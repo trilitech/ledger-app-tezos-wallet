@@ -1,0 +1,2 @@
+# Entrypoint,               Display entrypoint,       Symbolic pattern, Binary pattern
+  update_operators,         Update operators,         ${list ${or {{ Left (Pair ${address Add owner} (Pair ${address Operator} ${int Token id})) }; { Right (Pair ${address Add owner} (Pair ${address Operator} ${int Token id})) }}}},_

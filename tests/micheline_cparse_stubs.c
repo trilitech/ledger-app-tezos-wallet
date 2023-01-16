@@ -1,0 +1,147 @@
+#include <caml/mlvalues.h>
+#include <caml/memory.h>
+#include <caml/alloc.h>
+#include <caml/fail.h>
+
+#include "micheline_parser.h"
+#include "operation_parser.h"
+
+CAMLprim value micheline_cparse_capture_name(value mlstate) {
+  CAMLparam1(mlstate);
+  CAMLlocal1(r);
+  tz_parser_state **state = Data_abstract_val(mlstate);
+  r = caml_copy_string((*state)->field_name);
+  CAMLreturn(r);
+}
+
+CAMLprim value micheline_cparse_init(value pattern_option, value size) {
+  CAMLparam2(pattern_option, size);
+  CAMLlocal1(r);
+  r = caml_alloc(sizeof(value), Abstract_tag);
+  tz_parser_state *state = malloc(sizeof(tz_parser_state));
+  *((tz_parser_state**) Data_abstract_val(r)) = state;
+  if(Is_block(pattern_option)) {
+    size_t len = caml_string_length(Field(pattern_option, 0));
+    uint8_t* pat = malloc(len+1);
+    memcpy(pat, Bytes_val(Field(pattern_option, 0)), len);
+    tz_micheline_parser_init(state, pat, len);
+  } else {
+    tz_micheline_parser_init(state, NULL, 0);
+  }
+  size_t s = Long_val (size);
+  if (s >= 0xFFFF) caml_failwith("micheline_cparse_init: size too large");
+  tz_operation_parser_init(state, (uint16_t) s, 1);
+  CAMLreturn(r);
+}
+
+CAMLprim value micheline_cparse_step(value mlstate, value input, value output) {
+  CAMLparam3(mlstate, input, output);
+  CAMLlocal3(ibuf, obuf, r);
+  ibuf = Field(input, 0);
+  int iofs = Int_val(Field(input, 1));
+  int ilen = Int_val(Field(input, 2));
+  obuf = Field(output, 0);
+  int oofs = Int_val(Field(output, 1));
+  int olen = Int_val(Field(output, 2));
+  tz_parser_state *state = *((tz_parser_state**) Data_abstract_val(mlstate));
+
+  tz_parser_regs regs = {Bytes_val(ibuf), iofs, ilen, (char*) Bytes_val(obuf), oofs, olen};
+  int ilen_init = ilen;
+  int olen_init = olen;
+
+  while(!TZ_IS_BLOCKED(tz_micheline_parser_step(state, &regs)));
+
+  int read = ilen_init-regs.ilen;
+  int written = olen_init-regs.olen;
+
+  r = caml_alloc_tuple(3);
+  Store_field(r, 0, Val_int(read));
+  Store_field(r, 1, Val_int(written));
+
+  switch (state->errno) {
+  case TZ_BLO_DONE:
+    Store_field(r, 2, Val_int(0));
+    break;
+  case TZ_BLO_FEED_ME:
+    Store_field(r, 2, Val_int(1));
+    break;
+  case TZ_BLO_IM_FULL:
+    Store_field(r, 2, Val_int(2));
+    break;
+  case TZ_ERR_INVALID_TAG:
+    caml_failwith("micheline_cparse_step: invalid tag");
+  case TZ_ERR_INVALID_OP:
+    caml_failwith("micheline_cparse_step: invalid operation");
+  case TZ_ERR_UNSUPPORTED:
+    caml_failwith("micheline_cparse_step: unsupported data");
+  case TZ_ERR_TOO_LARGE:
+    caml_failwith("micheline_cparse_step: data size limitation exceeded");
+  case TZ_ERR_BAD_PATTERN:
+    caml_failwith("micheline_cparse_step: the pattern is bad");
+  case TZ_ERR_MISMATCH:
+    caml_failwith("micheline_cparse_step: pattern matching failed");
+  case TZ_ERR_TOO_DEEP:
+    caml_failwith("micheline_cparse_step: expression too deep");
+  case TZ_ERR_INVALID_STATE:
+    caml_failwith("micheline_cparse_step: invalid state");
+  default:
+    char err[100];
+    snprintf(err,99,"micheline_cparse_step: unknown error code %d", state->errno);
+    caml_failwith(err);
+  }
+  CAMLreturn(r);
+}
+
+CAMLprim value operation_cparse_step(value mlstate, value input, value output) {
+  CAMLparam3(mlstate, input, output);
+  CAMLlocal3(ibuf, obuf, r);
+  ibuf = Field(input, 0);
+  int iofs = Int_val(Field(input, 1));
+  int ilen = Int_val(Field(input, 2));
+  obuf = Field(output, 0);
+  int oofs = Int_val(Field(output, 1));
+  int olen = Int_val(Field(output, 2));
+  tz_parser_state **state = Data_abstract_val(mlstate);
+
+  tz_parser_regs regs = {Bytes_val(ibuf), iofs, ilen, (char*) Bytes_val(obuf), oofs, olen};
+  int ilen_init = ilen;
+  int olen_init = olen;
+
+  while(!TZ_IS_BLOCKED(tz_operation_parser_step(*state, &regs)));
+
+  int read = ilen_init-regs.ilen;
+  int written = olen_init-regs.olen;
+
+  r = caml_alloc_tuple(3);
+  Store_field(r, 0, Val_int(read));
+  Store_field(r, 1, Val_int(written));
+
+  switch ((*state)->errno) {
+  case TZ_BLO_DONE:
+    Store_field(r, 2, Val_int(0));
+    break;
+  case TZ_BLO_FEED_ME:
+    Store_field(r, 2, Val_int(1));
+    break;
+  case TZ_BLO_IM_FULL:
+    Store_field(r, 2, Val_int(2));
+    break;
+  case TZ_ERR_INVALID_TAG:
+    caml_failwith("operation_cparse_step: invalid tag");
+  case TZ_ERR_INVALID_OP:
+    caml_failwith("operation_cparse_step: invalid operation");
+  case TZ_ERR_UNSUPPORTED:
+    caml_failwith("operation_cparse_step: unsupported data");
+  case TZ_ERR_TOO_LARGE:
+    caml_failwith("operation_cparse_step: data size limitation exceeded");
+  case TZ_ERR_BAD_PATTERN:
+    caml_failwith("operation_cparse_step: the pattern is bad");
+  case TZ_ERR_MISMATCH:
+    caml_failwith("operation_cparse_step: pattern matching failed");
+  case TZ_ERR_TOO_DEEP:
+    caml_failwith("operation_cparse_step: expression too deep");
+  default:
+    caml_failwith("operation_cparse_step");
+  }
+  CAMLreturn(r);
+}

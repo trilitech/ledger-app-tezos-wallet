@@ -1,0 +1,23 @@
+(executable
+        (name test_micheline_c_parser)
+        (modules test_micheline_c_parser)
+        (libraries "tezos-protocol-015-PtLimaPt"
+                   "tezos-benchmarks-proto-015-PtLimaPt"
+                   "terminal_size")
+        (foreign_stubs
+                (language c)
+                (names formatting parser_state num_parser micheline_parser pattern_registry operation_parser micheline_cparse_stubs)
+                (flags :standard -std=gnu99 -Werror=int-to-pointer-cast -Wall -Wextra -Werror -Wmissing-field-initializers)))
+
+(executable
+        (name gen_micheline)
+        (modules gen_micheline)
+        (libraries "tezos-protocol-015-PtLimaPt"
+                   "tezos-benchmarks-proto-015-PtLimaPt"))
+
+(executable
+        (name run_speculos)
+        (modules run_speculos)
+        (libraries "tezos-rpc-http-client-unix"))
+
+(copy_files "../app/src/parser/[!g]*.[ch]")

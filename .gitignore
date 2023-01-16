@@ -1,0 +1,12 @@
+app/bin
+app/debug
+app/dep
+app/obj
+app/src/glyphs.h
+app/src/glyphs.c
+app/src/parser/generated_patterns.h
+app/.target
+pattern_registry/*.csv
+_build
+bin
+tests/micheline_samples.hex

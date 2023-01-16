@@ -1,0 +1,7 @@
+# Entrypoint,               Display entrypoint,   Symbolic pattern, Binary pattern
+  ask,                      Ask,                  Pair (Pair ${address Collection address} ${int Token id}) (Pair ${or {{ Left ${address Payment in fa1.2} }; { Right ${or {{Left (Pair ${address Payment in fa2} ${int Payment fa2 token id})}; {Right ${any Payment in tez}}}}}}} (Pair ${int Amount} (Pair ${int Editions} (Pair {Pair ${int Share amount} ${address Share recipient}} (Pair ${any Expiry time} ${any Target}) ) ) ) ), _
+  fulfill_ask,              Fullfill ask,         Pair ${int Ask id} ${or {{None};{Some ${address Proxy}}}}, _
+  fulfill_offer,            Fulfill offer,        Pair ${int Offer id} ${or {{None};{Some ${int Token id}}}}, _
+  offer,                    Offer,                Pair (Pair ${address Collection address} ${or {{None};{Some ${int Token id}}}}) (Pair ${or {{ Left ${address Payment in fa1.2} }; { Right ${or {{Left (Pair ${address Payment in fa2} ${int Payment fa2 token id})}; {Right ${any Payment in tez}}}}}}} (Pair ${int Amount} (Pair ${list {Pair ${int Share amount} ${address Share recipient}}} (Pair ${any Expiry time} (Pair ${any Target} ${any Proxy}))))), _
+  retract_ask,              Retract ask,          ${int Id}, _
+  delegate,                 Delegate,             Unit, _

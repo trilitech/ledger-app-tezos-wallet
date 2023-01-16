@@ -1,0 +1,34 @@
+include: '.gitlab-ci-build-docker.yml'
+
+stages:
+  - prepare
+  - build
+  - test
+
+.use_docker: &use_docker
+  image: !reference [.use_docker_template, image]
+  after_script:
+    - !reference [.use_docker_template, after_script]
+  before_script:
+    - !reference [.use_docker_template, before_script]
+    - apk add --update make
+
+test:
+  <<: *use_docker
+  stage: test
+  script:
+    - make test
+
+build:
+  <<: *use_docker
+  stage: build
+  script:
+    - make
+    - tar czf app_Nano_S.tgz -C bin/s .
+    - tar czf app_Nano_S+.tgz -C bin/sp .
+    - tar czf app_Nano_X.tgz -C bin/x .
+  artifacts:
+    paths:
+      - app_Nano_S.tgz
+      - app_Nano_S+.tgz
+      - app_Nano_X.tgz
