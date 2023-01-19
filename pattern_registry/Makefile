@@ -13,4 +13,4 @@ contracts.csv: contracts.csv.in
 
 clean:
 	rm -f *.csv
-	rm ../app/src/parser/generated_patterns.h
+	rm -f ../app/src/parser/generated_patterns.h

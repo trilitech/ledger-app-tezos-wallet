@@ -5,13 +5,16 @@
 Start by preparing docker images for building:
 
 1. Follow https://github.com/LedgerHQ/ledger-app-builder to build the ledger app builder environment.
-2. Build the docker image to run the OCaml scripts (needed to generate some parts of the app, and for the tests).
+2. Follow https://speculos.ledger.com/user/docker.html to build the ledger app simulator Speculos
+3. Build the docker image to run the OCaml scripts (needed to generate some parts of the app, and for the tests).
 
 At the time this README was written, it consists in the following commands:
 
 ```
 git clone git@github.com:LedgerHQ/ledger-app-builder.git <somewhere>
 (cd <somewhere> && docker build -t ledger-app-builder:latest .)
+docker pull ghcr.io/ledgerhq/speculos
+docker image tag ghcr.io/ledgerhq/speculos speculos
 docker build -t ledger-app-tezos-ocaml -f docker/Dockerfile.ocaml docker
 ```
 

@@ -1,0 +1,54 @@
+(* Keys for mnemonic zebra (x24), path m/44'/1729'/0'/0' *)
+
+let _pkh =
+  Tezos_crypto.Signature.Public_key_hash.of_b58check_exn
+    "tz1dyX3B1CFYa2DfdFLyPtiJCfQRUgPVME6E"
+
+let _pk =
+  Tezos_crypto.Signature.Public_key.of_b58check_exn
+    "edpkuXX2VdkdXzkN11oLCb8Aurdo1BTAtQiK8ZY9UPj2YMt3AHEpcY"
+
+let sk =
+  Tezos_crypto.Signature.Secret_key.of_b58check_exn
+    "edsk2tUyhVvGj9B1S956ZzmaU4bC9J7t8xVBH52fkAoZL25MHEwacd"
+
+let split_sign_apdus bin =
+  let len = Bytes.length bin in
+  let rec split ofs idx =
+    if ofs = len then []
+    else
+      let size = min len 235 in
+      let last = ofs + size = len in
+      let packet = Bytes.create (size + 5) in
+      Bytes.set_uint8 packet 0 (* CLA *) 0x80;
+      Bytes.set_uint8 packet 1 (* INS *) 0x0F;
+      Bytes.set_uint8 packet 2 (* P1 *) (if last then 0x80 else 0x00 lor idx);
+      Bytes.set_uint8 packet 3 (* P2 *) 0x00;
+      Bytes.blit bin ofs packet 5 size;
+      let result =
+        if last then Bytes.of_string "\x90\x00"
+        else
+          Bytes.cat
+            (Tezos_crypto.Signature.to_bytes
+               (Tezos_crypto.Signature.sign sk bin))
+            (Bytes.of_string "\x90\x00")
+      in
+      (packet, result) :: split (ofs + size) (idx + 1)
+  in
+  [
+    ( Bytes.of_string
+        "\x80\x0f\x00\x00\x11\x04\x80\x00\x00\x2c\x80\x00\x06\xc1\x80\x00\x00\x00\x80\x00\x00\x00",
+      Bytes.of_string "\x90\x00" );
+  ]
+  @ split 0 0
+
+let () =
+  let hex = `Hex Sys.argv.(1) in
+  let bin = Hex.to_bytes hex in
+  Format.printf "sleep 0.2@\n";
+  List.iter
+    (fun (apdu, ans) ->
+      Format.printf "send_apdu %a@\nexpect_apdu_return %a@\n" Hex.pp
+        (Hex.of_bytes apdu) Hex.pp (Hex.of_bytes ans))
+    (split_sign_apdus bin);
+  Format.printf "expect_exited@."

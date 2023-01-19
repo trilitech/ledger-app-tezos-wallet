@@ -1,0 +1,10 @@
+(executable
+        (name gen_micheline)
+        (modules gen_micheline)
+        (libraries "tezos-protocol-015-PtLimaPt"
+                   "tezos-benchmarks-proto-015-PtLimaPt"))
+
+(executable
+        (name gen_integration)
+        (modules gen_integration)
+        (libraries "tezos-protocol-015-PtLimaPt"))

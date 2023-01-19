@@ -1,0 +1,16 @@
+sleep 0.2
+expect_full_text "Tezos Walletready forsafe signing"
+send_apdu 800f000111048000002c800006c10000000000000000
+expect_apdu_return 9000
+sleep 1
+send_apdu 800f81002305020000001d0100000004434143410100000004504f504f0100000006424f5544494e
+sleep 1
+expect_full_text 'Data{\"CACA\";\"POPO\";\"BOUDIN\"}'
+press_button right
+expect_full_text "Accept?"
+press_button both
+sleep 1
+expect_apdu_return 84e475e38707140e725019e91f036e341fa4a2c8752b7828f37bbf91061b0e0a3144022011d5eb497a8fc1790444d9d9cd2384cfc701bc11da8b827759e80048372dd75702201425ba4e385d79aa73a0d28e90622812b3165cf46cc3f4b18018dbae34d668269000
+press_button right
+press_button both
+expect_exited

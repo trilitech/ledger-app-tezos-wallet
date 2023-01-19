@@ -13,22 +13,30 @@ stages:
     - !reference [.use_docker_template, before_script]
     - apk add --update make
 
-test:
+unit:
   <<: *use_docker
   stage: test
   script:
-    - make test
+    - make unit_tests
+
+integration:
+  image:
+    name: ghcr.io/ledgerhq/speculos
+    entrypoint: [""]
+  stage: test
+  dependencies:
+    - build
+  script:
+    - apt update && apt install -y curl jq
+    - cd tests/integration && PATH=/speculos:$PATH ./run_test_local.sh nanos
 
 build:
   <<: *use_docker
   stage: build
   script:
-    - make
-    - tar czf app_Nano_S.tgz -C bin/s .
-    - tar czf app_Nano_S+.tgz -C bin/sp .
-    - tar czf app_Nano_X.tgz -C bin/x .
+    - make dist
   artifacts:
     paths:
-      - app_Nano_S.tgz
-      - app_Nano_S+.tgz
-      - app_Nano_X.tgz
+      - app_nanos.tgz
+      - app_nanosp.tgz
+      - app_nanox.tgz

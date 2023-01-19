@@ -9,4 +9,5 @@ app/.target
 pattern_registry/*.csv
 _build
 bin
-tests/micheline_samples.hex
+tests/unit/micheline_samples.hex
+app_*.tgz

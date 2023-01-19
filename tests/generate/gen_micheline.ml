@@ -36,17 +36,15 @@ let vector =
                  ]))))
 
 let () =
-  assert (Array.length Sys.argv = 3);
-  let m = int_of_string Sys.argv.(2) in
-  let fp = if Sys.argv.(1) = "-" then stdout else open_out Sys.argv.(1) in
+  assert (Array.length Sys.argv = 2);
+  let m = int_of_string Sys.argv.(1) in
   let output expr =
     let bin =
       Data_encoding.Binary.to_bytes_exn Protocol.Script_repr.expr_encoding expr
     in
-    output_string fp "05";
-    output_string fp (Hex.show (Hex.of_bytes bin));
-    output_string fp "\n"
+    print_string "05";
+    print_string (Hex.show (Hex.of_bytes bin));
+    print_string "\n"
   in
   Seq.iter output
-    (Seq.take m (Seq.append vector (Seq.concat (Seq.forever gen))));
-  close_out fp
+    (Seq.take m (Seq.append vector (Seq.concat (Seq.forever gen))))
