@@ -6,7 +6,7 @@ let st = Random.State.make_self_init ()
 
 let config =
   {
-    Michelson_generation.target_size = { min = 0; max = 10 };
+    Michelson_generation.target_size = { min = 10; max = 100 };
     burn_in_multiplier = 1;
   }
 

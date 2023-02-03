@@ -1,68 +1,34 @@
-# A named volume for the CI Docker-in-Docker, the current working dir on the dev's machine
-BUILD_VOLUME ?= $(realpath .)
+BUILD_VOLUME?=$(realpath .)# Volume for the CI, CWD on the dev's machine
 
-all: build dist test
+all: app_nanos.tgz app_nanosp.tgz app_nanox.tgz
+debug: app_nanos_dbg.tgz app_nanosp_dbg.tgz app_nanox_dbg.tgz
 
-.PHONY: clean app build dist built-in-patterns test integration_tests integration_tests_s integration_tests_sp integration_tests_x unit_tests app_s app_sp app_x
+.PHONY: clean all debug integration_tests unit_tests
 
-# Check for Docker and required images
-#ifneq ($(shell docker --version > /dev/null && echo works), works)
-#  $(error "Docker is required, see README")
-#endif
-#ifneq ($(shell docker run --rm -i -v "${BUILD_VOLUME}:/app" ledger-app-builder:latest echo works), works)
-#  $(error "Docker image `ledger-app-builder` is required, see README")
-#endif
-#ifneq ($(shell docker run --rm -i -v "${BUILD_VOLUME}:/app" ledger-app-tezos-ocaml:latest echo works), works)
-#  $(error "Docker image `ledger-app-tezos-ocaml` is required, see README")
-#endif
+app/src/parser/generated_patterns.h: pattern_registry/*.ml* pattern_registry/Makefile pattern_registry/dune pattern_registry/*.csv.in pattern_registry/*.sh
+	docker run --rm -i -v "${BUILD_VOLUME}:/app" ledger-app-tezos-ocaml:latest make -C /app/pattern_registry
 
-dist: build
-	tar czf app_nanos.tgz -C bin/nanos .
-	tar czf app_nanosp.tgz -C bin/nanosp .
-	tar czf app_nanox.tgz -C bin/nanox .
+app_%.tgz: app/src/parser/generated_patterns.h app/src/*.[ch] app/src/parser/*.[ch] app/Makefile
+	docker run --rm -i -v "${BUILD_VOLUME}:/app" ledger-app-builder:latest bash -c \
+          'BOLOS_SDK=$$$(shell echo $(patsubst app_%.tgz,%,$@) | tr '[:lower:]' '[:upper:]')_SDK make -C app'
+	docker run --rm -i -v "${BUILD_VOLUME}:/app" ledger-app-builder:latest bash -c "cd app/bin/ && tar cz ." > $@
 
-build: app_s app_sp app_x
-
-app_s: built-in-patterns
-	docker run --rm -i -v "${BUILD_VOLUME}:/app" ledger-app-builder:latest bash -c 'BOLOS_SDK=$$NANOS_SDK make -C app'
-	mkdir -p bin/nanos
-	docker run --rm -i -v "${BUILD_VOLUME}:/app" ledger-app-builder:latest bash -c "cd app/bin/ && tar c ." | tar x -C bin/nanos
-	tar czf app_nanos.tgz -C bin/nanos .
-
-app_sp: built-in-patterns
-	docker run --rm -i -v "${BUILD_VOLUME}:/app" ledger-app-builder:latest bash -c 'BOLOS_SDK=$$NANOSP_SDK make -C app'
-	mkdir -p bin/nanosp
-	docker run --rm -i -v "${BUILD_VOLUME}:/app" ledger-app-builder:latest bash -c "cd app/bin/ && tar c ." | tar x -C bin/nanosp
-	tar czf app_nanosp.tgz -C bin/nanosp .
-
-app_x: built-in-patterns
-	docker run --rm -i -v "${BUILD_VOLUME}:/app" ledger-app-builder:latest bash -c 'BOLOS_SDK=$$NANOX_SDK make -C app'
-	mkdir -p bin/nanox
-	docker run --rm -i -v "${BUILD_VOLUME}:/app" ledger-app-builder:latest bash -c "cd app/bin/ && tar c ." | tar x -C bin/nanox
-	tar czf app_nanox.tgz -C bin/nanox .
+app_%_dbg.tgz: app/src/parser/generated_patterns.h app/src/*.[ch] app/src/parser/*.[ch] app/Makefile
+	docker run --rm -i -v "${BUILD_VOLUME}:/app" ledger-app-builder:latest bash -c \
+          'BOLOS_SDK=$$$(shell echo $(patsubst app_%_dbg.tgz,%,$@) | tr '[:lower:]' '[:upper:]')_SDK make -C app DEBUG=true'
+	docker run --rm -i -v "${BUILD_VOLUME}:/app" ledger-app-builder:latest bash -c "cd app/bin/ && tar cz ." > $@
 
 clean:
 	rm -rf bin app_*.tgz
 	docker run --rm -i -v "${BUILD_VOLUME}:/app" ledger-app-builder:latest make -C app mrproper
-	docker run --rm -i -v "${BUILD_VOLUME}:/app" ledger-app-tezos-ocaml:latest make -C /app/pattern_registry clean
-	docker run --rm -i -v "${BUILD_VOLUME}:/app" ledger-app-tezos-ocaml:latest make -C /app/tests/unit clean
-	docker run --rm -i -v "${BUILD_VOLUME}:/app" ledger-app-tezos-ocaml:latest rm -rf _build
+	docker run --rm -i -v "${BUILD_VOLUME}:/app" ledger-app-tezos-ocaml:latest bash -c \
+	  "make -C /app/pattern_registry clean && make -C /app/tests/generate clean && rm -rf _build"
 
-built-in-patterns:
-	docker run --rm -i -v "${BUILD_VOLUME}:/app" ledger-app-tezos-ocaml:latest make -C /app/pattern_registry
-
-test: unit_tests integration_tests
-
-integration_tests: integration_tests_s # integration_tests_sp integration_tests_x
-
-unit_tests:
+unit_tests: test/samples/micheline.hex /tests/unit/*.ml* tests/unit/*.[ch] tests/unit/dune tests/unit/Makefile
 	docker run --rm -i -v "${BUILD_VOLUME}:/app" ledger-app-tezos-ocaml:latest make -C /app/tests/unit
 
-integration_tests_s: dist
+integration_tests: app_nanos.tgz test/samples/micheline.hex tests/integration/*.sh tests/integration/nanos/*.sh
 	cd tests/integration && ./run_test_docker.sh nanos
 
-integration_tests_sp: dist
-	cd tests/integration && ./run_test_docker.sh nanosp
-
-integration_tests_x: dist
-	cd tests/integration && ./run_test_docker.sh nanox
+test/samples/micheline.hex: tests/generate/*.ml* tests/generate/dune tests/generate/Makefile
+	docker run --rm -i -v "${BUILD_VOLUME}:/app" ledger-app-tezos-ocaml:latest make -C /app/tests/generate

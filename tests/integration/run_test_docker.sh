@@ -17,7 +17,8 @@ seed="zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra ze
 function start_speculos_runner {
     echo -n "Starting speculos in a Docker container..."
     volume=`docker volume create`
-    docker run --rm -i -v "$volume":/app --entrypoint "/bin/bash" speculos -c "mkdir -p /app/bin/$target/ ; tar xz -C /app/bin/$target/" < "../../app_$target.tgz"
+    if [ " $DEBUG " != "  " ] ; then dbg_suffix="_dbg" ; fi
+    docker run --rm -i -v "$volume":/app --entrypoint "/bin/bash" speculos -c "mkdir -p /app/bin/$target/ ; tar xz -C /app/bin/$target/" < "../../app_$target$dbg_suffix.tgz"
     docker run --name speculos_runner --rm -i -v "$volume":/app --publish 5000:5000 --network host --detach speculos --display headless --api-port 5000 --seed "$seed" -m $target /app/bin/$target/app.elf > /dev/null 2>&1
 
     while ! curl -s localhost:5000/events 2> /dev/null >&2 ; do sleep 0.1 ; echo -n "." ; done
@@ -53,7 +54,7 @@ function cleanup {
 
 . "$(pwd)/test_runtime.sh"
 
-for i in $target/test_*.sh ; do
+for i in ../samples/*.sh ; do
     vars_dir=`mktemp -d`
     start_speculos_runner
     trap cleanup EXIT

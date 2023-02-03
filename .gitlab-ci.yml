@@ -17,7 +17,8 @@ unit:
   <<: *use_docker
   stage: test
   script:
-    - make unit_tests
+    - docker run --rm -i -v "${BUILD_VOLUME}:/app" ledger-app-tezos-ocaml:latest make -C /app/tests/generate
+    - docker run --rm -i -v "${BUILD_VOLUME}:/app" ledger-app-tezos-ocaml:latest make -C /app/tests/unit
 
 integration:
   image:

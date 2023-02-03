@@ -8,6 +8,5 @@ app/src/parser/generated_patterns.h
 app/.target
 pattern_registry/*.csv
 _build
-bin
-tests/unit/micheline_samples.hex
+tests/samples
 app_*.tgz

@@ -27,9 +27,28 @@ function send_apdu {
 function expect_apdu_return {
     echo " - expect_apdu_return $1"
     if [ "`jq .data < $vars_dir/apdu`" != "\"$1\"" ] ; then
-        (echo "FAILURE(expect_full_text):"
+        (echo "FAILURE(expect_apdu_return):"
          echo "  Result: '`cat $vars_dir/apdu`'"
-         echo "  Expected: '$2'") >&2
+         echo "  Expected: '$1'") >&2
+        exit 1
+    fi
+}
+
+function send_async_apdus {
+    async_apdus=`mktemp`
+    (while [ "$#" -ne 0 ] ; do
+         apdu="$1"
+         res="$2"
+         shift 2
+         echo " - apdu $apdu"
+         curl -s localhost:5000/apdu -d "{\"data\":\"$apdu\"}" > $vars_dir/apdu 2> /dev/null
+         expect_apdu_return "$res"
+     done ; rm $async_apdus) &
+}
+
+function expect_async_apdus_sent {
+    if [ -f $async_apdus ] ; then
+        (echo "FAILURE(expect_async_apdus_sent)") >&2
         exit 1
     fi
 }

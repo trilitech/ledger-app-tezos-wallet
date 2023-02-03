@@ -17,7 +17,8 @@ seed="zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra ze
 function start_speculos_runner {
     echo -n "Starting speculos..."
     app_dir=`mktemp -d`
-    tar xfz ../../app_$target.tgz -C $app_dir
+    if [ " $DEBUG " != "  " ] ; then dbg_suffix="_dbg" ; fi
+    tar xfz ../../app_$target$dbg_suffix.tgz -C $app_dir
     speculos.py --display headless --api-port 5000 --seed "$seed" -m $target $app_dir/app.elf > /dev/null 2>&1 &
     speculos_pid=$!
     while ! curl -s localhost:5000/events > /dev/null 2>&1 ; do sleep 0.1 ; echo -n "." ; done
@@ -51,7 +52,7 @@ function cleanup {
 
 . "$(pwd)/test_runtime.sh"
 
-for i in $target/test_*.sh ; do
+for i in $target/test_*.sh ../samples/*.sh ; do
     vars_dir=`mktemp -d`
     start_speculos_runner
     trap cleanup EXIT

@@ -18,4 +18,4 @@ docker image tag ghcr.io/ledgerhq/speculos speculos
 docker build -t ledger-app-tezos-ocaml -f docker/Dockerfile.ocaml docker
 ```
 
-You're all set, just run `make` now, binaries for each `<model>` (S, S+ or X) should be available in `bin/<model>`.
+You're all set, just run `make` now, binaries for each `<model>` (S, S+ or X) should be available as `tgz` archives at the root.

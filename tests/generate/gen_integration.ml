@@ -17,21 +17,25 @@ let split_sign_apdus bin =
   let rec split ofs idx =
     if ofs = len then []
     else
-      let size = min len 235 in
+      let size = min (len - ofs) 235 in
       let last = ofs + size = len in
       let packet = Bytes.create (size + 5) in
       Bytes.set_uint8 packet 0 (* CLA *) 0x80;
       Bytes.set_uint8 packet 1 (* INS *) 0x0F;
-      Bytes.set_uint8 packet 2 (* P1 *) (if last then 0x80 else 0x00 lor idx);
+      Bytes.set_uint8 packet 2 (* P1 *) ((if last then 0x80 else 0x00) lor idx);
       Bytes.set_uint8 packet 3 (* P2 *) 0x00;
+      Bytes.set_uint8 packet 4 (* LC *) size;
       Bytes.blit bin ofs packet 5 size;
       let result =
-        if last then Bytes.of_string "\x90\x00"
-        else
-          Bytes.cat
-            (Tezos_crypto.Signature.to_bytes
-               (Tezos_crypto.Signature.sign sk bin))
-            (Bytes.of_string "\x90\x00")
+        if last then
+          Bytes.concat Bytes.empty
+            [
+              Tezos_crypto.Blake2B.(to_bytes (hash_bytes [ bin ]));
+              Tezos_crypto.Signature.to_bytes
+                (Tezos_crypto.Signature.sign sk bin);
+              Bytes.of_string "\x90\x00";
+            ]
+        else Bytes.of_string "\x90\x00"
       in
       (packet, result) :: split (ofs + size) (idx + 1)
   in
@@ -40,15 +44,23 @@ let split_sign_apdus bin =
         "\x80\x0f\x00\x00\x11\x04\x80\x00\x00\x2c\x80\x00\x06\xc1\x80\x00\x00\x00\x80\x00\x00\x00",
       Bytes.of_string "\x90\x00" );
   ]
-  @ split 0 0
+  @ split 0 1
 
 let () =
   let hex = `Hex Sys.argv.(1) in
   let bin = Hex.to_bytes hex in
   Format.printf "sleep 0.2@\n";
+  Format.printf "send_async_apdus";
+  let apdus = split_sign_apdus bin in
   List.iter
     (fun (apdu, ans) ->
-      Format.printf "send_apdu %a@\nexpect_apdu_return %a@\n" Hex.pp
-        (Hex.of_bytes apdu) Hex.pp (Hex.of_bytes ans))
-    (split_sign_apdus bin);
-  Format.printf "expect_exited@."
+      Format.printf "\\@\n  %a %a" Hex.pp (Hex.of_bytes apdu) Hex.pp
+        (Hex.of_bytes ans))
+    apdus;
+  Format.printf "@\n for i in `seq 0 %d` ; do press_button right ; done@\n"
+    ((List.length apdus - 1) * 10);
+  Format.printf
+    "press_button left@\n\
+     press_button both@\n\
+     sleep 1@\n\
+     expect_async_apdus_sent@."
