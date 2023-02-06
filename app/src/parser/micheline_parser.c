@@ -18,7 +18,7 @@ const char *const tz_micheline_parser_step_name[] = {
   "INT",
   "PRINT_INT",
   "CAPTURE_BYTES",
-  "PRINT_BASE58"
+  "PRINT_CAPTURE"
 };
 #endif
 

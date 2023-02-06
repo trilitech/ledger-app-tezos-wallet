@@ -60,8 +60,10 @@ void tz_ui_stream_push () {
   int bucket = global.stream.model.total % TZ_UI_STREAM_HISTORY_SCREENS;
   strncpy(global.stream.model.titles[bucket], global.stream.buffer.title, TZ_UI_STREAM_TITLE_WIDTH);
   strncpy(global.stream.model.values[bucket], global.stream.buffer.value, TZ_UI_STREAM_CONTENTS_SIZE);
-  if (global.stream.model.total == 0 || global.stream.model.total >= TZ_UI_STREAM_HISTORY_SCREENS)
+  if (global.stream.model.total == 0 || global.stream.model.total >= TZ_UI_STREAM_HISTORY_SCREENS) {
     global.stream.model.current++;
+    update ();
+  }
 #ifdef TEZOS_DEBUG
   char debug_title[TZ_UI_STREAM_TITLE_WIDTH+1], debug_value[TZ_UI_STREAM_CONTENTS_SIZE + 1];
   debug_title[TZ_UI_STREAM_TITLE_WIDTH] = 0;
@@ -72,7 +74,6 @@ void tz_ui_stream_push () {
          debug_title, debug_value,
          prev_total, global.stream.model.total, prev_current, global.stream.model.current);
 #endif
-  update ();
 }
 
 static void pred () {

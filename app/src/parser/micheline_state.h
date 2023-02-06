@@ -3,7 +3,7 @@
 
 #include "num_state.h"
 
-#define TZ_MICHELINE_STACK_DEPTH 20
+#define TZ_MICHELINE_STACK_DEPTH 45
 
 typedef enum {
   TZ_MICHELINE_TAG_INT,

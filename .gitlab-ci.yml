@@ -2,42 +2,79 @@ include: '.gitlab-ci-build-docker.yml'
 
 stages:
   - prepare
+  - generate
   - build
   - test
 
-.use_docker: &use_docker
-  image: !reference [.use_docker_template, image]
-  after_script:
-    - !reference [.use_docker_template, after_script]
-  before_script:
-    - !reference [.use_docker_template, before_script]
-    - apk add --update make
+generate_builtin_patterns:
+  image: $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:latest
+  stage: generate
+  script:
+    - make -C pattern_registry
+  artifacts:
+    paths:
+      - app/src/parser/generated_patterns.h
+
+generate_samples:
+  image: $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:latest
+  stage: generate
+  script:
+    - make -C tests/generate
+  artifacts:
+    paths:
+      - tests/samples
+
+build_nanos:
+  image: $CI_REGISTRY_IMAGE/ledger-app-builder:latest
+  stage: build
+  script:
+    - bash -c 'make -C app BOLOS_SDK=$NANOS_SDK'
+    - cd app/bin/ && tar czf ../../app_nanos.tgz .
+  dependencies:
+    - generate_builtin_patterns
+  artifacts:
+    paths:
+      - app_nanos.tgz
+
+build_nanos_dbg:
+  image: $CI_REGISTRY_IMAGE/ledger-app-builder:latest
+  stage: build
+  script:
+    - bash -c 'make -C app BOLOS_SDK=$NANOS_SDK DEBUG=true'
+    - cd app/bin/ && tar czf ../../app_nanos_dbg.tgz .
+  dependencies:
+    - generate_builtin_patterns
+  artifacts:
+    paths:
+      - app_nanos_dbg.tgz
 
 unit:
-  <<: *use_docker
+  image: $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:latest
   stage: test
   script:
-    - docker run --rm -i -v "${BUILD_VOLUME}:/app" ledger-app-tezos-ocaml:latest make -C /app/tests/generate
-    - docker run --rm -i -v "${BUILD_VOLUME}:/app" ledger-app-tezos-ocaml:latest make -C /app/tests/unit
+    - make -C tests/unit
+  dependencies:
+    - generate_samples
 
-integration:
+integration_nanos_basic:
   image:
     name: ghcr.io/ledgerhq/speculos
     entrypoint: [""]
   stage: test
   dependencies:
-    - build
+    - build_nanos_dbg
   script:
     - apt update && apt install -y curl jq
-    - cd tests/integration && PATH=/speculos:$PATH ./run_test_local.sh nanos
+    - PATH=/speculos:$PATH COLUMNS=80 ./tests/integration/run_test_local.sh nanos app_nanos_dbg.tgz tests/integration/nanos
 
-build:
-  <<: *use_docker
-  stage: build
+integration_nanos_samples:
+  image:
+    name: ghcr.io/ledgerhq/speculos
+    entrypoint: [""]
+  stage: test
+  dependencies:
+    - build_nanos_dbg
+    - generate_samples
   script:
-    - make dist
-  artifacts:
-    paths:
-      - app_nanos.tgz
-      - app_nanosp.tgz
-      - app_nanox.tgz
+    - apt update && apt install -y curl jq
+    - PATH=/speculos:$PATH COLUMNS=80 ./tests/integration/run_test_local.sh nanos app_nanos_dbg.tgz tests/samples

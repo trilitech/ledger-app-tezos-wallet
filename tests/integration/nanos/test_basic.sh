@@ -1,18 +1,16 @@
-screen_1="Tezos Walletready forsafe signing"
-screen_2="Quit?"
 sleep 0.2
-expect_full_text "$screen_1"
+expect_full_text "Tezos Wallet" "ready for" "safe signing"
 press_button right
-expect_full_text "$screen_2"
+expect_full_text "Quit?"
 press_button left
-expect_full_text "$screen_1"
+expect_full_text "Tezos Wallet" "ready for" "safe signing"
 press_button left
-expect_full_text "$screen_1"
+expect_full_text "Tezos Wallet" "ready for" "safe signing"
 press_button both
-expect_full_text "$screen_1"
+expect_full_text "Tezos Wallet" "ready for" "safe signing"
 press_button right
-expect_full_text "$screen_2"
+expect_full_text "Quit?"
 press_button right
-expect_full_text "$screen_2"
+expect_full_text "Quit?"
 press_button both
 expect_exited

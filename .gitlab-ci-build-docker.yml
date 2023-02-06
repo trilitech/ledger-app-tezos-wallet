@@ -1,10 +1,8 @@
-services:
-  - docker:20.10.16-dind
-
-variables:
-  BUILD_VOLUME: VOL_$CI_JOB_ID
-
 .build_docker_template: &build_docker
+  services:
+    - docker:20.10.16-dind
+  variables:
+    BUILD_VOLUME: VOL_$CI_JOB_ID
   image: docker:20.10.16
   stage: prepare
   before_script:
@@ -13,21 +11,6 @@ variables:
     changes:
       - docker/*
       - .gitlab-ci-build-docker.yml
-
-.use_docker_template:
-  image: docker:20.10.16
-  before_script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker pull $CI_REGISTRY_IMAGE/ledger-app-builder:latest
-    - docker pull $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:latest
-    - docker tag $CI_REGISTRY_IMAGE/ledger-app-builder:latest ledger-app-builder:latest
-    - docker tag $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:latest ledger-app-tezos-ocaml:latest
-    - docker run --rm -i -v "$BUILD_VOLUME":/app ledger-app-tezos-ocaml:latest sudo chown opam:opam /app
-    - docker container create --name "$BUILD_VOLUME"_FILES -v "$BUILD_VOLUME":/app ledger-app-tezos-ocaml:latest
-    - docker cp "$CI_PROJECT_DIR"/. "$BUILD_VOLUME"_FILES:/app/
-  after_script:
-    - docker container rm "$BUILD_VOLUME"_FILES
-    - docker volume rm "$BUILD_VOLUME"
 
 build docker ledger-app-builder:
   <<: *build_docker

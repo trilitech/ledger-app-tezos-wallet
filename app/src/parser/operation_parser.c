@@ -20,7 +20,7 @@ const char *const tz_operation_parser_step_name[] = {
 };
 #endif
 
-const struct tz_operation_field_descriptor transaction_fields[] = {
+const tz_operation_field_descriptor transaction_fields[] = {
   // Name,           Kind,                        Req,  Skip,  None
   { "Source",        TZ_OPERATION_FIELD_SOURCE,      true, true,  false },
   { "Fee",           TZ_OPERATION_FIELD_AMOUNT,      true, false, false },
@@ -33,7 +33,7 @@ const struct tz_operation_field_descriptor transaction_fields[] = {
   { NULL, 0, 0, 0, 0 }
 };
 
-const struct tz_operation_field_descriptor reveal_fields[] = {
+const tz_operation_field_descriptor reveal_fields[] = {
   // Name,           Kind,                        Req,  Skip,  None
   { "Source",        TZ_OPERATION_FIELD_SOURCE,      true, true,  false },
   { "Fee",           TZ_OPERATION_FIELD_AMOUNT,      true, false, false },
@@ -44,7 +44,7 @@ const struct tz_operation_field_descriptor reveal_fields[] = {
   { NULL, 0, 0, 0, 0 }
 };
 
-const struct tz_operation_field_descriptor delegation_fields[] = {
+const tz_operation_field_descriptor delegation_fields[] = {
   // Name,           Kind,                        Req,  Skip,  None
   { "Source",        TZ_OPERATION_FIELD_SOURCE,      true, true,  false },
   { "Fee",           TZ_OPERATION_FIELD_AMOUNT,      true, false, false },
@@ -55,7 +55,7 @@ const struct tz_operation_field_descriptor delegation_fields[] = {
   { NULL, 0, 0, 0, 0 }
 };
 
-const struct tz_operation_field_descriptor set_deposit_fields[] = {
+const tz_operation_field_descriptor set_deposit_fields[] = {
   // Name,           Kind,                        Req,  Skip,  None
   { "Source",        TZ_OPERATION_FIELD_SOURCE,      true, true,  false },
   { "Fee",           TZ_OPERATION_FIELD_AMOUNT,      true, false, false },
@@ -66,7 +66,7 @@ const struct tz_operation_field_descriptor set_deposit_fields[] = {
   { NULL, 0, 0, 0, 0 }
 };
 
-const struct tz_operation_field_descriptor update_ck_fields[] = {
+const tz_operation_field_descriptor update_ck_fields[] = {
   // Name,           Kind,                        Req,  Skip,  None
   { "Source",        TZ_OPERATION_FIELD_SOURCE,      true, true,  false },
   { "Fee",           TZ_OPERATION_FIELD_AMOUNT,      true, false, false },
@@ -78,7 +78,7 @@ const struct tz_operation_field_descriptor update_ck_fields[] = {
 };
 
 
-const struct tz_operation_descriptor tz_operation_descriptors[] = {
+const tz_operation_descriptor tz_operation_descriptors[] = {
   { TZ_OPERATION_TAG_TRANSACTION, "Transaction",       transaction_fields  },
   { TZ_OPERATION_TAG_REVEAL,      "Reveal",            reveal_fields       },
   { TZ_OPERATION_TAG_DELEGATION,  "Delegation",        delegation_fields   },
@@ -91,7 +91,7 @@ static const char* parameter_name = "Parameter";
 static const char* expression_name = "Expression";
 static const char* unset_message = "Field unset";
 
-static tz_parser_result push_frame (tz_parser_state *state, enum tz_operation_parser_step step) {
+static tz_parser_result push_frame (tz_parser_state *state, tz_operation_parser_step_kind step) {
   if (state->operation.frame >= &state->operation.stack[TZ_OPERATION_STACK_DEPTH - 1])
     tz_raise (TOO_DEEP);
   state->operation.frame++ ;
@@ -142,11 +142,11 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state, tz_parser_regs
   if (state->operation.frame == NULL) tz_stop (DONE);
 
 #ifdef TEZOS_DEBUG
-  PRINTF("[DEBUG] operation(frame: %d, offset:%d/%d, ilen: %ld, step: %s, errno: %s)\n",
+  PRINTF("[DEBUG] operation(frame: %d, offset:%d/%d, ilen: %d, step: %s, errno: %s)\n",
          (int) (state->operation.frame - state->operation.stack),
          (int) state->ofs,
          (int) state->operation.stack[0].stop,
-         regs->ilen,
+         (int) regs->ilen,
          (const char*) PIC(tz_operation_parser_step_name[state->operation.frame->step]),
          tz_parser_result_name(state->errno));
 #endif
@@ -191,7 +191,7 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state, tz_parser_regs
   case TZ_OPERATION_STEP_TAG: {
     uint8_t t;
     tz_must (tz_parser_read(state,regs,&t));
-    for (const struct tz_operation_descriptor* d = tz_operation_descriptors ; d->tag != 0 ; d++) {
+    for (const tz_operation_descriptor* d = tz_operation_descriptors ; d->tag != 0 ; d++) {
       if (d->tag == t) {
         state->operation.frame->step = TZ_OPERATION_STEP_OPERATION;
         state->operation.frame->step_operation.descriptor = d;
@@ -378,9 +378,9 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state, tz_parser_regs
     break;
   }
   case TZ_OPERATION_STEP_OPERATION: {
-    const struct tz_operation_descriptor *d =
+    const tz_operation_descriptor *d =
       state->operation.frame->step_operation.descriptor;
-    const struct tz_operation_field_descriptor *field =
+    const tz_operation_field_descriptor *field =
       PIC(&d->fields[state->operation.frame->step_operation.field]);
     const char *name = PIC(field->name);
     if (name == NULL) {

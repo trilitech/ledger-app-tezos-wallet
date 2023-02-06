@@ -46,6 +46,50 @@ let split_sign_apdus bin =
   ]
   @ split 0 1
 
+open Tezos_protocol_015_PtLimaPt
+open Tezos_micheline
+
+let split_screens size bin =
+  let node =
+    Micheline.root
+      (Data_encoding.Binary.of_bytes_exn Protocol.Script_repr.expr_encoding
+         (Bytes.sub bin 1 (Bytes.length bin - 1)))
+  in
+  let rec pp_node ~wrap ppf (node : Protocol.Script_repr.node) =
+    match node with
+    | String (_, s) -> Format.fprintf ppf "%S" s
+    | Bytes (_, bs) ->
+        Format.fprintf ppf "0x%s"
+          (String.uppercase_ascii (Hex.show (Hex.of_bytes bs)))
+    | Int (_, n) -> Format.fprintf ppf "%s" (Z.to_string n)
+    | Seq (_, l) ->
+        Format.fprintf ppf "{%a}"
+          (Format.pp_print_list
+             ~pp_sep:(fun ppf () -> Format.fprintf ppf ";")
+             (pp_node ~wrap:false))
+          l
+    | Prim (_, p, l, a) ->
+        let lwrap, rwrap =
+          if wrap && (l <> [] || a <> []) then ("(", ")") else ("", "")
+        in
+        Format.fprintf ppf "%s%s%a%s%s" lwrap
+          (Protocol.Michelson_v1_primitives.string_of_prim p)
+          (fun ppf l ->
+            List.iter
+              (fun e -> Format.fprintf ppf " %a" (pp_node ~wrap:true) e)
+              l)
+          l
+          (if a = [] then "" else " " ^ String.concat " " a)
+          rwrap
+  in
+  let whole = Format.asprintf "%a" (pp_node ~wrap:false) node in
+  let len = String.length whole in
+  let rec split ofs acc =
+    if len - ofs <= size then List.rev (String.sub whole ofs (len - ofs) :: acc)
+    else split (ofs + size) (String.sub whole ofs size :: acc)
+  in
+  split 0 []
+
 let () =
   let hex = `Hex Sys.argv.(1) in
   let bin = Hex.to_bytes hex in
@@ -57,10 +101,9 @@ let () =
       Format.printf "\\@\n  %a %a" Hex.pp (Hex.of_bytes apdu) Hex.pp
         (Hex.of_bytes ans))
     apdus;
-  Format.printf "@\n for i in `seq 0 %d` ; do press_button right ; done@\n"
-    ((List.length apdus - 1) * 10);
-  Format.printf
-    "press_button left@\n\
-     press_button both@\n\
-     sleep 1@\n\
-     expect_async_apdus_sent@."
+  Format.printf "@\nsleep 0.5@\n";
+  List.iter
+    (fun s ->
+      Format.printf "expect_full_text 'Data' '%s'\npress_button right@\n" s)
+    (split_screens 38 bin);
+  Format.printf "press_button both@\nsleep 1@\nexpect_async_apdus_sent@."

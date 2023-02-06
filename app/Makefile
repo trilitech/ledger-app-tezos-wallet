@@ -9,7 +9,7 @@ else
 ifneq ($(TARGET_NAME)$(DEBUG), $(file <.target))
 $(info Target switch detected, $(file <.target) -> $(TARGET_NAME)$(DEBUG), cleaning up...)
 $(file >.target,$(TARGET_NAME)$(DEBUG))
-IGNORE_OUTPUT:=$(shell make clean)
+IGNORE_OUTPUT:=$(shell make clean DEBUG=$(DEBUG))
 endif
 endif
 

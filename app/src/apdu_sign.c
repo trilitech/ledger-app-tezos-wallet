@@ -129,9 +129,10 @@ static void send_continue() {
 static void refill() {
   tz_parser_regs *regs = &global.apdu.sign.parser_regs;
   while(!TZ_IS_BLOCKED(tz_operation_parser_step(&global.apdu.sign.parser_state, regs))){};
-  PRINTF("[DEBUG] refill() \n");
+  PRINTF("[DEBUG] refill(errno: %s) \n", tz_parser_result_name(global.apdu.sign.parser_state.errno));
   switch (global.apdu.sign.parser_state.errno) {
   case TZ_BLO_IM_FULL:
+  last_screen:
     strncpy (global.stream.buffer.title, global.apdu.sign.parser_state.field_name, TZ_UI_STREAM_TITLE_WIDTH);
     global.stream.buffer.value[regs->oofs] = 0;
     tz_ui_stream_push ();
@@ -147,11 +148,7 @@ static void refill() {
         (global.apdu.sign.parser_regs.ilen != 0)) {
       failwith ("parsing done but some data left");
     }
-    if(global.apdu.sign.parser_regs.oofs != 0) {
-      strncpy (global.stream.buffer.title, global.apdu.sign.parser_state.field_name, TZ_UI_STREAM_TITLE_WIDTH);
-      global.stream.buffer.value[global.apdu.sign.parser_regs.oofs] = 0;
-      tz_ui_stream_push ();
-    }
+    if(global.apdu.sign.parser_regs.oofs != 0) goto last_screen;
     tz_ui_stream_close ();
     break;
   default:
@@ -242,13 +239,13 @@ static size_t handle_data_apdu(packet_t *pkt) {
     tz_operation_parser_set_size(&global.apdu.sign.parser_state, global.apdu.sign.total_length);
   }
 
+  // resume the parser with the new data
+  refill ();
+
   // loop getting and parsing packets until we have a first screen
   if (tz_ui_stream_current_screen_kind() == TZ_UI_STREAM_DISPLAY_INIT) {
-    refill ();
-    if (tz_ui_stream_current_screen_kind() == TZ_UI_STREAM_DISPLAY_INIT) {
-      global.apdu.sign.step = SIGN_ST_WAIT_DATA;
-      return finalize_successful_send(0);
-    }
+    global.apdu.sign.step = SIGN_ST_WAIT_DATA;
+    return finalize_successful_send(0);
   }
 
   // launch parsing and UI (once we have a first screen)

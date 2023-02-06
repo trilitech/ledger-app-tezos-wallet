@@ -55,7 +55,7 @@ __attribute__((noreturn)) void main_loop() {
     PRINTF("[SIZEOF] global: %d\n", sizeof(global));
     PRINTF("[SIZEOF] global.apdu.sign: %d\n", sizeof(global.apdu.sign));
     PRINTF("[SIZEOF] global.apdu.hash: %d\n", sizeof(global.apdu.hash));
-    PRINTF("[SIZEOF] global.strean: %d\n", sizeof(global.stream));
+    PRINTF("[SIZEOF] global.stream: %d\n", sizeof(global.stream));
     PRINTF("[SIZEOF] global.ux: %d\n", sizeof(global.ux));
 
     ui_initial_screen();
