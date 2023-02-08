@@ -13,7 +13,7 @@ function attempts {
 function expect_full_text {
     echo -n " - expect_full_text" ; for s in "$@" ; do echo -n " \"$s\"" ; done
     IFS= exp="$*"
-    nb=20
+    nb=50
     while true ; do
         got=`curl -s localhost:5000/events?currentscreenonly=true  2> /dev/null | jq -r '[.events[].text] | add'`
         if [ "$exp" == "$got" ] ; then
@@ -33,7 +33,7 @@ function expect_full_text {
             exit 1
         fi
         echo -n "."
-        sleep 0.5
+        sleep 0.2
         nb=$((nb-1))
     done
 }

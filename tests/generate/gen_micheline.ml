@@ -35,16 +35,18 @@ let vector =
                    "12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890";
                  ]))))
 
-let () =
-  assert (Array.length Sys.argv = 2);
-  let m = int_of_string Sys.argv.(1) in
-  let output expr =
-    let bin =
-      Data_encoding.Binary.to_bytes_exn Protocol.Script_repr.expr_encoding expr
-    in
-    print_string "05";
-    print_string (Hex.show (Hex.of_bytes bin));
-    print_string "\n"
-  in
-  Seq.iter output
-    (Seq.take m (Seq.append vector (Seq.concat (Seq.forever gen))))
+let expr = Seq.append vector (Seq.concat (Seq.forever gen))
+
+let bin =
+  Seq.map
+    (fun expr ->
+      ( expr,
+        Data_encoding.Binary.to_bytes_exn Protocol.Script_repr.expr_encoding
+          expr ))
+    expr
+
+let hex =
+  Seq.map
+    (fun (expr, bin) ->
+      (expr, bin, `Hex (String.cat "05" (Hex.show (Hex.of_bytes bin)))))
+    bin
