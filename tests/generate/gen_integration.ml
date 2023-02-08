@@ -54,6 +54,11 @@ let decode_expr bin =
     (Data_encoding.Binary.of_bytes_exn Protocol.Script_repr.expr_encoding
        (Bytes.sub bin 1 (Bytes.length bin - 1)))
 
+let decode_op bin =
+  Data_encoding.Binary.of_bytes_exn
+    Protocol.Alpha_context.Operation.unsigned_encoding
+    (Bytes.sub bin 1 (Bytes.length bin - 1))
+
 let rec pp_node ~wrap ppf (node : Protocol.Script_repr.node) =
   match node with
   | String (_, s) -> Format.fprintf ppf "%S" s
@@ -87,6 +92,56 @@ let split_screens size whole =
   in
   split 0 []
 
+let pp_op size
+    ( (_shell : Tezos_base.Operation.shell_header),
+      (Contents_list contents : Protocol.Alpha_context.packed_contents_list) ) =
+  let screens = ref [] in
+  let push t fmt =
+    Format.kasprintf (fun v -> screens := (t, v) :: !screens) fmt
+  in
+  let print_manager n (type t)
+      (Manager_operation { fee; operation; storage_limit; _ } :
+        t Protocol.Alpha_context.Kind.manager Protocol.Alpha_context.contents) =
+    push
+      (Format.asprintf "Operation (%d)" n)
+      (match operation with
+      | Transaction _ -> "Transaction"
+      | _ -> "UNSUPPORTED");
+    push "Fee" "%a tz" Protocol.Alpha_context.Tez.pp fee;
+    push "Storage limit" "%s" (Z.to_string storage_limit);
+    match operation with
+    | Transaction { amount; entrypoint; destination; parameters } ->
+        push "Amount" "%a tz" Protocol.Alpha_context.Tez.pp amount;
+        push "Destination" "%a" Protocol.Alpha_context.Contract.pp destination;
+        push "Entrypoint" "%a" Protocol.Alpha_context.Entrypoint.pp entrypoint;
+        let node =
+          let bin =
+            Data_encoding.Binary.to_bytes_exn
+              Protocol.Alpha_context.Script.lazy_expr_encoding parameters
+          in
+          Micheline.root
+            (Data_encoding.Binary.of_bytes_exn
+               Protocol.Script_repr.expr_encoding
+               (Bytes.sub bin 4 (Bytes.length bin - 4)))
+        in
+
+        let whole = Format.asprintf "%a" (pp_node ~wrap:false) node in
+        List.iter (push "Data" "%s") (split_screens size whole)
+    | _ -> assert false
+  in
+
+  let rec print_op :
+      type t. int -> t Protocol.Alpha_context.contents_list -> unit =
+   fun n -> function
+    | Single (Manager_operation _ as m) -> print_manager n m
+    | Cons ((Manager_operation _ as m), rest) ->
+        print_manager n m;
+        print_op (succ n) rest
+    | _ -> assert false
+  in
+  print_op 0 contents;
+  List.rev !screens
+
 let shell_escape ppf s =
   Format.fprintf ppf "'";
   String.iter
@@ -95,12 +150,10 @@ let shell_escape ppf s =
     s;
   Format.fprintf ppf "'"
 
-let gen_expect_test ppf (`Hex txt as hex) =
+let gen_expect_test_sign ppf (`Hex txt as hex) screens =
   let bin = Hex.to_bytes hex in
-  let node = decode_expr bin in
-  let whole = Format.asprintf "%a" (pp_node ~wrap:false) node in
   Format.fprintf ppf "# full input: %s@\n" txt;
-  Format.fprintf ppf "# full output: %s@\n" whole;
+  let screens = screens bin in
   Format.fprintf ppf "sleep 0.2@\n";
   Format.fprintf ppf "send_async_apdus";
   let apdus = split_sign_apdus bin in
@@ -111,8 +164,24 @@ let gen_expect_test ppf (`Hex txt as hex) =
     apdus;
   Format.fprintf ppf "@\nsleep 0.5@\n";
   List.iter
-    (fun s ->
-      Format.fprintf ppf "expect_full_text 'Data' %a\npress_button right@\n"
+    (fun (t, s) ->
+      Format.fprintf ppf "expect_full_text '%s' %a\npress_button right@\n" t
         shell_escape s)
-    (split_screens 38 whole);
+    screens;
   Format.fprintf ppf "press_button both@\nsleep 1@\nexpect_async_apdus_sent@."
+
+let gen_expect_test_sign_micheline_data ppf hex =
+  let screens bin =
+    let node = decode_expr bin in
+    let whole = Format.asprintf "%a" (pp_node ~wrap:false) node in
+    Format.fprintf ppf "# full output: %s@\n" whole;
+    List.map (fun s -> ("Data", s)) (split_screens 38 whole)
+  in
+  gen_expect_test_sign ppf hex screens
+
+let gen_expect_test_sign_operation ppf hex =
+  let screens bin =
+    let op = decode_op bin in
+    pp_op 38 op
+  in
+  gen_expect_test_sign ppf hex screens

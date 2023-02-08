@@ -20,14 +20,18 @@ clean:
 	rm -rf bin app_*.tgz
 	docker run --rm -i -v "$(realpath .):/app" ledger-app-builder:latest make -C app mrproper
 	docker run --rm -i -v "$(realpath .):/app" ledger-app-tezos-ocaml:latest bash -c \
-	  "make -C /app/pattern_registry clean && make -C /app/tests/generate clean && rm -rf _build"
+	  "make -C /app/pattern_registry clean && make -C /app/tests/generate clean && cd /app && rm -rf _build"
 
 unit_tests: test/samples/micheline.hex tests/unit/*.ml* tests/unit/*.[ch] tests/unit/dune tests/unit/Makefile
 	docker run --rm -i -v "$(realpath .):/app" ledger-app-tezos-ocaml:latest make -C /app/tests/unit
 
-integration_tests: app_nanos_dbg.tgz test/samples/micheline.hex tests/integration/*.sh tests/integration/nanos/*.sh
+integration_tests: app_nanos_dbg.tgz test/samples/operations/samples.hex test/samples/micheline/samples.hex tests/integration/*.sh tests/integration/nanos/*.sh
+	./tests/integration/run_test_docker.sh nanos app_nanos_dbg.tgz tests/samples/operations
+	./tests/integration/run_test_docker.sh nanos app_nanos_dbg.tgz tests/samples/micheline
 	./tests/integration/run_test_docker.sh nanos app_nanos_dbg.tgz tests/integration/nanos
-	./tests/integration/run_test_docker.sh nanos app_nanos_dbg.tgz tests/samples
 
-test/samples/micheline.hex: tests/generate/*.ml* tests/generate/dune tests/generate/Makefile
-	docker run --rm -i -v "$(realpath .):/app" ledger-app-tezos-ocaml:latest make -C /app/tests/generate
+test/samples/micheline/samples.hex: tests/generate/*.ml* tests/generate/dune tests/generate/Makefile
+	docker run --rm -i -v "$(realpath .):/app" ledger-app-tezos-ocaml:latest make -C /app/tests/generate ../samples/micheline/samples.hex
+
+test/samples/operations/samples.hex: tests/generate/*.ml* tests/generate/dune tests/generate/Makefile
+	docker run --rm -i -v "$(realpath .):/app" ledger-app-tezos-ocaml:latest make -C /app/tests/generate ../samples/operations/samples.hex

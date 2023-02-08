@@ -2,7 +2,7 @@ let () =
   match Sys.argv with
   | [| _; "micheline"; m; "nanos" as model; dir |] ->
       let m = int_of_string m in
-      let fp_hex = open_out (dir ^ "/micheline_samples.hex") in
+      let fp_hex = open_out (dir ^ "/samples.hex") in
       let ppf_hex = Format.formatter_of_out_channel fp_hex in
       print_string "Generating Micheline samples";
       Seq.iteri
@@ -18,12 +18,31 @@ let () =
               open_out (Format.asprintf "%s/test_%s_%03d.sh" dir model i)
             in
             let ppf = Format.formatter_of_out_channel fp in
-            Gen_integration.gen_expect_test ppf hex;
+            Gen_integration.gen_expect_test_sign_micheline_data ppf hex;
             close_out fp))
         (Seq.take m Gen_micheline.hex);
       Format.fprintf ppf_hex "%!";
       print_newline ()
-  | [| _; "micheline"; _m; "nanosp" | "nanox"; _dir |] ->
+  | [| _; "operations"; m; "nanos" as model; dir |] ->
+      let m = int_of_string m in
+      let fp_hex = open_out (dir ^ "/samples.hex") in
+      let ppf_hex = Format.formatter_of_out_channel fp_hex in
+      print_string "Generating Micheline samples";
+      Seq.iteri
+        (fun i (_op, _, (`Hex txt as hex)) ->
+          print_string ".";
+          flush stdout;
+          Format.fprintf ppf_hex "%s@\n" txt;
+          let fp =
+            open_out (Format.asprintf "%s/test_%s_%03d.sh" dir model i)
+          in
+          let ppf = Format.formatter_of_out_channel fp in
+          Gen_integration.gen_expect_test_sign_operation ppf hex;
+          close_out fp)
+        (Seq.take m Gen_operations.hex);
+      Format.fprintf ppf_hex "%!";
+      print_newline ()
+  | [| _; _; _m; "nanosp" | "nanox"; _dir |] ->
       Format.eprintf "Actually, only nanos is supported for now.@.";
       exit 1
   | _ ->

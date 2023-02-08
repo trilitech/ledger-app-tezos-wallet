@@ -21,6 +21,7 @@ generate_samples:
   script:
     - mkdir -p tests/samples
     - dune exec ./tests/generate/generate.exe micheline 1000 nanos tests/samples
+    - dune exec ./tests/generate/generate.exe operations 1000 nanos tests/samples
   artifacts:
     paths:
       - tests/samples
@@ -68,7 +69,7 @@ integration_nanos_basic:
     - apt update && apt install -y curl jq
     - PATH=/speculos:$PATH COLUMNS=80 ./tests/integration/run_test_local.sh nanos app_nanos_dbg.tgz tests/integration/nanos
 
-integration_nanos_samples:
+integration_nanos_micheline_samples:
   image:
     name: ghcr.io/ledgerhq/speculos
     entrypoint: [""]
@@ -78,4 +79,16 @@ integration_nanos_samples:
     - generate_samples
   script:
     - apt update && apt install -y curl jq
-    - PATH=/speculos:$PATH COLUMNS=80 ./tests/integration/run_test_local.sh nanos app_nanos_dbg.tgz tests/samples
+    - PATH=/speculos:$PATH COLUMNS=80 ./tests/integration/run_test_local.sh nanos app_nanos_dbg.tgz tests/samples/micheline
+
+integration_nanos_operations_samples:
+  image:
+    name: ghcr.io/ledgerhq/speculos
+    entrypoint: [""]
+  stage: test
+  dependencies:
+    - build_nanos_dbg
+    - generate_samples
+  script:
+    - apt update && apt install -y curl jq
+    - PATH=/speculos:$PATH COLUMNS=80 ./tests/integration/run_test_local.sh nanos app_nanos_dbg.tgz tests/samples/operations
