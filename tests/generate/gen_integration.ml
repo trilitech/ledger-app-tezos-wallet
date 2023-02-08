@@ -90,6 +90,14 @@ let split_screens size bin =
   in
   split 0 []
 
+let shell_escape ppf s =
+  Format.fprintf ppf "'";
+  String.iter
+    (function
+      | '\'' -> Format.fprintf ppf "'\\''" | c -> Format.fprintf ppf "%c" c)
+    s;
+  Format.fprintf ppf "'"
+
 let () =
   let hex = `Hex Sys.argv.(1) in
   let bin = Hex.to_bytes hex in
@@ -104,6 +112,7 @@ let () =
   Format.printf "@\nsleep 0.5@\n";
   List.iter
     (fun s ->
-      Format.printf "expect_full_text 'Data' '%s'\npress_button right@\n" s)
+      Format.printf "expect_full_text 'Data' %a\npress_button right@\n"
+        shell_escape s)
     (split_screens 38 bin);
   Format.printf "press_button both@\nsleep 1@\nexpect_async_apdus_sent@."
