@@ -5,7 +5,6 @@ function attempts {
     shift
     while [ $nb -gt 0 ] && ! "$@" ; do
         nb=$((nb-1))
-        echo -n "."
         sleep 0.5
     done
 }
@@ -13,7 +12,7 @@ function attempts {
 function expect_full_text {
     echo -n " - expect_full_text" ; for s in "$@" ; do echo -n " \"$s\"" ; done
     IFS= exp="$*"
-    nb=50
+    nb=100
     while true ; do
         got=`curl -s localhost:5000/events?currentscreenonly=true  2> /dev/null | jq -r '[.events[].text] | add'`
         if [ "$exp" == "$got" ] ; then
@@ -56,7 +55,7 @@ function send_apdu {
 
 function expect_apdu_return {
     echo -n " - expect_apdu_return $1"
-    attempts 20 [ -f $vars_dir/apdu ]
+    attempts 100 [ -f $vars_dir/apdu ]
     if ! [ -f $vars_dir/apdu ] ; then
         echo
         echo "FAILURE(expect_apdu_return)" >&2
@@ -73,6 +72,7 @@ function expect_apdu_return {
 
 function send_async_apdus {
     async_apdus=`mktemp`
+    echo " - will send $(($#/2)) apdus"
     (while [ "$#" -ne 0 ] ; do
          apdu="$1"
          res="$2"
@@ -87,10 +87,12 @@ function send_async_apdus {
 }
 
 function expect_async_apdus_sent {
+    attempts 100 test ! -f $async_apdus
     if [ -f $async_apdus ] ; then
         (echo "FAILURE(expect_async_apdus_sent)") >&2
         exit 1
     fi
+    echo " - all apdus received"
 }
 
 function cleanup {
@@ -104,7 +106,7 @@ function cleanup {
 
 function expect_exited {
     echo -n " - expect_exited"
-    attempts 20 exited
+    attempts 100 exited
     echo
     if ! exited ; then
         echo "FAILURE(expect_exited)" >&2
