@@ -3,7 +3,7 @@
 . "`dirname $0`/test_runtime.sh"
 
 function start_speculos_runner {
-    echo -n "Starting speculos in a Docker container..."
+    echo "Starting speculos in a Docker container..."
     volume=`docker volume create`
     docker run --rm -i -v "$volume":/app			\
 	--entrypoint "/bin/bash" speculos -c			\
@@ -14,30 +14,22 @@ function start_speculos_runner {
 			--network host				\
 			speculos --display headless		\
 			    --api-port 5000 --seed "$seed"	\
-			    -m $target /app/bin/$target/app.elf	\
-						     2>/dev/null)
+			    -m $target /app/bin/$target/app.elf)
     docker logs -f $container > $vars_dir/speculog 2>&1 &
-    while ! curl -s localhost:5000/events 2> /dev/null >&2; do
-	sleep 0.1
-	echo -n "."
-    done
-    while [ "`curl -s localhost:5000/events 2> /dev/null`" == "{}" ]; do
-	sleep 0.1
-	echo -n "."
-    done
-    echo
+    attempts curl -s localhost:5000/events 2> /dev/null >&2
+    attempts [ "$(curl -s localhost:5000/events 2> /dev/null)" != "{}" ]
 }
 
 function kill_speculos_runner {
     echo "Stopping speculos..."
-    if docker container ls | grep speculos_runner > /dev/null 2>&1 ; then
-        docker container kill speculos_runner > /dev/null 2>&1
-    fi
+
+    exited || docker container rm -f speculos_runner
+    attempts exited
     docker volume rm "$volume" > /dev/null 2>&1 || true
 }
 
 function exited {
-    if docker container ls | grep speculos_runner > /dev/null 2>&1 ; then
+    if docker container inspect speculos_runner > /dev/null 2>&1 ; then
         return 1
     else
         return 0
