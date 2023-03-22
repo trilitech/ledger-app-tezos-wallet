@@ -1,12 +1,15 @@
 seed="zebra`for i in $(seq 1 23) ; do echo -n ' zebra' ; done`"
 
 function attempts {
-    nb=$1
-    shift
-    while [ $nb -gt 0 ] && ! "$@" ; do
-        nb=$((nb-1))
-        sleep 0.5
+    nb=2000
+    while (( nb > 0 )); do
+	if "$@" ; then
+	    return 0
+	fi
+	(( nb -= 1 )) || :
+	sleep 0.05
     done
+    return 1
 }
 
 function expect_full_text {
@@ -55,7 +58,7 @@ function send_apdu {
 
 function expect_apdu_return {
     echo -n " - expect_apdu_return $1"
-    attempts 100 [ -f $vars_dir/apdu ]
+    attempts [ -f $vars_dir/apdu ]
     if ! [ -f $vars_dir/apdu ] ; then
         echo
         echo "FAILURE(expect_apdu_return)" >&2
@@ -87,7 +90,7 @@ function send_async_apdus {
 }
 
 function expect_async_apdus_sent {
-    attempts 100 test ! -f $async_apdus
+    attempts test ! -f $async_apdus
     if [ -f $async_apdus ] ; then
         (echo "FAILURE(expect_async_apdus_sent)") >&2
         exit 1
@@ -106,7 +109,7 @@ function cleanup {
 
 function expect_exited {
     echo -n " - expect_exited"
-    attempts 100 exited
+    attempts exited
     echo
     if ! exited ; then
         echo "FAILURE(expect_exited)" >&2
