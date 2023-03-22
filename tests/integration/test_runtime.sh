@@ -65,9 +65,10 @@ function expect_apdu_return {
         exit 1
     fi
     echo
-    if [ "`jq -r .data < $vars_dir/apdu`" != "$1" ] ; then
+    result=$(jq -r .data < $vars_dir/apdu)
+    if [ "$result" != "$1" ]; then
         (echo "FAILURE(expect_apdu_return):"
-         echo "  Result: '`cat $vars_dir/apdu`'"
+         echo "  Result: '$result'"
          echo "  Expected: '$1'") >&2
         exit 1
     fi
