@@ -1,37 +1,70 @@
+#
+# Makefile
+#
+
 all: app_nanos.tgz app_nanosp.tgz app_nanox.tgz
 debug: app_nanos_dbg.tgz app_nanosp_dbg.tgz app_nanox_dbg.tgz
 
 .PHONY: clean all debug integration_tests unit_tests
 
-app/src/parser/generated_patterns.h: pattern_registry/*.ml* pattern_registry/Makefile pattern_registry/dune pattern_registry/*.csv.in pattern_registry/*.sh
-	docker run --rm -i -v "$(realpath .):/app" ledger-app-tezos-ocaml:latest make -C /app/pattern_registry
+DOCKER_RUN		= docker run --rm -i -v "$(realpath .):/app"
+DOCKER_RUN_APP_BUILDER	= $(DOCKER_RUN) ledger-app-builder:latest
+DOCKER_RUN_APP_OCAML	= $(DOCKER_RUN) ledger-app-tezos-ocaml:latest 
 
-app_%.tgz: app/src/parser/generated_patterns.h app/src/*.[ch] app/src/parser/*.[ch] app/Makefile
-	docker run --rm -i -v "$(realpath .):/app" ledger-app-builder:latest bash -c \
+GENERATED_PATTERNS	= app/src/parser/generated_patterns.h
+
+$(GENERATED_PATTERNS):	pattern_registry/*.ml*		\
+			pattern_registry/Makefile	\
+			pattern_registry/dune		\
+			pattern_registry/*.csv.in	\
+			pattern_registry/*.sh
+	$(DOCKER_RUN_APP_OCAML) make -C /app/pattern_registry
+
+app_%.tgz:	$(GENERATED_PATTERNS)	\
+		app/src/*.[ch]		\
+		app/src/parser/*.[ch]	\
+		app/Makefile
+	$(DOCKER_RUN_APP_BUILDER) bash -c \
           'BOLOS_SDK=$$$(shell echo $(patsubst app_%.tgz,%,$@) | tr '[:lower:]' '[:upper:]')_SDK make -C app'
-	docker run --rm -i -v "$(realpath .):/app" ledger-app-builder:latest bash -c "cd app/bin/ && tar cz ." > $@
+	$(DOCKER_RUN_APP_BUILDER) bash -c "cd app/bin/ && tar cz ." > $@
 
-app_%_dbg.tgz: app/src/parser/generated_patterns.h app/src/*.[ch] app/src/parser/*.[ch] app/Makefile
-	docker run --rm -i -v "$(realpath .):/app" ledger-app-builder:latest bash -c \
+app_%_dbg.tgz: $(GENERATED_PATTERNS) app/src/*.[ch] app/src/parser/*.[ch] app/Makefile
+	$(DOCKER_RUN_APP_BUILDER) bash -c \
           'BOLOS_SDK=$$$(shell echo $(patsubst app_%_dbg.tgz,%,$@) | tr '[:lower:]' '[:upper:]')_SDK make -C app DEBUG=true'
-	docker run --rm -i -v "$(realpath .):/app" ledger-app-builder:latest bash -c "cd app/bin/ && tar cz ." > $@
+	$(DOCKER_RUN_APP_BUILDER) bash -c "cd app/bin/ && tar cz ." > $@
 
 clean:
 	rm -rf bin app_*.tgz
-	docker run --rm -i -v "$(realpath .):/app" ledger-app-builder:latest make -C app mrproper
-	docker run --rm -i -v "$(realpath .):/app" ledger-app-tezos-ocaml:latest bash -c \
+	$(DOCKER_RUN_APP_BUILDER) make -C app mrproper
+	$(DOCKER_RUN_APP_OCAML) bash -c \
 	  "make -C /app/pattern_registry clean && make -C /app/tests/generate clean && cd /app && rm -rf _build"
 
-unit_tests: test/samples/micheline.hex tests/unit/*.ml* tests/unit/*.[ch] tests/unit/dune tests/unit/Makefile
-	docker run --rm -i -v "$(realpath .):/app" ledger-app-tezos-ocaml:latest make -C /app/tests/unit
+unit_tests:	test/samples/micheline.hex	\
+		tests/unit/*.ml*		\
+		tests/unit/*.[ch]		\
+		tests/unit/dune			\
+		tests/unit/Makefile
+	$(DOCKER_RUN_APP_OCAML) make -C /app/tests/unit
 
-integration_tests: app_nanos_dbg.tgz test/samples/operations/samples.hex test/samples/micheline/samples.hex tests/integration/*.sh tests/integration/nanos/*.sh
-	./tests/integration/run_test_docker.sh nanos app_nanos_dbg.tgz tests/samples/operations
-	./tests/integration/run_test_docker.sh nanos app_nanos_dbg.tgz tests/samples/micheline
-	./tests/integration/run_test_docker.sh nanos app_nanos_dbg.tgz tests/integration/nanos
+RUN_TEST_DOCKER = ./tests/integration/run_test_docker.sh
 
-test/samples/micheline/samples.hex: tests/generate/*.ml* tests/generate/dune tests/generate/Makefile
-	docker run --rm -i -v "$(realpath .):/app" ledger-app-tezos-ocaml:latest make -C /app/tests/generate ../samples/micheline/samples.hex
+integration_tests:	app_nanos_dbg.tgz			\
+			test/samples/operations/samples.hex	\
+			test/samples/micheline/samples.hex	\
+			tests/integration/*.sh			\
+			tests/integration/nanos/*.sh
+	$(RUN_TEST_DOCKER) nanos app_nanos_dbg.tgz tests/samples/operations
+	$(RUN_TEST_DOCKER) nanos app_nanos_dbg.tgz tests/samples/micheline
+	$(RUN_TEST_DOCKER) nanos app_nanos_dbg.tgz tests/integration/nanos
 
-test/samples/operations/samples.hex: tests/generate/*.ml* tests/generate/dune tests/generate/Makefile
-	docker run --rm -i -v "$(realpath .):/app" ledger-app-tezos-ocaml:latest make -C /app/tests/generate ../samples/operations/samples.hex
+test/samples/micheline/samples.hex:	tests/generate/*.ml*	\
+					tests/generate/dune	\
+					tests/generate/Makefile
+	$(DOCKER_RUN_APP_OCAML) make -C /app/tests/generate	\
+	    ../samples/micheline/samples.hex
+
+test/samples/operations/samples.hex:	tests/generate/*.ml*	\
+					tests/generate/dune	\
+					tests/generate/Makefile
+	$(DOCKER_RUN_APP_OCAML) make -C /app/tests/generate	\
+	    ../samples/operations/samples.hex
