@@ -39,10 +39,10 @@ clean:
 	$(DOCKER_RUN_APP_OCAML) bash -c \
 	  "make -C /app/pattern_registry clean && make -C /app/tests/generate clean && cd /app && rm -rf _build"
 
-unit_tests:	test/samples/micheline.hex	\
-		tests/unit/*.ml*		\
-		tests/unit/*.[ch]		\
-		tests/unit/dune			\
+unit_tests:	test/samples/micheline/samples.hex	\
+		tests/unit/*.ml*			\
+		tests/unit/*.[ch]			\
+		tests/unit/dune				\
 		tests/unit/Makefile
 	$(DOCKER_RUN_APP_OCAML) make -C /app/tests/unit
 
