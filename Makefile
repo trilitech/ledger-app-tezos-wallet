@@ -7,11 +7,34 @@ debug: app_nanos_dbg.tgz app_nanosp_dbg.tgz app_nanox_dbg.tgz
 
 .PHONY: clean all debug integration_tests unit_tests
 
-DOCKER_RUN		= docker run --rm -i -v "$(realpath .):/app"
+DOCKER			= docker
+DOCKER_RUN		= $(DOCKER) run --rm -i -v "$(realpath .):/app"
 DOCKER_RUN_APP_BUILDER	= $(DOCKER_RUN) ledger-app-builder:latest
 DOCKER_RUN_APP_OCAML	= $(DOCKER_RUN) ledger-app-tezos-ocaml:latest 
 
 GENERATED_PATTERNS	= app/src/parser/generated_patterns.h
+
+#
+# Fetch the docker images:
+
+LEDGERHQ=ghcr.io/ledgerhq
+
+docker_speculos:
+	$(DOCKER) pull $(LEDGERHQ)/speculos
+	$(DOCKER) image tag $(LEDGERHQ)/speculos speculos
+
+docker_ledger_app_builder:
+	$(DOCKER) pull $(LEDGERHQ)/ledger-app-builder/ledger-app-builder:latest
+	$(DOCKER) image tag $(LEDGERHQ)/ledger-app-builder/ledger-app-builder \
+			ledger-app-builder
+
+docker_ledger_app_ocaml:
+	$(DOCKER) build -t ledger-app-tezos-ocaml \
+			-f docker/Dockerfile.ocaml docker
+
+docker_images:	docker_speculos			\
+		docker_ledger_app_builder	\
+		docker_ledger_app_ocaml
 
 $(GENERATED_PATTERNS):	pattern_registry/*.ml*		\
 			pattern_registry/Makefile	\
