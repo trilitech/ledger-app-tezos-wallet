@@ -91,3 +91,10 @@ test/samples/operations/samples.hex:	tests/generate/*.ml*	\
 					tests/generate/Makefile
 	$(DOCKER_RUN_APP_OCAML) make -C /app/tests/generate	\
 	    ../samples/operations/samples.hex
+
+#
+# Dash vs under aliases:
+
+docker-images: docker_images
+integration-tests: integration_tests
+unit-tests: unit_tests
