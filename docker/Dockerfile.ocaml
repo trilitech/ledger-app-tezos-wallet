@@ -1,10 +1,16 @@
 FROM ocaml/opam:alpine-3.17-ocaml-4.14
-RUN sudo cp /usr/bin/opam-2.1 /usr/bin/opam
-RUN opam-2.1 install tezos-client-015-PtLimaPt.15.1 terminal_size octez-codec.15.1
-RUN opam pin tezos-benchmark.15.1 https://gitlab.com/tezos/tezos.git#latest-release
-RUN opam pin tezos-micheline-rewriting.15.1 https://gitlab.com/tezos/tezos.git#latest-release
-RUN opam pin tezos-benchmark-type-inference-015-PtLimaPt.15.1 https://gitlab.com/tezos/tezos.git#latest-release
-RUN opam pin tezos-015-PtLimaPt-test-helpers.15.1 https://gitlab.com/tezos/tezos.git#latest-release
-RUN opam pin tezos-benchmark-015-PtLimaPt.15.1 https://gitlab.com/tezos/tezos.git#latest-release
-RUN opam pin tezos-shell-benchmarks.15.1 https://gitlab.com/tezos/tezos.git#latest-release
-RUN opam pin tezos-benchmarks-proto-015-PtLimaPt.15.1 https://gitlab.com/tezos/tezos.git#latest-release
+
+RUN	sudo cp /usr/bin/opam-2.1 /usr/bin/opam;			   \
+	opam install							   \
+		tezos-client-015-PtLimaPt.15.1				   \
+		terminal_size						   \
+		octez-codec.15.1;					   \
+									   \
+	LATEST=https://gitlab.com/tezos/tezos.git#v15-release;		   \
+	opam pin tezos-benchmark.15.1				  $LATEST; \
+	opam pin tezos-micheline-rewriting.15.1		  	  $LATEST; \
+	opam pin tezos-benchmark-type-inference-015-PtLimaPt.15.1 $LATEST; \
+	opam pin tezos-015-PtLimaPt-test-helpers.15.1		  $LATEST; \
+	opam pin tezos-benchmark-015-PtLimaPt.15.1		  $LATEST; \
+	opam pin tezos-shell-benchmarks.15.1			  $LATEST; \
+	opam pin tezos-benchmarks-proto-015-PtLimaPt.15.1	  $LATEST
