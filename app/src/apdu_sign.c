@@ -22,7 +22,6 @@
 #include "globals.h"
 #include "keys.h"
 #include "memory.h"
-#include "ui.h"
 #include "ui_stream.h"
 
 #include "parser/parser_state.h"

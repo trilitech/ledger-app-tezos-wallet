@@ -32,8 +32,9 @@
 #  define TZ_SCREEN_LINES_11PX                    5
 #endif
 
+#include "ui_commons.h"
 #include "ui_stream.h"
-#include "ui.h"
+#include "ui_home.h"
 
 // Zeros out all globals that can keep track of APDU instruction state.
 // Notably this does *not* include UI state.

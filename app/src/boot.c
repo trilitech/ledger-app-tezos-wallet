@@ -18,7 +18,6 @@
 
 #include "os.h"
 #include "cx.h"
-#include "ui.h"
 
 #include "globals.h"
 #include "main_loop.h"

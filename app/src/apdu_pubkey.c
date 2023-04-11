@@ -22,7 +22,6 @@
 #include "cx.h"
 #include "globals.h"
 #include "keys.h"
-#include "ui.h"
 
 #include <string.h>
 
