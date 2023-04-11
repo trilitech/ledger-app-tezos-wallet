@@ -1,5 +1,7 @@
 /* Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
 
+   TODO: dump this file
+
    With code excerpts from:
     - Legacy Tezos app, Copyright 2019 Obsidian Systems
     - Ledger Blue sample apps, Copyright 2016 Ledger

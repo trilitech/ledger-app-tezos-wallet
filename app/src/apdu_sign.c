@@ -1,4 +1,6 @@
-/* Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
+/* Tezos Ledger application - Clear signing command handler
+
+   Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
 
    With code excerpts from:
     - Legacy Tezos app, Copyright 2019 Obsidian Systems

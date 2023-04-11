@@ -1,4 +1,6 @@
-/* Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
+/* Tezos Ledger application - Dynamic UI to display a stream of pages
+
+   Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -13,6 +15,25 @@
    limitations under the License. */
 
 #pragma once
+
+/* This implements a multi-page screen, allowing to display a
+   potentially infinite number of screens, keeping a bounded history.
+   The user can query new screens using the right button, and go back
+   a few screens using the left button (until history limit is
+   reached).
+
+   When a new page is needed, the display will call the `refill`
+   callback, which in turn can call `tz_ui_stream_push` to add a new
+   page. When the last page is reached, `tz_ui_stream_close` should be
+   called, and the two final special pages to `accept` and `reject`
+   the operation are pushed. The user can trigger the `accept` and
+   `reject` callbacks by pressing both buttons while there pages are
+   displayed.
+
+   It is also possible to use this display engine for non streamed
+   data by pushing a precomputed series of pages with
+   `tz_ui_stream_push`, calling `tz_ui_stream_close`, and launching
+   with a `refill` callback set to NULL. */
 
 #include <stdbool.h>
 

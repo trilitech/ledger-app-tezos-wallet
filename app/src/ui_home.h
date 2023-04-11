@@ -1,4 +1,6 @@
-/* Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
+/* Tezos Ledger application - Home screen display
+
+   Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
 
    With code excerpts from:
     - Legacy Tezos app, Copyright 2019 Obsidian Systems
@@ -17,5 +19,9 @@
    limitations under the License. */
 
 #pragma once
+
+/* This implements a two-page screen (`waiting for commands` and `quit`).
+
+   TODO: add blind signing and settings pages. */
 
 void ui_initial_screen(void);
