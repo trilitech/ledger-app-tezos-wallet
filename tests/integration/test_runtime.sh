@@ -71,9 +71,11 @@ function expect_full_text {
             return 0
         fi
         # poll $nb times
-        # continue if screen still displays the previous expectation (lagging redisplay)
-        # or a prefix of the expectation (non atomic redisplay)
-        if [ $nb -eq 1 ] || ( [ "$FULL_TEXT_PREV" != "$got" ] && ! [[ "$exp" =~ ^"$got".* ]] ) ; then
+        # continue if screen still displays the previous expectation
+        # (lagging redisplay) or a prefix of the expectation (non
+        # atomic redisplay)
+        if [ $nb -eq 1 -o \( "$FULL_TEXT_PREV" != "$got"	\
+             -a "${exp##$got}" = "$exp" \) ]; then
             echo
             (echo "FAILURE(expect_full_text):"
              echo "  On screen: '$got'"
