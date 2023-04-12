@@ -33,14 +33,14 @@ function expect_full_text {
     while true ; do
         got=`curl -s localhost:5000/events?currentscreenonly=true  2> /dev/null | jq -r '[.events[].text] | add'`
         if [ "$exp" == "$got" ] ; then
-            pred_full_text="$exp"
+            FULL_TEXT_PREV="$exp"
             echo
             return 0
         fi
         # poll $nb times
         # continue if screen still displays the previous expectation (lagging redisplay)
         # or a prefix of the expectation (non atomic redisplay)
-        if [ $nb -eq 1 ] || ( [ "$pred_full_text" != "$got" ] && ! [[ "$exp" =~ ^"$got".* ]] ) ; then
+        if [ $nb -eq 1 ] || ( [ "$FULL_TEXT_PREV" != "$got" ] && ! [[ "$exp" =~ ^"$got".* ]] ) ; then
             echo
             (echo "FAILURE(expect_full_text):"
              echo "  On screen: '$got'"
@@ -166,6 +166,7 @@ function main {
         start_speculos_runner
         trap cleanup EXIT
         echo "Running test $test"
+        FULL_TEXT_PREV="Tezos Walletready forsafe signing"
         . $test
         echo "Success."
         kill_speculos_runner
