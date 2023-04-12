@@ -27,7 +27,6 @@
 
 #include "apdu.h"
 #include "globals.h"
-#include "memory.h"
 
 static cx_curve_t derivation_type_to_cx_curve(derivation_type_t const derivation_type) {
   switch (derivation_type) {
@@ -76,7 +75,7 @@ size_t read_bip32_path(bip32_path_t *const out, uint8_t const *const in, size_t 
 
     if (in_size - ix < out->length * sizeof(*buf_as_bip32->components))
         THROW(EXC_WRONG_LENGTH_FOR_INS);
-    if (out->length == 0 || out->length > NUM_ELEMENTS(out->components)) THROW(EXC_WRONG_VALUES);
+    if (out->length == 0 || out->length > MAX_BIP32_LEN) THROW(EXC_WRONG_VALUES);
 
     for (size_t i = 0; i < out->length; i++) {
         out->components[i] =
