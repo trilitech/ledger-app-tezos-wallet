@@ -17,14 +17,16 @@
 . "`dirname $0`/test_runtime.sh"
 
 function start_speculos_runner {
-    echo "Starting speculos..."
-    app_dir=`mktemp -d`
+    echo "Starting speculos on port $PORT..."
+
+    app_dir="$(mktemp -d $DATA_DIR/appdir-XXXXXX)"
     tar xfz "$tgz" -C $app_dir
-    speculos.py --display headless --api-port 5000 --seed "$seed"	\
-      -m $target $app_dir/app.elf > $vars_dir/speculog 2>&1 &
+    speculos --display headless --apdu-port 0 --api-port $PORT          \
+             --seed "$seed" -m $target $app_dir/app.elf                 \
+                > $SPECULOG 2>&1 < /dev/null &
     speculos_pid=$!
-    attempts curl -s localhost:5000/events > /dev/null 2>&1
-    attempts [ "`curl -s localhost:5000/events 2> /dev/null`" != "{}" ]
+    attempts curl -s $SPECULOS_URL/events > /dev/null 2>&1
+    attempts [ "`curl -s $SPECULOS_URL/events 2> /dev/null`" != "{}" ]
 }
 
 function kill_speculos_runner {

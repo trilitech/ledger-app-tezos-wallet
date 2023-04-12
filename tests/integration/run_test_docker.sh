@@ -17,33 +17,35 @@
 . "`dirname $0`/test_runtime.sh"
 
 function start_speculos_runner {
-    echo "Starting speculos in a Docker container..."
-    volume=`docker volume create`
+    echo "Starting speculos in a Docker container on port $PORT..."
+    volume=$(docker volume create speculos_$PORT)
     docker run --rm -i -v "$volume":/app			\
 	--entrypoint "/bin/bash" speculos -c			\
 	"mkdir -p /app/bin/$target/; tar xz -C /app/bin/$target/" < "$tgz"
-    container=$(docker run --name speculos_runner --rm -i -d	\
-			-v "$volume":/app			\
-			--publish 5000:5000			\
-			--network host				\
+
+    container=$(docker run --name speculos_$PORT --rm -i -d	\
+			-v "speculos_$PORT":/app		\
+			--publish $PORT:$PORT			\
+			--network bridge			\
 			speculos --display headless		\
-			    --api-port 5000 --seed "$seed"	\
+			    --api-port $PORT --seed "$seed"	\
 			    -m $target /app/bin/$target/app.elf)
-    docker logs -f $container > $vars_dir/speculog 2>&1 &
-    attempts curl -s localhost:5000/events 2> /dev/null >&2
-    attempts [ "$(curl -s localhost:5000/events 2> /dev/null)" != "{}" ]
+    docker logs -f $container > $SPECULOG 2>&1 &
+    attempts curl -s $SPECULOS_URL/events > /dev/null 2>&1
+    attempts [ "$(curl -s $SPECULOS_URL/events 2> /dev/null)" != "{}" ]
 }
 
 function kill_speculos_runner {
-    echo "Stopping speculos..."
+    echo "Stopping speculos on port $PORT..."
 
-    exited || docker container rm -f speculos_runner
+    exited || docker container rm -f speculos_$PORT
     attempts exited
-    docker volume rm "$volume" > /dev/null 2>&1 || true
+
+    docker volume rm "speculos_$PORT" > /dev/null || true
 }
 
 function exited {
-    if docker container inspect speculos_runner > /dev/null 2>&1 ; then
+    if docker container inspect speculos_$PORT > /dev/null 2>&1 ; then
         return 1
     else
         return 0

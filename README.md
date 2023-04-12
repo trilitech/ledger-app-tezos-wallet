@@ -89,3 +89,27 @@ and
 ```
 
 NOTE: the tests are [currently] only available for the Nano S.
+
+Integration tests can be run directly from the command line rather than
+via the Makefile:
+
+
+```
+:; ./tests/integration/run_test_docker.sh nanos app_nanos_dbg.tgz \
+                                                tests/integration/nanos
+```
+
+There is also `run_test_local.sh` which should perform in a similar
+fashion, but it doesn't run speculos in a docker container and so you
+have to have the appropriate environment set up locally.
+
+Both of these commands take the following arguments:
+
+-T test_name
+: only runs a test with this name, may be provided multiple times.
+
+-l num
+: stops after num tests.
+
+-x
+: executes the tests with shell tracing (-x)

@@ -76,9 +76,10 @@ integration_tests:	app_nanos_dbg.tgz			\
 			test/samples/micheline/samples.hex	\
 			tests/integration/*.sh			\
 			tests/integration/nanos/*.sh
-	$(RUN_TEST_DOCKER) nanos app_nanos_dbg.tgz tests/samples/operations
-	$(RUN_TEST_DOCKER) nanos app_nanos_dbg.tgz tests/samples/micheline
-	$(RUN_TEST_DOCKER) nanos app_nanos_dbg.tgz tests/integration/nanos
+	$(RUN_TEST_DOCKER) nanos app_nanos_dbg.tgz		\
+				tests/integration/nanos		\
+				tests/samples/operations	\
+				tests/samples/micheline
 
 test/samples/micheline/samples.hex:	tests/generate/*.ml*	\
 					tests/generate/dune	\
