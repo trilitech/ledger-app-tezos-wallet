@@ -54,9 +54,17 @@ function expect_full_text {
     done
 }
 
+#
+# in press_button, the ledger can return an empty reply which curl flags
+# as an error (52).  This is not "no reply" and it is valid.
+
 function press_button {
     echo " - press_button $1"
-    res=`(curl -s localhost:5000/button/$1 -d '{"action":"press-and-release"}' > /dev/null 2>&1 ; echo $?)`
+    set +e
+    curl -s localhost:5000/button/$1 -d '{"action":"press-and-release"}' \
+       >/dev/null 2>&1
+    res=$?
+    set -e
     if [ "$res" != 0 ] && [ "$res" != 52 ] ; then
         echo "FAILURE(press_buttton($1)): error code $res" >&2
         exit 1
