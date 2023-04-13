@@ -168,7 +168,6 @@ let gen_expect_test_sign ppf (`Hex txt as hex) screens =
   let bin = Hex.to_bytes hex in
   Format.fprintf ppf "# full input: %s@\n" txt;
   let screens = screens bin in
-  Format.fprintf ppf "sleep 0.2@\n";
   Format.fprintf ppf "send_async_apdus";
   let apdus = split_sign_apdus bin in
   List.iter
@@ -176,13 +175,14 @@ let gen_expect_test_sign ppf (`Hex txt as hex) screens =
       Format.fprintf ppf "\\@\n  %a %a" Hex.pp (Hex.of_bytes apdu) Hex.pp
         (Hex.of_bytes ans))
     apdus;
-  Format.fprintf ppf "@\nsleep 0.5@\n";
+  Format.fprintf ppf "@\n";
   List.iter
     (fun (t, s) ->
       Format.fprintf ppf "expect_full_text '%s' %a\npress_button right@\n" t
         shell_escape s)
     screens;
-  Format.fprintf ppf "press_button both@\nsleep 1@\nexpect_async_apdus_sent@."
+  Format.fprintf ppf "expect_full_text 'Accept?'@\n";
+  Format.fprintf ppf "press_button both@\nexpect_async_apdus_sent@."
 
 let gen_expect_test_sign_micheline_data ppf hex =
   let screens bin =
