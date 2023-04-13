@@ -61,7 +61,7 @@ function attempts {
 function expect_full_text {
     echo -n " - expect_full_text" ; for s in "$@" ; do echo -n " \"$s\"" ; done
     IFS= exp="$*"
-    nb=100
+    nb=200
     while :; do
         got="$(curl -s $SPECULOS_URL/events?currentscreenonly=true)"
         got="$(echo $got | jq -r '[.events[].text] | add')"
@@ -84,7 +84,7 @@ function expect_full_text {
             exit 1
         fi
         echo -n "."
-        sleep 0.2
+        sleep 0.05
         nb=$((nb-1))
     done
 }
