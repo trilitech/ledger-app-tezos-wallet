@@ -16,15 +16,21 @@ endif
 APPNAME = "Tezos Wallet"
 
 ifeq ($(TARGET_NAME), TARGET_NANOS)
-APP_LOAD_FLAGS=--appFlags 0x800  # APPLICATION_FLAG_LIBRARY
+APP_LOAD_FLAGS=0x800  # APPLICATION_FLAG_LIBRARY
+TARGET_ID=0x31100004
+ICONNAME=icons/nano-s-tezos.gif
 endif
 ifeq ($(TARGET_NAME), TARGET_NANOS2)
-APP_LOAD_FLAGS=--appFlags 0x800  # APPLICATION_FLAG_LIBRARY
+APP_LOAD_FLAGS=0x800  # APPLICATION_FLAG_LIBRARY
+TARGET_ID=0x33100004
+ICONNAME=icons/nano-x-tezos.gif
 endif
 ifeq ($(TARGET_NAME), TARGET_NANOSX)
-APP_LOAD_FLAGS=--appFlags 0xa40  # APPLICATION_FLAG_LIBRARY + APPLICATION_FLAG_BOLOS_SETTINGS + BLE SUPPORT
+APP_LOAD_FLAGS=0xa40  # APPLICATION_FLAG_LIBRARY + APPLICATION_FLAG_BOLOS_SETTINGS + BLE SUPPORT
+TARGET_ID=0x33000004
+ICONNAME=icons/nano-x-tezos.gif
 endif
-APP_LOAD_PARAMS=$(APP_LOAD_FLAGS) --curve ed25519 --curve secp256k1 --curve secp256r1 --path "44'/1729'" $(COMMON_LOAD_PARAMS)
+APP_LOAD_PARAMS=--appFlags $(APP_LOAD_FLAGS) --curve ed25519 --curve secp256k1 --curve secp256r1 --path "44'/1729'" $(COMMON_LOAD_PARAMS)
 
 GIT_DESCRIBE ?= $(shell git describe --tags --abbrev=8 --always --long --dirty 2>/dev/null)
 
@@ -50,16 +56,10 @@ else
   $(info COMMIT=$(COMMIT))
 endif
 
-ifeq ($(TARGET_NAME),TARGET_NANOS)
-ICONNAME=icons/nano-s-tezos.gif
-else
-ICONNAME=icons/nano-x-tezos.gif
-endif
-
 ################
 # Default rule #
 ################
-all: default
+all: default bin/app.toml
 
 ############
 # Platform #
@@ -151,11 +151,19 @@ DEFINES   += USB_SEGMENT_SIZE=64
 DEFINES   += U2F_PROXY_MAGIC=\"XTZ\"
 DEFINES   += HAVE_IO_U2F HAVE_U2F
 
-load: all
-	python3 -m ledgerblue.loadApp $(APP_LOAD_PARAMS)
+bin/app.toml: bin/app.elf
+	cp ${ICONNAME} bin/app.gif
+	echo "name = \"Tezos Wallet\"" > $@
+	echo "version = \"${APPVERSION}\"" >> $@
+	echo "[${TARGET_ID}]" >> $@
+	echo "binary = \"app.hex\"" >> $@
+	echo "icon = \"app.gif\"" >> $@
+	echo "flags = \"${APP_LOAD_FLAGS}\"" >> $@
+	echo "dataSize = 0" >> $@
+	echo "derivationPath = {curves = [\"ed25519\", \"secp256k1\", \"secp256r1\"]}" >> $@
+	echo "paths = [\"44'/1729'\"]" >> $@
+	echo "apiLevel = \"1\"" >> $@
 
-delete:
-	python3 -m ledgerblue.deleteApp $(COMMON_DELETE_PARAMS)
 # import generic rules from the sdk
 include $(BOLOS_SDK)/Makefile.rules
 

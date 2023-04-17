@@ -92,6 +92,10 @@ test/samples/operations/samples.hex:	tests/generate/*.ml*	\
 	$(DOCKER_RUN_APP_OCAML) make -C /app/tests/generate	\
 	    ../samples/operations/samples.hex
 
+load_%: app_%.tgz
+	ledgerctl delete "Tezos Wallet"
+	DIR=`mktemp -d` ; tar xf $< -C $$DIR && cd $$DIR && ledgerctl install app.toml ; rm -rf $$DIR
+
 #
 # Dash vs under aliases:
 

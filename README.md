@@ -50,6 +50,21 @@ Or for a single target:
 :; make app_nanos_dbg.tgz
 ```
 
+## Loading on real hardware
+
+You need the `ledgetctl` tool, that can be installed with pip. At the
+moment, only the unreleased version works, that you can install as
+follows.
+
+```
+pip install git+https://github.com/LedgerHQ/blue-loader-python
+```
+
+Depending on the hardware you have, call one of the two Makefile
+targets `load_nanos` (for Nano S) or `load_nanosp` (for Nano S+).
+Unfortunately, Nano X applications cannot be tested on real hardware.
+Make sure you have the latest firmware on the device.
+
 ## Testing
 
 There are two main kinds of testing that are provided: unit tests; and
