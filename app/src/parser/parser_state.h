@@ -14,8 +14,7 @@
    See the License for the specific language governing permissions and
    limitations under the License. */
 
-#ifndef _TZ_PARSER_STATE_H
-#define _TZ_PARSER_STATE_H	1
+#pragma once
 
 #include "num_state.h"
 #include "micheline_state.h"
@@ -109,5 +108,3 @@ extern tz_parser_result tz_parser_set_errno (tz_parser_state *state, tz_parser_r
 #define tz_must(cond) do { tz_parser_result errno = cond; if(errno) tz_return(errno); } while (0)
 #define tz_continue tz_return (TZ_CONTINUE)
 #define tz_break tz_return (TZ_BREAK)
-
-#endif /* parser_state.h */

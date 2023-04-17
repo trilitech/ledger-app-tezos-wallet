@@ -14,8 +14,7 @@
    See the License for the specific language governing permissions and
    limitations under the License. */
 
-#ifndef _TZ_OPERATION_PARSER_H
-#define _TZ_OPERATION_PARSER_H	1
+#pragma once
 
 #include "parser_state.h"
 
@@ -24,4 +23,3 @@ extern void tz_operation_parser_init(tz_parser_state *state, uint16_t size, bool
 extern void tz_operation_parser_set_size(tz_parser_state *state, uint16_t size);
 extern tz_parser_result tz_operation_parser_step(tz_parser_state *state, tz_parser_regs *regs);
 
-#endif /* operation_parser.h */

@@ -14,8 +14,7 @@
    See the License for the specific language governing permissions and
    limitations under the License. */
 
-#ifndef _TZ_OPERATION_STATE_H
-#define _TZ_OPERATION_STATE_H	1
+#pragma once
 
 #include "num_state.h"
 
@@ -118,5 +117,3 @@ typedef struct {
   uint8_t destination[22]; // saved for entrypoint dispatch
   uint16_t batch_index;    // to print a sequence number
 } tz_operation_state;
-
-#endif /* operation_parser.h */

@@ -14,8 +14,7 @@
    See the License for the specific language governing permissions and
    limitations under the License. */
 
-#ifndef _TZ_MICHELINE_STATE_H
-#define _TZ_MICHELINE_STATE_H	1
+#pragma once
 
 #include "num_state.h"
 
@@ -114,5 +113,3 @@ typedef struct {
   size_t pat_len;
   bool capturing;
 } tz_micheline_state;
-
-#endif /* micheline_state.h */

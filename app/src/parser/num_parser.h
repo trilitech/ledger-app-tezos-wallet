@@ -14,8 +14,7 @@
    See the License for the specific language governing permissions and
    limitations under the License. */
 
-#ifndef _TZ_NUM_PARSER_H
-#define _TZ_NUM_PARSER_H	1
+#pragma once
 
 #include "parser_state.h"
 
@@ -30,5 +29,3 @@ extern tz_parser_result tz_parse_int_step (tz_num_parser_buffer *buffers,
 extern tz_parser_result tz_parse_nat_step (tz_num_parser_buffer *buffers,
                                            tz_num_parser_regs *regs,
                                            uint8_t b, bool pretty_print);
-
-#endif /* num_state.h */

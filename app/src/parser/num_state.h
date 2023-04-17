@@ -14,8 +14,7 @@
    See the License for the specific language governing permissions and
    limitations under the License. */
 
-#ifndef _TZ_NUM_STATE_H
-#define _TZ_NUM_STATE_H	1
+#pragma once
 
 #include "formatting.h"
 
@@ -31,4 +30,3 @@ typedef struct {
   char decimal[TZ_DECIMAL_BUFFER_SIZE(TZ_NUM_BUFFER_SIZE/8)];
 } tz_num_parser_buffer;
 
-#endif /* num_state.h */
