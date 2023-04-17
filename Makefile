@@ -10,7 +10,7 @@ debug: app_nanos_dbg.tgz app_nanosp_dbg.tgz app_nanox_dbg.tgz
 DOCKER			= docker
 DOCKER_RUN		= $(DOCKER) run --rm -i -v "$(realpath .):/app"
 DOCKER_RUN_APP_BUILDER	= $(DOCKER_RUN) ledger-app-builder:latest
-DOCKER_RUN_APP_OCAML	= $(DOCKER_RUN) ledger-app-tezos-ocaml:latest 
+DOCKER_RUN_APP_OCAML	= $(DOCKER_RUN) ledger-app-tezos-ocaml:latest
 
 GENERATED_PATTERNS	= app/src/parser/generated_patterns.h
 
