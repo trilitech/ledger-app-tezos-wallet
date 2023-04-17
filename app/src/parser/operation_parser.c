@@ -314,7 +314,7 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state, tz_parser_regs
       switch (state->operation.frame->step_read_bytes.kind) {
       case TZ_OPERATION_FIELD_SOURCE:
         memcpy(state->operation.source, state->buffers.capture, 22);
-        // fallthrough
+        __attribute__((fallthrough));
       case TZ_OPERATION_FIELD_PKH:
         if (tz_format_pkh (state->buffers.capture, 21, (char*) state->buffers.capture)) tz_raise (INVALID_TAG);
         break;

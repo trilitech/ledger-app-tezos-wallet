@@ -58,14 +58,14 @@ typedef enum {
 
 
 typedef struct {
-  char *name;
+  const char *name;
   tz_operation_field_kind kind : 4;
   uint8_t required : 1, skip : 1, display_none : 1;
 } tz_operation_field_descriptor;
 
 typedef struct {
   tz_operation_tag tag;
-  char *name;
+  const char *name;
   const tz_operation_field_descriptor *fields;
 } tz_operation_descriptor;
 
@@ -81,7 +81,7 @@ typedef struct {
       uint8_t field;
     } step_operation;
     struct {
-      char *str;
+      const char *str;
     } step_print;
     struct {
       uint16_t ofs;
@@ -99,10 +99,10 @@ typedef struct {
       uint8_t skip : 1;
     } step_read_entrypoint;
     struct {
-      char *name;
+      const char *name;
       uint8_t inited : 1;
       uint8_t skip : 1;
-      char *pattern_entrypoint;
+      const char *pattern_entrypoint;
     } step_read_micheline;
   };
 } tz_operation_parser_frame;

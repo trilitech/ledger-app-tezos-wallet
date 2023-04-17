@@ -126,8 +126,9 @@ __attribute__((noreturn)) void main_loop() {
                 switch (sw) {
                     default:
                         sw = 0x6800 | (e & 0x7FF);
-                        // FALL THROUGH
+                        __attribute__((fallthrough));
                     case 0x6000 ... 0x6FFF:
+                        __attribute__((fallthrough));
                     case 0x9000 ... 0x9FFF: {
                         PRINTF("[ERROR] line number: %d\n", sw & 0x0FFF);
                         size_t tx = 0;

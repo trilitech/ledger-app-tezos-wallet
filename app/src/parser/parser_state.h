@@ -93,18 +93,24 @@ extern void tz_parser_skip(tz_parser_state *state, tz_parser_regs *regs);
 
 extern tz_parser_result tz_parser_set_errno (tz_parser_state *state, tz_parser_result code);
 #ifdef TEZOS_DEBUG
-#  define tz_return(e) do { \
-    tz_parser_result c = (e); \
-    if (c) PRINTF ("[DEBUG] tz_return(code: %s, loc: %s:%d)\n", \
-                   tz_parser_result_name (c), __FILE__, __LINE__);      \
-    return tz_parser_set_errno (state, c); \
-  } while (0)
+#  define tz_return(e) do {                                             \
+            tz_parser_result _c = (e);                                  \
+            if (_c) {                                                   \
+                PRINTF ("[DEBUG] tz_return(code: %s, loc: %s:%d)\n",    \
+                tz_parser_result_name (_c), __FILE__, __LINE__);        \
+            }                                                           \
+            return tz_parser_set_errno (state, _c);                     \
+        } while (0)
 #else
 #  define tz_return(e) return tz_parser_set_errno (state, e)
 #endif
 #define tz_raise(e) tz_return (TZ_ERR_##e)
 #define tz_stop(e) tz_return (TZ_BLO_##e)
 #define tz_reraise return state->errno
-#define tz_must(cond) do { tz_parser_result errno = cond; if(errno) tz_return(errno); } while (0)
+#define tz_must(cond) do {                      \
+ 	    tz_parser_result _err = cond;       \
+	    if (_err)                           \
+	        tz_return(_err);                \
+	} while (0)
 #define tz_continue tz_return (TZ_CONTINUE)
 #define tz_break tz_return (TZ_BREAK)

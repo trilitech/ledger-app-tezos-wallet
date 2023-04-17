@@ -30,7 +30,7 @@ typedef struct {
 
 #include "generated_patterns.h"
 
-bool find_pattern(uint8_t* address, char* entrypoint, const uint8_t** pattern, uint16_t* length) {
+bool find_pattern(uint8_t* address, const char* entrypoint, const uint8_t** pattern, uint16_t* length) {
   const pattern_association *assoc = &builtin_entrypoints[0];
   while(assoc->contract) {
     contract_association* contract = PIC(assoc->contract);

@@ -44,16 +44,16 @@ static cx_curve_t derivation_type_to_cx_curve(derivation_type_t const derivation
 
 #define READ_UNALIGNED_BIG_ENDIAN(type, in) \
     ({ \
-        uint8_t const *bytes = (uint8_t const *)in; \
-        uint8_t out_bytes[sizeof(type)]; \
-        type res; \
+        uint8_t const *_bytes = (uint8_t const *)in; \
+        uint8_t _out_bytes[sizeof(type)]; \
+        type _res; \
 \
-        for (size_t i = 0; i < sizeof(type); i++) { \
-            out_bytes[i] = bytes[sizeof(type) - i - 1]; \
+        for (size_t _i = 0; _i < sizeof(type); _i++) { \
+            _out_bytes[_i] = _bytes[sizeof(type) - _i - 1]; \
         } \
-        memcpy(&res, out_bytes, sizeof(type)); \
+        memcpy(&_res, _out_bytes, sizeof(type)); \
 \
-        res; \
+        _res; \
     })
 
 // Same as READ_UNALIGNED_BIG_ENDIAN but helps keep track of how many bytes

@@ -21,6 +21,7 @@
 #include "cx.h"
 
 #include "apdu.h"
+#include "apdu_sign.h"
 #include "globals.h"
 #include "keys.h"
 #include "memory.h"
@@ -155,7 +156,6 @@ static void refill() {
     strncpy (global.stream.buffer.title, global.apdu.sign.parser_state.field_name, TZ_UI_STREAM_TITLE_WIDTH);
     global.stream.buffer.value[regs->oofs] = 0;
     tz_ui_stream_push ();
-    tz_parser_regs *regs = &global.apdu.sign.parser_regs;
     regs->olen = TZ_UI_STREAM_CONTENTS_WIDTH * TZ_UI_STREAM_CONTENTS_LINES;
     regs->oofs = 0;
     break;
