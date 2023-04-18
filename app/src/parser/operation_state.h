@@ -19,6 +19,7 @@
 #include "num_state.h"
 
 typedef enum {
+  TZ_OPERATION_TAG_END         =   0,
   TZ_OPERATION_TAG_REVEAL      = 107,
   TZ_OPERATION_TAG_TRANSACTION = 108,
   TZ_OPERATION_TAG_ORIGINATION = 109,

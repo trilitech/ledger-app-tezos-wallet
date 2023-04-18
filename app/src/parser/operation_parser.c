@@ -205,9 +205,10 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state, tz_parser_regs
     break;
   }
   case TZ_OPERATION_STEP_TAG: {
+    const tz_operation_descriptor* d;
     uint8_t t;
     tz_must (tz_parser_read(state,regs,&t));
-    for (const tz_operation_descriptor* d = tz_operation_descriptors ; d->tag != 0 ; d++) {
+    for (d = tz_operation_descriptors; d->tag != TZ_OPERATION_TAG_END; d++) {
       if (d->tag == t) {
         state->operation.frame->step = TZ_OPERATION_STEP_OPERATION;
         state->operation.frame->step_operation.descriptor = d;

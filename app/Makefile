@@ -129,7 +129,7 @@ endif
 CC       := $(CLANGPATH)clang
 
 CFLAGS   += -O3 -Os -Wall -Wextra
-#CFLAGS   += -Wassign-enum
+CFLAGS   += -Wassign-enum
 #CFLAGS   += -Wbad-function-cast
 #CFLAGS   += -Wcast-align
 #CFLAGS   += -Wcast-qual
