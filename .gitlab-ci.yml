@@ -1,13 +1,14 @@
 include: '.gitlab-ci-build-docker.yml'
 
 stages:
+  - sync
   - prepare
   - generate
   - build
   - test
 
 generate_builtin_patterns:
-  image: $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:latest
+  image: $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_NAME
   stage: generate
   script:
     - make -C pattern_registry
@@ -16,7 +17,7 @@ generate_builtin_patterns:
       - app/src/parser/generated_patterns.h
 
 generate_samples:
-  image: $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:latest
+  image: $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_NAME
   stage: generate
   script:
     - mkdir -p tests/samples
@@ -27,7 +28,7 @@ generate_samples:
       - tests/samples
 
 build_nanos:
-  image: $CI_REGISTRY_IMAGE/ledger-app-builder:latest
+  image: $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_NAME
   stage: build
   script:
     - bash -c 'make -C app BOLOS_SDK=$NANOS_SDK'
@@ -39,7 +40,7 @@ build_nanos:
       - app_nanos.tgz
 
 build_nanos_dbg:
-  image: $CI_REGISTRY_IMAGE/ledger-app-builder:latest
+  image: $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_NAME
   stage: build
   script:
     - bash -c 'make -C app BOLOS_SDK=$NANOS_SDK DEBUG=true'
@@ -51,7 +52,7 @@ build_nanos_dbg:
       - app_nanos_dbg.tgz
 
 unit:
-  image: $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:latest
+  image: $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_NAME
   stage: test
   script:
     - make -C tests/unit
