@@ -60,7 +60,7 @@ unit:
 
 integration_nanos_basic:
   image:
-    name: ghcr.io/ledgerhq/speculos
+    name: ghcr.io/ledgerhq/speculos:sha-90a021a
     entrypoint: [""]
   stage: test
   dependencies:
@@ -71,7 +71,7 @@ integration_nanos_basic:
 
 integration_nanos_micheline_samples:
   image:
-    name: ghcr.io/ledgerhq/speculos
+    name: ghcr.io/ledgerhq/speculos:sha-90a021a
     entrypoint: [""]
   stage: test
   dependencies:
@@ -83,7 +83,7 @@ integration_nanos_micheline_samples:
 
 integration_nanos_operations_samples:
   image:
-    name: ghcr.io/ledgerhq/speculos
+    name: ghcr.io/ledgerhq/speculos:sha-90a021a
     entrypoint: [""]
   stage: test
   dependencies:

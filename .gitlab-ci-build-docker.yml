@@ -19,6 +19,7 @@ build docker ledger-app-builder:
     - apk add --update git
     - git clone https://github.com/LedgerHQ/ledger-app-builder.git TMP
     - cd TMP/full &&
+      git checkout 79a7c077b6c0223dca614ef391e8df93ef2ca40e &&
       docker build --cache-from $CI_REGISTRY_IMAGE/ledger-app-builder:latest
                    --tag $CI_REGISTRY_IMAGE/ledger-app-builder:latest
                    --tag ledger-app-builder:latest
