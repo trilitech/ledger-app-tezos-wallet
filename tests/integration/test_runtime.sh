@@ -306,6 +306,7 @@ function expect_exited {
 }
 
 function usage {
+    echo "$@"                                                  >&2
     echo "Usage: $0 [-l lim] type app dir [dir ...]"           >&2
     echo "    where type is nanos, nanosp, or nanosx"          >&2
     echo "     and app is a tar.gz containing the app"         >&2
