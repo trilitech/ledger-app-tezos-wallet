@@ -21,8 +21,8 @@ function start_speculos_runner {
 
     app_dir="$(mktemp -d $DATA_DIR/appdir-XXXXXX)"
     tar xfz "$tgz" -C $app_dir
-    speculos --display headless --apdu-port 0 --api-port $PORT          \
-             --seed "$seed" -m $target $app_dir/app.elf                 \
+    $SPECULOS --display headless --apdu-port 0 --api-port $PORT          \
+              --seed "$seed" -m $target $app_dir/app.elf                 \
                 > $SPECULOG 2>&1 < /dev/null &
     speculos_pid=$!
     attempts curl -s $SPECULOS_URL/events > /dev/null 2>&1
@@ -44,5 +44,7 @@ function exited {
         return 0
     fi
 }
+
+[ -z "$SPECULOS" ] && SPECULOS=speculos
 
 main "$@"
