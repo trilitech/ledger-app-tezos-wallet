@@ -57,7 +57,7 @@ moment, only the unreleased version works, that you can install as
 follows.
 
 ```
-pip install git+https://github.com/LedgerHQ/blue-loader-python
+pip install git+https://github.com/LedgerHQ/ledgerctl
 ```
 
 Depending on the hardware you have, call one of the two Makefile
