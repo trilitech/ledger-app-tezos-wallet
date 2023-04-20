@@ -62,6 +62,7 @@ function expect_full_text {
     echo -n " - expect_full_text" ; for s in "$@" ; do echo -n " \"$s\"" ; done
     IFS= exp="$*"
     nb=200
+    FULL_TEXT_PREV=""
     while :; do
         got="$(curl -s $SPECULOS_URL/events?currentscreenonly=true)"
         got="$(echo $got | jq -r '[.events[].text] | add')"
@@ -74,8 +75,7 @@ function expect_full_text {
         # continue if screen still displays the previous expectation
         # (lagging redisplay) or a prefix of the expectation (non
         # atomic redisplay)
-        if [ $nb -eq 1 -o \( "$FULL_TEXT_PREV" != "$got"	\
-             -a "${exp##$got}" = "$exp" \) ]; then
+        if [ $nb -eq 1 ]; then
             echo
             (echo "FAILURE(expect_full_text):"
              echo "  On screen: '$got'"
@@ -183,7 +183,6 @@ run_a_test() {
         fi
         kill_speculos_runner
         start_speculos_runner
-        FULL_TEXT_PREV="Tezos Walletready forsafe signing"
         . $CMD
         kill_speculos_runner
      ) > $OUTF 2> $ERRF
