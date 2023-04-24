@@ -8,7 +8,7 @@ stages:
   - test
 
 generate_builtin_patterns:
-  image: $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_NAME
+  image: $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG
   stage: generate
   script:
     - make -C pattern_registry
@@ -17,7 +17,7 @@ generate_builtin_patterns:
       - app/src/parser/generated_patterns.h
 
 generate_samples:
-  image: $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_NAME
+  image: $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG
   stage: generate
   script:
     - mkdir -p tests/samples/micheline
@@ -29,7 +29,7 @@ generate_samples:
       - tests/samples
 
 build_nanos:
-  image: $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_NAME
+  image: $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_SLUG
   stage: build
   script:
     - bash -c 'make -C app BOLOS_SDK=$NANOS_SDK'
@@ -41,7 +41,7 @@ build_nanos:
       - app_nanos.tgz
 
 build_nanos_dbg:
-  image: $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_NAME
+  image: $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_SLUG
   stage: build
   script:
     - bash -c 'make -C app BOLOS_SDK=$NANOS_SDK DEBUG=true'
@@ -53,7 +53,7 @@ build_nanos_dbg:
       - app_nanos_dbg.tgz
 
 unit:
-  image: $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_NAME
+  image: $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG
   stage: test
   script:
     - make -C tests/unit

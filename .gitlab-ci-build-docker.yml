@@ -15,27 +15,27 @@
 build docker ledger-app-builder:
   <<: *build_docker
   script:
-    - docker pull $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_NAME || true
+    - docker pull $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_SLUG || true
     - apk add --update git
     - git clone https://github.com/LedgerHQ/ledger-app-builder.git TMP
     - cd TMP/full &&
       git checkout 79a7c077b6c0223dca614ef391e8df93ef2ca40e &&
-      docker build --cache-from $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_NAME
-                   --tag $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_NAME
-                   --tag ledger-app-builder:$CI_COMMIT_REF_NAME
+      docker build --cache-from $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_SLUG
+                   --tag $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_SLUG
+                   --tag ledger-app-builder:$CI_COMMIT_REF_SLUG
              .
-    - docker push $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_NAME
+    - docker push $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_SLUG
 
 build docker ledger-app-tezos-ocaml:
   <<: *build_docker
   script:
-    - docker pull $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_NAME || true
-    - docker build --cache-from $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_NAME
-                   --tag $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_NAME
-                   --tag ledger-app-tezos-ocaml:$CI_COMMIT_REF_NAME
+    - docker pull $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG || true
+    - docker build --cache-from $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG
+                   --tag $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG
+                   --tag ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG
                    -f docker/Dockerfile.ocaml
              docker
-    - docker push $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_NAME
+    - docker push $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG
 
 sync docker images:
   services:
@@ -47,13 +47,13 @@ sync docker images:
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - if ! docker manifest inspect $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_NAME ; then
-        docker manifest create $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_NAME $CI_REGISTRY_IMAGE/ledger-app-builder:main ;
-        docker manifest push $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_NAME ;
+    - if ! docker manifest inspect $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_SLUG ; then
+        docker manifest create $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_SLUG $CI_REGISTRY_IMAGE/ledger-app-builder:main ;
+        docker manifest push $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_SLUG ;
       fi
-    - if ! docker manifest inspect $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_NAME ; then
-        docker manifest create $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_NAME $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:main ;
-        docker manifest push $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_NAME ;
+    - if ! docker manifest inspect $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG ; then
+        docker manifest create $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:main ;
+        docker manifest push $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG ;
       fi
   only:
     - branches
