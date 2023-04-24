@@ -11,3 +11,4 @@ pattern_registry/*.csv
 _build
 tests/samples
 app_*.tgz
+integration_tests.json
