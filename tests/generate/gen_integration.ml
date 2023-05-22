@@ -43,16 +43,6 @@ let split_sign_apdus ~signer:{ path; pkh = _; pk = _; sk } bin =
 open Tezos_protocol_015_PtLimaPt
 open Tezos_micheline
 
-let decode_expr bin =
-  Micheline.root
-    (Data_encoding.Binary.of_bytes_exn Protocol.Script_repr.expr_encoding
-       (Bytes.sub bin 1 (Bytes.length bin - 1)))
-
-let decode_op bin =
-  Data_encoding.Binary.of_bytes_exn
-    Protocol.Alpha_context.Operation.unsigned_encoding
-    (Bytes.sub bin 1 (Bytes.length bin - 1))
-
 let rec pp_node ~wrap ppf (node : Protocol.Script_repr.node) =
   match node with
   | String (_, s) -> Format.fprintf ppf "%S" s
@@ -192,7 +182,7 @@ let gen_expect_test_sign ppf (`Hex txt as hex) screens =
 
 let gen_expect_test_sign_micheline_data ppf hex =
   let screens bin =
-    let node = decode_expr bin in
+    let node = Gen_micheline.decode bin in
     let whole = Format.asprintf "%a" (pp_node ~wrap:false) node in
     Format.fprintf ppf "# full output: %s@\n" whole;
     List.map (fun s -> ("Data", s)) (split_screens 38 whole)
@@ -201,7 +191,7 @@ let gen_expect_test_sign_micheline_data ppf hex =
 
 let gen_expect_test_sign_operation ppf hex =
   let screens bin =
-    let op = decode_op bin in
+    let op = Gen_operations.decode bin in
     pp_op 38 op
   in
   gen_expect_test_sign ppf hex screens

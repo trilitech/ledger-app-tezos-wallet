@@ -14,6 +14,8 @@
 
 open Tezos_micheline
 
+let random_state = Random.State.make_self_init ()
+
 let micheline_too_large_or_too_deep expr =
   try
     let rec traverse d expr =

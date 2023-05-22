@@ -28,7 +28,7 @@ let gen () =
     let entrypoint = Entrypoint.of_string_strict_exn "jean_bob" in
     let parameters =
       Protocol.Script_repr.lazy_expr
-        (Michelson_generation.make_code_sampler Gen_micheline.st
+        (Michelson_generation.make_code_sampler Gen_utils.random_state
            Gen_micheline.config)
           .term
     in
@@ -44,22 +44,28 @@ let gen () =
   (shell, contents)
 
 let op = Seq.forever gen
+let operation_watermark = Tezos_crypto.Signature.Generic_operation
 
-let bin =
-  Seq.map
-    (fun op ->
-      ( op,
-        Data_encoding.Binary.to_bytes_exn
-          Protocol.Alpha_context.Operation.unsigned_encoding op ))
-    op
+let operation_watermark_bytes =
+  Tezos_crypto.Signature.bytes_of_watermark operation_watermark
+
+let encode op =
+  Bytes.cat operation_watermark_bytes
+    (Data_encoding.Binary.to_bytes_exn
+       Protocol.Alpha_context.Operation.unsigned_encoding op)
+
+let decode bin =
+  let watermark = Bytes.sub bin 0 1 in
+  if not @@ Bytes.equal watermark operation_watermark_bytes then
+    failwith @@ Format.sprintf "%s: invalid watermark" __FUNCTION__;
+  let bin = Bytes.sub bin 1 (Bytes.length bin - 1) in
+  Data_encoding.Binary.of_bytes_exn
+    Protocol.Alpha_context.Operation.unsigned_encoding bin
 
 let hex =
   Seq.map
-    (fun (op, bin) ->
-      let bin =
-        Bytes.cat
-          Tezos_crypto.Signature.(bytes_of_watermark Generic_operation)
-          bin
-      in
-      (op, bin, `Hex (Hex.show (Hex.of_bytes bin))))
-    bin
+    (fun op ->
+      let bin = encode op in
+      let hex = Hex.of_bytes bin in
+      (op, bin, hex))
+    op

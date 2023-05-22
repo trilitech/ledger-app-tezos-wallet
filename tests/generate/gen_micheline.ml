@@ -16,8 +16,6 @@ open Tezos_protocol_015_PtLimaPt
 open Tezos_micheline
 open Tezos_benchmarks_proto_015_PtLimaPt
 
-let st = Random.State.make_self_init ()
-
 let config =
   {
     Michelson_generation.target_size = { min = 10; max = 100 };
@@ -27,8 +25,10 @@ let config =
 let gen () =
   List.to_seq
     [
-      (Michelson_generation.make_code_sampler st config).term;
-      (Michelson_generation.make_data_sampler st config).term;
+      (Michelson_generation.make_code_sampler Gen_utils.random_state config)
+        .term;
+      (Michelson_generation.make_data_sampler Gen_utils.random_state config)
+        .term;
     ]
 
 let vector =
@@ -50,17 +50,27 @@ let vector =
                  ]))))
 
 let expr = Seq.append vector (Seq.concat (Seq.forever gen))
+let micheline_watermark = Tezos_crypto.Signature.Custom (Bytes.of_string "\x05")
 
-let bin =
-  Seq.map
-    (fun expr ->
-      ( expr,
-        Data_encoding.Binary.to_bytes_exn Protocol.Script_repr.expr_encoding
-          expr ))
-    expr
+let micheline_watermark_bytes =
+  Tezos_crypto.Signature.bytes_of_watermark micheline_watermark
+
+let encode expr =
+  Bytes.cat micheline_watermark_bytes
+    (Data_encoding.Binary.to_bytes_exn Protocol.Script_repr.expr_encoding expr)
+
+let decode bin =
+  let watermark = Bytes.sub bin 0 1 in
+  if not @@ Bytes.equal watermark micheline_watermark_bytes then
+    failwith @@ Format.sprintf "%s: invalid watermark" __FUNCTION__;
+  let bin = Bytes.sub bin 1 (Bytes.length bin - 1) in
+  Micheline.root
+    (Data_encoding.Binary.of_bytes_exn Protocol.Script_repr.expr_encoding bin)
 
 let hex =
   Seq.map
-    (fun (expr, bin) ->
-      (expr, bin, `Hex (String.cat "05" (Hex.show (Hex.of_bytes bin)))))
-    bin
+    (fun expr ->
+      let bin = encode expr in
+      let hex = Hex.of_bytes bin in
+      (expr, bin, hex))
+    expr
