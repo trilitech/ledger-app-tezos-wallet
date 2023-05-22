@@ -14,6 +14,10 @@
 
 (* Keys for mnemonic zebra (x24), path m/44'/1729'/0'/0' *)
 
+let path =
+  Bytes.of_string
+    "\x04\x80\x00\x00\x2c\x80\x00\x06\xc1\x80\x00\x00\x00\x80\x00\x00\x00"
+
 let _pkh =
   Tezos_crypto.Signature.Public_key_hash.of_b58check_exn
     "tz1dyX3B1CFYa2DfdFLyPtiJCfQRUgPVME6E"
@@ -26,39 +30,57 @@ let sk =
   Tezos_crypto.Signature.Secret_key.of_b58check_exn
     "edsk2tUyhVvGj9B1S956ZzmaU4bC9J7t8xVBH52fkAoZL25MHEwacd"
 
-let split_sign_apdus bin =
-  let len = Bytes.length bin in
-  let rec split ofs idx =
-    if ofs = len then []
-    else
-      let size = min (len - ofs) 235 in
-      let last = ofs + size = len in
-      let packet = Bytes.create (size + 5) in
-      Bytes.set_uint8 packet 0 (* CLA *) 0x80;
-      Bytes.set_uint8 packet 1 (* INS *) 0x0F;
-      Bytes.set_uint8 packet 2 (* P1 *) ((if last then 0x80 else 0x00) lor idx);
-      Bytes.set_uint8 packet 3 (* P2 *) 0x00;
-      Bytes.set_uint8 packet 4 (* LC *) size;
-      Bytes.blit bin ofs packet 5 size;
-      let result =
-        if last then
-          Bytes.concat Bytes.empty
-            [
-              Tezos_crypto.Blake2B.(to_bytes (hash_bytes [ bin ]));
-              Tezos_crypto.Signature.to_bytes
-                (Tezos_crypto.Signature.sign sk bin);
-              Bytes.of_string "\x90\x00";
-            ]
-        else Bytes.of_string "\x90\x00"
+let make_packet ~cla ~ins ~p1 ~p2 ~lc ?(ofs = 0) content =
+  let header_size = 5 in
+  let packet = Bytes.create (header_size + lc) in
+  Bytes.set_uint8 packet 0 cla;
+  Bytes.set_uint8 packet 1 ins;
+  Bytes.set_uint8 packet 2 p1;
+  Bytes.set_uint8 packet 3 p2;
+  Bytes.set_uint8 packet 4 lc;
+  Bytes.blit content ofs packet header_size lc;
+  packet
+
+let max_apdu_size = 235
+
+let make_packets ~cla ~ins ~p2 ~idx content =
+  let len = Bytes.length content in
+  let rec aux ofs idx =
+    let remaining_size = len - ofs in
+    if remaining_size <= max_apdu_size then
+      let packet =
+        make_packet ~cla ~ins ~p1:(0x80 lor idx) ~p2 ~lc:remaining_size ~ofs
+          content
       in
-      (packet, result) :: split (ofs + size) (idx + 1)
+      [ packet ]
+    else
+      let packet =
+        make_packet ~cla ~ins ~p1:(0x00 lor idx) ~p2 ~lc:max_apdu_size ~ofs
+          content
+      in
+      packet :: aux (ofs + max_apdu_size) (idx + 1)
   in
-  [
-    ( Bytes.of_string
-        "\x80\x0f\x00\x00\x11\x04\x80\x00\x00\x2c\x80\x00\x06\xc1\x80\x00\x00\x00\x80\x00\x00\x00",
-      Bytes.of_string "\x90\x00" );
-  ]
-  @ split 0 1
+  aux 0 idx
+
+let split_sign_apdus bin =
+  let path_len = Bytes.length path in
+  let apdus =
+    make_packet ~cla:0x80 ~ins:0x0F ~p1:0x00 ~p2:0x00 ~lc:path_len path
+    :: make_packets ~cla:0x80 ~ins:0x0F ~p2:0x00 ~idx:1 bin
+  in
+  let expectations =
+    let success_bytes = Bytes.of_string "\x90\x00" in
+    let bin_sign_success_bytes =
+      let bin_hash = Tezos_crypto.Blake2B.(to_bytes (hash_bytes [ bin ])) in
+      let sign =
+        Tezos_crypto.Signature.to_bytes (Tezos_crypto.Signature.sign sk bin)
+      in
+      Bytes.concat Bytes.empty [ bin_hash; sign; success_bytes ]
+    in
+    List.init (List.length apdus - 1) (fun _ -> success_bytes)
+    @ [ bin_sign_success_bytes ]
+  in
+  List.combine apdus expectations
 
 open Tezos_protocol_015_PtLimaPt
 open Tezos_micheline
