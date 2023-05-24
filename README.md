@@ -113,3 +113,30 @@ Both of these commands take the following arguments:
 
 -x
 : executes the tests with shell tracing (-x)
+
+# Seculos
+
+```
+seed=$(for i in {1..24}; do echo zebra; done)
+docker run --rm -it -v $(pwd)/app/bin:/speculos/apps -p 41000:41000 -p 5000:5000 speculos \
+    --display=headless --vnc-port 41000 --seed "$seed" \
+    -m nanos apps/app.elf
+```
+
+new shell:
+```
+bash
+
+function exit() {
+  echo "Error $@"
+  return $@
+}
+
+export PORT=5000
+export DATA_DIR=$(mktemp -d)
+export SPECULOS_URL=http://127.0.0.1:5000
+
+source tests/integration/test_runtime.sh
+
+# start vncviewer on 0.0.0.0:41000
+```
