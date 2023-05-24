@@ -12,38 +12,17 @@
    See the License for the specific language governing permissions and
    limitations under the License. *)
 
-let path_to_bytes path =
-  (* hardened is defined by the "'" *)
-  let hardened idx = idx lor 0x80_00_00_00 in
-  let length = List.length path in
-  let bytes = Bytes.create ((4 * length) + 1) in
-  Bytes.set_uint8 bytes 0 length;
-  List.iteri
-    (fun i idx ->
-      Bytes.set_int32_be bytes ((4 * i) + 1) (Int32.of_int (hardened idx)))
-    path;
-  bytes
+type signer = {
+  path : bytes;
+  pkh : Tezos_crypto.Signature.public_key_hash;
+  pk : Tezos_crypto.Signature.public_key;
+  sk : Tezos_crypto.Signature.secret_key;
+}
 
-(* Keys for mnemonic zebra (x24), path m/44'/1729'/0'/0' *)
-
-let path = path_to_bytes [ 44; 1729; 0; 0 ]
-
-let _pkh =
-  Tezos_crypto.Signature.Public_key_hash.of_b58check_exn
-    "tz1dyX3B1CFYa2DfdFLyPtiJCfQRUgPVME6E"
-
-let _pk =
-  Tezos_crypto.Signature.Public_key.of_b58check_exn
-    "edpkuXX2VdkdXzkN11oLCb8Aurdo1BTAtQiK8ZY9UPj2YMt3AHEpcY"
-
-let sk =
-  Tezos_crypto.Signature.Secret_key.of_b58check_exn
-    "edsk2tUyhVvGj9B1S956ZzmaU4bC9J7t8xVBH52fkAoZL25MHEwacd"
-
-let split_sign_apdus bin =
+let split_sign_apdus ~signer:{ path; pkh = _; pk = _; sk } bin =
   let cla = Apdu.Class.Default in
   let ins = Apdu.Instruction.Sign_with_hash in
-  let curve = Apdu.Curve.ED25519 in
+  let curve = Apdu.Curve.of_sk sk in
   let apdus =
     Apdu.make_packet ~cla ~ins ~curve path
     :: Apdu.make_packets ~idx:1 ~cla ~ins ~curve bin
@@ -165,12 +144,38 @@ let shell_escape ppf s =
     s;
   Format.fprintf ppf "'"
 
+let path_to_bytes path =
+  (* hardened is defined by the "'" *)
+  let hardened idx = idx lor 0x80_00_00_00 in
+  let length = List.length path in
+  let bytes = Bytes.create ((4 * length) + 1) in
+  Bytes.set_uint8 bytes 0 length;
+  List.iteri
+    (fun i idx ->
+      Bytes.set_int32_be bytes ((4 * i) + 1) (Int32.of_int (hardened idx)))
+    path;
+  bytes
+
+(* Keys for mnemonic zebra (x24), path m/44'/1729'/0'/0' *)
+
+let signer =
+  (* tz1dyX3B1CFYa2DfdFLyPtiJCfQRUgPVME6E *)
+  let open Tezos_crypto.Signature in
+  let path = path_to_bytes [ 44; 1729; 0; 0 ] in
+  let sk =
+    Secret_key.of_b58check_exn
+      "edsk2tUyhVvGj9B1S956ZzmaU4bC9J7t8xVBH52fkAoZL25MHEwacd"
+  in
+  let pk = Secret_key.to_public_key sk in
+  let pkh = Public_key.hash pk in
+  { path; pkh; pk; sk }
+
 let gen_expect_test_sign ppf (`Hex txt as hex) screens =
   let bin = Hex.to_bytes hex in
   Format.fprintf ppf "# full input: %s@\n" txt;
   let screens = screens bin in
   Format.fprintf ppf "send_async_apdus";
-  let apdus = split_sign_apdus bin in
+  let apdus = split_sign_apdus ~signer bin in
   List.iter
     (fun (apdu, ans) ->
       Format.fprintf ppf "\\@\n  %a %a" Hex.pp (Hex.of_bytes apdu) Hex.pp

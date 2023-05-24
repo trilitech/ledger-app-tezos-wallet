@@ -53,6 +53,11 @@ end
 module Curve = struct
   type t = ED25519 | SECP256K1 | SECP256R1 | BIP32_ED25519
 
+  let of_sk : Tezos_crypto.Signature.secret_key -> t = function
+    | Ed25519 _ -> ED25519
+    | Secp256k1 _ -> SECP256K1
+    | P256 _ -> SECP256R1
+
   let to_uint8 = function
     | ED25519 -> 0x00
     | SECP256K1 -> 0x01
