@@ -97,8 +97,9 @@ integration_nanos_micheline_samples:
     - apt update && apt install -y curl jq
     - SPECULOS=/speculos/speculos.py COLUMNS=80 ./tests/integration/run_test_local.sh nanos app_nanos_dbg.tgz tests/samples/micheline
   artifacts:
+    when: always
     paths:
-      - integration_tests.json
+    - integration_tests.json
 
 integration_nanos_operations_samples:
   image:
@@ -112,5 +113,6 @@ integration_nanos_operations_samples:
     - apt update && apt install -y curl jq
     - SPECULOS=/speculos/speculos.py COLUMNS=80 ./tests/integration/run_test_local.sh nanos app_nanos_dbg.tgz tests/samples/operations
   artifacts:
+    when: always
     paths:
-      - integration_tests.json
+    - integration_tests.json
