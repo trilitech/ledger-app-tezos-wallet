@@ -43,6 +43,19 @@ build_nanos_dbg:
     DEVICE_SDK: NANOS_SDK
     DEBUG: "true"
 
+build_nanosp:
+  extends: .build_app
+  variables:
+    DEVICE_APP: nanosp
+    DEVICE_SDK: NANOSP_SDK
+
+build_nanosp_dbg:
+  extends: .build_app
+  variables:
+    DEVICE_APP: nanosp_dbg
+    DEVICE_SDK: NANOSP_SDK
+    DEBUG: "true"
+
 unit:
   image: $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG
   stage: test
