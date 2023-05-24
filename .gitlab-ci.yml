@@ -1,4 +1,6 @@
-include: '.gitlab-ci-build-docker.yml'
+include:
+  - local: .gitlab-ci-build-docker.yml
+  - local: .gitlab/build-template.yml
 
 stages:
   - sync
@@ -29,28 +31,17 @@ generate_samples:
       - tests/samples
 
 build_nanos:
-  image: $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_SLUG
-  stage: build
-  script:
-    - bash -c 'make -C app BOLOS_SDK=$NANOS_SDK'
-    - cd app/bin/ && tar czf ../../app_nanos.tgz .
-  dependencies:
-    - generate_builtin_patterns
-  artifacts:
-    paths:
-      - app_nanos.tgz
+  extends: .build_app
+  variables:
+    DEVICE_APP: nanos
+    DEVICE_SDK: NANOS_SDK
 
 build_nanos_dbg:
-  image: $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_SLUG
-  stage: build
-  script:
-    - bash -c 'make -C app BOLOS_SDK=$NANOS_SDK DEBUG=true'
-    - cd app/bin/ && tar czf ../../app_nanos_dbg.tgz .
-  dependencies:
-    - generate_builtin_patterns
-  artifacts:
-    paths:
-      - app_nanos_dbg.tgz
+  extends: .build_app
+  variables:
+    DEVICE_APP: nanos_dbg
+    DEVICE_SDK: NANOS_SDK
+    DEBUG: "true"
 
 unit:
   image: $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG
