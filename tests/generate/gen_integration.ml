@@ -79,13 +79,17 @@ let quit ppf () =
   expect_quit ppf ();
   Button.(press ppf Both)
 
-let expected_screen ppf ~title ~content =
-  expect_full_text ppf [ title; content ]
+type screen = { title : string; contents : string list }
+
+let make_screen ~title contents = { title; contents }
+
+let expected_screen ppf { title; contents } =
+  expect_full_text ppf (title :: contents)
 
 let go_through_screens ppf screens =
   List.iter
-    (fun (title, content) ->
-      expected_screen ppf ~title ~content;
+    (fun screen ->
+      expected_screen ppf screen;
       Button.(press ppf Right))
     screens
 
@@ -145,36 +149,64 @@ let rec pp_node ~wrap ppf (node : Protocol.Script_repr.node) =
         (if a = [] then "" else " " ^ String.concat " " a)
         rwrap
 
-let split_screens size whole =
+let screen_width = 19
+let nanos_screen_lines = 3
+
+let split_screens ~title whole =
+  let screen_data_lines = nanos_screen_lines - 1 in
+  let max_size = screen_data_lines * screen_width in
   let len = String.length whole in
   let rec split ofs acc =
-    if len - ofs <= size then List.rev (String.sub whole ofs (len - ofs) :: acc)
-    else split (ofs + size) (String.sub whole ofs size :: acc)
+    let remaining_size = len - ofs in
+    if remaining_size <= max_size then
+      let content = String.sub whole ofs remaining_size in
+      let screen = make_screen ~title [ content ] in
+      screen :: acc
+    else
+      let content = String.sub whole ofs max_size in
+      let screen = make_screen ~title [ content ] in
+      split (ofs + max_size) (screen :: acc)
   in
-  split 0 []
+  List.rev @@ split 0 []
 
-let pp_op size
+let node_to_screens ppf node =
+  let whole = Format.asprintf "%a" (pp_node ~wrap:false) node in
+  Format.fprintf ppf "# full output: %s@\n" whole;
+  split_screens ~title:"Data" whole
+
+let operation_to_screens ppf
     ( (_shell : Tezos_base.Operation.shell_header),
       (Contents_list contents : Protocol.Alpha_context.packed_contents_list) ) =
-  let screens = ref [] in
-  let push t fmt =
-    Format.kasprintf (fun v -> screens := (t, v) :: !screens) fmt
+  let make_screen ~title fmt =
+    Format.kasprintf (fun content -> make_screen ~title [ content ]) fmt
   in
-  let print_manager n (type t)
+  let screen_of_manager n (type t)
       (Manager_operation { fee; operation; storage_limit; _ } :
         t Protocol.Alpha_context.Kind.manager Protocol.Alpha_context.contents) =
-    push
-      (Format.asprintf "Operation (%d)" n)
-      (match operation with
-      | Transaction _ -> "Transaction"
-      | _ -> "UNSUPPORTED");
-    push "Fee" "%a tz" Protocol.Alpha_context.Tez.pp fee;
-    push "Storage limit" "%s" (Z.to_string storage_limit);
     match operation with
     | Transaction { amount; entrypoint; destination; parameters } ->
-        push "Amount" "%a tz" Protocol.Alpha_context.Tez.pp amount;
-        push "Destination" "%a" Protocol.Alpha_context.Contract.pp destination;
-        push "Entrypoint" "%a" Protocol.Alpha_context.Entrypoint.pp entrypoint;
+        let operation_title = Format.asprintf "Operation (%d)" n in
+        let operation_screen =
+          make_screen ~title:operation_title "Transaction"
+        in
+        let fee_screen =
+          make_screen ~title:"Fee" "%a tz" Protocol.Alpha_context.Tez.pp fee
+        in
+        let storage_screen =
+          make_screen ~title:"Storage limit" "%s" (Z.to_string storage_limit)
+        in
+        let amount_screen =
+          make_screen ~title:"Amount" "%a tz" Protocol.Alpha_context.Tez.pp
+            amount
+        in
+        let destination_screen =
+          make_screen ~title:"Destination" "%a"
+            Protocol.Alpha_context.Contract.pp destination
+        in
+        let entrypoint_screen =
+          make_screen ~title:"Entrypoint" "%a"
+            Protocol.Alpha_context.Entrypoint.pp entrypoint
+        in
         let node =
           let bin =
             Data_encoding.Binary.to_bytes_exn
@@ -185,23 +217,20 @@ let pp_op size
                Protocol.Script_repr.expr_encoding
                (Bytes.sub bin 4 (Bytes.length bin - 4)))
         in
-
-        let whole = Format.asprintf "%a" (pp_node ~wrap:false) node in
-        List.iter (push "Data" "%s") (split_screens size whole)
+        let node_screens = node_to_screens ppf node in
+        operation_screen :: fee_screen :: storage_screen :: amount_screen
+        :: destination_screen :: entrypoint_screen :: node_screens
     | _ -> assert false
   in
-
-  let rec print_op :
-      type t. int -> t Protocol.Alpha_context.contents_list -> unit =
+  let rec screen_of_operations :
+      type t. int -> t Protocol.Alpha_context.contents_list -> screen list =
    fun n -> function
-    | Single (Manager_operation _ as m) -> print_manager n m
+    | Single (Manager_operation _ as m) -> screen_of_manager n m
     | Cons ((Manager_operation _ as m), rest) ->
-        print_manager n m;
-        print_op (succ n) rest
+        screen_of_manager n m @ screen_of_operations (succ n) rest
     | _ -> assert false
   in
-  print_op 0 contents;
-  List.rev !screens
+  screen_of_operations 0 contents
 
 let path_to_bytes path =
   (* hardened is defined by the "'" *)
@@ -242,15 +271,13 @@ let gen_expect_test_sign ppf (`Hex txt as hex) screens =
 let gen_expect_test_sign_micheline_data ppf hex =
   let screens bin =
     let node = Gen_micheline.decode bin in
-    let whole = Format.asprintf "%a" (pp_node ~wrap:false) node in
-    Format.fprintf ppf "# full output: %s@\n" whole;
-    List.map (fun s -> ("Data", s)) (split_screens 38 whole)
+    node_to_screens ppf node
   in
   gen_expect_test_sign ppf hex screens
 
 let gen_expect_test_sign_operation ppf hex =
   let screens bin =
     let op = Gen_operations.decode bin in
-    pp_op 38 op
+    operation_to_screens ppf op
   in
   gen_expect_test_sign ppf hex screens
