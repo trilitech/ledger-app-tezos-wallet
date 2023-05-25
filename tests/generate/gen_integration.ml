@@ -100,26 +100,28 @@ type signer = {
   sk : Tezos_crypto.Signature.secret_key;
 }
 
-let split_sign_apdus ~signer:{ path; pkh = _; pk = _; sk } bin =
+let sign_apdus ~signer:{ path; pkh = _; pk = _; sk } bin =
   let cla = Apdu.Class.Default in
   let ins = Apdu.Instruction.Sign_with_hash in
   let curve = Apdu.Curve.of_sk sk in
-  let apdus =
-    Apdu.make_packet ~cla ~ins ~curve path
-    :: Apdu.make_packets ~idx:1 ~cla ~ins ~curve bin
-  in
+  Apdu.make_packet ~cla ~ins ~curve path
+  :: Apdu.make_packets ~idx:1 ~cla ~ins ~curve bin
+
+let sign ppf ~signer bin =
+  let apdus = sign_apdus ~signer bin in
   let expectations =
     let bin_sign_success_bytes =
       let bin_hash = Tezos_crypto.Blake2B.(to_bytes (hash_bytes [ bin ])) in
       let sign =
-        Tezos_crypto.Signature.to_bytes (Tezos_crypto.Signature.sign sk bin)
+        Tezos_crypto.Signature.to_bytes
+          (Tezos_crypto.Signature.sign signer.sk bin)
       in
       Bytes.concat Bytes.empty [ bin_hash; sign; Apdu.success ]
     in
     List.init (List.length apdus - 1) (fun _ -> Apdu.success)
     @ [ bin_sign_success_bytes ]
   in
-  List.combine apdus expectations
+  send_async_apdus ppf @@ List.combine apdus expectations
 
 open Tezos_protocol_015_PtLimaPt
 open Tezos_micheline
@@ -262,8 +264,7 @@ let gen_expect_test_sign ppf (`Hex txt as hex) screens =
   let bin = Hex.to_bytes hex in
   Format.fprintf ppf "# full input: %s@." txt;
   let screens = screens bin in
-  let apdus = split_sign_apdus ~signer bin in
-  send_async_apdus ppf apdus;
+  sign ppf ~signer bin;
   go_through_screens ppf screens;
   accept ppf ();
   expect_async_apdus_sent ppf ()
