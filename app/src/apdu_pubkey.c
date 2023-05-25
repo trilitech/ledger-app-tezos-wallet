@@ -66,9 +66,21 @@ static void format_pkh(char* buffer) {
   tz_format_pkh(hash, 21, buffer);
 }
 
+static void stream_cb(tz_ui_cb_type_t type) {
+  switch (type) {
+  case TZ_UI_STREAM_CB_ACCEPT:
+    ok_cb();
+    break;
+  case TZ_UI_STREAM_CB_REFILL:
+    break;
+  case TZ_UI_STREAM_CB_REJECT:
+    delay_reject();
+    break;
+  }
+}
 
 __attribute__((noreturn)) static void prompt_address () {
-  tz_ui_stream_init(NULL, ok_cb, delay_reject);
+  tz_ui_stream_init(stream_cb);
   format_pkh(global.stream.buffer.value);
   strcpy(global.stream.buffer.title, "Provide Key");
   tz_ui_stream_push();

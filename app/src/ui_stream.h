@@ -49,10 +49,14 @@ typedef struct {
   char value[TZ_UI_STREAM_CONTENTS_SIZE + 1];
 } tz_ui_stream_buffer;
 
+typedef enum {
+  TZ_UI_STREAM_CB_ACCEPT,
+  TZ_UI_STREAM_CB_REFILL,
+  TZ_UI_STREAM_CB_REJECT
+} tz_ui_cb_type_t;
+
 typedef struct {
-  void (*refill)(void);
-  void (*accept)(void);
-  void (*reject)(void);
+  void (*cb)(tz_ui_cb_type_t);
   char titles[TZ_UI_STREAM_HISTORY_SCREENS][TZ_UI_STREAM_TITLE_WIDTH];
   char values[TZ_UI_STREAM_HISTORY_SCREENS][TZ_UI_STREAM_CONTENTS_SIZE];
   int16_t current;
@@ -71,13 +75,7 @@ typedef enum {
   TZ_UI_STREAM_DISPLAY_REJECT,
 } tz_ui_stream_screen_kind;
 
-typedef struct {
-  void (*refill)();
-  void (*accept)();
-  void (*reject)();
-} tz_ui_stream_callbacks;
-
-void tz_ui_stream_init(void (*)(void), void (*)(void), void (*)(void));
+void tz_ui_stream_init(void (*)(tz_ui_cb_type_t));
 void tz_ui_stream_push(void);
 void tz_ui_stream_close(void);
 tz_ui_stream_screen_kind tz_ui_stream_current_screen_kind(void);

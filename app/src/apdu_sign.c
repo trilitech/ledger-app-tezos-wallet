@@ -209,6 +209,20 @@ static void hash_packet(packet_t *pkt) {
   }
 }
 
+static void stream_cb(tz_ui_cb_type_t type) {
+  switch (type) {
+  case TZ_UI_STREAM_CB_ACCEPT:
+    sign_packet();
+    break;
+  case TZ_UI_STREAM_CB_REFILL:
+    refill();
+    break;
+  case TZ_UI_STREAM_CB_REJECT:
+    send_reject();
+    break;
+  }
+}
+
 static size_t handle_first_apdu(packet_t *pkt) {
 
   if (global.apdu.sign.step != SIGN_ST_IDLE) THROW(EXC_UNEXPECTED_SIGN_STATE);
@@ -225,7 +239,7 @@ static size_t handle_first_apdu(packet_t *pkt) {
   tz_parser_regs_refill (&global.apdu.sign.parser_regs, NULL, 0);
   tz_parser_regs_flush (&global.apdu.sign.parser_regs, global.stream.buffer.value, TZ_UI_STREAM_CONTENTS_SIZE);
 
-  tz_ui_stream_init (refill, sign_packet, send_reject);
+  tz_ui_stream_init(stream_cb);
 
   global.apdu.sign.step = SIGN_ST_WAIT_DATA;
   return finalize_successful_send(0);

@@ -46,11 +46,9 @@ static void update () {
   }
 }
 
-void tz_ui_stream_init (void (*refill)(), void (*accept)(), void (*reject)()) {
+void tz_ui_stream_init (void (*cb)(tz_ui_cb_type_t)) {
   memset(&global.stream, 0x0, sizeof(global.stream));
-  global.stream.refill = refill;
-  global.stream.accept = accept;
-  global.stream.reject = reject;
+  global.stream.cb = cb;
   global.stream.full = false;
   global.stream.current = -1;
   global.stream.total = -1;
@@ -138,11 +136,11 @@ static unsigned int cb(unsigned int button_mask, __attribute__((unused)) unsigne
     switch (tz_ui_stream_current_screen_kind ()) {
     case TZ_UI_STREAM_DISPLAY_ACCEPT:
       ui_initial_screen ();
-      global.stream.accept ();
+      global.stream.cb(TZ_UI_STREAM_CB_ACCEPT);
       break;
     case TZ_UI_STREAM_DISPLAY_REJECT:
       ui_initial_screen ();
-      global.stream.reject ();
+      global.stream.cb(TZ_UI_STREAM_CB_REJECT);
       break;
     default: break;
     }
@@ -220,9 +218,8 @@ static void change_screen_left() {
 
 static void change_screen_right() {
   if (global.stream.current == global.stream.total) {
-    if (!global.stream.full) {
-      global.stream.refill ();
-    }
+    if (!global.stream.full)
+      global.stream.cb(TZ_UI_STREAM_CB_REFILL);
   }
   // go back to the data screen
   succ ();
