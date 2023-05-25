@@ -93,11 +93,7 @@ typedef struct {
 typedef struct {
   main_step_t step;
   uint8_t *stack_root;
-  struct {
-    tz_ui_stream_model model;
-    tz_ui_stream_buffer buffer;
-    tz_ui_stream_callbacks callbacks;
-  } stream;
+  tz_ui_stream_t stream;
   bip32_path_with_curve_t path_with_curve;
   struct {
     apdu_hash_state_t hash;
