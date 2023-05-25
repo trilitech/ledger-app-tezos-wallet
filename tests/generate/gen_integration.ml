@@ -255,7 +255,7 @@ let path_to_bytes path =
 
 (* Keys for mnemonic zebra (x24), path m/44'/1729'/0'/0' *)
 
-let signer =
+let tz1_signer =
   (* tz1dyX3B1CFYa2DfdFLyPtiJCfQRUgPVME6E *)
   let open Tezos_crypto.Signature in
   let path = path_to_bytes [ 44; 1729; 0; 0 ] in
@@ -267,10 +267,27 @@ let signer =
   let pkh = Public_key.hash pk in
   { path; pkh; pk; sk }
 
+let tz2_signer =
+  (* tz2GB5YHqF4UzQ8GP5yUqdhY9oVWRXCY2hPU *)
+  let open Tezos_crypto.Signature in
+  let path = path_to_bytes [ 44; 1729; 0; 0 ] in
+  let sk =
+    Secret_key.of_b58check_exn
+      "spsk2Pfx9chqXVbz2tW7ze4gGU4RfaiK3nSva77bp69zHhFho2zTze"
+  in
+  let pk = Secret_key.to_public_key sk in
+  let pkh = Public_key.hash pk in
+  { path; pkh; pk; sk }
+
+let gen_signer = QCheck2.Gen.oneofl [ tz1_signer; tz2_signer ]
+
 let gen_expect_test_sign ppf (`Hex txt as hex) screens =
   let bin = Hex.to_bytes hex in
   Format.fprintf ppf "# full input: %s@." txt;
   let screens = screens bin in
+  let signer = QCheck2.Gen.generate1 ~rand:Gen_utils.random_state gen_signer in
+  Format.fprintf ppf "# signer: %a@." Tezos_crypto.Signature.Public_key_hash.pp
+    signer.pkh;
   sign ppf ~signer bin;
   go_through_screens ppf screens;
   accept ppf ();
