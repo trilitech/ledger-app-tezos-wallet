@@ -12,6 +12,83 @@
    See the License for the specific language governing permissions and
    limitations under the License. *)
 
+let shell_escape ppf s =
+  Format.fprintf ppf "'";
+  String.iter
+    (function
+      | '\'' -> Format.fprintf ppf "'\\''" | c -> Format.fprintf ppf "%c" c)
+    s;
+  Format.fprintf ppf "'"
+
+let pp_hex_bytes ppf bytes = Format.fprintf ppf "%a" Hex.pp (Hex.of_bytes bytes)
+
+(** General *)
+
+let expect_full_text ppf l =
+  let pp_space ppf () = Format.fprintf ppf " " in
+  let pp_args = Format.pp_print_list ~pp_sep:pp_space shell_escape in
+  Format.fprintf ppf "expect_full_text %a@." pp_args l
+
+module Button = struct
+  type t = Both | Right | Left
+
+  let press ppf button =
+    let button =
+      match button with Both -> "both" | Right -> "right" | Left -> "left"
+    in
+    Format.fprintf ppf "press_button %s@." button
+end
+
+let send_apdu ppf apdu = Format.fprintf ppf "send_apdu %a@." pp_hex_bytes apdu
+
+let expect_apdu_return ppf ans =
+  Format.fprintf ppf "expect_apdu_return %a@." pp_hex_bytes ans
+
+let send_async_apdus ppf apdus =
+  let pp_dash_break_line ppf () = Format.fprintf ppf "\\@\n\t" in
+  let pp_apdu ppf (apdu, ans) =
+    Format.fprintf ppf "%a %a" pp_hex_bytes apdu pp_hex_bytes ans
+  in
+  let pp_apdus = Format.pp_print_list ~pp_sep:pp_dash_break_line pp_apdu in
+  Format.fprintf ppf "send_async_apdus %a%a@." pp_dash_break_line () pp_apdus
+    apdus
+
+let expect_async_apdus_sent ppf () =
+  Format.fprintf ppf "expect_async_apdus_sent@."
+
+let expect_exited ppf () = Format.fprintf ppf "expect_exited@."
+
+(** Specific *)
+
+let home ppf () =
+  expect_full_text ppf [ "Tezos Wallet"; "ready for"; "safe signing" ]
+
+let expect_accept ppf () = expect_full_text ppf [ "Accept?" ]
+let expect_reject ppf () = expect_full_text ppf [ "Reject?" ]
+let expect_quit ppf () = expect_full_text ppf [ "Quit?" ]
+
+let accept ppf () =
+  expect_accept ppf ();
+  Button.(press ppf Both)
+
+let reject ppf () =
+  expect_reject ppf ();
+  Button.(press ppf Both)
+
+let quit ppf () =
+  expect_quit ppf ();
+  Button.(press ppf Both)
+
+let expected_screen ppf ~title ~content =
+  expect_full_text ppf [ title; content ]
+
+let go_through_screens ppf screens =
+  List.iter
+    (fun (title, content) ->
+      expected_screen ppf ~title ~content;
+      Button.(press ppf Right))
+    screens
+
 type signer = {
   path : bytes;
   pkh : Tezos_crypto.Signature.public_key_hash;
@@ -126,14 +203,6 @@ let pp_op size
   print_op 0 contents;
   List.rev !screens
 
-let shell_escape ppf s =
-  Format.fprintf ppf "'";
-  String.iter
-    (function
-      | '\'' -> Format.fprintf ppf "'\\''" | c -> Format.fprintf ppf "%c" c)
-    s;
-  Format.fprintf ppf "'"
-
 let path_to_bytes path =
   (* hardened is defined by the "'" *)
   let hardened idx = idx lor 0x80_00_00_00 in
@@ -162,23 +231,13 @@ let signer =
 
 let gen_expect_test_sign ppf (`Hex txt as hex) screens =
   let bin = Hex.to_bytes hex in
-  Format.fprintf ppf "# full input: %s@\n" txt;
+  Format.fprintf ppf "# full input: %s@." txt;
   let screens = screens bin in
-  Format.fprintf ppf "send_async_apdus";
   let apdus = split_sign_apdus ~signer bin in
-  List.iter
-    (fun (apdu, ans) ->
-      Format.fprintf ppf "\\@\n  %a %a" Hex.pp (Hex.of_bytes apdu) Hex.pp
-        (Hex.of_bytes ans))
-    apdus;
-  Format.fprintf ppf "@\n";
-  List.iter
-    (fun (t, s) ->
-      Format.fprintf ppf "expect_full_text '%s' %a\npress_button right@\n" t
-        shell_escape s)
-    screens;
-  Format.fprintf ppf "expect_full_text 'Accept?'@\n";
-  Format.fprintf ppf "press_button both@\nexpect_async_apdus_sent@."
+  send_async_apdus ppf apdus;
+  go_through_screens ppf screens;
+  accept ppf ();
+  expect_async_apdus_sent ppf ()
 
 let gen_expect_test_sign_micheline_data ppf hex =
   let screens bin =
