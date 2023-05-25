@@ -55,8 +55,6 @@ typedef struct {
   void (*reject)(void);
   char titles[TZ_UI_STREAM_HISTORY_SCREENS][TZ_UI_STREAM_TITLE_WIDTH];
   char values[TZ_UI_STREAM_HISTORY_SCREENS][TZ_UI_STREAM_CONTENTS_SIZE];
-  char title[TZ_UI_STREAM_TITLE_WIDTH + 1];
-  char value[TZ_UI_STREAM_CONTENTS_SIZE + 1];
   int16_t current;
   int16_t total;
   bool full;

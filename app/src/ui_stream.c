@@ -19,38 +19,41 @@
 // Model
 
 static void update () {
+  size_t bucket, i;
+
+  for (i = 0; i < TZ_SCREEN_LINES_11PX; i++)
+    global.ux.lines[i][0]=0;
+
   if (global.stream.current == global.stream.total + 1) {
-    strcpy(global.stream.title, "Accept?");
-    bzero(global.stream.value, TZ_UI_STREAM_CONTENTS_SIZE);
-    strcpy(global.stream.value, "Press both buttons");
-    strcpy(global.stream.value + TZ_UI_STREAM_CONTENTS_WIDTH, "to accept.");
-  } else if (global.stream.current == global.stream.total + 2) {
-    strcpy(global.stream.title, "Reject?");
-    bzero(global.stream.value, TZ_UI_STREAM_CONTENTS_SIZE);
-    strcpy(global.stream.value, "Press both buttons");
-    strcpy(global.stream.value + TZ_UI_STREAM_CONTENTS_WIDTH, "to reject.");
-  } else if (global.stream.current >= 0) {
-    int bucket = global.stream.current % TZ_UI_STREAM_HISTORY_SCREENS;
-    memcpy(global.stream.title, global.stream.titles[bucket], TZ_UI_STREAM_TITLE_WIDTH);
-    memcpy(global.stream.value, global.stream.values[bucket], TZ_UI_STREAM_CONTENTS_SIZE);
+    STRLCPY(global.ux.lines[0], "Accept?");
+    STRLCPY(global.ux.lines[1], "Press both buttons");
+    STRLCPY(global.ux.lines[2], "to accept.");
+    return;
   }
-#ifdef TEZOS_DEBUG
-  PRINTF("[DEBUG] update_screen(title: \"%s\", value: \"%s\")\n",
-         global.stream.title, global.stream.value);
-#endif
+
+  if (global.stream.current == global.stream.total + 2) {
+    STRLCPY(global.ux.lines[0], "Reject?");
+    STRLCPY(global.ux.lines[1], "Press both buttons");
+    STRLCPY(global.ux.lines[2], "to reject.");
+    return;
+  }
+
+  bucket = global.stream.current % TZ_UI_STREAM_HISTORY_SCREENS;
+
+  STRLCPY(global.ux.lines[0], global.stream.titles[bucket]);
+  for (i = 0; i < TZ_UI_STREAM_CONTENTS_LINES; i++) {
+    STRLCPY(global.ux.lines[i+1], global.stream.values[bucket] + i * TZ_UI_STREAM_CONTENTS_WIDTH);
+  }
 }
 
 void tz_ui_stream_init (void (*refill)(), void (*accept)(), void (*reject)()) {
+  memset(&global.stream, 0x0, sizeof(global.stream));
   global.stream.refill = refill;
   global.stream.accept = accept;
   global.stream.reject = reject;
   global.stream.full = false;
   global.stream.current = -1;
   global.stream.total = -1;
-  global.stream.title[TZ_UI_STREAM_TITLE_WIDTH] = 0;
-  global.stream.value[TZ_UI_STREAM_CONTENTS_SIZE] = 0;
-  strncpy(global.stream.title, "Waiting", TZ_UI_STREAM_TITLE_WIDTH);
-  strncpy(global.stream.value, "", TZ_UI_STREAM_CONTENTS_SIZE);
 }
 
 void tz_ui_stream_close () {
@@ -78,7 +81,6 @@ void tz_ui_stream_push () {
   strncpy(global.stream.values[bucket], global.stream.buffer.value, TZ_UI_STREAM_CONTENTS_SIZE);
   if (global.stream.total == 0 || global.stream.total >= TZ_UI_STREAM_HISTORY_SCREENS) {
     global.stream.current++;
-    update ();
   }
 #ifdef TEZOS_DEBUG
   char debug_title[TZ_UI_STREAM_TITLE_WIDTH+1], debug_value[TZ_UI_STREAM_CONTENTS_SIZE + 1];
@@ -95,14 +97,12 @@ void tz_ui_stream_push () {
 static void pred () {
   if (global.stream.current >= 1 && global.stream.current >= global.stream.total - TZ_UI_STREAM_HISTORY_SCREENS + 2) {
     global.stream.current--;
-    update ();
   }
 }
 
 static void succ () {
   if (global.stream.current < global.stream.total + (global.stream.full ? 2 : 0)) {
     global.stream.current++;
-    update ();
   }
 }
 
@@ -160,7 +160,7 @@ static void redisplay () {
     {{ BAGL_RECTANGLE, 0x00, 0, 0, 128, BAGL_HEIGHT, 0, 0, BAGL_FILL, 0x000000, 0xFFFFFF, 0, 0 }, NULL },
     {{ BAGL_ICON, 0x00, 1, 1, 7, 7, 0, 0, 0, 0xFFFFFF, 0x000000, 0, BAGL_GLYPH_NOGLYPH }, (const char*) &C_icon_rien },
     {{ BAGL_ICON, 0x00, 120, 1, 7, 7, 0, 0, 0, 0xFFFFFF, 0x000000, 0, BAGL_GLYPH_NOGLYPH }, (const char*) &C_icon_rien },
-    {{ BAGL_LABELINE, 0x02, 8, 8, 112, 11, 0, 0, 0, 0xFFFFFF, 0x000000, BOLD, 0 }, global.stream.title },
+    {{ BAGL_LABELINE, 0x02, 8, 8, 112, 11, 0, 0, 0, 0xFFFFFF, 0x000000, BOLD, 0 }, global.ux.lines[0] },
     {{ BAGL_LABELINE, 0x02, 0, 19, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000, REGULAR, 0 }, global.ux.lines[1] },
     {{ BAGL_LABELINE, 0x02, 0, 30, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000, REGULAR, 0 }, global.ux.lines[2] },
     {{ BAGL_ICON, 0x00, 56, 14, 16, 16, 0, 0, 0, 0xFFFFFF, 0x000000, 0, BAGL_GLYPH_NOGLYPH }, (const char*) &C_icon_rien },
@@ -168,7 +168,7 @@ static void redisplay () {
     {{ BAGL_RECTANGLE, 0x00, 0, 0, 128, BAGL_HEIGHT, 0, 0, BAGL_FILL, 0x000000, 0xFFFFFF, 0, 0 }, NULL },
     {{ BAGL_ICON, 0x00, 1, 1, 7, 7, 0, 0, 0, 0xFFFFFF, 0x000000, 0, BAGL_GLYPH_NOGLYPH }, (const char*) &C_icon_rien },
     {{ BAGL_ICON, 0x00, 120, 1, 7, 7, 0, 0, 0, 0xFFFFFF, 0x000000, 0, BAGL_GLYPH_NOGLYPH }, (const char*) &C_icon_rien },
-    {{ BAGL_LABELINE, 0x02, 8, 8, 112, 11, 0, 0, 0, 0xFFFFFF, 0x000000, BOLD, 0 }, global.stream.title },
+    {{ BAGL_LABELINE, 0x02, 8, 8, 112, 11, 0, 0, 0, 0xFFFFFF, 0x000000, BOLD, 0 }, global.ux.lines[0] },
     {{ BAGL_LABELINE, 0x02, 0, 21, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000, REGULAR, 0 }, global.ux.lines[1] },
     {{ BAGL_LABELINE, 0x02, 0, 34, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000, REGULAR, 0 }, global.ux.lines[2] },
     {{ BAGL_LABELINE, 0x02, 0, 47, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000, REGULAR, 0 }, global.ux.lines[3] },
@@ -177,11 +177,7 @@ static void redisplay () {
 #endif
   };
 
-  for (int i = 0; i < TZ_SCREEN_LINES_11PX;i++)
-    global.ux.lines[i][0]=0;
-  for (int i = 0; i < TZ_UI_STREAM_CONTENTS_LINES;i++) {
-    strncpy(global.ux.lines[i+1], global.stream.value + i * TZ_UI_STREAM_CONTENTS_WIDTH, TZ_UI_STREAM_CONTENTS_WIDTH);
-  }
+  update();
 
   switch (tz_ui_stream_current_screen_kind ()) {
   case TZ_UI_STREAM_DISPLAY_INIT:
