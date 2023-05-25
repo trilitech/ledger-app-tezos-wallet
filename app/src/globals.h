@@ -25,6 +25,7 @@
 #include "exception.h"
 #include "keys.h"
 #include "parser/parser_state.h"
+#include "utils.h"
 
 #define TZ_SCREEN_WITDH_FULL_REGULAR_11PX       19
 #define TZ_SCREEN_WITDH_BETWEEN_ICONS_BOLD_11PX 16
