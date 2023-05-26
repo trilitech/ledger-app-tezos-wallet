@@ -74,8 +74,8 @@ typedef struct {
   void (*reject)();
 } tz_ui_stream_callbacks;
 
-void tz_ui_stream_init (void (*refill)(), void (*accept)(), void (*reject)());
-void tz_ui_stream_push ();
-void tz_ui_stream_close ();
-tz_ui_stream_screen_kind tz_ui_stream_current_screen_kind ();
-__attribute__((noreturn)) void tz_ui_stream ();
+void tz_ui_stream_init(void (*)(void), void (*)(void), void (*)(void));
+void tz_ui_stream_push(void);
+void tz_ui_stream_close(void);
+tz_ui_stream_screen_kind tz_ui_stream_current_screen_kind(void);
+__attribute__((noreturn)) void tz_ui_stream(void);

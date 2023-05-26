@@ -53,8 +53,8 @@
 // Last valid instruction code
 #define INS_MAX                       0x0F
 
-size_t finalize_successful_send(size_t tx);
-void delayed_send(size_t tx);
+size_t finalize_successful_send(size_t);
+void delayed_send(size_t);
 void delay_reject(void);
 void require_permissioned_comm(void);
 

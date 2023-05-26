@@ -82,16 +82,16 @@ typedef struct {
   tz_operation_state operation;
 } tz_parser_state;
 
-extern void tz_parser_init(tz_parser_state *state);
+void tz_parser_init(tz_parser_state *);
 
-extern tz_parser_result tz_parser_put(tz_parser_state *state, tz_parser_regs *regs, char c);
-extern tz_parser_result tz_parser_read(tz_parser_state *state, tz_parser_regs *regs, uint8_t *r);
-extern tz_parser_result tz_parser_peek(tz_parser_state *state, tz_parser_regs *regs,uint8_t *r);
-extern void tz_parser_skip(tz_parser_state *state, tz_parser_regs *regs);
+tz_parser_result tz_parser_put(tz_parser_state *, tz_parser_regs *, char);
+tz_parser_result tz_parser_read(tz_parser_state *, tz_parser_regs *, uint8_t *);
+tz_parser_result tz_parser_peek(tz_parser_state *, tz_parser_regs *, uint8_t *);
+void tz_parser_skip(tz_parser_state *, tz_parser_regs *);
 
 // error handling utils
 
-extern tz_parser_result tz_parser_set_errno (tz_parser_state *state, tz_parser_result code);
+tz_parser_result tz_parser_set_errno(tz_parser_state *, tz_parser_result);
 #ifdef TEZOS_DEBUG
 #  define tz_return(e) do {                                             \
             tz_parser_result _c = (e);                                  \

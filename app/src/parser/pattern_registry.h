@@ -18,5 +18,5 @@
 
 #include "parser_state.h"
 
-bool find_pattern(uint8_t* address, const char* entrypoint, const uint8_t** pattern, uint16_t* length);
-bool find_name(uint8_t* address, const char** name);
+bool find_pattern(uint8_t *, const char *, const uint8_t **, uint16_t *);
+bool find_name(uint8_t *, const char **);

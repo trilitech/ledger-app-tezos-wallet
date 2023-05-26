@@ -56,26 +56,20 @@ typedef struct {
 } bip32_path_with_curve_t;
 
 // throws
-size_t read_bip32_path(bip32_path_t *const out, uint8_t const *const in, size_t const in_size);
+size_t read_bip32_path(bip32_path_t *const, uint8_t const *const,
+		       size_t const);
 
-int generate_key_pair(key_pair_t *key_pair,
-                      derivation_type_t const derivation_type,
-                      bip32_path_t const *const bip32_path);
+int generate_key_pair(key_pair_t *, derivation_type_t const,
+                      bip32_path_t const *const);
 
 // Non-reentrant
-void public_key_hash(
-    uint8_t *const hash_out,
-    size_t const hash_out_size,
-    cx_ecfp_public_key_t *const compressed_out,  // pass NULL if this value is not desired
-    derivation_type_t const derivation_type,
-    cx_ecfp_public_key_t const *const restrict public_key);
+void public_key_hash(uint8_t *const, size_t const,
+                     cx_ecfp_public_key_t *const,
+                     derivation_type_t const,
+                     cx_ecfp_public_key_t const *const restrict);
 
-size_t sign(uint8_t *const out,
-            size_t const out_size,
-            derivation_type_t const derivation_type,
-            key_pair_t const *const key,
-            uint8_t const *const in,
-            size_t const in_size);
+size_t sign(uint8_t *const, size_t const, derivation_type_t const,
+            key_pair_t const *const, uint8_t const *const, size_t const);
 
 static inline derivation_type_t parse_derivation_type(uint8_t const curve_code) {
     switch (curve_code) {
@@ -92,6 +86,5 @@ static inline derivation_type_t parse_derivation_type(uint8_t const curve_code) 
     }
 }
 
-int generate_public_key(cx_ecfp_public_key_t *public_key,
-                        derivation_type_t const derivation_type,
-                        bip32_path_t const *const bip32_path);
+int generate_public_key(cx_ecfp_public_key_t *, derivation_type_t const,
+                        bip32_path_t const *const);
