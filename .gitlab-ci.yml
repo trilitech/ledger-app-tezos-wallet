@@ -85,6 +85,13 @@ integration_nanos_basic:
   variables:
     DEVICE: nanos
 
+integration_nanosp_basic:
+  extends: .integration-basic
+  dependencies:
+    - build_nanosp_dbg
+  variables:
+    DEVICE: nanosp
+
 integration_nanos_micheline_samples:
   image:
     name: ghcr.io/ledgerhq/speculos:sha-90a021a
