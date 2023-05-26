@@ -175,40 +175,6 @@ static void refill() {
   }
 }
 
-static void hash_block(blake2b_hash_state_t *const state, uint8_t *current) {
-  if (!(state->initialized)) THROW(EXC_MEMORY_ERROR);
-  cx_hash((cx_hash_t *) &state->state, 0, current, B2B_BLOCKBYTES, NULL, 0);
-}
-
-static void finish_hash(uint8_t *const out, size_t const out_size,
-                        blake2b_hash_state_t *const state, uint8_t *buff,
-                        size_t buff_length) {
-  if (!(state->initialized)) THROW(EXC_MEMORY_ERROR);
-  if (buff_length > B2B_BLOCKBYTES) THROW(EXC_MEMORY_ERROR);
-  cx_hash((cx_hash_t *) &state->state, CX_LAST, buff, buff_length, out, out_size);
-}
-
-static void fill_message_data(packet_t *pkt, size_t *hash_offset) {
-  uint8_t *data = pkt->buff + *hash_offset;
-  size_t size = pkt->buff_size - *hash_offset;
-  size_t copied = MIN(B2B_BLOCKBYTES - global.apdu.sign.message_data_length, size);
-  memcpy(global.apdu.sign.message_data + global.apdu.sign.message_data_length,
-         data, copied);
-  global.apdu.sign.message_data_length += copied;
-  *hash_offset += copied;
-}
-
-static void hash_packet(packet_t *pkt) {
-  size_t hash_offset = 0;
-  while(hash_offset < pkt->buff_size) {
-    fill_message_data(pkt, &hash_offset);
-    if (global.apdu.sign.message_data_length == B2B_BLOCKBYTES) {
-      hash_block( &global.apdu.hash.hash_state, global.apdu.sign.message_data );
-      global.apdu.sign.message_data_length = 0;
-    }
-  }
-}
-
 static void stream_cb(tz_ui_cb_type_t type) {
   switch (type) {
   case TZ_UI_STREAM_CB_ACCEPT:
@@ -232,8 +198,7 @@ static size_t handle_first_apdu(packet_t *pkt) {
   global.path_with_curve.derivation_type = parse_derivation_type(pkt->p2);
 
   // init hash
-  cx_blake2b_init(&global.apdu.hash.hash_state.state, SIGN_HASH_SIZE * 8);
-  global.apdu.hash.hash_state.initialized = true;
+  cx_blake2b_init(&global.apdu.hash.state, SIGN_HASH_SIZE * 8);
 
   tz_operation_parser_init(&global.apdu.sign.parser_state, TZ_UNKNOWN_SIZE, false);
   tz_parser_regs_refill (&global.apdu.sign.parser_regs, NULL, 0);
@@ -256,16 +221,14 @@ static size_t handle_data_apdu(packet_t *pkt) {
   global.apdu.sign.packet_index++; // XXX drop or check
 
   // do the incremental hashing
-  hash_packet(pkt);
+  cx_hash((cx_hash_t *)&global.apdu.hash.state,
+          pkt->is_last ? CX_LAST : 0,
+          pkt->buff, pkt->buff_size,
+          global.apdu.hash.final_hash, sizeof(global.apdu.hash.final_hash));
   global.apdu.sign.total_length += pkt->buff_size;
-  if (pkt->is_last) {
+
+  if (pkt->is_last)
     global.apdu.sign.received_last_msg = true;
-    finish_hash(global.apdu.hash.final_hash,
-                sizeof(global.apdu.hash.final_hash),
-                &global.apdu.hash.hash_state,
-                global.apdu.sign.message_data,
-                global.apdu.sign.message_data_length);
-  }
 
   // refill the parser's input
   tz_parser_regs_refill (&global.apdu.sign.parser_regs, pkt->buff, pkt->buff_size);

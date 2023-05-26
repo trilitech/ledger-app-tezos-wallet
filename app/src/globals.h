@@ -55,11 +55,6 @@ void init_globals(void);
 #define MAX_SIGNATURE_SIZE 100
 #define B2B_BLOCKBYTES 128
 
-typedef struct {
-  cx_blake2b_t state;
-  bool initialized;
-} blake2b_hash_state_t;
-
 typedef enum {
   ST_IDLE,
   ST_SIGN,
@@ -67,7 +62,7 @@ typedef enum {
 } main_step_t;
 
 typedef struct {
-  blake2b_hash_state_t hash_state;
+  cx_blake2b_t state;
   uint8_t final_hash[SIGN_HASH_SIZE];
 } apdu_hash_state_t;
 
@@ -83,8 +78,6 @@ typedef struct {
   sign_step_t step;
   bool received_last_msg;
 
-  uint8_t message_data[B2B_BLOCKBYTES];
-  size_t message_data_length;
   size_t total_length;
 
   tz_parser_state parser_state;
