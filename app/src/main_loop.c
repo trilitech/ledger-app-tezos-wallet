@@ -34,6 +34,15 @@
 static uint8_t dispatch(uint8_t instruction) {
   FUNC_ENTER(("%u", instruction));
 
+  switch (global.home_screen) {
+  case SCREEN_QUIT:
+    PRINTF("[ERROR] received instruction whilst on Quit screen\n");
+    THROW(EXC_UNEXPECTED_STATE);
+    break;
+  default:
+    break;
+  }
+
   switch (instruction) {
   case INS_SIGN:
   case INS_SIGN_WITH_HASH: {

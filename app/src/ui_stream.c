@@ -127,8 +127,10 @@ size_t tz_ui_stream_pushl(const char *title, const char *value, size_t max) {
     s->values[bucket][i * TZ_UI_STREAM_CONTENTS_WIDTH] = '\0';
 
   // Ensure things fit on one line
-  size_t length = MIN(strlen(value), max);
+  size_t length = strlen(value);
   size_t offset = 0;
+
+  length = MIN(length, max);
 
   int line = 0;
   while (offset < length && line < TZ_UI_STREAM_CONTENTS_LINES) {

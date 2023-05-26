@@ -20,13 +20,6 @@
 
 #include "globals.h"
 
-static enum {
-  SCREEN_CLEAR_SIGN,
-  SCREEN_QUIT,
-  SCREEN_BLIND_SIGN,
-  SCREEN_SETTINGS,
-} screen;
-
 /* Prototypes */
 
 static unsigned int cb(unsigned int, unsigned int);
@@ -37,16 +30,26 @@ static unsigned int cb(unsigned int button_mask, __attribute__((unused)) unsigne
   FUNC_ENTER(("button_mask=%d, button_mask_counter=%d", button_mask,
               button_mask_counter));
 
-  if (button_mask == (BUTTON_EVT_RELEASED | BUTTON_LEFT) && screen > SCREEN_CLEAR_SIGN) {
-    screen--;
-    redisplay ();
-  }
-  if (button_mask == (BUTTON_EVT_RELEASED | BUTTON_RIGHT) && screen < SCREEN_QUIT) {
-    screen++;
-    redisplay ();
-  }
-  if (button_mask == (BUTTON_EVT_RELEASED | BUTTON_LEFT | BUTTON_RIGHT) && screen == 1) {
-    exit_app();
+  if ((button_mask & BUTTON_EVT_RELEASED) == 0)
+    return 0;
+
+  switch (button_mask & ~BUTTON_EVT_RELEASED) {
+  case BUTTON_LEFT:
+    if (global.home_screen > SCREEN_CLEAR_SIGN) {
+      global.home_screen--;
+      redisplay();
+    }
+    break;
+  case BUTTON_RIGHT:
+    if (global.home_screen < SCREEN_QUIT) {
+      global.home_screen++;
+      redisplay();
+    }
+    break;
+  case BUTTON_LEFT | BUTTON_RIGHT:
+    if (global.home_screen == SCREEN_QUIT)
+      exit_app();
+    break;
   }
 
   FUNC_LEAVE();
@@ -85,7 +88,7 @@ static void redisplay() {
 
   for (int i = 0; i < TZ_SCREEN_LINES_11PX;i++)
     global.ux.lines[i][0]=0;
-  switch (screen) {
+  switch (global.home_screen) {
   case SCREEN_CLEAR_SIGN:
     init[2].text = (const char*) &C_icon_right;
     STRLCPY(global.ux.lines[0], "Tezos Wallet");
@@ -93,6 +96,7 @@ static void redisplay() {
     STRLCPY(global.ux.lines[LINE_2], "safe signing");
     break;
   case SCREEN_BLIND_SIGN:
+    init[1].text = (const char*) &C_icon_left;
     init[2].text = (const char*) &C_icon_right;
     STRLCPY(global.ux.lines[0], "Tezos Wallet");
     STRLCPY(global.ux.lines[LINE_1], "ready for");
@@ -105,6 +109,7 @@ static void redisplay() {
     break;
   case SCREEN_SETTINGS:
     init[1].text = (const char*) &C_icon_left;
+    init[2].text = (const char*) &C_icon_right;
     STRLCPY(global.ux.lines[0], "Settings");
     init[sizeof(init)/sizeof(bagl_element_t)-1].text = (const char*) &C_icon_settings;
     break;
@@ -115,7 +120,12 @@ static void redisplay() {
 
 void ui_initial_screen(void) {
   FUNC_ENTER(("void"));
-  screen = SCREEN_CLEAR_SIGN;
+/*
+ * XXXrcd: consider decision...
+ *         should we revert to clear signing when
+ *         we start again?
+ */         
+  global.home_screen = SCREEN_CLEAR_SIGN;
   redisplay();
   FUNC_LEAVE();
 }

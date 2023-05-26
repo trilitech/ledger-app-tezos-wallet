@@ -7,5 +7,7 @@ expect_full_text "Accept?"
 press_button both
 expect_apdu_return 2102747884d9abdf16b3ab745158925f567e222f71225501826fa83347f6cbe9c3939000
 press_button right
+press_button right
+press_button right
 press_button both
 expect_exited
