@@ -89,6 +89,8 @@ typedef struct {
 
   tz_parser_state parser_state;
   tz_parser_regs parser_regs;
+
+  char line_buf[TZ_UI_STREAM_CONTENTS_SIZE + 1];
 } apdu_sign_state_t;
 
 typedef struct {

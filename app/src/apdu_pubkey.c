@@ -80,10 +80,10 @@ static void stream_cb(tz_ui_cb_type_t type) {
 }
 
 __attribute__((noreturn)) static void prompt_address () {
+  char buf[TZ_UI_STREAM_CONTENTS_SIZE + 1];
   tz_ui_stream_init(stream_cb);
-  format_pkh(global.stream.buffer.value);
-  strcpy(global.stream.buffer.title, "Provide Key");
-  tz_ui_stream_push();
+  format_pkh(buf);
+  tz_ui_stream_push("Provide Key", buf);
   tz_ui_stream_close();
   tz_ui_stream();
 }

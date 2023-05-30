@@ -44,11 +44,6 @@
 
 #define TZ_UI_STREAM_CONTENTS_SIZE (TZ_UI_STREAM_CONTENTS_WIDTH * TZ_UI_STREAM_CONTENTS_LINES)
 
-typedef struct {
-  char title[TZ_UI_STREAM_TITLE_WIDTH + 1];
-  char value[TZ_UI_STREAM_CONTENTS_SIZE + 1];
-} tz_ui_stream_buffer;
-
 typedef enum {
   TZ_UI_STREAM_CB_ACCEPT,
   TZ_UI_STREAM_CB_REFILL,
@@ -62,8 +57,6 @@ typedef struct {
   int16_t current;
   int16_t total;
   bool full;
-  // XXXrcd: remove things below this line
-  tz_ui_stream_buffer buffer;
 } tz_ui_stream_t;
 
 typedef enum {
@@ -76,7 +69,7 @@ typedef enum {
 } tz_ui_stream_screen_kind;
 
 void tz_ui_stream_init(void (*)(tz_ui_cb_type_t));
-void tz_ui_stream_push(void);
+void tz_ui_stream_push(const char *, const char *);
 void tz_ui_stream_close(void);
 tz_ui_stream_screen_kind tz_ui_stream_current_screen_kind(void);
 __attribute__((noreturn)) void tz_ui_stream(void);

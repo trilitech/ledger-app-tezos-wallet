@@ -153,11 +153,11 @@ static void refill() {
   switch (global.apdu.sign.parser_state.errno) {
   case TZ_BLO_IM_FULL:
   last_screen:
-    strncpy (global.stream.buffer.title, global.apdu.sign.parser_state.field_name, TZ_UI_STREAM_TITLE_WIDTH);
-    global.stream.buffer.value[regs->oofs] = 0;
-    tz_ui_stream_push ();
-    regs->olen = TZ_UI_STREAM_CONTENTS_WIDTH * TZ_UI_STREAM_CONTENTS_LINES;
-    regs->oofs = 0;
+    tz_ui_stream_push(global.apdu.sign.parser_state.field_name,
+                      global.apdu.sign.line_buf);
+    tz_parser_regs_flush(&global.apdu.sign.parser_regs,
+                         global.apdu.sign.line_buf,
+                         TZ_UI_STREAM_CONTENTS_SIZE);
     break;
   case TZ_BLO_FEED_ME:
     send_continue();
@@ -237,8 +237,9 @@ static size_t handle_first_apdu(packet_t *pkt) {
 
   tz_operation_parser_init(&global.apdu.sign.parser_state, TZ_UNKNOWN_SIZE, false);
   tz_parser_regs_refill (&global.apdu.sign.parser_regs, NULL, 0);
-  tz_parser_regs_flush (&global.apdu.sign.parser_regs, global.stream.buffer.value, TZ_UI_STREAM_CONTENTS_SIZE);
-
+  tz_parser_regs_flush(&global.apdu.sign.parser_regs,
+                       global.apdu.sign.line_buf,
+                       TZ_UI_STREAM_CONTENTS_SIZE);
   tz_ui_stream_init(stream_cb);
 
   global.apdu.sign.step = SIGN_ST_WAIT_DATA;

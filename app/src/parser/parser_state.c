@@ -44,6 +44,7 @@ void tz_parser_init(tz_parser_state *state) {
 }
 
 void tz_parser_regs_flush(tz_parser_regs *regs,char *obuf, size_t olen) {
+  memset(obuf, 0x0, olen);
   regs->obuf = obuf;
   regs->oofs = 0;
   regs->olen = olen;

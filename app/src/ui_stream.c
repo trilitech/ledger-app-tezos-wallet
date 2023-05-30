@@ -64,7 +64,7 @@ void tz_ui_stream_close () {
 #endif
 }
 
-void tz_ui_stream_push () {
+void tz_ui_stream_push(const char *title, const char *value) {
   if (global.stream.full) {
     failwith("trying to push in already closed stream display");
   }
@@ -75,8 +75,8 @@ void tz_ui_stream_push () {
 
   global.stream.total++;
   int bucket = global.stream.total % TZ_UI_STREAM_HISTORY_SCREENS;
-  strncpy(global.stream.titles[bucket], global.stream.buffer.title, TZ_UI_STREAM_TITLE_WIDTH);
-  strncpy(global.stream.values[bucket], global.stream.buffer.value, TZ_UI_STREAM_CONTENTS_SIZE);
+  strncpy(global.stream.titles[bucket], title, TZ_UI_STREAM_TITLE_WIDTH);
+  strncpy(global.stream.values[bucket], value, TZ_UI_STREAM_CONTENTS_SIZE);
   if (global.stream.total == 0 || global.stream.total >= TZ_UI_STREAM_HISTORY_SCREENS) {
     global.stream.current++;
   }
