@@ -29,7 +29,7 @@ let () =
             flush stdout;
             Format.fprintf ppf_hex "%s@\n" txt;
             let fp =
-              open_out (Format.asprintf "%s/test_%s_%03d.sh" dir model i)
+              open_out (Format.asprintf "%s/%s/test_%03d.sh" dir model i)
             in
             let ppf = Format.formatter_of_out_channel fp in
             Gen_integration.gen_expect_test_sign_micheline_data ppf hex;
