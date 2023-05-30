@@ -92,26 +92,32 @@ uint8_t tz_ui_max_line_chars(const char* value, int length) {
 }
 
 size_t tz_ui_stream_push(const char *title, const char *value) {
+  return tz_ui_stream_pushl(title, value, sizeof(global.stream.values[0]));
+}
+
+size_t tz_ui_stream_pushl(const char *title, const char *value, size_t max) {
+  tz_ui_stream_t *s = &global.stream;
   size_t i;
 
   FUNC_ENTER(("title=%s, value=%s", title, value));
-  if (global.stream.full) {
+  if (s->full) {
     failwith("trying to push in already closed stream display");
   }
 #ifdef TEZOS_DEBUG
-  int prev_total = global.stream.total;
-  int prev_current = global.stream.current;
+  int prev_total = s->total;
+  int prev_current = s->current;
 #endif
 
-  global.stream.total++;
-  int bucket = global.stream.total % TZ_UI_STREAM_HISTORY_SCREENS;
-  STRLCPY(global.stream.titles[bucket], title);
+  s->total++;
+  int bucket = s->total % TZ_UI_STREAM_HISTORY_SCREENS;
+
+  STRLCPY(s->titles[bucket], title);
   for (i = 0; i < TZ_UI_STREAM_CONTENTS_LINES; i++)
-    global.stream.values[bucket][i * TZ_UI_STREAM_CONTENTS_WIDTH] = '\0';
+    s->values[bucket][i * TZ_UI_STREAM_CONTENTS_WIDTH] = '\0';
 
   // Ensure things fit on one line
-  int length = 0, offset = 0;
-  while(value[length] != '\0') length++;
+  size_t length = MIN(strlen(value), max);
+  size_t offset = 0;
 
   int line = 0;
   while (offset < length && line < TZ_UI_STREAM_CONTENTS_LINES) {
@@ -122,27 +128,23 @@ size_t tz_ui_stream_push(const char *title, const char *value) {
     PRINTF("[DEBUG] split(value: \"%s\", will_fit: %d, len: %d, line: %d, offset: %d)\n",
             start, will_fit, len, line, offset);
 
-    char* buffer = global.stream.values[bucket] + line * TZ_UI_STREAM_CONTENTS_WIDTH;
+    char* buffer = s->values[bucket] + line * TZ_UI_STREAM_CONTENTS_WIDTH;
     strlcpy(buffer, start, will_fit + 1);
     offset += will_fit;
 
     line++;
   }
 
-  if (global.stream.total == 0 || global.stream.total >= TZ_UI_STREAM_HISTORY_SCREENS) {
-    global.stream.current++;
-  }
+  if (s->total == 0 || s->total >= TZ_UI_STREAM_HISTORY_SCREENS) 
+    s->current++;
 
-#ifdef TEZOS_DEBUG
-  char debug_title[TZ_UI_STREAM_TITLE_WIDTH+1], debug_value[TZ_UI_STREAM_CONTENTS_SIZE + 1];
-  debug_title[TZ_UI_STREAM_TITLE_WIDTH] = 0;
-  debug_value[TZ_UI_STREAM_CONTENTS_SIZE] = 0;
-  STRLCPY(debug_title, global.stream.titles[bucket]);
-  STRLCPY(debug_value, global.stream.values[bucket]);
-  PRINTF("[DEBUG] push_screen(title: \"%s\", value: \"%s\", total: %d -> %d, current: %d -> %d, offset: %d)\n",
-         debug_title, debug_value,
-         prev_total, global.stream.total, prev_current, global.stream.current, offset);
-#endif
+  PRINTF("[DEBUG] tz_ui_stream_pushl(%s, %s, %u)\n", title, value, max);
+  PRINTF("[DEBUG]        bucket   %d\n", bucket);
+  PRINTF("[DEBUG]        title:   \"%s\"\n", s->titles[bucket]);
+  PRINTF("[DEBUG]        value:   \"%s\"\n", s->values[bucket]);
+  PRINTF("[DEBUG]        total:   %d -> %d\n", prev_total, s->total);
+  PRINTF("[DEBUG]        current: %d -> %d\n", prev_current, s->current);
+  PRINTF("[DEBUG]        offset:  %d\n", offset);
   FUNC_LEAVE();
 
   return offset;
