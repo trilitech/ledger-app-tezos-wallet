@@ -1,6 +1,7 @@
 include:
   - local: .gitlab-ci-build-docker.yml
   - local: .gitlab/build-template.yml
+  - local: .gitlab/integration-template.yml
 
 stages:
   - sync
@@ -78,18 +79,11 @@ unit:
     - generate_samples
 
 integration_nanos_basic:
-  image:
-    name: ghcr.io/ledgerhq/speculos:sha-90a021a
-    entrypoint: [""]
-  stage: test
+  extends: .integration-basic
   dependencies:
     - build_nanos_dbg
-  script:
-    - apt update && apt install -y curl jq
-    - SPECULOS=/speculos/speculos.py COLUMNS=80 ./tests/integration/run_test_local.sh nanos app_nanos_dbg.tgz tests/integration/nanos
-  artifacts:
-    paths:
-      - integration_tests.json
+  variables:
+    DEVICE: nanos
 
 integration_nanos_micheline_samples:
   image:

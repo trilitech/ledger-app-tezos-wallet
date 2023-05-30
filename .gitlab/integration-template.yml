@@ -1,0 +1,19 @@
+---
+
+.integration-basic:
+  image:
+    name: ghcr.io/ledgerhq/speculos:sha-90a021a
+    entrypoint: [""]
+  stage: test
+  variables:
+    DEVICE: ""
+  script:
+    - apt update && apt install -y curl jq
+    - SPECULOS=/speculos/speculos.py
+      COLUMNS=80
+      ./tests/integration/run_test_local.sh ${DEVICE}
+      app_${DEVICE}_dbg.tgz
+      tests/integration/${DEVICE}
+  artifacts:
+    paths:
+      - integration_tests.json
