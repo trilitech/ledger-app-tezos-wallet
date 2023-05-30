@@ -308,7 +308,7 @@ function expect_exited {
 function usage {
     echo "$@"                                                  >&2
     echo "Usage: $0 [-l lim] type app dir [dir ...]"           >&2
-    echo "    where type is nanos, nanosp, or nanosx"          >&2
+    echo "    where type is nanos, nanosp, or nanox"           >&2
     echo "     and app is a tar.gz containing the app"         >&2
     echo "     and the dirs contain the test scripts"          >&2
     exit 1
@@ -332,8 +332,8 @@ function main {
     target="$1";       shift
     tgz="$1";          shift
 
-    if ! echo $target | grep -qE '^nanos[px]?$'; then
-       usage "Target \"$target\" must be nanos, nanosp, or nanosx."
+    if ! echo $target | grep -qE '^nano(s|sp|x)$'; then
+       usage "Target \"$target\" must be nanos, nanosp, or nanox."
     fi
 
     [ ! -f "$tgz" ] && usage "Tarball \"$tgz\" does not exist."
