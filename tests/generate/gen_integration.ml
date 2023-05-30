@@ -47,8 +47,12 @@ let expect_apdu_return ppf ans =
 
 let send_async_apdus ppf apdus =
   let pp_dash_break_line ppf () = Format.fprintf ppf "\\@\n\t" in
+  let pp_hex_bytes_opt ppf = function
+    | None -> Format.fprintf ppf "\"\""
+    | Some bytes -> pp_hex_bytes ppf bytes
+  in
   let pp_apdu ppf (apdu, ans) =
-    Format.fprintf ppf "%a %a" pp_hex_bytes apdu pp_hex_bytes ans
+    Format.fprintf ppf "%a %a" pp_hex_bytes apdu pp_hex_bytes_opt ans
   in
   let pp_apdus = Format.pp_print_list ~pp_sep:pp_dash_break_line pp_apdu in
   Format.fprintf ppf "send_async_apdus %a%a@." pp_dash_break_line () pp_apdus
@@ -111,16 +115,18 @@ let sign_apdus ~signer:{ path; pkh = _; pk = _; sk } bin =
 let sign ppf ~signer bin =
   let apdus = sign_apdus ~signer bin in
   let expectations =
-    let bin_sign_success_bytes =
-      let bin_hash = Tezos_crypto.Blake2B.(to_bytes (hash_bytes [ bin ])) in
-      let sign =
-        Tezos_crypto.Signature.to_bytes
-          (Tezos_crypto.Signature.sign signer.sk bin)
-      in
-      Bytes.concat Bytes.empty [ bin_hash; sign; Apdu.success ]
+    let bin_accept_expectation =
+      if Apdu.Curve.(deterministic_sig (of_sk signer.sk)) then
+        let bin_hash = Tezos_crypto.Blake2B.(to_bytes (hash_bytes [ bin ])) in
+        let sign =
+          Tezos_crypto.Signature.to_bytes
+            (Tezos_crypto.Signature.sign signer.sk bin)
+        in
+        Some (Bytes.concat Bytes.empty [ bin_hash; sign; Apdu.success ])
+      else None
     in
-    List.init (List.length apdus - 1) (fun _ -> Apdu.success)
-    @ [ bin_sign_success_bytes ]
+    List.init (List.length apdus - 1) (fun _ -> Some Apdu.success)
+    @ [ bin_accept_expectation ]
   in
   send_async_apdus ppf @@ List.combine apdus expectations
 

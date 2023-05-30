@@ -78,6 +78,10 @@ module Curve = struct
     | SECP256K1 -> 0x01
     | SECP256R1 -> 0x02
     | BIP32_ED25519 -> 0x03
+
+  let deterministic_sig = function
+    | ED25519 -> true
+    | SECP256K1 | SECP256R1 | BIP32_ED25519 -> false
 end
 
 let success = Bytes.of_string "\x90\x00"

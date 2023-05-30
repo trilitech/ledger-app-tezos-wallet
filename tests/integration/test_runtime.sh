@@ -148,7 +148,9 @@ function send_async_apdus {
              echo "FAILURE(send_async_apdus)" >&2
              exit 1
          fi
-         expect_apdu_return "$res"
+	 if [ -n "$res" ]; then
+	     expect_apdu_return "$res"
+	 fi
      done ; rm $async_apdus) &
 }
 
