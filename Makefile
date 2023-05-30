@@ -5,7 +5,8 @@
 all: app_nanos.tgz app_nanosp.tgz app_nanox.tgz
 debug: app_nanos_dbg.tgz app_nanosp_dbg.tgz app_nanox_dbg.tgz
 
-.PHONY: clean all debug integration_tests unit_tests
+.PHONY: clean all debug integration_tests unit_tests \
+	integration_tests_basic integration_tests_basic_%
 
 DOCKER			= docker
 DOCKER_RUN		= $(DOCKER) run --rm -i -v "$(realpath .):/app"
@@ -71,13 +72,21 @@ unit_tests:	test/samples/micheline/samples.hex	\
 
 RUN_TEST_DOCKER = ./tests/integration/run_test_docker.sh
 
-integration_tests:	app_nanos_dbg.tgz			\
+integration_tests_basic_%:	app_%_dbg.tgz			\
+				tests/integration/*.sh		\
+				tests/integration/%/*.sh
+	$(RUN_TEST_DOCKER) $* app_$*_dbg.tgz			\
+				tests/integration/$*		\
+
+integration_tests_basic:	integration_tests_basic_nanos	\
+				integration_tests_basic_nanosp	\
+				integration_tests_basic_nanox
+
+integration_tests:	integration_tests_basic		\
 			test/samples/operations/samples.hex	\
 			test/samples/micheline/samples.hex	\
-			tests/integration/*.sh			\
-			tests/integration/nanos/*.sh
+			tests/integration/*.sh
 	$(RUN_TEST_DOCKER) nanos app_nanos_dbg.tgz		\
-				tests/integration/nanos		\
 				tests/samples/operations	\
 				tests/samples/micheline
 

@@ -88,7 +88,14 @@ and
 :; make integration-tests
 ```
 
-NOTE: the tests are [currently] only available for the Nano S.
+NOTE: the full integration tests are [currently] only available for the Nano S. The basic tests can be run for all
+devices with:
+
+```
+:; make integration_tests_basic
+```
+
+> Tests can be run for individual devices by appending the device name: e.g. `integration_tests_basic_nanosp`.
 
 Integration tests can be run directly from the command line rather than
 via the Makefile:
