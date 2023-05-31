@@ -10,7 +10,7 @@
   script:
     - bash -c "make -C app BOLOS_SDK=\$${DEVICE_SDK} DEBUG=${DEBUG}"
     - cd app/bin/ && tar czf ../../app_${DEVICE_APP}.tgz .
-  dependencies:
+  needs:
     - generate_builtin_patterns
   artifacts:
     paths:

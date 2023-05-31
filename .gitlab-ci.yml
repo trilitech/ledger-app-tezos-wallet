@@ -75,19 +75,19 @@ unit:
   stage: test
   script:
     - make -C tests/unit
-  dependencies:
+  needs:
     - generate_samples
 
 integration_nanos_basic:
   extends: .integration-basic
-  dependencies:
+  needs:
     - build_nanos_dbg
   variables:
     DEVICE: nanos
 
 integration_nanosp_basic:
   extends: .integration-basic
-  dependencies:
+  needs:
     - build_nanosp_dbg
   variables:
     DEVICE: nanosp
@@ -104,7 +104,7 @@ integration_nanos_micheline_samples:
     name: ghcr.io/ledgerhq/speculos:sha-90a021a
     entrypoint: [""]
   stage: test
-  dependencies:
+  needs:
     - build_nanos_dbg
     - generate_samples
   script:
@@ -120,7 +120,7 @@ integration_nanos_operations_samples:
     name: ghcr.io/ledgerhq/speculos:sha-90a021a
     entrypoint: [""]
   stage: test
-  dependencies:
+  needs:
     - build_nanos_dbg
     - generate_samples
   script:
