@@ -19,4 +19,4 @@ set -e
 
 docker run --rm -i -v "$(realpath .):/app"		\
     --entrypoint=/bin/sh speculos			\
-    -c "cd /app && apt-get update && apt-get -y install curl jq && SPECULOS=/speculos/speculos.py ./tests/integration/run_test_local.sh $*"
+    -c "cd /app && apt-get update && apt-get -y install curl jq build-essential libsodium-dev && pip install base58 pytezos && SPECULOS=/speculos/speculos.py ./tests/integration/run_test_local.sh $*"

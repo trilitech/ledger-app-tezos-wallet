@@ -109,7 +109,8 @@ integration_nanos_micheline_samples:
     - build_nanos_dbg
     - generate_samples
   script:
-    - apt update && apt install -y curl jq
+    - apt update && apt install -y curl jq build-essential libsodium-dev
+    - pip install base58 pytezos
     - SPECULOS=/speculos/speculos.py COLUMNS=80 ./tests/integration/run_test_local.sh nanos app_nanos_dbg.tgz tests/samples/micheline
   artifacts:
     when: always
@@ -125,7 +126,8 @@ integration_nanos_operations_samples:
     - build_nanos_dbg
     - generate_samples
   script:
-    - apt update && apt install -y curl jq
+    - apt update && apt install -y curl jq build-essential libsodium-dev
+    - pip install base58 pytezos
     - SPECULOS=/speculos/speculos.py COLUMNS=80 ./tests/integration/run_test_local.sh nanos app_nanos_dbg.tgz tests/samples/operations
   artifacts:
     when: always

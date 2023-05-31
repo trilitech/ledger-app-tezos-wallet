@@ -7,6 +7,7 @@ expect_full_text 'Data' '{"CACA";"POPO";"BOUDIN"}'
 press_button right
 expect_full_text "Accept?"
 press_button both
+check_tlv_signature_from_sent_apdu 84e475e38707140e725019e91f036e341fa4a2c8752b7828f37bbf91061b0e0a 9000 sppk7bVy617DmGvXsMqcwsiLtnedTN2trUi5ugXcNig7en4rHJyunK1 05020000001d0100000004434143410100000004504f504f0100000006424f5544494e
 press_button right
 press_button both
 expect_exited

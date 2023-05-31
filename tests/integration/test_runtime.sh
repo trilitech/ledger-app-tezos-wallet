@@ -161,6 +161,24 @@ function expect_async_apdus_sent {
     echo " - all apdus received"
 }
 
+function check_tlv_signature_from_sent_apdu {
+    echo -n " - check_tlv_signature_from_apdus_sent $@"
+    APDU=$DATA_DIR/apdu-$PORT
+    if ! attempts [ -f $APDU ]; then
+        echo "FAILURE(check_tlv_signature_from_apdus_sent)" >&2
+        exit 1
+    fi
+    result="$(jq -r .data < $APDU)"
+    $(dirname $0)/check_tlv_signature.py $@ $result
+    res=$?
+    set -e
+    if [ "$res" != 0 ] ; then
+        (echo "FAILURE(check_tlv_signature_from_apdus_sent):"
+	 echo "  Check: check_tlv_signature.py $@ $result") >&2
+        exit 1
+    fi
+}
+
 run_a_test() {
     PORT=$1
     CMD="$2"

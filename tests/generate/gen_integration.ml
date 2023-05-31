@@ -61,6 +61,11 @@ let expect_async_apdus_sent ppf () =
 
 let expect_exited ppf () = Format.fprintf ppf "expect_exited@."
 
+let check_tlv_signature_from_sent_apdu ppf ~prefix ~suffix pk message =
+  Format.fprintf ppf "check_tlv_signature_from_sent_apdu %a %a %a %a@."
+    pp_hex_bytes prefix pp_hex_bytes suffix Tezos_crypto.Signature.Public_key.pp
+    pk pp_hex_bytes message
+
 (** Specific *)
 
 let home ppf () =
@@ -121,6 +126,9 @@ let sign ppf ~signer bin =
       in
       expect_apdu_return ppf
         (Bytes.concat Bytes.empty [ bin_hash; sign; Apdu.success ])
+    else
+      check_tlv_signature_from_sent_apdu ppf ~prefix:bin_hash
+        ~suffix:Apdu.success signer.pk bin
   in
   let last_index = List.length apdus - 1 in
   let async_apdus =
