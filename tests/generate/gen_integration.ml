@@ -45,16 +45,12 @@ let send_apdu ppf apdu = Format.fprintf ppf "send_apdu %a@." pp_hex_bytes apdu
 let expect_apdu_return ppf ans =
   Format.fprintf ppf "expect_apdu_return %a@." pp_hex_bytes ans
 
-type async_apdu = { apdu : bytes; ans : bytes option }
+type async_apdu = { apdu : bytes; check : Format.formatter -> unit -> unit }
 
 let send_async_apdus ppf apdus =
   let pp_dash_break_line ppf () = Format.fprintf ppf "\\@\n\t" in
-  let pp_hex_bytes_opt ppf = function
-    | None -> Format.fprintf ppf "\"\""
-    | Some bytes -> pp_hex_bytes ppf bytes
-  in
-  let pp_apdu ppf { apdu; ans } =
-    Format.fprintf ppf "%a %a" pp_hex_bytes apdu pp_hex_bytes_opt ans
+  let pp_apdu ppf { apdu; check } =
+    Format.fprintf ppf "%a \"%a\"" pp_hex_bytes apdu check ()
   in
   let pp_apdus = Format.pp_print_list ~pp_sep:pp_dash_break_line pp_apdu in
   Format.fprintf ppf "send_async_apdus %a%a@." pp_dash_break_line () pp_apdus
@@ -116,28 +112,25 @@ let sign_apdus ~signer:{ path; pkh = _; pk = _; sk } bin =
 
 let sign ppf ~signer bin =
   let apdus = sign_apdus ~signer bin in
-  let bin_accept_expectation =
+  let bin_accept_check ppf () =
     let bin_hash = Tezos_crypto.Blake2B.(to_bytes (hash_bytes [ bin ])) in
     if Apdu.Curve.(deterministic_sig (of_sk signer.sk)) then
       let sign =
         Tezos_crypto.Signature.to_bytes
           (Tezos_crypto.Signature.sign signer.sk bin)
       in
-      Some (Bytes.concat Bytes.empty [ bin_hash; sign; Apdu.success ])
-    else (
-      check_tlv_signature_from_sent_apdu ppf ~prefix:bin_hash
-        ~suffix:Apdu.success signer.pk bin;
-      None)
+      expect_apdu_return ppf
+        (Bytes.concat Bytes.empty [ bin_hash; sign; Apdu.success ])
   in
   let last_index = List.length apdus - 1 in
   let async_apdus =
     List.mapi
       (fun index apdu ->
-        let ans =
-          if index = last_index then bin_accept_expectation
-          else Some Apdu.success
+        let check ppf () =
+          if index = last_index then bin_accept_check ppf ()
+          else expect_apdu_return ppf Apdu.success
         in
-        { apdu; ans })
+        { apdu; check })
       apdus
   in
   send_async_apdus ppf async_apdus

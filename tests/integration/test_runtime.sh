@@ -140,7 +140,7 @@ function send_async_apdus {
     echo " - will send $(($#/2)) apdus"
     (while [ "$#" -ne 0 ] ; do
          apdu="$1"
-         res="$2"
+         check="$2"
          shift 2
          echo " - apdu $apdu"
          if ! curl -s $SPECULOS_URL/apdu -d "{\"data\":\"$apdu\"}" \
@@ -148,9 +148,7 @@ function send_async_apdus {
              echo "FAILURE(send_async_apdus)" >&2
              exit 1
          fi
-	 if [ -n "$res" ]; then
-	     expect_apdu_return "$res"
-	 fi
+         eval "$check"
      done ; rm $async_apdus) &
 }
 
