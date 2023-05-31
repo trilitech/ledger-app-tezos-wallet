@@ -65,6 +65,8 @@ void tz_ui_stream_close () {
 }
 
 void tz_ui_stream_push(const char *title, const char *value) {
+  size_t i;
+
   if (global.stream.full) {
     failwith("trying to push in already closed stream display");
   }
@@ -75,8 +77,10 @@ void tz_ui_stream_push(const char *title, const char *value) {
 
   global.stream.total++;
   int bucket = global.stream.total % TZ_UI_STREAM_HISTORY_SCREENS;
-  strncpy(global.stream.titles[bucket], title, TZ_UI_STREAM_TITLE_WIDTH);
-  strncpy(global.stream.values[bucket], value, TZ_UI_STREAM_CONTENTS_SIZE);
+  STRLCPY(global.stream.titles[bucket], title);
+  for (i = 0; i < TZ_UI_STREAM_CONTENTS_LINES; i++)
+    global.stream.values[bucket][i * TZ_UI_STREAM_CONTENTS_WIDTH] = '\0';
+  STRLCPY(global.stream.values[bucket], value);
   if (global.stream.total == 0 || global.stream.total >= TZ_UI_STREAM_HISTORY_SCREENS) {
     global.stream.current++;
   }
@@ -84,8 +88,8 @@ void tz_ui_stream_push(const char *title, const char *value) {
   char debug_title[TZ_UI_STREAM_TITLE_WIDTH+1], debug_value[TZ_UI_STREAM_CONTENTS_SIZE + 1];
   debug_title[TZ_UI_STREAM_TITLE_WIDTH] = 0;
   debug_value[TZ_UI_STREAM_CONTENTS_SIZE] = 0;
-  strncpy(debug_title, global.stream.titles[bucket], TZ_UI_STREAM_TITLE_WIDTH);
-  strncpy(debug_value, global.stream.values[bucket], TZ_UI_STREAM_CONTENTS_SIZE);
+  STRLCPY(debug_title, global.stream.titles[bucket]);
+  STRLCPY(debug_value, global.stream.values[bucket]);
   PRINTF("[DEBUG] push_screen(title: \"%s\", value: \"%s\", total: %d -> %d, current: %d -> %d)\n",
          debug_title, debug_value,
          prev_total, global.stream.total, prev_current, global.stream.current);

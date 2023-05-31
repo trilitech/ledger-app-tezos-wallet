@@ -76,24 +76,24 @@ static void redisplay() {
   switch (screen) {
   case SCREEN_CLEAR_SIGN:
     init[2].text = (const char*) &C_icon_right;
-    strncpy(global.ux.lines[0], "Tezos Wallet", TZ_SCREEN_WITDH_FULL_REGULAR_11PX);
-    strncpy(global.ux.lines[LINE_1], "ready for", TZ_SCREEN_WITDH_FULL_REGULAR_11PX);
-    strncpy(global.ux.lines[LINE_2], "safe signing", TZ_SCREEN_WITDH_FULL_REGULAR_11PX);
+    STRLCPY(global.ux.lines[0], "Tezos Wallet");
+    STRLCPY(global.ux.lines[LINE_1], "ready for");
+    STRLCPY(global.ux.lines[LINE_2], "safe signing");
     break;
   case SCREEN_BLIND_SIGN:
     init[2].text = (const char*) &C_icon_right;
-    strncpy(global.ux.lines[0], "Tezos Wallet", TZ_SCREEN_WITDH_FULL_REGULAR_11PX);
-    strncpy(global.ux.lines[LINE_1], "ready for", TZ_SCREEN_WITDH_FULL_REGULAR_11PX);
-    strncpy(global.ux.lines[LINE_2], "BLIND signing", TZ_SCREEN_WITDH_FULL_REGULAR_11PX);
+    STRLCPY(global.ux.lines[0], "Tezos Wallet");
+    STRLCPY(global.ux.lines[LINE_1], "ready for");
+    STRLCPY(global.ux.lines[LINE_2], "BLIND signing");
     break;
   case SCREEN_QUIT:
     init[1].text = (const char*) &C_icon_left;
-    strncpy(global.ux.lines[0], "Quit?", TZ_SCREEN_WITDH_FULL_REGULAR_11PX);
+    STRLCPY(global.ux.lines[0], "Quit?");
     init[sizeof(init)/sizeof(bagl_element_t)-1].text = (const char*) &C_icon_dashboard_x;
     break;
   case SCREEN_SETTINGS:
     init[1].text = (const char*) &C_icon_left;
-    strncpy(global.ux.lines[0], "Settings", TZ_SCREEN_WITDH_FULL_REGULAR_11PX);
+    STRLCPY(global.ux.lines[0], "Settings");
     init[sizeof(init)/sizeof(bagl_element_t)-1].text = (const char*) &C_icon_settings;
     break;
   }
