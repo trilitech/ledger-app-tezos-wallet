@@ -17,6 +17,9 @@ import sys
 import base58
 from pytezos import pytezos
 
+def adjust_size(bytes, size):
+    return bytes[-size:].rjust(size, b'\x00')
+
 def signature_of_tlv(tlv):
     # See: https://developers.ledger.com/docs/embedded-app/crypto-api/lcx__ecdsa_8h/#cx_ecdsa_sign
     # TLV: 30 || L || 02 || Lr || r || 02 || Ls || s
@@ -38,7 +41,10 @@ def signature_of_tlv(tlv):
     s_len_index = second_tag_index + 1
     s_index = s_len_index + 1
     s_len = tlv[s_len_index]
-    return tlv[r_index : r_index + r_len] + tlv[s_index : s_index + s_len]
+    r = tlv[r_index : r_index + r_len]
+    s = tlv[s_index : s_index + s_len]
+    # Sometimes \x00 are added or removed, a size adjustment is required here.
+    return adjust_size(r, 32) + adjust_size(s, 32)
 
 def signature_of_hex_tlv(hex_string):
     tlv = bytearray.fromhex(hex_string)
