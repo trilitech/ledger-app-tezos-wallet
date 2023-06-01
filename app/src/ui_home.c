@@ -30,6 +30,9 @@ static enum {
 static void redisplay();
 
 static unsigned int cb(unsigned int button_mask, __attribute__((unused)) unsigned int button_mask_counter) {
+  FUNC_ENTER(("button_mask=%d, button_mask_counter=%d", button_mask,
+              button_mask_counter));
+
   if (button_mask == (BUTTON_EVT_RELEASED | BUTTON_LEFT) && screen > SCREEN_CLEAR_SIGN) {
     screen--;
     redisplay ();
@@ -41,6 +44,8 @@ static unsigned int cb(unsigned int button_mask, __attribute__((unused)) unsigne
   if (button_mask == (BUTTON_EVT_RELEASED | BUTTON_LEFT | BUTTON_RIGHT) && screen == 1) {
     exit_app();
   }
+
+  FUNC_LEAVE();
   return 0;
 }
 
@@ -71,6 +76,9 @@ static void redisplay() {
 #define LINE_2 3
 #endif
   };
+
+  FUNC_ENTER(("void"));
+
   for (int i = 0; i < TZ_SCREEN_LINES_11PX;i++)
     global.ux.lines[i][0]=0;
   switch (screen) {
@@ -98,9 +106,12 @@ static void redisplay() {
     break;
   }
   DISPLAY(init, cb);
+  FUNC_LEAVE();
 }
 
 void ui_initial_screen(void) {
+  FUNC_ENTER(("void"));
   screen = SCREEN_CLEAR_SIGN;
   redisplay();
+  FUNC_LEAVE();
 }

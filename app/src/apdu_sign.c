@@ -68,6 +68,8 @@ static void init_packet(packet_t *pkt) {
 
 static int write_signature(uint8_t *const out, uint8_t const *const data, size_t const data_length) {
 
+    FUNC_ENTER(("out=%p, data=%p, data_length=%u", out, data, data_length));
+
     key_pair_t key_pair = {0};
     size_t signature_size = 0;
 
@@ -101,6 +103,7 @@ static int write_signature(uint8_t *const out, uint8_t const *const data, size_t
         THROW(error);
     }
 
+    FUNC_LEAVE();
     return signature_size;
 }
 
@@ -108,6 +111,7 @@ static void sign_packet() {
   size_t tx = 0;
   bool send_hash = true; // TODO change this when we handle more APDU instructions
 
+  FUNC_ENTER(("void"));
   if (send_hash) {
     memcpy(&G_io_apdu_buffer[tx],
            global.apdu.hash.final_hash,
@@ -127,9 +131,11 @@ static void sign_packet() {
 
   global.step = ST_IDLE;
   global.apdu.sign.step = SIGN_ST_IDLE;
+  FUNC_LEAVE();
 }
 
 static void send_reject() {
+  FUNC_ENTER(("void"));
   if (global.apdu.sign.step != SIGN_ST_WAIT_USER_INPUT) THROW(EXC_UNEXPECTED_SIGN_STATE);
   if (!(global.apdu.sign.received_last_msg)) THROW(EXC_UNEXPECTED_SIGN_STATE);
   clear_data();
@@ -137,17 +143,22 @@ static void send_reject() {
 
   global.step = ST_IDLE;
   global.apdu.sign.step = SIGN_ST_IDLE;
+  FUNC_LEAVE();
 }
 
 static void send_continue() {
+  FUNC_ENTER(("void"));
   if (global.apdu.sign.step != SIGN_ST_WAIT_USER_INPUT) THROW(EXC_UNEXPECTED_SIGN_STATE);
   if (global.apdu.sign.received_last_msg) THROW(EXC_UNEXPECTED_SIGN_STATE);
   delayed_send(finalize_successful_send(0));
   global.apdu.sign.step = SIGN_ST_WAIT_DATA;
+  FUNC_LEAVE();
 }
 
 static void refill() {
   tz_parser_regs *regs = &global.apdu.sign.parser_regs;
+
+  FUNC_ENTER(("void"));
   while(!TZ_IS_BLOCKED(tz_operation_parser_step(&global.apdu.sign.parser_state, regs))){};
   PRINTF("[DEBUG] refill(errno: %s) \n", tz_parser_result_name(global.apdu.sign.parser_state.errno));
   switch (global.apdu.sign.parser_state.errno) {
@@ -173,6 +184,7 @@ static void refill() {
   default:
     failwith("parsing error");
   }
+  FUNC_LEAVE();
 }
 
 static void stream_cb(tz_ui_cb_type_t type) {
@@ -191,6 +203,7 @@ static void stream_cb(tz_ui_cb_type_t type) {
 
 static size_t handle_first_apdu(packet_t *pkt) {
 
+  FUNC_ENTER(("pkt=%p", pkt));
   if (global.apdu.sign.step != SIGN_ST_IDLE) THROW(EXC_UNEXPECTED_SIGN_STATE);
 
   clear_data();
@@ -208,10 +221,12 @@ static size_t handle_first_apdu(packet_t *pkt) {
   tz_ui_stream_init(stream_cb);
 
   global.apdu.sign.step = SIGN_ST_WAIT_DATA;
+  FUNC_LEAVE();
   return finalize_successful_send(0);
 }
 
 static size_t handle_data_apdu(packet_t *pkt) {
+  FUNC_ENTER(("pkt=%p", pkt));
   if (global.apdu.sign.step != SIGN_ST_WAIT_DATA)
     // we received a packet while we did not explicitly asked for one
     THROW(EXC_UNEXPECTED_SIGN_STATE);
@@ -248,18 +263,26 @@ static size_t handle_data_apdu(packet_t *pkt) {
   // launch parsing and UI (once we have a first screen)
   global.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
   tz_ui_stream ();
+  FUNC_LEAVE();
 }
 
 size_t handle_apdu_sign(__attribute__((unused)) bool return_hash) {
   packet_t pkt;
+  size_t ret;
+
+  FUNC_ENTER(("return_hash=%s", return_hash ? "true" : "false"));
+
   init_packet(&pkt);
 
   if (pkt.is_first) {
     if (global.step != ST_IDLE) THROW (EXC_UNEXPECTED_STATE);
     global.step = ST_SIGN;
-    return handle_first_apdu(&pkt);
+    ret = handle_first_apdu(&pkt);
   } else {
     if (global.step != ST_SIGN) THROW (EXC_UNEXPECTED_STATE);
-    return handle_data_apdu(&pkt);
+    ret = handle_data_apdu(&pkt);
   }
+
+  FUNC_LEAVE();
+  return ret;
 }

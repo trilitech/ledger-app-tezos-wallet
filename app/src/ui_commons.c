@@ -19,6 +19,7 @@
    limitations under the License. */
 
 #include "ui_commons.h"
+#include "utils.h"
 
 void io_seproxyhal_display(const bagl_element_t *element) {
     return io_seproxyhal_display_default((bagl_element_t *)element);

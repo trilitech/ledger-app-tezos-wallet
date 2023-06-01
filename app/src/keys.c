@@ -68,6 +68,8 @@ struct bip32_path_wire {
 size_t read_bip32_path(bip32_path_t *const out, uint8_t const *const in, size_t const in_size) {
     struct bip32_path_wire const *const buf_as_bip32 = (struct bip32_path_wire const *) in;
 
+    FUNC_ENTER(("out=%p, in=%p, in_size=%u", out, in, in_size));
+
     if (in_size < sizeof(buf_as_bip32->length)) THROW(EXC_WRONG_LENGTH_FOR_INS);
 
     size_t ix = 0;
@@ -82,6 +84,7 @@ size_t read_bip32_path(bip32_path_t *const out, uint8_t const *const in, size_t 
             CONSUME_UNALIGNED_BIG_ENDIAN(ix, uint32_t, &buf_as_bip32->components[i]);
     }
 
+    FUNC_LEAVE();
     return ix;
 }
 
@@ -92,6 +95,9 @@ int crypto_derive_private_key(cx_ecfp_private_key_t *private_key,
     check_null(bip32_path);
     uint8_t raw_private_key[PRIVATE_KEY_DATA_SIZE] = {0};
     int error = 0;
+
+    FUNC_ENTER(("private_key=%p, derivation_type=%d, bip32_path=%p",
+                private_key, derivation_type, bip32_path));
 
     cx_curve_t const cx_curve =
         derivation_type_to_cx_curve(derivation_type);
@@ -129,12 +135,15 @@ int crypto_derive_private_key(cx_ecfp_private_key_t *private_key,
     }
     END_TRY;
 
+    FUNC_LEAVE();
     return error;
 }
 
 int crypto_init_public_key(derivation_type_t const derivation_type,
                            cx_ecfp_private_key_t *private_key,
                            cx_ecfp_public_key_t *public_key) {
+    FUNC_ENTER(("derivation_type=%d, private_key=%p, public_key=%p",
+                derivation_type, private_key, public_key));
     cx_curve_t const cx_curve =
         derivation_type_to_cx_curve(derivation_type);
 
@@ -147,6 +156,7 @@ int crypto_init_public_key(derivation_type_t const derivation_type,
         public_key->W_len = 33;
     }
 
+    FUNC_LEAVE();
     return 0;
 }
 
@@ -156,6 +166,9 @@ int generate_key_pair(key_pair_t *key_pair,
                       bip32_path_t const *const bip32_path) {
     int error;
 
+    FUNC_ENTER(("key_pair=%p, derivation_type=%d, bip32_path=%p",
+                key_pair, derivation_type, bip32_path));
+
     // derive private key according to BIP32 path
     error = crypto_derive_private_key(&key_pair->private_key, derivation_type, bip32_path);
     if (error) {
@@ -163,6 +176,7 @@ int generate_key_pair(key_pair_t *key_pair,
     }
     // generate corresponding public key
     error = crypto_init_public_key(derivation_type, &key_pair->private_key, &key_pair->public_key);
+    FUNC_LEAVE();
     return error;
 }
 
@@ -172,11 +186,15 @@ int generate_public_key(cx_ecfp_public_key_t *public_key,
     cx_ecfp_private_key_t private_key = {0};
     int error;
 
+    FUNC_ENTER(("public_key=%p, derivation_type=%d, bip32_path=%p",
+                public_key, derivation_type, bip32_path));
+
     error = crypto_derive_private_key(&private_key, derivation_type, bip32_path);
     if (error) {
         return (error);
     }
     error = crypto_init_public_key(derivation_type, &private_key, public_key);
+    FUNC_LEAVE();
     return (error);
 }
 
@@ -187,6 +205,10 @@ void public_key_hash(uint8_t *const hash_out,
                      cx_ecfp_public_key_t *compressed_out,
                      derivation_type_t const derivation_type,
                      cx_ecfp_public_key_t const *const restrict public_key) {
+    FUNC_ENTER(("hash_out=%p, hash_out_size=%u, compressed_out=%p, "
+                "derivation_type=%d, public_key=%p",
+                hash_out, hash_out_size, compressed_out,
+                derivation_type, public_key));
     check_null(hash_out);
     check_null(public_key);
     if (hash_out_size < HASH_SIZE) THROW(EXC_WRONG_LENGTH);
@@ -221,6 +243,7 @@ void public_key_hash(uint8_t *const hash_out,
     if (compressed_out != NULL) {
         memmove(compressed_out, &compressed, sizeof(*compressed_out));
     }
+    FUNC_LEAVE();
 }
 
 size_t sign(uint8_t *const out,
@@ -229,6 +252,9 @@ size_t sign(uint8_t *const out,
             key_pair_t const *const pair,
             uint8_t const *const in,
             size_t const in_size) {
+    FUNC_ENTER(("out=%p, out_size=%u, derivation_type=%d, "
+                "pair=%p, in=%p, in_size=%u",
+                out, out_size, derivation_type, pair, in, in_size));
     check_null(out);
     check_null(pair);
     check_null(in);
@@ -271,5 +297,6 @@ size_t sign(uint8_t *const out,
             THROW(EXC_WRONG_PARAM);  // This should not be able to happen.
     }
 
+    FUNC_LEAVE();
     return tx;
 }

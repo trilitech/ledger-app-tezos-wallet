@@ -28,6 +28,7 @@
 #include <string.h>
 
 static size_t provide_pubkey(uint8_t *const io_buffer, cx_ecfp_public_key_t const *const pubkey) {
+  FUNC_ENTER(("io_buffer=%p, pubkey=%p", io_buffer, pubkey));
   check_null(io_buffer);
   check_null(pubkey);
   size_t tx = 0;
@@ -39,6 +40,7 @@ static size_t provide_pubkey(uint8_t *const io_buffer, cx_ecfp_public_key_t cons
   io_buffer[tx++] = pubkey->W_len;
   memmove(io_buffer + tx, pubkey->W, pubkey->W_len);
   tx += pubkey->W_len;
+  FUNC_LEAVE();
   return finalize_successful_send(tx);
 }
 
@@ -54,6 +56,8 @@ static void ok_cb() {
 static void format_pkh(char* buffer) {
   cx_ecfp_public_key_t pubkey = {0};
   uint8_t hash[21];
+
+  FUNC_ENTER(("buffer=%p", buffer));
   generate_public_key(&pubkey, global.path_with_curve.derivation_type, &global.path_with_curve.bip32_path);
   public_key_hash(hash+1, 20, NULL, global.path_with_curve.derivation_type, &pubkey);
   switch (global.path_with_curve.derivation_type) {
@@ -64,6 +68,7 @@ static void format_pkh(char* buffer) {
   default: THROW(EXC_WRONG_PARAM); // XXX find appropriate error
   }
   tz_format_pkh(hash, 21, buffer);
+  FUNC_LEAVE();
 }
 
 static void stream_cb(tz_ui_cb_type_t type) {
@@ -81,16 +86,20 @@ static void stream_cb(tz_ui_cb_type_t type) {
 
 __attribute__((noreturn)) static void prompt_address () {
   char buf[TZ_UI_STREAM_CONTENTS_SIZE + 1];
+
+  FUNC_ENTER(("void"));
   tz_ui_stream_init(stream_cb);
   format_pkh(buf);
   tz_ui_stream_push("Provide Key", buf);
   tz_ui_stream_close();
   tz_ui_stream();
+  FUNC_LEAVE();
 }
 
 size_t handle_apdu_get_public_key(bool prompt) {
   uint8_t *dataBuffer = G_io_apdu_buffer + OFFSET_CDATA;
 
+  FUNC_ENTER(("prompt=%s", prompt ? "true" : "false"));
   if (G_io_apdu_buffer[OFFSET_P1] != 0) THROW(EXC_WRONG_PARAM);
 
   // do not expose pks without prompt through U2F (permissionless legacy comm in browser)
@@ -113,4 +122,5 @@ size_t handle_apdu_get_public_key(bool prompt) {
     global.step = ST_PROMPT;
     prompt_address();
   }
+  FUNC_LEAVE();
 }

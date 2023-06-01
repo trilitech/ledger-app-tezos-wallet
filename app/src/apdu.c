@@ -49,15 +49,19 @@ size_t finalize_successful_send(size_t tx) {
 
 // Send back response; do not restart the event loop
 void delayed_send(size_t tx) {
+  FUNC_ENTER(("tx=%u", tx));
   io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, tx);
+  FUNC_LEAVE();
 }
 
 void delay_reject(void) {
   size_t tx = 0;
+  FUNC_ENTER(("void"));
   G_io_apdu_buffer[tx++] = EXC_REJECT >> 8;
   G_io_apdu_buffer[tx++] = EXC_REJECT & 0xFF;
   delayed_send(tx);
   global.step = ST_IDLE;
+  FUNC_LEAVE();
 }
 
 void require_permissioned_comm(void) {

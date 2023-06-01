@@ -22,6 +22,8 @@
 static void update () {
   size_t bucket, i;
 
+  FUNC_ENTER(("void"));
+
   for (i = 0; i < TZ_SCREEN_LINES_11PX; i++)
     global.ux.lines[i][0]=0;
 
@@ -45,29 +47,32 @@ static void update () {
   for (i = 0; i < TZ_UI_STREAM_CONTENTS_LINES; i++) {
     STRLCPY(global.ux.lines[i+1], global.stream.values[bucket] + i * TZ_UI_STREAM_CONTENTS_WIDTH);
   }
+  FUNC_LEAVE();
 }
 
 void tz_ui_stream_init (void (*cb)(tz_ui_cb_type_t)) {
+  FUNC_ENTER(("cb=%p", cb));
   memset(&global.stream, 0x0, sizeof(global.stream));
   global.stream.cb = cb;
   global.stream.full = false;
   global.stream.current = -1;
   global.stream.total = -1;
+  FUNC_LEAVE();
 }
 
 void tz_ui_stream_close () {
+  FUNC_ENTER(("void"));
   if (global.stream.full) {
     failwith("trying to close already closed stream display");
   }
   global.stream.full = true;
-#ifdef TEZOS_DEBUG
-  PRINTF("[DEBUG] close()\n");
-#endif
+  FUNC_LEAVE();
 }
 
 void tz_ui_stream_push(const char *title, const char *value) {
   size_t i;
 
+  FUNC_ENTER(("title=%s, value=%s", title, value));
   if (global.stream.full) {
     failwith("trying to push in already closed stream display");
   }
@@ -95,22 +100,28 @@ void tz_ui_stream_push(const char *title, const char *value) {
          debug_title, debug_value,
          prev_total, global.stream.total, prev_current, global.stream.current);
 #endif
+  FUNC_LEAVE();
 }
 
 static void pred () {
+  FUNC_ENTER(("void"));
   if (global.stream.current >= 1 && global.stream.current >= global.stream.total - TZ_UI_STREAM_HISTORY_SCREENS + 2) {
     global.stream.current--;
   }
+  FUNC_LEAVE();
 }
 
 static void succ () {
+  FUNC_ENTER(("void"));
   if (global.stream.current < global.stream.total + (global.stream.full ? 2 : 0)) {
     global.stream.pressed_right = false;
     global.stream.current++;
   }
+  FUNC_LEAVE();
 }
 
 tz_ui_stream_screen_kind tz_ui_stream_current_screen_kind () {
+  FUNC_ENTER(("void"));
   if (global.stream.current < 0)
     return TZ_UI_STREAM_DISPLAY_INIT;
   else if (global.stream.current == 0)
@@ -123,6 +134,7 @@ tz_ui_stream_screen_kind tz_ui_stream_current_screen_kind () {
     return TZ_UI_STREAM_DISPLAY_REJECT;
   else
     return TZ_UI_STREAM_DISPLAY_CONT;
+  FUNC_LEAVE();
 }
 
 // View
@@ -131,6 +143,10 @@ static void change_screen_left();
 static void change_screen_right();
 
 static unsigned int cb(unsigned int button_mask, __attribute__((unused)) unsigned int button_mask_counter) {
+
+  FUNC_ENTER(("button_mask=%d, button_mask_counter=%d", button_mask,
+              button_mask_counter));
+
   switch (button_mask) {
   case BUTTON_EVT_RELEASED | BUTTON_LEFT:
     change_screen_left();
@@ -154,6 +170,7 @@ static unsigned int cb(unsigned int button_mask, __attribute__((unused)) unsigne
   default:
     break;
   }
+  FUNC_LEAVE();
   return 0;
 }
 
@@ -180,6 +197,8 @@ static void redisplay () {
     {{ BAGL_ICON, 0x00, 56, 47, 16, 16, 0, 0, 0, 0xFFFFFF, 0x000000, 0, BAGL_GLYPH_NOGLYPH }, (const char*) &C_icon_rien },
 #endif
   };
+
+  FUNC_ENTER(("void"));
 
   update();
 
@@ -215,16 +234,20 @@ static void redisplay () {
     break;
   }
   DISPLAY(init, cb);
+  FUNC_LEAVE();
 }
 
 static void change_screen_left() {
+  FUNC_ENTER(("void"));
   pred ();
   redisplay();
+  FUNC_LEAVE();
 }
 
 static void change_screen_right() {
   global.stream.pressed_right = true;
 
+  FUNC_ENTER(("void"));
   if (global.stream.current == global.stream.total) {
     if (!global.stream.full)
       global.stream.cb(TZ_UI_STREAM_CB_REFILL);
@@ -232,9 +255,11 @@ static void change_screen_right() {
   // go back to the data screen
   succ ();
   redisplay();
+  FUNC_LEAVE();
 }
 
 __attribute__((noreturn)) void tz_ui_stream() {
+  FUNC_ENTER(("void"));
   if (global.stream.pressed_right)
     succ();
 
