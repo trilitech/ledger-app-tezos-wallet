@@ -1,0 +1,8 @@
+send_async_apdus \
+        800f000011048000002c800006c18000000080000000 9000\
+        800f81000a050200000004034c031a 5a438e2fc3268c32382d0ef105a0fdb6d4d6c17bff144de081c8e8fbb316207f0bdd383986d66777f72d6b75d69f6d0aff6343dc4fee0f297eb014c0585c31bf3e40df15174e456159d0d27f8795cb37e959a20a0c84237f360234800ee994049000
+expect_full_text 'Data' '{SWAP;CONCAT}'
+press_button right
+expect_full_text 'Accept?'
+press_button both
+expect_async_apdus_sent
