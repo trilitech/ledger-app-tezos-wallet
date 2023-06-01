@@ -56,6 +56,6 @@ sync docker images:
         docker manifest push $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG ;
       fi
   only:
-    - branches
+    - merge_requests
   except:
     - main
