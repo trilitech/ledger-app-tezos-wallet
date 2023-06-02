@@ -1,12 +1,13 @@
 ---
 
-.integration-basic:
+.integration:
   image:
     name: ghcr.io/ledgerhq/speculos:sha-90a021a
     entrypoint: [""]
   stage: test
   variables:
     DEVICE: ""
+    TESTDIR: ""
   script:
     - apt update && apt install -y curl jq build-essential libsodium-dev
     - pip install base58 pytezos
@@ -16,5 +17,6 @@
       app_${DEVICE}_dbg.tgz
       tests/integration/${DEVICE}
   artifacts:
+    when: always
     paths:
-      - integration_tests.json
+    - integration_tests.json

@@ -80,56 +80,43 @@ unit:
     - generate_samples
 
 integration_nanos_basic:
-  extends: .integration-basic
+  extends: .integration
   needs:
     - build_nanos_dbg
   variables:
     DEVICE: nanos
+    TESTDIR: tests/integration/nanos
 
 integration_nanosp_basic:
-  extends: .integration-basic
+  extends: .integration
   needs:
     - build_nanosp_dbg
   variables:
     DEVICE: nanosp
+    TESTDIR: tests/integration/nanosp
 
 integration_nanox_basic:
-  extends: .integration-basic
+  extends: .integration
   needs:
     - build_nanox_dbg
   variables:
     DEVICE: nanox
+    TESTDIR: tests/integration/nanox
 
 integration_nanos_micheline_samples:
-  image:
-    name: ghcr.io/ledgerhq/speculos:sha-90a021a
-    entrypoint: [""]
-  stage: test
+  extends: .integration
   needs:
     - build_nanos_dbg
     - generate_samples
-  script:
-    - apt update && apt install -y curl jq build-essential libsodium-dev
-    - pip install base58 pytezos
-    - SPECULOS=/speculos/speculos.py COLUMNS=80 ./tests/integration/run_test_local.sh nanos app_nanos_dbg.tgz tests/samples/micheline
-  artifacts:
-    when: always
-    paths:
-    - integration_tests.json
+  variables:
+    DEVICE: nanos
+    TESTDIR: tests/samples/micheline
 
 integration_nanos_operations_samples:
-  image:
-    name: ghcr.io/ledgerhq/speculos:sha-90a021a
-    entrypoint: [""]
-  stage: test
+  extends: .integration
   needs:
     - build_nanos_dbg
     - generate_samples
-  script:
-    - apt update && apt install -y curl jq build-essential libsodium-dev
-    - pip install base58 pytezos
-    - SPECULOS=/speculos/speculos.py COLUMNS=80 ./tests/integration/run_test_local.sh nanos app_nanos_dbg.tgz tests/samples/operations
-  artifacts:
-    when: always
-    paths:
-    - integration_tests.json
+  variables:
+    DEVICE: nanos
+    TESTDIR: tests/samples/operations
