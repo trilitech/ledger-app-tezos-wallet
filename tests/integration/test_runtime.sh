@@ -246,6 +246,7 @@ run_a_test() {
         #         non-zero:
         rm $OUTF $ERRF $SPECULOG
     fi
+    return $RETCODE
 }
 
 MAX_DOTS=40
@@ -264,6 +265,7 @@ test_a_dir() {
     DOT=0
     DID_DOT=0
     DOT_PER_NUM=$(( $num_left / $MAX_DOTS + 1 ))
+    THE_DOT=.
 
     printf "$TEST_BANNER|" $DIR
 
@@ -289,11 +291,12 @@ test_a_dir() {
             fi
         done
 
-        wait -p DIE -n $PIDS || /bin/true
+        wait -p DIE -n $PIDS || THE_DOT=\*
 
         if [ -n "$DIE" ]; then
             if (( DOT >= DOT_PER_NUM )); then
-                echo -n .
+                echo -n "$THE_DOT"
+                THE_DOT=.
                 DOT=0
                 (( DID_DOT += 1 )) || :
             fi
