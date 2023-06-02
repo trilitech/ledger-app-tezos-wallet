@@ -20,6 +20,13 @@
 #include "num_parser.h"
 #include "pattern_registry.h"
 
+/* Prototypes */
+
+static tz_parser_result push_frame(tz_parser_state *,
+                                   tz_operation_parser_step_kind);
+static tz_parser_result pop_frame(tz_parser_state *);
+
+
 #ifdef TEZOS_DEBUG
 const char *const tz_operation_parser_step_name[] = {
   "MAGIC",

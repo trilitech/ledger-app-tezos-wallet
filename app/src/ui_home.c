@@ -27,7 +27,11 @@ static enum {
   SCREEN_SETTINGS,
 } screen;
 
-static void redisplay();
+/* Prototypes */
+
+static unsigned int cb(unsigned int, unsigned int);
+static void redisplay(void);
+
 
 static unsigned int cb(unsigned int button_mask, __attribute__((unused)) unsigned int button_mask_counter) {
   FUNC_ENTER(("button_mask=%d, button_mask_counter=%d", button_mask,

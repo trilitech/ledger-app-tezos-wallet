@@ -34,16 +34,6 @@
 #include <string.h>
 #include <stdbool.h>
 
-#define P1_FIRST          0x00
-#define P1_NEXT           0x01
-#define P1_HASH_ONLY_NEXT 0x03  // You only need it once
-#define P1_LAST_MARKER    0x80
-
-static inline void clear_data(void) {
-    memset(&global.apdu.hash, 0, sizeof(global.apdu.hash));
-    memset(&global.apdu.sign, 0, sizeof(global.apdu.sign));
-}
-
 typedef struct {
   uint8_t cla;
   uint8_t ins;
@@ -54,6 +44,30 @@ typedef struct {
   bool is_last;
   bool is_first;
 } packet_t;
+
+/* Prototypes */
+
+static inline void clear_data(void);
+static void init_packet(packet_t *);
+static int write_signature(uint8_t *const, uint8_t const *const, size_t const);
+static void sign_packet(void);
+static void send_reject(void);
+static void send_continue(void);
+static void refill(void);
+static void stream_cb(tz_ui_cb_type_t);
+static size_t handle_first_apdu(packet_t *);
+static size_t handle_data_apdu(packet_t *);
+
+#define P1_FIRST          0x00
+#define P1_NEXT           0x01
+#define P1_HASH_ONLY_NEXT 0x03  // You only need it once
+#define P1_LAST_MARKER    0x80
+
+
+static inline void clear_data(void) {
+    memset(&global.apdu.hash, 0, sizeof(global.apdu.hash));
+    memset(&global.apdu.sign, 0, sizeof(global.apdu.sign));
+}
 
 static void init_packet(packet_t *pkt) {
   pkt->cla = G_io_apdu_buffer[OFFSET_CLA];

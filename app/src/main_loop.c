@@ -30,6 +30,7 @@
 #include "apdu_sign.h"
 #include "apdu_pubkey.h"
 
+
 static uint8_t dispatch(uint8_t instruction) {
   FUNC_ENTER(("%u", instruction));
 

@@ -17,6 +17,17 @@
 
 #include "globals.h"
 
+/* Prototypes */
+
+static unsigned int cb(unsigned int, unsigned int);
+static void update(void);
+static void pred(void);
+static void succ(void);
+static void change_screen_left(void);
+static void change_screen_right(void);
+static void redisplay(void);
+
+
 // Model
 
 static void update () {
@@ -185,9 +196,6 @@ tz_ui_stream_screen_kind tz_ui_stream_current_screen_kind () {
 }
 
 // View
-
-static void change_screen_left();
-static void change_screen_right();
 
 static unsigned int cb(unsigned int button_mask, __attribute__((unused)) unsigned int button_mask_counter) {
 

@@ -27,6 +27,14 @@
 
 #include <string.h>
 
+/* Prototypes */
+
+static size_t provide_pubkey(uint8_t *const, cx_ecfp_public_key_t const *const);
+static void ok_cb(void);
+static void format_pkh(char *);
+static void stream_cb(tz_ui_cb_type_t);
+
+
 static size_t provide_pubkey(uint8_t *const io_buffer, cx_ecfp_public_key_t const *const pubkey) {
   FUNC_ENTER(("io_buffer=%p, pubkey=%p", io_buffer, pubkey));
   check_null(io_buffer);

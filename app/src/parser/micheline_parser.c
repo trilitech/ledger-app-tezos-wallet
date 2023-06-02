@@ -17,6 +17,25 @@
 #include "micheline_parser.h"
 #include "num_parser.h"
 
+/* Prototypes */
+
+static int read_pat(tz_parser_state *, uint8_t *);
+static int skip_pat(tz_parser_state *, uint8_t);
+static tz_parser_result size_pat(tz_parser_state *, uint16_t *);
+static tz_parser_result push_frame(tz_parser_state *,
+                                    tz_micheline_parser_step_kind);
+static tz_parser_result pop_frame(tz_parser_state *);
+static tz_parser_result begin_sized(tz_parser_state *);
+static tz_parser_result continue_sized(tz_parser_state *);
+static tz_parser_result end_sized(tz_parser_state *);
+static tz_parser_result may_start_capture(tz_parser_state *, uint8_t);
+static tz_parser_result stop_capture_bytes(tz_parser_state *);
+static tz_parser_result print_escaped(tz_parser_state *, uint8_t);
+static tz_parser_result parser_put_if_not_capturing(tz_parser_state *,
+                                                    tz_parser_regs *, char);
+static tz_parser_result tag_selection(tz_parser_state *, uint8_t);
+
+
 #ifdef TEZOS_DEBUG
 const char *const tz_micheline_parser_step_name[] = {
   "TAG",
