@@ -198,6 +198,12 @@ let gen_transaction =
   let* parameters = gen_expr in
   return (Transaction { amount; destination; entrypoint; parameters })
 
+let gen_update_consensus_key =
+  let open Protocol.Alpha_context in
+  let open QCheck2.Gen in
+  let* public_key = gen_public_key in
+  return (Update_consensus_key public_key)
+
 let gen_manager_operation gen_operation =
   let open Protocol.Alpha_context in
   let open QCheck2.Gen in
@@ -228,6 +234,7 @@ let gen_hidden_manager_operation =
       aux gen_reveal;
       aux gen_set_deposits_limit;
       aux gen_transaction;
+      aux gen_update_consensus_key;
     ]
 
 type hidden_manager_operation_list =

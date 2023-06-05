@@ -61,6 +61,11 @@ let to_string
             Format.asprintf "%a" Entrypoint.pp entrypoint;
             Test_micheline_c_parser.to_string parameters;
           ]
+    | Update_consensus_key public_key ->
+        aux ~kind:"Set consensus key"
+          [
+            Format.asprintf "%a" Tezos_crypto.Signature.Public_key.pp public_key;
+          ]
     | _ -> assert false
   in
   let rec operations_to_string : type t. t contents_list -> string = function

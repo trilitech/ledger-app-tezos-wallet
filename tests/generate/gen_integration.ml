@@ -249,6 +249,12 @@ let operation_to_screens ppf
              make_screen ~title:"Entrypoint" "%a" Entrypoint.pp entrypoint;
            ]
           @ node_to_screens ppf parameters)
+    | Update_consensus_key public_key ->
+        aux ~kind:"Set consensus key"
+          [
+            make_screen ~title:"Public key" "%a"
+              Tezos_crypto.Signature.Public_key.pp public_key;
+          ]
     | _ -> assert false
   in
   let rec screen_of_operations : type t. int -> t contents_list -> screen list =
