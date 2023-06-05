@@ -16,34 +16,116 @@
 open Tezos_protocol_016_PtMumbai
 open Tezos_benchmarks_proto_016_PtMumbai
 
+(* Only use this function to generate values *)
+let gen_expr =
+  let gen rand =
+    Protocol.Script_repr.lazy_expr
+      (Michelson_generation.make_code_sampler rand Gen_micheline.config).term
+  in
+  let shrink _ = assert false in
+  QCheck2.Gen.make_primitive ~gen ~shrink
+
+let gen_algo =
+  QCheck2.Gen.oneofl Tezos_crypto.Signature.[ Ed25519; Secp256k1; P256 ]
+
+let gen_keys =
+  let open QCheck2.Gen in
+  let* seed = QCheck2.Gen.bytes_size (return 32) in
+  let* algo = gen_algo in
+  return @@ Tezos_crypto.Signature.generate_key ~algo ~seed ()
+
+let gen_secret_key = QCheck2.Gen.map (fun (_, _, sk) -> sk) gen_keys
+let gen_public_key = QCheck2.Gen.map (fun (_, pk, _) -> pk) gen_keys
+let gen_public_key_hash = QCheck2.Gen.map (fun (pkh, _, _) -> pkh) gen_keys
+
+let gen_tez =
+  QCheck2.Gen.map Protocol.Alpha_context.Tez.(mul_exn one_cent)
+  @@ QCheck2.Gen.int_range 1 100
+
+let gen_manager_counter =
+  QCheck2.Gen.map
+    Protocol.Alpha_context.Manager_counter.Internal_for_tests.of_int
+  @@ QCheck2.Gen.int_range 0 1000
+
+let gen_z_bound b = QCheck2.Gen.map Z.of_int QCheck2.Gen.(int_bound b)
+
+let gen_gaz_bound b =
+  QCheck2.Gen.map Protocol.Alpha_context.Gas.Arith.integral_of_int_exn
+    QCheck2.Gen.(int_bound b)
+
+let gen_origination_nonce =
+  let open Protocol.Alpha_context in
+  let open QCheck2.Gen in
+  let rec incr i nonce =
+    if i <= 0 then return nonce
+    else
+      let nonce = Origination_nonce.Internal_for_tests.incr nonce in
+      incr (i - 1) nonce
+  in
+  let* i = int_range 1 100 in
+  let initial_nonce =
+    Origination_nonce.Internal_for_tests.initial Environment.Operation_hash.zero
+  in
+  incr i initial_nonce
+
+let gen_contract =
+  let open Protocol.Alpha_context in
+  let open QCheck2.Gen in
+  let gen_originated =
+    let* public_key_hash = gen_public_key_hash in
+    return (Contract.Implicit public_key_hash)
+  in
+  let gen_implict =
+    let* origination_nonce = gen_origination_nonce in
+    return (Contract.Internal_for_tests.originated_contract origination_nonce)
+  in
+  oneof [ gen_implict; gen_originated ]
+
+let gen_entrypoint =
+  QCheck2.Gen.oneofl
+    Protocol.Alpha_context.Entrypoint.
+      [
+        default;
+        root;
+        do_;
+        set_delegate;
+        remove_delegate;
+        deposit;
+        of_string_strict_exn "jean_bob";
+      ]
+
+let gen_transaction =
+  let open Protocol.Alpha_context in
+  let open QCheck2.Gen in
+  let* amount = gen_tez in
+  let* destination = gen_contract in
+  let* entrypoint = gen_entrypoint in
+  let* parameters = gen_expr in
+  return (Transaction { amount; destination; entrypoint; parameters })
+
+let gen_manager_operation gen_operation =
+  let open Protocol.Alpha_context in
+  let open QCheck2.Gen in
+  let* source = gen_public_key_hash in
+  let* fee = gen_tez in
+  let* counter = gen_manager_counter in
+  let* gas_limit = gen_gaz_bound 1000 in
+  let* storage_limit = gen_z_bound 1000 in
+  let* operation = gen_operation in
+  return
+    (Manager_operation
+       { source; fee; counter; operation; gas_limit; storage_limit })
+
 let gen () =
   let open Protocol.Alpha_context in
-  let source = Tezos_crypto.Signature.Public_key_hash.zero in
-  let fee = Tez.fifty_cents in
-  let counter = Manager_counter.Internal_for_tests.of_int (Random.int 1000) in
-  let gas_limit = Gas.Arith.integral_of_int_exn (Random.int 1000) in
-  let storage_limit = Z.of_int (Random.int 1000) in
-  let operation =
-    let amount = Tez.fifty_cents in
-    let destination = Contract.Originated Protocol.Contract_hash.zero in
-    let entrypoint = Entrypoint.of_string_strict_exn "jean_bob" in
-    let parameters =
-      Protocol.Script_repr.lazy_expr
-        (Michelson_generation.make_code_sampler Gen_utils.random_state
-           Gen_micheline.config)
-          .term
-    in
-    Transaction { amount; destination; entrypoint; parameters }
-  in
   let shell =
     { Tezos_base.Operation.branch = Tezos_crypto.Hashed.Block_hash.zero }
   in
-  let contents =
-    Contents_list
-      (Single
-         (Manager_operation
-            { source; fee; counter; operation; gas_limit; storage_limit }))
+  let transaction =
+    QCheck2.Gen.generate1 ~rand:Gen_utils.random_state
+      (gen_manager_operation gen_transaction)
   in
+  let contents = Contents_list (Single transaction) in
   (shell, contents)
 
 let op = Seq.forever gen
