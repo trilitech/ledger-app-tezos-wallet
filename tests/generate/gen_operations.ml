@@ -171,6 +171,12 @@ let gen_entrypoint =
         of_string_strict_exn "jean_bob";
       ]
 
+let gen_delegation =
+  let open Protocol.Alpha_context in
+  let open QCheck2.Gen in
+  let* public_key_hash_opt = option gen_public_key_hash in
+  return (Delegation public_key_hash_opt)
+
 let gen_transaction =
   let open Protocol.Alpha_context in
   let open QCheck2.Gen in
@@ -204,7 +210,7 @@ let gen_hidden_manager_operation =
       (fun manager_operation -> HMO manager_operation)
       (gen_manager_operation gen_operation)
   in
-  QCheck2.Gen.oneof [ aux gen_transaction ]
+  QCheck2.Gen.oneof [ aux gen_delegation; aux gen_transaction ]
 
 type hidden_manager_operation_list =
   | HMOL :

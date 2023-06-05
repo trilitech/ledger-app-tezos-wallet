@@ -212,6 +212,10 @@ let node_to_screens ppf node =
   Format.fprintf ppf "# full output: %s@\n" whole;
   [ make_screen ~title:"Data" ~multi:true [ whole ] ]
 
+let pp_opt_field pp ppf = function
+  | None -> Format.fprintf ppf "Field unset"
+  | Some v -> Format.fprintf ppf "%a" pp v
+
 let operation_to_screens ppf
     ( (_shell : Tezos_base.Operation.shell_header),
       (Contents_list contents : Protocol.Alpha_context.packed_contents_list) ) =
@@ -234,6 +238,13 @@ let operation_to_screens ppf
       manager_screens @ operation_screens
     in
     match operation with
+    | Delegation public_key_hash_opt ->
+        aux ~kind:"Delegation"
+          [
+            make_screen ~title:"Delegate" "%a"
+              (pp_opt_field Tezos_crypto.Signature.Public_key_hash.pp)
+              public_key_hash_opt;
+          ]
     | Transaction { amount; entrypoint; destination; parameters } ->
         let parameters =
           let expr =
