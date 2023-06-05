@@ -1,4 +1,5 @@
 (* Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
+   Copyright 2023 Functori <contact@functori.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -98,48 +99,3 @@ let check (nfail, nok, failed) expr =
   let res = pp_c expr in
   if exp = res then (nfail, nok + 1, failed)
   else (nfail + 1, nok, (exp, res) :: failed)
-
-let () =
-  assert (Array.length Sys.argv = 2);
-  let fp = if Sys.argv.(1) = "-" then stdin else open_in Sys.argv.(1) in
-  let inputs =
-    Seq.of_dispenser (fun () ->
-        try
-          let bin = Hex.to_string (`Hex (input_line fp)) in
-          let _, expr =
-            Data_encoding.Binary.read_exn Protocol.Script_repr.expr_encoding bin
-              1
-              (String.length bin - 1)
-          in
-          Some expr
-        with End_of_file ->
-          close_in fp;
-          None)
-  in
-  let nfail, nok, failed = Seq.fold_left check (0, 0, []) inputs in
-  let ntoo_deep, ntoo_large, failed =
-    List.fold_left
-      (fun (acctoo_deep, acctoo_large, accl) (exp, res) ->
-        if res = "Failure(\"micheline_cparse_step: expression too deep\")" then
-          (acctoo_deep + 1, acctoo_large, accl)
-        else if
-          res
-          = "Failure(\"micheline_cparse_step: data size limitation exceeded\")"
-        then (acctoo_deep, acctoo_large + 1, accl)
-        else (acctoo_deep, acctoo_large, (exp, res) :: accl))
-      (0, 0, []) failed
-  in
-  Format.printf
-    "Result: %d test were run, %d hard failed, %d failed with TOO_DEEP, %d \
-     failed with TOO_LARGE.@."
-    (nfail + nok)
-    (nfail - ntoo_deep - ntoo_large)
-    ntoo_deep ntoo_large;
-  List.iter
-    (fun (exp, res) ->
-      Format.printf "%s@.Expected: %S@.Got: %S@."
-        (String.make
-           (match Terminal_size.get_columns () with Some v -> v | None -> 80)
-           '-')
-        exp res)
-    failed

@@ -3,4 +3,4 @@
 all: test_micheline_c_parser
 
 test_micheline_c_parser: *.ml *.[ch] dune Makefile
-	dune exec ./test_micheline_c_parser.exe ../samples/micheline/samples.hex
+	dune exec ./test_c_parser.exe micheline ../samples/micheline/samples.hex
