@@ -195,6 +195,8 @@ let pp_opt_field pp ppf = function
   | None -> Format.fprintf ppf "Field unset"
   | Some v -> Format.fprintf ppf "%a" pp v
 
+let pp_tz ppf tz = Format.fprintf ppf "%a tz" Protocol.Alpha_context.Tez.pp tz
+
 let operation_to_screens ppf
     ( (_shell : Tezos_base.Operation.shell_header),
       (Contents_list contents : Protocol.Alpha_context.packed_contents_list) ) =
@@ -221,6 +223,11 @@ let operation_to_screens ppf
             make_screen ~title:"Delegate" "%a"
               (pp_opt_field Tezos_crypto.Signature.Public_key_hash.pp)
               public_key_hash_opt;
+          ]
+    | Set_deposits_limit tez_opt ->
+        aux ~kind:"Set deposit limit"
+          [
+            make_screen ~title:"Staking limit" "%a" (pp_opt_field pp_tz) tez_opt;
           ]
     | Transaction { amount; entrypoint; destination; parameters } ->
         let parameters =
