@@ -14,6 +14,41 @@
    limitations under the License. *)
 
 open Tezos_protocol_015_PtLimaPt
+open Test_c_parser_utils
+
+let pp_c_bin ~(cparse_step : cparse_step) ppf bytes =
+  let len = Bytes.length bytes in
+  let state = cparse_init None len in
+  let ss = 1 + Random.int 1000 in
+  let rec screen_by_screen ofs =
+    let buf = Bytes.make ss ' ' in
+    let read, written, st =
+      cparse_step state ~input:(bytes, ofs, len - ofs) ~output:(buf, 0, ss)
+    in
+    if written > 0 then
+      Format.fprintf ppf "%s" (Bytes.to_string (Bytes.sub buf 0 written));
+    match st with
+    | FEED_ME -> ()
+    | IM_FULL -> screen_by_screen (ofs + read)
+    | DONE -> ()
+  in
+  screen_by_screen 0
+
+let pp_c ~to_bytes ~cparse_step input =
+  try Format.asprintf "%a" (pp_c_bin ~cparse_step) @@ to_bytes input
+  with exn -> Printexc.to_string exn
+
+let check ~to_string ~to_bytes ~cparse_step inputs =
+  let aux (nfail, nok, failed) input =
+    if (nfail + nok) mod 100 = 0 then
+      Format.printf "Running: %d (%d failed)...%s%!" (nfail + nok) nfail
+        (String.make 80 '\b');
+    let expected = to_string input in
+    let got = pp_c ~to_bytes ~cparse_step input in
+    if expected = got then (nfail, nok + 1, failed)
+    else (nfail + 1, nok, (expected, got) :: failed)
+  in
+  Seq.fold_left aux (0, 0, []) inputs
 
 let () =
   match Sys.argv with
@@ -34,7 +69,7 @@ let () =
               None)
       in
       let nfail, nok, failed =
-        Seq.fold_left Test_micheline_c_parser.check (0, 0, []) inputs
+        Test_micheline_c_parser.(check ~to_string ~to_bytes ~cparse_step inputs)
       in
       let ntoo_deep, ntoo_large, failed =
         List.fold_left
