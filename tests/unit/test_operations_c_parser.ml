@@ -42,6 +42,11 @@ let to_string
               (pp_opt_field Tezos_crypto.Signature.Public_key_hash.pp)
               public_key_hash_opt;
           ]
+    | Reveal public_key ->
+        aux ~kind:"Reveal"
+          [
+            Format.asprintf "%a" Tezos_crypto.Signature.Public_key.pp public_key;
+          ]
     | Set_deposits_limit tez_opt ->
         aux ~kind:"Set deposit limit"
           [ Format.asprintf "%a" (pp_opt_field pp_tz) tez_opt ]
