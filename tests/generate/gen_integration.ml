@@ -230,14 +230,10 @@ let operation_to_screens ppf
             Protocol.Alpha_context.Entrypoint.pp entrypoint
         in
         let node =
-          let bin =
-            Data_encoding.Binary.to_bytes_exn
-              Protocol.Alpha_context.Script.lazy_expr_encoding parameters
+          let expr =
+            Result.get_ok @@ Protocol.Script_repr.force_decode parameters
           in
-          Micheline.root
-            (Data_encoding.Binary.of_bytes_exn
-               Protocol.Script_repr.expr_encoding
-               (Bytes.sub bin 4 (Bytes.length bin - 4)))
+          Micheline.root expr
         in
         let node_screens = node_to_screens ppf node in
         operation_screen :: fee_screen :: storage_screen :: amount_screen

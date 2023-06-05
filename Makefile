@@ -64,6 +64,7 @@ clean:
 	  "make -C /app/pattern_registry clean && make -C /app/tests/generate clean && cd /app && rm -rf _build"
 
 unit_tests:	test/samples/micheline/samples.hex	\
+		test/samples/operations/samples.hex	\
 		tests/unit/*.ml*			\
 		tests/unit/*.[ch]			\
 		tests/unit/dune				\

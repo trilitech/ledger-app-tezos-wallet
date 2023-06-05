@@ -100,6 +100,38 @@ let () =
                '-')
             exp res)
         failed
+  | [| _; "operations"; path |] ->
+      let fp = if path = "-" then stdin else open_in path in
+      let inputs =
+        Seq.of_dispenser (fun () ->
+            try
+              let bin = Hex.to_string (`Hex (input_line fp)) in
+              let _, op =
+                Data_encoding.Binary.read_exn
+                  Protocol.Alpha_context.Operation.unsigned_encoding bin 1
+                  (String.length bin - 1)
+              in
+              Some op
+            with End_of_file ->
+              close_in fp;
+              None)
+      in
+      let nfail, nok, failed =
+        Test_operations_c_parser.(
+          check ~to_string ~to_bytes ~cparse_step inputs)
+      in
+      Format.printf "Result: %d test were run, %d failed.@." (nfail + nok) nfail;
+      List.iter
+        (fun (exp, res) ->
+          Format.printf "%s@.Expected: %S@.Got: %S@."
+            (String.make
+               (match Terminal_size.get_columns () with
+               | Some v -> v
+               | None -> 80)
+               '-')
+            exp res)
+        failed
   | _ ->
-      Format.eprintf "Usage: %s micheline <path>@." Sys.executable_name;
+      Format.eprintf "Usage: %s <micheline|operations> <path>@."
+        Sys.executable_name;
       exit 1
