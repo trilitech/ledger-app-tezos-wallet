@@ -211,6 +211,7 @@ run_a_test() {
     SPECULOG=$(mktemp $DATA_DIR/speculog-$PORT-$JOBID-XXXXXX)
 
     SPECULOS_URL=http://localhost:$PORT
+    TIMESTAMP=$(date +%s)
 
     set +e
     (   set -e
@@ -232,10 +233,13 @@ run_a_test() {
           --rawfile speculog $SPECULOG                         \
     '
         { "path":     "'"$CMD"'"
+        , "pid":  "'$PID'"
+        , "port":  "'$PORT'"
         , "retcode":  "'$RETCODE'"
         , "stdout":   $stdout
         , "stderr":   $stderr
         , "speculog": $speculog
+        , "timestamp":  "'$TIMESTAMP'"
         }
     ' > $RETF < /dev/null
     if [ -s $RETF ]; then
