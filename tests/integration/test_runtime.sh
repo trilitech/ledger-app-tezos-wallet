@@ -173,9 +173,8 @@ function send_async_apdus {
 }
 
 function expect_async_apdus_sent {
-    attempts test ! -f $async_apdus
-    if [ -f $async_apdus ] ; then
-        (echo "FAILURE(expect_async_apdus_sent)") >&2
+    if ! attempts test ! -f $async_apdus; then
+        echo "FAILURE(expect_async_apdus_sent)" >&2
         exit 1
     fi
     echo " - all apdus received"
