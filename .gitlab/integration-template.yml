@@ -15,7 +15,7 @@
       COLUMNS=80
       ./tests/integration/run_test_local.sh ${DEVICE}
       app_${DEVICE}_dbg.tgz
-      tests/integration/${DEVICE}
+      ${TESTDIR}
   artifacts:
     when: always
     paths:
