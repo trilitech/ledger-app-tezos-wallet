@@ -214,17 +214,17 @@ run_a_test() {
     TIMESTAMP=$(date +%s)
 
     set +e
-    (   set -e
-        echo "PID: $$"          # get the PID into files
+    (   echo "PID: $$"          # get the PID into files
         echo "PORT: $PORT"
         echo "SPECULOS_URL: $SPECULOS_URL"
         if [ $TEST_TRACE = 1 ]; then
             set -x
         fi
-        kill_speculos_runner
         start_speculos_runner
-        . $CMD
+        ( set -e; . $CMD )
+        RETCODE=$?
         kill_speculos_runner
+        exit $RETCODE
      ) > $OUTF 2> $ERRF
      RETCODE=$?
      set -e
