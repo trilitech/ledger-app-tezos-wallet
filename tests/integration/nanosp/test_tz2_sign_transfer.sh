@@ -16,7 +16,8 @@ expect_full_text 'Destination' 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT'
 press_button right
 expect_full_text 'Entrypoint' 'jean_bob'
 press_button right
-expect_full_text 'Data' 'SIZE'
+# FIXME: OCR bug
+expect_full_text 'Data' 'lZE'
 press_button right
 expect_full_text 'Accept?' 'Press both buttons' 'to accept.'
 press_button both
