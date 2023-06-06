@@ -114,4 +114,10 @@ extern unsigned int app_stack_canary;  // From SDK
 
 extern unsigned char G_io_seproxyhal_spi_buffer[IO_SEPROXYHAL_BUFFER_SIZE_B];
 
+// From paging compute!
+//uint8_t se_get_cropped_length(const char* text,
+//                                     uint8_t text_length,
+//                                     uint32_t width_limit_in_pixels,
+//                                     uint8_t text_format);
+
 // extern const uint32_t mainnet_chain_id = 0x7A06A770 // NetXdQprcVkpaWU

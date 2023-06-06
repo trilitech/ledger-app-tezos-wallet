@@ -80,7 +80,47 @@ void tz_ui_stream_push(const char *title, const char *value) {
   STRLCPY(global.stream.titles[bucket], title);
   for (i = 0; i < TZ_UI_STREAM_CONTENTS_LINES; i++)
     global.stream.values[bucket][i * TZ_UI_STREAM_CONTENTS_WIDTH] = '\0';
-  STRLCPY(global.stream.values[bucket], value);
+
+  // Ensure things fit on one line
+  int length = 0, offset = 0;
+  while(value[length] != '\0') length++;
+
+  int line = 0;
+  while (offset < length && line < TZ_UI_STREAM_CONTENTS_LINES) {
+    const char* start = value + offset;
+    int len = length - offset;
+    int will_fit = se_get_cropped_length(start, len, BAGL_WIDTH, PAGING_FORMAT_NB);
+
+#ifdef TEZOS_DEBUG
+  char debug_line[TZ_UI_STREAM_CONTENTS_SIZE + 1];
+  debug_line[TZ_UI_STREAM_CONTENTS_SIZE] = 0;
+  //STRLCPY(debug_line, global.stream.values[bucket][line]);
+  PRINTF("[DEBUG] split(value: \"%s\", will_fit: %d, length: %d, len: %d, line: %d, offset: %d)\n",
+         value, will_fit, length, len, line, offset);
+#endif
+
+    char* buffer = global.stream.values[bucket] + line * TZ_UI_STREAM_CONTENTS_WIDTH;
+    if (will_fit >= len && len < TZ_UI_STREAM_CONTENTS_WIDTH) {
+      strlcpy(buffer, start, len + 1);
+      break;
+    } else if (will_fit >= len && len >= TZ_UI_STREAM_CONTENTS_WIDTH){
+      strlcpy(buffer, start, TZ_UI_STREAM_CONTENTS_WIDTH);
+      offset += TZ_UI_STREAM_CONTENTS_WIDTH - 1;
+      line++;
+      continue;
+    } else if (will_fit < TZ_UI_STREAM_CONTENTS_WIDTH) {
+      strlcpy(buffer, start, will_fit + 1);
+      offset += will_fit;
+      line++;
+      continue;
+    } else {
+      strlcpy(buffer, start, TZ_UI_STREAM_CONTENTS_WIDTH);
+      offset += TZ_UI_STREAM_CONTENTS_WIDTH - 1;
+      line++;
+      continue;
+    }
+  }
+
   if (global.stream.total == 0 || global.stream.total >= TZ_UI_STREAM_HISTORY_SCREENS) {
     global.stream.current++;
   }
