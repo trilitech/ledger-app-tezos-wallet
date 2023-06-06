@@ -2,9 +2,9 @@
         (name encode_pattern)
         (modules Encode_pattern)
         (libraries "process_pattern"
-                   "tezos-client-015-PtLimaPt"))
+                   "tezos-client-016-PtMumbai"))
 
 (library
         (name process_pattern)
         (modules Process_pattern)
-        (libraries "tezos-client-015-PtLimaPt"))
+        (libraries "tezos-client-016-PtMumbai"))

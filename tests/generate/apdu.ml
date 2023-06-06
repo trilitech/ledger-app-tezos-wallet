@@ -72,6 +72,7 @@ module Curve = struct
     | Ed25519 _ -> ED25519
     | Secp256k1 _ -> SECP256K1
     | P256 _ -> SECP256R1
+    | Bls _ -> failwith "The Bls curve is not supported"
 
   let to_uint8 = function
     | ED25519 -> 0x00

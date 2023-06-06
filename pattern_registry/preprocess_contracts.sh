@@ -60,7 +60,7 @@ do
   ex_binary=$(sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' <<< "$ex_binary" | tr '[:upper:]' '[:lower:]')
 
   # Convert human to binary
-  binary="0x"$(octez-codec encode 015-PtLimaPt.contract from '"'"$human"'"')
+  binary="0x"$(octez-codec encode 016-PtMumbai.contract from '"'"$human"'"')
   if [ "$?" -ne 0 ]
   then
     handle_error "error while calling octez-codec"
