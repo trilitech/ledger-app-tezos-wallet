@@ -64,7 +64,7 @@ void tz_ui_stream_close () {
 #endif
 }
 
-void tz_ui_stream_push(const char *title, const char *value) {
+tz_ui_stream_push_result_t tz_ui_stream_push(const char *title, const char *value) {
   size_t i;
 
   if (global.stream.full) {
@@ -102,6 +102,7 @@ void tz_ui_stream_push(const char *title, const char *value) {
     char* buffer = global.stream.values[bucket] + line * TZ_UI_STREAM_CONTENTS_WIDTH;
     if (will_fit >= len && len < TZ_UI_STREAM_CONTENTS_WIDTH) {
       strlcpy(buffer, start, len + 1);
+      offset += len;
       break;
     } else if (will_fit >= len && len > TZ_UI_STREAM_CONTENTS_WIDTH){
       strlcpy(buffer, start, TZ_UI_STREAM_CONTENTS_WIDTH + 1);
@@ -135,6 +136,11 @@ void tz_ui_stream_push(const char *title, const char *value) {
          debug_title, debug_value,
          prev_total, global.stream.total, prev_current, global.stream.current);
 #endif
+  tz_ui_stream_push_result_t res;
+  res.wrote = offset;
+  res.remaining = length - offset;
+
+  return res;
 }
 
 static void pred () {

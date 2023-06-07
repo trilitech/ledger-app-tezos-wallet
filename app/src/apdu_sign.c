@@ -148,16 +148,19 @@ static void send_continue() {
 
 static void refill() {
   tz_parser_regs *regs = &global.apdu.sign.parser_regs;
+  tz_ui_stream_push_result_t res;
   while(!TZ_IS_BLOCKED(tz_operation_parser_step(&global.apdu.sign.parser_state, regs))){};
   PRINTF("[DEBUG] refill(errno: %s) \n", tz_parser_result_name(global.apdu.sign.parser_state.errno));
   switch (global.apdu.sign.parser_state.errno) {
   case TZ_BLO_IM_FULL:
   last_screen:
-    tz_ui_stream_push(global.apdu.sign.parser_state.field_name,
-                      global.apdu.sign.line_buf);
-    tz_parser_regs_flush(&global.apdu.sign.parser_regs,
-                         global.apdu.sign.line_buf,
-                         TZ_UI_STREAM_CONTENTS_SIZE);
+    res = tz_ui_stream_push(global.apdu.sign.parser_state.field_name,
+                            global.apdu.sign.line_buf);
+
+    tz_parser_regs_flush_retain(&global.apdu.sign.parser_regs,
+                                global.apdu.sign.line_buf,
+                                TZ_UI_STREAM_CONTENTS_SIZE,
+                                res.remaining);
     break;
   case TZ_BLO_FEED_ME:
     send_continue();

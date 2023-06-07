@@ -59,14 +59,18 @@ function attempts {
     return 1
 }
 
+function get_screen_text {
+   got="$(curl -s $SPECULOS_URL/events?currentscreenonly=true)"
+   echo $got | jq -r '[.events[].text] | add'
+}
+
 function expect_full_text {
     echo -n " - expect_full_text" ; for s in "$@" ; do echo -n " \"$s\"" ; done
     IFS= exp="$*"
     nb=200
     FULL_TEXT_PREV=""
     while :; do
-        got="$(curl -s $SPECULOS_URL/events?currentscreenonly=true)"
-        got="$(echo $got | jq -r '[.events[].text] | add')"
+        got="$(get_screen_text)"
         if [ "$exp" == "$got" ] ; then
             FULL_TEXT_PREV="$exp"
             echo
@@ -88,6 +92,34 @@ function expect_full_text {
         sleep 0.05
         nb=$((nb-1))
     done
+}
+
+# One section of data can spill across multiple screens.
+# Collect all pages with the given title, and then compare at the end.
+function expect_multiscreen_content {
+    title="$1"
+    expected_content="$2"
+    echo -n " - expect_full_text_multiscreen(title: $title, content: $expected_content)"
+
+    TEXT_SO_FAR=""
+    TEXT_PREV=""
+
+    content=""
+    while content=$(echo "$(get_screen_text)" | sed '/^'"$title"'/!{q1}; {s/^'"$title"'\(.*\)$/\1/}');
+    do
+        echo "success!"
+        TEXT_SO_FAR="$TEXT_SO_FAR$content"
+        press_button right
+    done
+
+    echo "Got: $TEXT_SO_FAR"
+
+    if [ "$TEXT_SO_FAR" != "$expected_content" ]; then
+        (echo "FAILURE(expect_multiscreen_content):"
+         echo "  On screen: '$TEXT_SO_FAR'"
+         echo "  Expected:  '$expected_content'") >&2
+        exit 1
+    fi
 }
 
 #

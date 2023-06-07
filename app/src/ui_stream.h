@@ -68,8 +68,13 @@ typedef enum {
   TZ_UI_STREAM_DISPLAY_REJECT,
 } tz_ui_stream_screen_kind;
 
+typedef struct {
+  int wrote;
+  int remaining;
+} tz_ui_stream_push_result_t;
+
 void tz_ui_stream_init(void (*)(tz_ui_cb_type_t));
-void tz_ui_stream_push(const char *, const char *);
+tz_ui_stream_push_result_t tz_ui_stream_push(const char *, const char *);
 void tz_ui_stream_close(void);
 tz_ui_stream_screen_kind tz_ui_stream_current_screen_kind(void);
 __attribute__((noreturn)) void tz_ui_stream(void);

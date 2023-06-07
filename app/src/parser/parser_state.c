@@ -50,6 +50,19 @@ void tz_parser_regs_flush(tz_parser_regs *regs,char *obuf, size_t olen) {
   regs->olen = olen;
 }
 
+void tz_parser_regs_flush_retain(tz_parser_regs *regs, char *obuf, size_t olen, size_t retain) {
+  memset(obuf, 0x0, olen - retain);
+  regs->obuf = obuf;
+  regs->oofs = 0;
+  regs->olen = olen;
+  while (retain > 0) {
+    regs->obuf[regs->oofs] = obuf[olen - retain];
+    regs->oofs++;
+    regs->olen--;
+    retain--;
+  }
+}
+
 void tz_parser_regs_refill(tz_parser_regs *regs,uint8_t *ibuf, size_t ilen) {
   regs->ibuf = ibuf;
   regs->iofs = 0;
