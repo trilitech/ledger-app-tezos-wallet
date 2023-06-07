@@ -96,23 +96,48 @@ function expect_full_text {
 
 # One section of data can spill across multiple screens.
 # Collect all pages with the given title, and then compare at the end.
-function expect_multiscreen_content {
+function expect_section_content {
     title="$1"
     expected_content="$2"
     echo -n " - expect_full_text_multiscreen(title: $title, content: $expected_content)"
 
-    TEXT_SO_FAR=""
-    TEXT_PREV=""
-
-    content=""
-    while content=$(echo "$(get_screen_text)" | sed '/^'"$title"'/!{q1}; {s/^'"$title"'\(.*\)$/\1/}');
-    do
-        echo "success!"
-        TEXT_SO_FAR="$TEXT_SO_FAR$content"
-        press_button right
+    nb=200
+    while ! echo "$(get_screen_text)" | sed '/^'"$title"'/!{q1}'; do
+        sleep 0.05
+        nb=$((nb-1))
+        if [ $nb -eq 1 ]; then
+            echo
+            (echo "FAILURE(expect_section_content):"
+             echo "  Title not found") >&2
+            exit 1
+        fi
     done
 
-    echo "Got: $TEXT_SO_FAR"
+    TEXT_SO_FAR=""
+    TEXT_PREV=""
+    content=""
+    while TEXT_PREV=$(get_screen_text) && content=$(echo "$TEXT_PREV" | sed '/^'"$title"'/!{q1}; {s/^'"$title"'\(.*\)$/\1/}');
+    do
+        TEXT_PREV=$content
+        TEXT_SO_FAR+="$content"
+
+        press_button right
+
+        nb=200
+        while [ "$TEXT_PREV" == "$(get_screen_text)" ]; do
+            echo "waiting for screen advance"
+            sleep 0.1
+            nb=$((nb-1))
+            if [ $nb -eq 1 ]; then
+                echo
+                (echo "FAILURE(expect_section_content):"
+                 echo "  Screen not advancing") >&2
+                exit 1
+            fi
+        done
+    done
+
+    press_button left
 
     if [ "$TEXT_SO_FAR" != "$expected_content" ]; then
         (echo "FAILURE(expect_multiscreen_content):"
@@ -137,6 +162,8 @@ function press_button {
         echo "FAILURE(press_buttton($1)): error code $res" >&2
         exit 1
     fi
+
+
 }
 
 function send_apdu {
@@ -278,7 +305,7 @@ test_a_dir() {
 
     PIDS=" "
     while :; do
-        for port in $(seq 5000 $((5000 + NUM_SPECULOS - 1)) ); do
+        for port in $(seq 5000 $((5000 + $num_left - 1)) ); do
             SLOTNAME=SLOT${port}_PID
 
             eval pid=\$$SLOTNAME
@@ -298,7 +325,7 @@ test_a_dir() {
             fi
         done
 
-        wait -p DIE -n $PIDS || /bin/true
+        wait -p DIE -n $PIDS || true
 
         if [ -n "$DIE" ]; then
             if (( DOT >= DOT_PER_NUM )); then
@@ -401,7 +428,7 @@ function main {
     FINISHED_TESTING=
     trap cleanup EXIT
 
-    NUM_SPECULOS=32
+    NUM_SPECULOS=1
     DATA_DIR=$(mktemp -d /tmp/foo-XXXXXX)
 
     printf "$TEST_BANNER_HEAD" "Running tests"
