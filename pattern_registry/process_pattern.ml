@@ -12,7 +12,7 @@
    See the License for the specific language governing permissions and
    limitations under the License. *)
 
-open Tezos_client_015_PtLimaPt
+open Tezos_client_016_PtMumbai
 
 let preprocess_pattern_string p =
   let rewrite p =

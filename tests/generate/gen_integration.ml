@@ -143,7 +143,7 @@ let sign ppf ~signer bin =
   in
   send_async_apdus ppf async_apdus
 
-open Tezos_protocol_015_PtLimaPt
+open Tezos_protocol_016_PtMumbai
 open Tezos_micheline
 
 let rec pp_node ~wrap ppf (node : Protocol.Script_repr.node) =

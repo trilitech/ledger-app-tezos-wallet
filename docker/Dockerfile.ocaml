@@ -1,18 +1,18 @@
 FROM   ocaml/opam:alpine-3.17-ocaml-4.14
 
 RUN    sudo cp /usr/bin/opam-2.1 /usr/bin/opam;                                         \
-       OCTEZ_VERSION=15.1;                                                              \
+       OCTEZ_VERSION=16.1;                                                              \
        OCTEZ_REPO=https://gitlab.com/tezos/tezos.git;                                   \
-       OCTEZ_COMMIT=`git ls-remote $OCTEZ_REPO v$OCTEZ_VERSION | cut -f 1`              \
+       OCTEZ_COMMIT=`git ls-remote $OCTEZ_REPO v$OCTEZ_VERSION | cut -f 1`;             \
        OCTEZ_URL=$OCTEZ_REPO#$OCTEZ_COMMIT;                                             \
        opam install                                                                     \
-           tezos-client-015-PtLimaPt.$OCTEZ_VERSION                                     \
+           tezos-client-016-PtMumbai.$OCTEZ_VERSION                                     \
            terminal_size                                                                \
            octez-codec.$OCTEZ_VERSION;                                                  \
        opam pin tezos-benchmark.$OCTEZ_VERSION                              $OCTEZ_URL; \
        opam pin tezos-micheline-rewriting.$OCTEZ_VERSION                    $OCTEZ_URL; \
-       opam pin tezos-benchmark-type-inference-015-PtLimaPt.$OCTEZ_VERSION  $OCTEZ_URL; \
-       opam pin tezos-015-PtLimaPt-test-helpers.$OCTEZ_VERSION              $OCTEZ_URL; \
-       opam pin tezos-benchmark-015-PtLimaPt.$OCTEZ_VERSION                 $OCTEZ_URL; \
+       opam pin tezos-benchmark-type-inference-016-PtMumbai.$OCTEZ_VERSION  $OCTEZ_URL; \
+       opam pin tezos-016-PtMumbai-test-helpers.$OCTEZ_VERSION              $OCTEZ_URL; \
+       opam pin tezos-benchmark-016-PtMumbai.$OCTEZ_VERSION                 $OCTEZ_URL; \
        opam pin tezos-shell-benchmarks.$OCTEZ_VERSION                       $OCTEZ_URL; \
-       opam pin tezos-benchmarks-proto-015-PtLimaPt.$OCTEZ_VERSION          $OCTEZ_URL
+       opam pin tezos-benchmarks-proto-016-PtMumbai.$OCTEZ_VERSION          $OCTEZ_URL

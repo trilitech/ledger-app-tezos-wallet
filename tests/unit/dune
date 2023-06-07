@@ -1,8 +1,8 @@
 (executable
         (name test_c_parser)
         (modules test_c_parser_utils test_micheline_c_parser test_operations_c_parser test_c_parser)
-        (libraries "tezos-protocol-015-PtLimaPt"
-                   "tezos-benchmarks-proto-015-PtLimaPt"
+        (libraries "tezos-protocol-016-PtMumbai"
+                   "tezos-benchmarks-proto-016-PtMumbai"
                    "terminal_size")
         (foreign_stubs
                 (language c)

@@ -13,14 +13,14 @@
    See the License for the specific language governing permissions and
    limitations under the License. *)
 
-open Tezos_protocol_015_PtLimaPt
-open Tezos_benchmarks_proto_015_PtLimaPt
+open Tezos_protocol_016_PtMumbai
+open Tezos_benchmarks_proto_016_PtMumbai
 
 let gen () =
   let open Protocol.Alpha_context in
   let source = Tezos_crypto.Signature.Public_key_hash.zero in
   let fee = Tez.fifty_cents in
-  let counter = Z.of_int (Random.int 1000) in
+  let counter = Manager_counter.Internal_for_tests.of_int (Random.int 1000) in
   let gas_limit = Gas.Arith.integral_of_int_exn (Random.int 1000) in
   let storage_limit = Z.of_int (Random.int 1000) in
   let operation =
@@ -35,7 +35,9 @@ let gen () =
     in
     Transaction { amount; destination; entrypoint; parameters }
   in
-  let shell = { Tezos_base.Operation.branch = Tezos_crypto.Block_hash.zero } in
+  let shell =
+    { Tezos_base.Operation.branch = Tezos_crypto.Hashed.Block_hash.zero }
+  in
   let contents =
     Contents_list
       (Single
