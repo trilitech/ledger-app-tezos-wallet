@@ -38,6 +38,17 @@ build docker ledger-app-tezos-ocaml:
              docker
     - docker push $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG
 
+build docker ledger-app-tezos-integration-tests:
+  <<: *build_docker
+  script:
+    - docker pull $CI_REGISTRY_IMAGE/ledger-app-tezos-integration-tests:$CI_COMMIT_REF_SLUG || true
+    - docker build --cache-from $CI_REGISTRY_IMAGE/ledger-app-tezos-integration-tests:$CI_COMMIT_REF_SLUG
+                   --tag $CI_REGISTRY_IMAGE/ledger-app-tezos-integration-tests:$CI_COMMIT_REF_SLUG
+                   --tag ledger-app-tezos-integration-tests:$CI_COMMIT_REF_SLUG
+                   -f docker/Dockerfile.integration-tests
+             docker
+    - docker push $CI_REGISTRY_IMAGE/ledger-app-tezos-integration-tests:$CI_COMMIT_REF_SLUG
+
 sync docker images:
   services:
     - docker:20.10.16-dind
@@ -55,6 +66,10 @@ sync docker images:
     - if ! docker manifest inspect $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG ; then
         docker manifest create $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:main ;
         docker manifest push $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG ;
+      fi
+    - if ! docker manifest inspect $CI_REGISTRY_IMAGE/ledger-app-tezos-integration-tests:$CI_COMMIT_REF_SLUG ; then
+        docker manifest create $CI_REGISTRY_IMAGE/ledger-app-tezos-integration-tests:$CI_COMMIT_REF_SLUG $CI_REGISTRY_IMAGE/ledger-app-tezos-integration-tests:main ;
+        docker manifest push $CI_REGISTRY_IMAGE/ledger-app-tezos-integration-tests:$CI_COMMIT_REF_SLUG ;
       fi
   only:
     - merge_requests

@@ -2,17 +2,15 @@
 
 .integration:
   image:
-    name: ghcr.io/ledgerhq/speculos:sha-90a021a
+  image:
+    name: $CI_REGISTRY_IMAGE/ledger-app-tezos-integration-tests:$CI_COMMIT_REF_SLUG
     entrypoint: [""]
   stage: test
   variables:
     DEVICE: ""
     TESTDIR: ""
   script:
-    - apt update && apt install -y curl jq build-essential libsodium-dev
-    - pip install base58 pytezos
-    - SPECULOS=/speculos/speculos.py
-      COLUMNS=80
+    - COLUMNS=80
       ./tests/integration/run_test_local.sh ${DEVICE}
       app_${DEVICE}_dbg.tgz
       ${TESTDIR}
