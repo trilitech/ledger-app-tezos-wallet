@@ -97,52 +97,15 @@ function expect_full_text {
 # One section of data can spill across multiple screens.
 # Collect all pages with the given title, and then compare at the end.
 function expect_section_content {
-    title="$1"
-    expected_content="$2"
-    echo -n " - expect_full_text_multiscreen(title: $title, content: $expected_content)"
+    echo -n " - expect_section_content $1"
 
-    nb=200
-    while ! echo "$(get_screen_text)" | sed '/^'"$title"'/!{q1}'; do
-        sleep 0.05
-        nb=$((nb-1))
-        if [ $nb -eq 1 ]; then
-            echo
-            (echo "FAILURE(expect_section_content):"
-             echo "  Title not found") >&2
-            exit 1
-        fi
-    done
+    $(dirname $0)/check_section_text.py -u $SPECULOS_URL -t "$1" -e "$2" --multi true
 
-    TEXT_SO_FAR=""
-    TEXT_PREV=""
-    content=""
-    while TEXT_PREV=$(get_screen_text) && content=$(echo "$TEXT_PREV" | sed '/^'"$title"'/!{q1}; {s/^'"$title"'\(.*\)$/\1/}');
-    do
-        TEXT_PREV=$content
-        TEXT_SO_FAR+="$content"
-
-        press_button right
-
-        nb=200
-        while [ "$TEXT_PREV" == "$(get_screen_text)" ]; do
-            echo "waiting for screen advance"
-            sleep 0.1
-            nb=$((nb-1))
-            if [ $nb -eq 1 ]; then
-                echo
-                (echo "FAILURE(expect_section_content):"
-                 echo "  Screen not advancing") >&2
-                exit 1
-            fi
-        done
-    done
-
-    press_button left
-
-    if [ "$TEXT_SO_FAR" != "$expected_content" ]; then
-        (echo "FAILURE(expect_multiscreen_content):"
-         echo "  On screen: '$TEXT_SO_FAR'"
-         echo "  Expected:  '$expected_content'") >&2
+    res=$?
+    set -e
+    if [ "$res" != 0 ] ; then
+        (echo "FAILURE(expect_section_content):"
+         echo "  Check: expect_section_content.py $@ $result") >&2
         exit 1
     fi
 }
@@ -162,8 +125,6 @@ function press_button {
         echo "FAILURE(press_buttton($1)): error code $res" >&2
         exit 1
     fi
-
-
 }
 
 function send_apdu {
@@ -233,7 +194,7 @@ function check_tlv_signature_from_sent_apdu {
     set -e
     if [ "$res" != 0 ] ; then
         (echo "FAILURE(check_tlv_signature_from_apdus_sent):"
-	 echo "  Check: check_tlv_signature.py $@ $result") >&2
+         echo "  Check: check_tlv_signature.py $@ $result") >&2
         exit 1
     fi
 }
@@ -428,7 +389,7 @@ function main {
     FINISHED_TESTING=
     trap cleanup EXIT
 
-    NUM_SPECULOS=1
+    NUM_SPECULOS=32
     DATA_DIR=$(mktemp -d /tmp/foo-XXXXXX)
 
     printf "$TEST_BANNER_HEAD" "Running tests"
