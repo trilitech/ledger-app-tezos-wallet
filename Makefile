@@ -33,9 +33,14 @@ docker_ledger_app_ocaml:
 	$(DOCKER) build -t ledger-app-tezos-ocaml \
 			-f docker/Dockerfile.ocaml docker
 
+docker_ledger_app_integration_tests:
+	$(DOCKER) build -t ledger-app-tezos-integration-tests \
+			-f docker/Dockerfile.integration-tests docker
+
 docker_images:	docker_speculos			\
 		docker_ledger_app_builder	\
-		docker_ledger_app_ocaml
+		docker_ledger_app_ocaml		\
+		docker_ledger_app_integration_tests
 
 $(GENERATED_PATTERNS):	pattern_registry/*.ml*		\
 			pattern_registry/Makefile	\
