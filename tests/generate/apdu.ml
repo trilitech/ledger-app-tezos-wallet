@@ -148,3 +148,10 @@ module Signer = struct
     let pkh = Public_key.hash pk in
     { path; pkh; pk; sk }
 end
+
+let sign ~signer:Signer.{ path; sk; _ } bin =
+  let cla = Class.Default in
+  let ins = Instruction.Sign_with_hash in
+  let curve = Curve.of_sk sk in
+  make_packet ~cla ~ins ~curve (Path.to_bytes path)
+  :: make_packets ~idx:1 ~cla ~ins ~curve bin

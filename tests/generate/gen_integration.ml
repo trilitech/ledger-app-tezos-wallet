@@ -101,15 +101,8 @@ let go_through_screens ppf screens =
       Button.(press ppf Right))
     screens
 
-let sign_apdus ~signer:Apdu.Signer.{ path; pkh = _; pk = _; sk } bin =
-  let cla = Apdu.Class.Default in
-  let ins = Apdu.Instruction.Sign_with_hash in
-  let curve = Apdu.Curve.of_sk sk in
-  Apdu.make_packet ~cla ~ins ~curve (Apdu.Path.to_bytes path)
-  :: Apdu.make_packets ~idx:1 ~cla ~ins ~curve bin
-
 let sign ppf ~signer:Apdu.Signer.({ sk; pk; _ } as signer) bin =
-  let apdus = sign_apdus ~signer bin in
+  let apdus = Apdu.sign ~signer bin in
   let bin_accept_check ppf () =
     let bin_hash = Tezos_crypto.Blake2B.(to_bytes (hash_bytes [ bin ])) in
     if Apdu.Curve.(deterministic_sig (of_sk sk)) then
