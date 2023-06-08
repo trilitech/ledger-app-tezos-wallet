@@ -101,34 +101,26 @@ let go_through_screens ppf screens =
       Button.(press ppf Right))
     screens
 
-type signer = {
-  path : bytes;
-  pkh : Tezos_crypto.Signature.public_key_hash;
-  pk : Tezos_crypto.Signature.public_key;
-  sk : Tezos_crypto.Signature.secret_key;
-}
-
-let sign_apdus ~signer:{ path; pkh = _; pk = _; sk } bin =
+let sign_apdus ~signer:Apdu.Signer.{ path; pkh = _; pk = _; sk } bin =
   let cla = Apdu.Class.Default in
   let ins = Apdu.Instruction.Sign_with_hash in
   let curve = Apdu.Curve.of_sk sk in
-  Apdu.make_packet ~cla ~ins ~curve path
+  Apdu.make_packet ~cla ~ins ~curve (Apdu.Path.to_bytes path)
   :: Apdu.make_packets ~idx:1 ~cla ~ins ~curve bin
 
-let sign ppf ~signer bin =
+let sign ppf ~signer:Apdu.Signer.({ sk; pk; _ } as signer) bin =
   let apdus = sign_apdus ~signer bin in
   let bin_accept_check ppf () =
     let bin_hash = Tezos_crypto.Blake2B.(to_bytes (hash_bytes [ bin ])) in
-    if Apdu.Curve.(deterministic_sig (of_sk signer.sk)) then
+    if Apdu.Curve.(deterministic_sig (of_sk sk)) then
       let sign =
-        Tezos_crypto.Signature.to_bytes
-          (Tezos_crypto.Signature.sign signer.sk bin)
+        Tezos_crypto.Signature.to_bytes (Tezos_crypto.Signature.sign sk bin)
       in
       expect_apdu_return ppf
         (Bytes.concat Bytes.empty [ bin_hash; sign; Apdu.success ])
     else
       check_tlv_signature_from_sent_apdu ppf ~prefix:bin_hash
-        ~suffix:Apdu.success signer.pk bin
+        ~suffix:Apdu.success pk bin
   in
   let last_index = List.length apdus - 1 in
   let async_apdus =
@@ -250,43 +242,17 @@ let operation_to_screens ppf
   in
   screen_of_operations 0 contents
 
-let path_to_bytes path =
-  (* hardened is defined by the "'" *)
-  let hardened idx = idx lor 0x80_00_00_00 in
-  let length = List.length path in
-  let bytes = Bytes.create ((4 * length) + 1) in
-  Bytes.set_uint8 bytes 0 length;
-  List.iteri
-    (fun i idx ->
-      Bytes.set_int32_be bytes ((4 * i) + 1) (Int32.of_int (hardened idx)))
-    path;
-  bytes
-
 (* Keys for mnemonic zebra (x24), path m/44'/1729'/0'/0' *)
 
 let tz1_signer =
   (* tz1dyX3B1CFYa2DfdFLyPtiJCfQRUgPVME6E *)
-  let open Tezos_crypto.Signature in
-  let path = path_to_bytes [ 44; 1729; 0; 0 ] in
-  let sk =
-    Secret_key.of_b58check_exn
-      "edsk2tUyhVvGj9B1S956ZzmaU4bC9J7t8xVBH52fkAoZL25MHEwacd"
-  in
-  let pk = Secret_key.to_public_key sk in
-  let pkh = Public_key.hash pk in
-  { path; pkh; pk; sk }
+  Apdu.Signer.make ~path:[ 44; 1729; 0; 0 ]
+    ~sk:"edsk2tUyhVvGj9B1S956ZzmaU4bC9J7t8xVBH52fkAoZL25MHEwacd"
 
 let tz2_signer =
   (* tz2GB5YHqF4UzQ8GP5yUqdhY9oVWRXCY2hPU *)
-  let open Tezos_crypto.Signature in
-  let path = path_to_bytes [ 44; 1729; 0; 0 ] in
-  let sk =
-    Secret_key.of_b58check_exn
-      "spsk2Pfx9chqXVbz2tW7ze4gGU4RfaiK3nSva77bp69zHhFho2zTze"
-  in
-  let pk = Secret_key.to_public_key sk in
-  let pkh = Public_key.hash pk in
-  { path; pkh; pk; sk }
+  Apdu.Signer.make ~path:[ 44; 1729; 0; 0 ]
+    ~sk:"spsk2Pfx9chqXVbz2tW7ze4gGU4RfaiK3nSva77bp69zHhFho2zTze"
 
 let gen_signer = QCheck2.Gen.oneofl [ tz1_signer; tz2_signer ]
 

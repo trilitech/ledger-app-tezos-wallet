@@ -116,3 +116,35 @@ let make_packets ?(idx = 0) ~cla ~ins ~curve content =
       packet :: aux (ofs + max_size) (idx + 1)
   in
   aux 0 idx
+
+module Path = struct
+  type t = int list
+
+  let to_bytes path =
+    (* hardened is defined by the "'" *)
+    let hardened idx = idx lor 0x80_00_00_00 in
+    let length = List.length path in
+    let bytes = Bytes.create ((4 * length) + 1) in
+    Bytes.set_uint8 bytes 0 length;
+    List.iteri
+      (fun i idx ->
+        Bytes.set_int32_be bytes ((4 * i) + 1) (Int32.of_int (hardened idx)))
+      path;
+    bytes
+end
+
+module Signer = struct
+  type t = {
+    path : Path.t;
+    pkh : Tezos_crypto.Signature.public_key_hash;
+    pk : Tezos_crypto.Signature.public_key;
+    sk : Tezos_crypto.Signature.secret_key;
+  }
+
+  let make ~path ~sk =
+    let open Tezos_crypto.Signature in
+    let sk = Secret_key.of_b58check_exn sk in
+    let pk = Secret_key.to_public_key sk in
+    let pkh = Public_key.hash pk in
+    { path; pkh; pk; sk }
+end
