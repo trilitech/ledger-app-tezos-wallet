@@ -40,21 +40,24 @@ module Button = struct
     Format.fprintf ppf "press_button %s@." button
 end
 
-let send_apdu ppf apdu = Format.fprintf ppf "send_apdu %a@." pp_hex_bytes apdu
+let send_apdu ppf packet =
+  Format.fprintf ppf "send_apdu %a@." pp_hex_bytes packet
 
 let expect_apdu_return ppf ans =
   Format.fprintf ppf "expect_apdu_return %a@." pp_hex_bytes ans
 
-type async_apdu = { apdu : bytes; check : Format.formatter -> unit -> unit }
+type async_apdu = { packet : bytes; check : Format.formatter -> unit -> unit }
 
-let send_async_apdus ppf apdus =
+let send_async_apdus ppf async_apdus =
   let pp_dash_break_line ppf () = Format.fprintf ppf "\\@\n\t" in
-  let pp_apdu ppf { apdu; check } =
-    Format.fprintf ppf "%a \"%a\"" pp_hex_bytes apdu check ()
+  let pp_async_apdu ppf { packet; check } =
+    Format.fprintf ppf "%a \"%a\"" pp_hex_bytes packet check ()
   in
-  let pp_apdus = Format.pp_print_list ~pp_sep:pp_dash_break_line pp_apdu in
-  Format.fprintf ppf "send_async_apdus %a%a@." pp_dash_break_line () pp_apdus
-    apdus
+  let pp_async_apdus =
+    Format.pp_print_list ~pp_sep:pp_dash_break_line pp_async_apdu
+  in
+  Format.fprintf ppf "send_async_apdus %a%a@." pp_dash_break_line ()
+    pp_async_apdus async_apdus
 
 let expect_async_apdus_sent ppf () =
   Format.fprintf ppf "expect_async_apdus_sent@."
@@ -102,7 +105,7 @@ let go_through_screens ppf screens =
     screens
 
 let sign ppf ~signer:Apdu.Signer.({ sk; pk; _ } as signer) bin =
-  let apdus = Apdu.sign ~signer bin in
+  let packets = Apdu.sign ~signer bin in
   let bin_accept_check ppf () =
     let bin_hash = Tezos_crypto.Blake2B.(to_bytes (hash_bytes [ bin ])) in
     if Apdu.Curve.(deterministic_sig (of_sk sk)) then
@@ -115,16 +118,16 @@ let sign ppf ~signer:Apdu.Signer.({ sk; pk; _ } as signer) bin =
       check_tlv_signature_from_sent_apdu ppf ~prefix:bin_hash
         ~suffix:Apdu.success pk bin
   in
-  let last_index = List.length apdus - 1 in
+  let last_index = List.length packets - 1 in
   let async_apdus =
     List.mapi
-      (fun index apdu ->
+      (fun index packet ->
         let check ppf () =
           if index = last_index then bin_accept_check ppf ()
           else expect_apdu_return ppf Apdu.success
         in
-        { apdu; check })
-      apdus
+        { packet; check })
+      packets
   in
   send_async_apdus ppf async_apdus
 
