@@ -50,9 +50,7 @@ let pp_c ~to_bytes ~cparse_step input =
 
 let check ~to_string ~to_bytes ~cparse_step inputs =
   let aux (nfail, nok, failed) i input =
-    if (nfail + nok) mod 100 = 0 then
-      Format.printf "Running: %d (%d failed)...%s%!" (nfail + nok) nfail
-        (String.make 80 '\b');
+    if i mod 100 = 0 then Format.printf "Running: %d (%d failed)...@." i nfail;
     let expected = to_string input in
     let got = pp_c ~to_bytes ~cparse_step input in
     if expected = got then (nfail, nok + 1, failed)
