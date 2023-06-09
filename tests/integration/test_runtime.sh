@@ -266,7 +266,7 @@ test_a_dir() {
 
     PIDS=" "
     while :; do
-        for port in $(seq 5000 $((5000 + $num_left - 1)) ); do
+        for port in $(seq 5000 $((5000 + NUM_SPECULOS - 1)) ); do
             SLOTNAME=SLOT${port}_PID
 
             eval pid=\$$SLOTNAME

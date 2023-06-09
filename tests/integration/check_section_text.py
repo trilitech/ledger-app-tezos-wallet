@@ -23,12 +23,36 @@ MAX_ATTEMPTS = 200
 @dataclass
 class Screen:
   title: str
-  text: str
+  text: list[str]
 
-def with_retry(f, message=None, attempts=MAX_ATTEMPTS):
+  def matches(self, content: str) -> bool:
+    if len(self.text) == 0:
+      return False
+
+    if not content.startswith(self.text[0]):
+      return False
+
+    content = content.removeprefix(self.text[0])
+
+    if content == "" and len(self.text) == 1:
+      return True
+
+    if len(self.text) == 1:
+      return False
+
+    return content.startswith(self.text[1])
+
+  def strip(self, content: str) -> str:
+    for l in self.text:
+      content = content.removeprefix(l)
+    return content
+
+
+def with_retry(url, f, attempts=MAX_ATTEMPTS):
     while True:
         try:
-            return f()
+            on_screen = get_screen(url)
+            return f(on_screen)
         except AssertionError as e:
             print('- retrying:', e)
             if attempts <= 0:
@@ -42,28 +66,15 @@ def get_screen(url):
     r.raise_for_status()
     lines = [e["text"] for e in r.json()["events"]]
 
-    screen = Screen(title=lines[0], text=''.join(lines[1:]))
+    screen = Screen(title=lines[0], text=lines[1:])
     print(f'- {screen} -')
     return screen
 
 def press_button(url, button, attempts=MAX_ATTEMPTS):
     """Press a button on the ledger device."""
-    old_screen = get_screen(url)
     print("- press", button)
-
-    while attempts > 0:
-        r = requests.post(f'{url}/button/{button}', json = {"action": "press-and-release"})
-        r.raise_for_status()
-
-        new_screen = get_screen(url)
-        if not (old_screen == new_screen or (new_screen.text.strip() == "" and new_screen.title.strip() == "")):
-            return new_screen
-
-        attempts -= 1
-        time.sleep(0.5)
-
-    print(f"- pressed {button} did not advance screen. Old screen: {old_screen}")
-    return old_screen
+    r = requests.post(f'{url}/button/{button}', json = {"action": "press-and-release"})
+    r.raise_for_status()
 
 def press_left(url):
     """Press the left button."""
@@ -81,47 +92,26 @@ def check_single_screen(url, title, content, attempts=MAX_ATTEMPTS):
     """Assert that the content of the current screen matches the expected value, with retries."""
     expected = Screen(title, content)
 
-    def check():
-        on_screen = get_screen(url)
+    def check(on_screen):
         assert on_screen == expected, f'expected {expected}, got {on_screen}'
 
-    with_retry(check)
+    with_retry(url, check)
 
 def check_multi_screen(url, title, content, attempts=MAX_ATTEMPTS):
     """Assert that the screen contents across all screens with the given title match expected content."""
-    def check_title():
-        on_screen = get_screen(url)
-        assert title == on_screen.title, f'found title {on_screen.title}, expected {title}'
-        return on_screen
+    while True:
+      def check_screen(screen):
+        assert screen.title == title, f"expected section '{title}' but on '{screen.title}'"
+        assert screen.matches(content), f"{screen} did not match {content}"
+        return screen
 
-    on_screen = with_retry(check_title)
-    prev_text = ""
+      on_screen = with_retry(url, check_screen)
+      content = on_screen.strip(content)
 
-    print("Got title:", on_screen)
+      if content == "":
+        break
 
-    while on_screen.title == title:
-        try:
-            assert content.startswith(on_screen.text), f'Expected to find "{on_screen.text}", but no match against "{content}"'
-            content = content.removeprefix(on_screen.text)
-            prev_text = on_screen.text
-        except AssertionError:
-            # Previous screen had not fully loaded
-            up_to = content.index(on_screen.text)
-            unloaded = content[:up_to]
-            expected_prev = prev_text + unloaded
-            print(f'- checking previous screen with "{expected_prev}"')
-            press_left(url)
-            check_single_screen(url, title, expected_prev)
-            content = content.removeprefix(unloaded)
-            prev_text = ""
-
-        if content == "":
-            break
-
-        on_screen = press_right(url)
-
-    assert content == "", f'Remaining content "{content}" not found on screen "{on_screen}".'
-    # End of final screen of section
+      press_right(url)
 
     print(f'- final screen {on_screen} -')
 

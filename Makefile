@@ -93,8 +93,8 @@ integration_tests_%:	integration_tests_basic_%		\
 			test/samples/micheline/%/samples.hex	\
 			tests/integration/*.sh
 	$(RUN_TEST_DOCKER) $* app_$*_dbg.tgz		\
-				tests/samples/micheline/$*
-#				tests/samples/operations/$*
+				tests/samples/micheline/$*	\
+				tests/samples/operations/$*
 
 integration_tests:	integration_tests_basic		\
 			tests/integration/*.sh			\
