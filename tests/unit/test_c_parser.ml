@@ -39,16 +39,24 @@ let pp_c ~to_bytes ~cparse_step input =
   with exn -> Printexc.to_string exn
 
 let check ~to_string ~to_bytes ~cparse_step inputs =
-  let aux (nfail, nok, failed) input =
+  let aux (nfail, nok, failed) i input =
     if (nfail + nok) mod 100 = 0 then
       Format.printf "Running: %d (%d failed)...%s%!" (nfail + nok) nfail
         (String.make 80 '\b');
     let expected = to_string input in
     let got = pp_c ~to_bytes ~cparse_step input in
     if expected = got then (nfail, nok + 1, failed)
-    else (nfail + 1, nok, (expected, got) :: failed)
+    else (nfail + 1, nok, (i, expected, got) :: failed)
   in
-  Seq.fold_left aux (0, 0, []) inputs
+  Seq.fold_lefti aux (0, 0, []) inputs
+
+let divider =
+  let columns = Option.value ~default:80 @@ Terminal_size.get_columns () in
+  String.make columns '-'
+
+let display_failed =
+  List.iter @@ fun (i, exp, res) ->
+  Format.printf "%s@.Test: %i@.Expected: %S@.Got: %S@." divider i exp res
 
 let () =
   match Sys.argv with
@@ -72,7 +80,7 @@ let () =
       in
       let ntoo_deep, ntoo_large, failed =
         List.fold_left
-          (fun (acctoo_deep, acctoo_large, accl) (exp, res) ->
+          (fun (acctoo_deep, acctoo_large, accl) ((_, _, res) as failed) ->
             if res = "Failure(\"micheline_cparse_step: expression too deep\")"
             then (acctoo_deep + 1, acctoo_large, accl)
             else if
@@ -80,7 +88,7 @@ let () =
               = "Failure(\"micheline_cparse_step: data size limitation \
                  exceeded\")"
             then (acctoo_deep, acctoo_large + 1, accl)
-            else (acctoo_deep, acctoo_large, (exp, res) :: accl))
+            else (acctoo_deep, acctoo_large, failed :: accl))
           (0, 0, []) failed
       in
       Format.printf
@@ -89,16 +97,7 @@ let () =
         (nfail + nok)
         (nfail - ntoo_deep - ntoo_large)
         ntoo_deep ntoo_large;
-      List.iter
-        (fun (exp, res) ->
-          Format.printf "%s@.Expected: %S@.Got: %S@."
-            (String.make
-               (match Terminal_size.get_columns () with
-               | Some v -> v
-               | None -> 80)
-               '-')
-            exp res)
-        failed
+      display_failed failed
   | [| _; "operations"; path |] ->
       let fp = if path = "-" then stdin else open_in path in
       let inputs =
@@ -119,16 +118,7 @@ let () =
           check ~to_string ~to_bytes ~cparse_step inputs)
       in
       Format.printf "Result: %d test were run, %d failed.@." (nfail + nok) nfail;
-      List.iter
-        (fun (exp, res) ->
-          Format.printf "%s@.Expected: %S@.Got: %S@."
-            (String.make
-               (match Terminal_size.get_columns () with
-               | Some v -> v
-               | None -> 80)
-               '-')
-            exp res)
-        failed
+      display_failed failed
   | _ ->
       Format.eprintf "Usage: %s <micheline|operations> <path>@."
         Sys.executable_name;
