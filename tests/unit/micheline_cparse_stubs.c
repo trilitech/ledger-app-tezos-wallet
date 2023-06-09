@@ -1,4 +1,5 @@
 /* Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
+   Copyright 2023 Functori <contact@functori.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -100,7 +101,7 @@ CAMLprim value micheline_cparse_step(value mlstate, value input, value output) {
     caml_failwith("micheline_cparse_step: invalid state");
   default:
     char err[100];
-    snprintf(err,99,"micheline_cparse_step: unknown error code %d", state->errno);
+    snprintf(err, 99, "micheline_cparse_step: unknown error code %d", state->errno);
     caml_failwith(err);
   }
   CAMLreturn(r);
@@ -154,8 +155,12 @@ CAMLprim value operation_cparse_step(value mlstate, value input, value output) {
     caml_failwith("operation_cparse_step: pattern matching failed");
   case TZ_ERR_TOO_DEEP:
     caml_failwith("operation_cparse_step: expression too deep");
+  case TZ_ERR_INVALID_STATE:
+    caml_failwith("operation_cparse_step: invalid state");
   default:
-    caml_failwith("operation_cparse_step");
+    char err[100];
+    snprintf(err, 99, "operation_cparse_step: unknown error code %d", (*state)->errno);
+    caml_failwith(err);
   }
   CAMLreturn(r);
 }
