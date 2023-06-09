@@ -16,6 +16,16 @@
 open Tezos_protocol_016_PtMumbai
 open Test_c_parser_utils
 
+let read_hex_file ~encoding path =
+  let fp = if path = "-" then stdin else open_in path in
+  Seq.of_dispenser @@ fun () ->
+  try
+    let bin = Hex.to_string (`Hex (input_line fp)) in
+    Some (Data_encoding.Binary.of_string_exn encoding bin)
+  with End_of_file ->
+    close_in fp;
+    None
+
 let pp_c_bin ~(cparse_step : cparse_step) ppf bytes =
   let len = Bytes.length bytes in
   let state = cparse_init None len in
@@ -61,19 +71,8 @@ let display_failed =
 let () =
   match Sys.argv with
   | [| _; "micheline"; path |] ->
-      let fp = if path = "-" then stdin else open_in path in
       let inputs =
-        Seq.of_dispenser (fun () ->
-            try
-              let bin = Hex.to_string (`Hex (input_line fp)) in
-              let expr =
-                Data_encoding.Binary.of_string_exn
-                  Protocol.Script_repr.expr_encoding bin
-              in
-              Some expr
-            with End_of_file ->
-              close_in fp;
-              None)
+        read_hex_file ~encoding:Protocol.Script_repr.expr_encoding path
       in
       let nfail, nok, failed =
         Test_micheline_c_parser.(check ~to_string ~to_bytes ~cparse_step inputs)
@@ -99,19 +98,9 @@ let () =
         ntoo_deep ntoo_large;
       display_failed failed
   | [| _; "operations"; path |] ->
-      let fp = if path = "-" then stdin else open_in path in
       let inputs =
-        Seq.of_dispenser (fun () ->
-            try
-              let bin = Hex.to_string (`Hex (input_line fp)) in
-              let op =
-                Data_encoding.Binary.of_string_exn
-                  Protocol.Alpha_context.Operation.unsigned_encoding bin
-              in
-              Some op
-            with End_of_file ->
-              close_in fp;
-              None)
+        read_hex_file
+          ~encoding:Protocol.Alpha_context.Operation.unsigned_encoding path
       in
       let nfail, nok, failed =
         Test_operations_c_parser.(
