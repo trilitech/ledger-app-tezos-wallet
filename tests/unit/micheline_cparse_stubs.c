@@ -58,6 +58,9 @@ CAMLprim value micheline_cparse_step(value mlstate, value input, value output) {
   obuf = Field(output, 0);
   int oofs = Int_val(Field(output, 1));
   int olen = Int_val(Field(output, 2));
+  // Data_abstract_val() returns a value that could change.
+  // It must be dereferenced before being used.
+  // https://gitlab.com/nomadic-labs/tezos-ledger-app-revamp/-/merge_requests/58#note_1434368804
   tz_parser_state *state = *((tz_parser_state**) Data_abstract_val(mlstate));
 
   tz_parser_regs regs = {Bytes_val(ibuf), iofs, ilen, (char*) Bytes_val(obuf), oofs, olen};
@@ -116,13 +119,16 @@ CAMLprim value operation_cparse_step(value mlstate, value input, value output) {
   obuf = Field(output, 0);
   int oofs = Int_val(Field(output, 1));
   int olen = Int_val(Field(output, 2));
-  tz_parser_state **state = Data_abstract_val(mlstate);
+  // Data_abstract_val() returns a value that could change.
+  // It must be dereferenced before being used.
+  // https://gitlab.com/nomadic-labs/tezos-ledger-app-revamp/-/merge_requests/58#note_1434368804
+  tz_parser_state *state = *((tz_parser_state**) Data_abstract_val(mlstate));
 
   tz_parser_regs regs = {Bytes_val(ibuf), iofs, ilen, (char*) Bytes_val(obuf), oofs, olen};
   int ilen_init = ilen;
   int olen_init = olen;
 
-  while(!TZ_IS_BLOCKED(tz_operation_parser_step(*state, &regs)));
+  while(!TZ_IS_BLOCKED(tz_operation_parser_step(state, &regs)));
 
   int read = ilen_init-regs.ilen;
   int written = olen_init-regs.olen;
@@ -131,7 +137,7 @@ CAMLprim value operation_cparse_step(value mlstate, value input, value output) {
   Store_field(r, 0, Val_int(read));
   Store_field(r, 1, Val_int(written));
 
-  switch ((*state)->errno) {
+  switch (state->errno) {
   case TZ_BLO_DONE:
     Store_field(r, 2, Val_int(0));
     break;
@@ -159,7 +165,7 @@ CAMLprim value operation_cparse_step(value mlstate, value input, value output) {
     caml_failwith("operation_cparse_step: invalid state");
   default:
     char err[100];
-    snprintf(err, 99, "operation_cparse_step: unknown error code %d", (*state)->errno);
+    snprintf(err, 99, "operation_cparse_step: unknown error code %d", state->errno);
     caml_failwith(err);
   }
   CAMLreturn(r);
