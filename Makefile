@@ -98,6 +98,7 @@ integration_tests_%:	integration_tests_basic_%		\
 
 integration_tests: 	tests/integration/*.sh			\
 			integration_tests_nanos 		\
+			integration_tests_nanosp 		\
 
 test/samples/micheline/%/samples.hex:	tests/generate/*.ml*	\
 					tests/generate/dune	\

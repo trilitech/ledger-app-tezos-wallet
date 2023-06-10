@@ -25,15 +25,25 @@ let shell_escape ppf s =
 let pp_hex_bytes ppf bytes = Format.fprintf ppf "%a" Hex.pp (Hex.of_bytes bytes)
 
 (** General *)
+module Device = struct
+  type t = Nanos | Nanosp
+
+  let of_string_exn = function
+    | "nanos" -> Nanos
+    | "nanosp" -> Nanosp
+    | d -> failwith @@ Format.sprintf "invalid device %s" d
+
+  let to_string = function Nanos -> "nanos" | Nanosp -> "nanosp"
+end
 
 let expect_full_text ppf l =
   let pp_space ppf () = Format.fprintf ppf " " in
   let pp_args = Format.pp_print_list ~pp_sep:pp_space shell_escape in
   Format.fprintf ppf "expect_full_text %a@." pp_args l
 
-let expect_section_content ppf ~title content =
-  Format.fprintf ppf "expect_section_content %a %a@." shell_escape title
-    shell_escape content
+let expect_section_content ppf ~device ~title content =
+  Format.fprintf ppf "expect_section_content %s %a %a@."
+    (Device.to_string device) shell_escape title shell_escape content
 
 module Button = struct
   type t = Both | Right | Left
@@ -79,16 +89,24 @@ let check_tlv_signature_from_sent_apdu ppf ~prefix ~suffix pk message =
 let home ppf () =
   expect_full_text ppf [ "Tezos Wallet"; "ready for"; "safe signing" ]
 
-let expect_accept ppf () = expect_full_text ppf [ "Accept?" ]
-let expect_reject ppf () = expect_full_text ppf [ "Reject?" ]
+let expect_accept ppf = function
+  | Device.Nanos -> expect_full_text ppf [ "Accept?" ]
+  | Device.Nanosp ->
+      expect_full_text ppf [ "Accept?"; "Press both buttons"; "to accept." ]
+
+let expect_reject ppf = function
+  | Device.Nanos -> expect_full_text ppf [ "Reject?" ]
+  | Device.Nanosp ->
+      expect_full_text ppf [ "Accept?"; "Press both buttons"; "to reject." ]
+
 let expect_quit ppf () = expect_full_text ppf [ "Quit?" ]
 
-let accept ppf () =
-  expect_accept ppf ();
+let accept ppf device =
+  expect_accept ppf device;
   Button.(press ppf Both)
 
-let reject ppf () =
-  expect_reject ppf ();
+let reject ppf device =
+  expect_reject ppf device;
   Button.(press ppf Both)
 
 let quit ppf () =
@@ -99,14 +117,14 @@ type screen = { title : string; contents : string list; multi : bool }
 
 let make_screen ~title ?(multi = false) contents = { title; contents; multi }
 
-let expected_screen ppf { title; contents; multi } =
-  if multi then expect_section_content ppf ~title @@ List.hd contents
+let expected_screen ppf ~device { title; contents; multi } =
+  if multi then expect_section_content ppf ~device ~title @@ List.hd contents
   else expect_full_text ppf (title :: contents)
 
-let go_through_screens ppf screens =
+let go_through_screens ppf ~device screens =
   List.iter
     (fun screen ->
-      expected_screen ppf screen;
+      expected_screen ppf ~device screen;
       Button.(press ppf Right))
     screens
 
@@ -258,7 +276,7 @@ let tz2_signer =
 
 let gen_signer = QCheck2.Gen.oneofl [ tz1_signer ]
 
-let gen_expect_test_sign ppf (`Hex txt as hex) screens =
+let gen_expect_test_sign ppf (`Hex txt as hex) ~device screens =
   let bin = Hex.to_bytes hex in
   Format.fprintf ppf "# full input: %s@." txt;
   let screens = screens bin in
@@ -266,20 +284,20 @@ let gen_expect_test_sign ppf (`Hex txt as hex) screens =
   Format.fprintf ppf "# signer: %a@." Tezos_crypto.Signature.Public_key_hash.pp
     signer.pkh;
   sign ppf ~signer bin;
-  go_through_screens ppf screens;
-  accept ppf ();
+  go_through_screens ppf ~device screens;
+  accept ppf device;
   expect_async_apdus_sent ppf ()
 
-let gen_expect_test_sign_micheline_data ppf hex =
+let gen_expect_test_sign_micheline_data ~device ppf hex =
   let screens bin =
     let node = Gen_micheline.decode bin in
     node_to_screens ppf node
   in
-  gen_expect_test_sign ppf hex screens
+  gen_expect_test_sign ppf hex ~device screens
 
-let gen_expect_test_sign_operation ppf hex =
+let gen_expect_test_sign_operation ?(device = Device.Nanos) ppf hex =
   let screens bin =
     let op = Gen_operations.decode bin in
     operation_to_screens ppf op
   in
-  gen_expect_test_sign ppf hex screens
+  gen_expect_test_sign ppf ~device hex screens

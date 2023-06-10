@@ -26,6 +26,11 @@ generate_samples_nanos:
   variables:
     DEVICE: nanos
 
+generate_samples_nanosp:
+  extends: .generate_samples
+  variables:
+    DEVICE: nanosp
+
 build_nanos:
   extends: .build_app
   variables:
@@ -106,6 +111,15 @@ integration_nanos_micheline_samples:
     DEVICE: nanos
     TESTDIR: tests/samples/micheline/nanos
 
+integration_nanosp_micheline_samples:
+  extends: .integration
+  needs:
+    - build_nanosp_dbg
+    - generate_samples_nanosp
+  variables:
+    DEVICE: nanosp
+    TESTDIR: tests/samples/micheline/nanosp
+
 integration_nanos_operations_samples:
   extends: .integration
   needs:
@@ -114,3 +128,12 @@ integration_nanos_operations_samples:
   variables:
     DEVICE: nanos
     TESTDIR: tests/samples/operations/nanos
+
+integration_nanosp_operations_samples:
+  extends: .integration
+  needs:
+    - build_nanosp_dbg
+    - generate_samples_nanosp
+  variables:
+    DEVICE: nanosp
+    TESTDIR: tests/samples/operations/nanosp
