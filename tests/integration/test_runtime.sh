@@ -294,6 +294,15 @@ test_a_dir() {
                 DOT=0
                 (( DID_DOT += 1 )) || :
             fi
+            if (( DOT % 4 == 0 )); then
+                echo -en '/\e[1D'
+            elif (( DOT % 4 == 1)); then
+                echo -en '-\e[1D'
+            elif (( DOT % 4 == 2)); then
+                echo -en '\\\e[1D'
+            else
+                echo -en '|\e[1D'
+            fi
             (( DOT += 1 )) || :
             PIDS="${PIDS/ $DIE / }"
             eval slot=\$PIDS$DIE
