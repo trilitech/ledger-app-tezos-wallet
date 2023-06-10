@@ -290,7 +290,7 @@ test_a_dir() {
             fi
         done
 
-        wait -p DIE -n $PIDS || /bin/true
+        wait -p DIE -n $PIDS || /usr/bin/env true
 
         if [ -n "$DIE" ]; then
             if (( DOT >= DOT_PER_NUM )); then
