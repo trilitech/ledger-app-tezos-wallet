@@ -1,6 +1,7 @@
 /* Tezos Ledger application - Clear signing command handler
 
    Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
+   Copyright 2023 TriliTech <contact@trili.tech>
 
    With code excerpts from:
     - Legacy Tezos app, Copyright 2019 Obsidian Systems
@@ -156,6 +157,7 @@ static void send_continue() {
 }
 
 static void refill() {
+  size_t wrote = 0;
   tz_parser_regs *regs = &global.apdu.sign.parser_regs;
 
   FUNC_ENTER(("void"));
@@ -164,11 +166,13 @@ static void refill() {
   switch (global.apdu.sign.parser_state.errno) {
   case TZ_BLO_IM_FULL:
   last_screen:
-    tz_ui_stream_push(global.apdu.sign.parser_state.field_name,
-                      global.apdu.sign.line_buf);
-    tz_parser_regs_flush(&global.apdu.sign.parser_regs,
-                         global.apdu.sign.line_buf,
-                         TZ_UI_STREAM_CONTENTS_SIZE);
+    wrote = tz_ui_stream_push(global.apdu.sign.parser_state.field_name,
+                              global.apdu.sign.line_buf);
+
+    tz_parser_regs_flush_up_to(&global.apdu.sign.parser_regs,
+                               global.apdu.sign.line_buf,
+                               TZ_UI_STREAM_CONTENTS_SIZE,
+                               wrote);
     break;
   case TZ_BLO_FEED_ME:
     send_continue();

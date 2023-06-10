@@ -69,7 +69,29 @@ void tz_ui_stream_close () {
   FUNC_LEAVE();
 }
 
-void tz_ui_stream_push(const char *title, const char *value) {
+uint8_t tz_ui_max_line_chars(const char* value, int length) {
+  if (length > TZ_UI_STREAM_CONTENTS_WIDTH) {
+    length = TZ_UI_STREAM_CONTENTS_WIDTH;
+  }
+
+# ifdef TARGET_NANOS
+    uint8_t will_fit = se_get_cropped_length(value, length, BAGL_WIDTH, BAGL_ENCODING_LATIN1);
+# else
+    uint8_t will_fit = length + 1;
+    uint8_t width;
+    do {
+      will_fit--;
+      width = bagl_compute_line_width(BAGL_FONT_OPEN_SANS_REGULAR_11px, 0, value, will_fit, BAGL_ENCODING_LATIN1);
+    } while (width >= BAGL_WIDTH);
+
+    PRINTF("[DEBUG] max_line_width(value: \"%s\", width: %d, will_fit: %d)\n",
+            value, width, will_fit);
+# endif
+
+    return will_fit;
+}
+
+size_t tz_ui_stream_push(const char *title, const char *value) {
   size_t i;
 
   FUNC_ENTER(("title=%s, value=%s", title, value));
@@ -86,21 +108,44 @@ void tz_ui_stream_push(const char *title, const char *value) {
   STRLCPY(global.stream.titles[bucket], title);
   for (i = 0; i < TZ_UI_STREAM_CONTENTS_LINES; i++)
     global.stream.values[bucket][i * TZ_UI_STREAM_CONTENTS_WIDTH] = '\0';
-  STRLCPY(global.stream.values[bucket], value);
+
+  // Ensure things fit on one line
+  int length = 0, offset = 0;
+  while(value[length] != '\0') length++;
+
+  int line = 0;
+  while (offset < length && line < TZ_UI_STREAM_CONTENTS_LINES) {
+    const char* start = value + offset;
+    int len = length - offset;
+    int will_fit = tz_ui_max_line_chars(start, len);
+
+    PRINTF("[DEBUG] split(value: \"%s\", will_fit: %d, len: %d, line: %d, offset: %d)\n",
+            start, will_fit, len, line, offset);
+
+    char* buffer = global.stream.values[bucket] + line * TZ_UI_STREAM_CONTENTS_WIDTH;
+    strlcpy(buffer, start, will_fit + 1);
+    offset += will_fit;
+
+    line++;
+  }
+
   if (global.stream.total == 0 || global.stream.total >= TZ_UI_STREAM_HISTORY_SCREENS) {
     global.stream.current++;
   }
+
 #ifdef TEZOS_DEBUG
   char debug_title[TZ_UI_STREAM_TITLE_WIDTH+1], debug_value[TZ_UI_STREAM_CONTENTS_SIZE + 1];
   debug_title[TZ_UI_STREAM_TITLE_WIDTH] = 0;
   debug_value[TZ_UI_STREAM_CONTENTS_SIZE] = 0;
   STRLCPY(debug_title, global.stream.titles[bucket]);
   STRLCPY(debug_value, global.stream.values[bucket]);
-  PRINTF("[DEBUG] push_screen(title: \"%s\", value: \"%s\", total: %d -> %d, current: %d -> %d)\n",
+  PRINTF("[DEBUG] push_screen(title: \"%s\", value: \"%s\", total: %d -> %d, current: %d -> %d, offset: %d)\n",
          debug_title, debug_value,
-         prev_total, global.stream.total, prev_current, global.stream.current);
+         prev_total, global.stream.total, prev_current, global.stream.current, offset);
 #endif
   FUNC_LEAVE();
+
+  return offset;
 }
 
 static void pred () {

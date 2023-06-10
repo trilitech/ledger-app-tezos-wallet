@@ -1,6 +1,7 @@
 /* Tezos Embedded C parser for Ledger - Full parser state definition and helpers
 
    Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
+   Copyright 2023 TriliTech <contact@trili.tech>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -44,10 +45,20 @@ void tz_parser_init(tz_parser_state *state) {
 }
 
 void tz_parser_regs_flush(tz_parser_regs *regs,char *obuf, size_t olen) {
-  memset(obuf, 0x0, olen);
+  tz_parser_regs_flush_up_to(regs, obuf, olen, olen);
+}
+
+void tz_parser_regs_flush_up_to(tz_parser_regs *regs, char *obuf, size_t olen, size_t up_to) {
   regs->obuf = obuf;
   regs->oofs = 0;
   regs->olen = olen;
+
+  size_t len = strlen(regs->obuf + up_to);
+  regs->oofs += len;
+  regs->olen -= len;
+
+  memmove(regs->obuf, regs->obuf + up_to, len);
+  memset(regs->obuf + regs->oofs, 0x0, regs->olen);
 }
 
 void tz_parser_regs_refill(tz_parser_regs *regs,uint8_t *ibuf, size_t ilen) {

@@ -59,14 +59,18 @@ function attempts {
     return 1
 }
 
+function get_screen_text {
+   got="$(curl -s $SPECULOS_URL/events?currentscreenonly=true)"
+   echo $got | jq -r '[.events[].text] | add'
+}
+
 function expect_full_text {
     echo -n " - expect_full_text" ; for s in "$@" ; do echo -n " \"$s\"" ; done
     IFS= exp="$*"
     nb=200
     FULL_TEXT_PREV=""
     while :; do
-        got="$(curl -s $SPECULOS_URL/events?currentscreenonly=true)"
-        got="$(echo $got | jq -r '[.events[].text] | add')"
+        got="$(get_screen_text)"
         if [ "$exp" == "$got" ] ; then
             FULL_TEXT_PREV="$exp"
             echo
@@ -88,6 +92,22 @@ function expect_full_text {
         sleep 0.05
         nb=$((nb-1))
     done
+}
+
+# One section of data can spill across multiple screens.
+# Collect all pages with the given title, and then compare at the end.
+function expect_section_content {
+    echo -n " - expect_section_content $1"
+
+    $(dirname $0)/check_section_text.py -u $SPECULOS_URL -t "$1" -e "$2"
+
+    res=$?
+    set -e
+    if [ "$res" != 0 ] ; then
+        (echo "FAILURE(expect_section_content):"
+         echo "  Check: expect_section_content.py $@ $result") >&2
+        exit 1
+    fi
 }
 
 #
@@ -174,7 +194,7 @@ function check_tlv_signature_from_sent_apdu {
     set -e
     if [ "$res" != 0 ] ; then
         (echo "FAILURE(check_tlv_signature_from_apdus_sent):"
-	 echo "  Check: check_tlv_signature.py $@ $result") >&2
+         echo "  Check: check_tlv_signature.py $@ $result") >&2
         exit 1
     fi
 }
