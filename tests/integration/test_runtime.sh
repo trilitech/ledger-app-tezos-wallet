@@ -99,7 +99,11 @@ function expect_full_text {
 function expect_section_content {
     echo -n " - expect_section_content $1"
 
-    $(dirname $0)/check_section_text.py -u $SPECULOS_URL -t "$1" -e "$2" --multi true
+    $(dirname $0)/check_section_text.py \
+                 -d $1 \
+                 -u $SPECULOS_URL \
+                 -t "$2" -e "$3" \
+                 --multi true
 
     res=$?
     set -e
