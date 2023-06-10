@@ -1,6 +1,7 @@
 /* Tezos Embedded C parser for Ledger - Full parser state definition and helpers
 
    Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
+   Copyright 2023 TriliTech <contact@trili.tech>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -36,6 +37,7 @@ typedef struct {
 } tz_parser_regs;
 extern void tz_parser_regs_flush(tz_parser_regs *regs, char *obuf, size_t olen);
 extern void tz_parser_regs_refill(tz_parser_regs *regs, uint8_t *ibuf, size_t ilen);
+extern void tz_parser_regs_flush_up_to(tz_parser_regs *regs, char* obuf, size_t olen, size_t retain);
 
 // Parser state
 
@@ -108,9 +110,9 @@ tz_parser_result tz_parser_set_errno(tz_parser_state *, tz_parser_result);
 #define tz_stop(e) tz_return (TZ_BLO_##e)
 #define tz_reraise return state->errno
 #define tz_must(cond) do {                      \
- 	    tz_parser_result _err = cond;       \
-	    if (_err)                           \
-	        tz_return(_err);                \
-	} while (0)
+            tz_parser_result _err = cond;       \
+            if (_err)                           \
+                tz_return(_err);                \
+        } while (0)
 #define tz_continue tz_return (TZ_CONTINUE)
 #define tz_break tz_return (TZ_BREAK)

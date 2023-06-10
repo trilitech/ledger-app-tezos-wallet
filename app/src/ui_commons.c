@@ -1,6 +1,7 @@
 /* Tezos Ledger application - Some UI primitives
 
    Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
+   Copyright 2023 TriliTech <contact@trili.tech>
 
    With code excerpts from:
     - Legacy Tezos app, Copyright 2019 Obsidian Systems
@@ -78,3 +79,17 @@ unsigned char io_event(__attribute__((unused)) unsigned char channel) {
 }
 
 const bagl_icon_details_t C_icon_rien = { 0, 0, 1, NULL, NULL };
+
+uint8_t max_line_width(const char* value, int length, bagl_font_id_e font) {
+# ifdef TARGET_NANOS
+    return se_get_cropped_length(value, length, BAGL_WIDTH, font);
+# else
+    unsigned short width = bagl_compute_line_width(font, 0, value, length, BAGL_ENCODING_LATIN1);
+    while (width >= BAGL_WIDTH) {
+      length--;
+      width = bagl_compute_line_width(font, 0, value, length, BAGL_ENCODING_LATIN1);
+    }
+
+    return length;
+# endif
+}

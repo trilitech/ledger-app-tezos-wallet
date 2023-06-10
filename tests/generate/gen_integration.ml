@@ -1,5 +1,6 @@
 (* Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
    Copyright 2023 Functori <contact@functori.com>
+   Copyright 2023 TriliTech <contact@trili.tech>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -29,6 +30,10 @@ let expect_full_text ppf l =
   let pp_space ppf () = Format.fprintf ppf " " in
   let pp_args = Format.pp_print_list ~pp_sep:pp_space shell_escape in
   Format.fprintf ppf "expect_full_text %a@." pp_args l
+
+let expect_section_content ppf ~title content =
+  Format.fprintf ppf "expect_section_content %a %a@." shell_escape title
+    shell_escape content
 
 module Button = struct
   type t = Both | Right | Left
@@ -87,12 +92,13 @@ let quit ppf () =
   expect_quit ppf ();
   Button.(press ppf Both)
 
-type screen = { title : string; contents : string list }
+type screen = { title : string; contents : string list; multi : bool }
 
-let make_screen ~title contents = { title; contents }
+let make_screen ~title ?(multi = false) contents = { title; contents; multi }
 
-let expected_screen ppf { title; contents } =
-  expect_full_text ppf (title :: contents)
+let expected_screen ppf { title; contents; multi } =
+  if multi then expect_section_content ppf ~title @@ List.hd contents
+  else expect_full_text ppf (title :: contents)
 
 let go_through_screens ppf screens =
   List.iter
@@ -194,7 +200,7 @@ let split_screens ~title whole =
 let node_to_screens ppf node =
   let whole = Format.asprintf "%a" (pp_node ~wrap:false) node in
   Format.fprintf ppf "# full output: %s@\n" whole;
-  split_screens ~title:"Data" whole
+  [ make_screen ~title:"Data" ~multi:true [ whole ] ]
 
 let operation_to_screens ppf
     ( (_shell : Tezos_base.Operation.shell_header),
