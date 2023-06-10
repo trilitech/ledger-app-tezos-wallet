@@ -104,7 +104,7 @@ function expect_full_text {
 # One section of data can spill across multiple screens.
 # Collect all pages with the given title, and then compare at the end.
 function expect_section_content {
-    echo -n " - expect_section_content $1"
+    echo -n " - expect_section_content $2"
 
     $(dirname $0)/check_section_text.py -u $SPECULOS_URL -t "$1" -e "$2"
 

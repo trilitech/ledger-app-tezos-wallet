@@ -68,8 +68,8 @@ clean:
 	$(DOCKER_RUN_APP_OCAML) bash -c \
 	  "make -C /app/pattern_registry clean && make -C /app/tests/generate clean && cd /app && rm -rf _build"
 
-unit_tests:	test/samples/micheline/samples.hex	\
-		test/samples/operations/samples.hex	\
+unit_tests:	test/samples/micheline/nanos/samples.hex	\
+		test/samples/operations/nanos/samples.hex	\
 		tests/unit/*.ml*			\
 		tests/unit/*.[ch]			\
 		tests/unit/dune				\
@@ -88,25 +88,28 @@ integration_tests_basic:	integration_tests_basic_nanos	\
 				integration_tests_basic_nanosp	\
 				integration_tests_basic_nanox
 
-integration_tests:	integration_tests_basic		\
-			test/samples/operations/samples.hex	\
-			test/samples/micheline/samples.hex	\
+integration_tests_%:	integration_tests_basic_%		\
+			test/samples/operations/%/samples.hex	\
+			test/samples/micheline/%/samples.hex	\
 			tests/integration/*.sh
-	$(RUN_TEST_DOCKER) nanos app_nanos_dbg.tgz		\
-				tests/samples/operations	\
-				tests/samples/micheline
+	$(RUN_TEST_DOCKER) $* app_$*_dbg.tgz		\
+				tests/samples/micheline/$*	\
+				tests/samples/operations/$*
 
-test/samples/micheline/samples.hex:	tests/generate/*.ml*	\
+integration_tests: 	tests/integration/*.sh			\
+			integration_tests_nanos 		\
+
+test/samples/micheline/%/samples.hex:	tests/generate/*.ml*	\
 					tests/generate/dune	\
 					tests/generate/Makefile
 	$(DOCKER_RUN_APP_OCAML) make -C /app/tests/generate	\
-	    ../samples/micheline/samples.hex
+	    ../samples/micheline/$*/samples.hex
 
-test/samples/operations/samples.hex:	tests/generate/*.ml*	\
+test/samples/operations/%/samples.hex:	tests/generate/*.ml*	\
 					tests/generate/dune	\
 					tests/generate/Makefile
 	$(DOCKER_RUN_APP_OCAML) make -C /app/tests/generate	\
-	    ../samples/operations/samples.hex
+	    ../samples/operations/$*/samples.hex
 
 load_%: app_%.tgz
 	ledgerctl delete "Tezos Wallet"
