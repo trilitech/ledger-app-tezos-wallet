@@ -41,11 +41,6 @@ typedef enum {
 } derivation_type_t;
 
 typedef struct {
-    cx_ecfp_public_key_t public_key;
-    cx_ecfp_private_key_t private_key;
-} key_pair_t;
-
-typedef struct {
     uint8_t length;
     uint32_t components[MAX_BIP32_LEN];
 } bip32_path_t;
@@ -59,8 +54,8 @@ typedef struct {
 size_t read_bip32_path(bip32_path_t *const, uint8_t const *const,
 		       size_t const);
 
-int generate_key_pair(key_pair_t *, derivation_type_t const,
-                      bip32_path_t const *const);
+int crypto_derive_private_key(cx_ecfp_private_key_t *, derivation_type_t const,
+                              bip32_path_t const *const);
 
 // Non-reentrant
 void public_key_hash(uint8_t *const, size_t const,
@@ -69,7 +64,8 @@ void public_key_hash(uint8_t *const, size_t const,
                      cx_ecfp_public_key_t const *const restrict);
 
 size_t sign(uint8_t *const, size_t const, derivation_type_t const,
-            key_pair_t const *const, uint8_t const *const, size_t const);
+            cx_ecfp_private_key_t const *const, uint8_t const *const,
+            size_t const);
 
 static inline derivation_type_t parse_derivation_type(uint8_t const curve_code) {
     switch (curve_code) {

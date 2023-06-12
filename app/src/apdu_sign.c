@@ -71,12 +71,14 @@ static int write_signature(uint8_t *const out, uint8_t const *const data, size_t
 
     FUNC_ENTER(("out=%p, data=%p, data_length=%u", out, data, data_length));
 
-    key_pair_t key_pair = {0};
+    cx_ecfp_private_key_t priv;
     size_t signature_size = 0;
+    int error;
 
-    int error = generate_key_pair(&key_pair,
-                                  global.path_with_curve.derivation_type,
-                                  &global.path_with_curve.bip32_path);
+
+    error = crypto_derive_private_key(&priv,
+                                      global.path_with_curve.derivation_type,
+                                      &global.path_with_curve.bip32_path);
     if (error) {
         THROW(EXC_WRONG_VALUES);
     }
@@ -87,7 +89,7 @@ static int write_signature(uint8_t *const out, uint8_t const *const data, size_t
             signature_size = sign(out,
                                   MAX_SIGNATURE_SIZE,
                                   global.path_with_curve.derivation_type,
-                                  &key_pair,
+                                  &priv,
                                   data,
                                   data_length);
         }
@@ -95,7 +97,7 @@ static int write_signature(uint8_t *const out, uint8_t const *const data, size_t
             error = e;
         }
         FINALLY {
-            memset(&key_pair, 0, sizeof(key_pair));
+            memset(&priv, 0, sizeof(priv));
         }
     }
     END_TRY;
