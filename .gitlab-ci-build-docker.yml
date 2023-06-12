@@ -1,3 +1,32 @@
+variables:
+  BUILD_LEDGER_APP: |
+    docker pull $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_SLUG || true
+    apk add --update git
+    git clone https://github.com/LedgerHQ/ledger-app-builder.git TMP
+    cd TMP/full &&
+    git checkout 79a7c077b6c0223dca614ef391e8df93ef2ca40e &&
+    docker build --cache-from $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_SLUG \
+                 --tag $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_SLUG        \
+                 --tag ledger-app-builder:$CI_COMMIT_REF_SLUG                           \
+           .
+    docker push $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_SLUG
+  BUILD_LEDGER_APP_TEZOS_OCAML: |
+    docker pull $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG || true
+    docker build --cache-from $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG \
+                 --tag $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG        \
+                 --tag ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG                           \
+                 -f docker/Dockerfile.ocaml                                                 \
+           docker
+    docker push $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG
+  BUILD_LEDGER_APP_TEZOS_INTEGRATION_TESTS: |
+    docker pull $CI_REGISTRY_IMAGE/ledger-app-tezos-integration-tests:$CI_COMMIT_REF_SLUG || true
+    docker build --cache-from $CI_REGISTRY_IMAGE/ledger-app-tezos-integration-tests:$CI_COMMIT_REF_SLUG \
+                 --tag $CI_REGISTRY_IMAGE/ledger-app-tezos-integration-tests:$CI_COMMIT_REF_SLUG        \
+                 --tag ledger-app-tezos-integration-tests:$CI_COMMIT_REF_SLUG                           \
+                 -f docker/Dockerfile.integration-tests                                                 \
+           docker
+    docker push $CI_REGISTRY_IMAGE/ledger-app-tezos-integration-tests:$CI_COMMIT_REF_SLUG
+
 .build_docker_template: &build_docker
   services:
     - docker:20.10.16-dind
@@ -16,38 +45,17 @@
 build docker ledger-app-builder:
   <<: *build_docker
   script:
-    - docker pull $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_SLUG || true
-    - apk add --update git
-    - git clone https://github.com/LedgerHQ/ledger-app-builder.git TMP
-    - cd TMP/full &&
-      git checkout 79a7c077b6c0223dca614ef391e8df93ef2ca40e &&
-      docker build --cache-from $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_SLUG
-                   --tag $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_SLUG
-                   --tag ledger-app-builder:$CI_COMMIT_REF_SLUG
-             .
-    - docker push $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_SLUG
+    - eval "$BUILD_LEDGER_APP"
 
 build docker ledger-app-tezos-ocaml:
   <<: *build_docker
   script:
-    - docker pull $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG || true
-    - docker build --cache-from $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG
-                   --tag $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG
-                   --tag ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG
-                   -f docker/Dockerfile.ocaml
-             docker
-    - docker push $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG
+    - eval "$BUILD_LEDGER_APP_TEZOS_OCAML"
 
 build docker ledger-app-tezos-integration-tests:
   <<: *build_docker
   script:
-    - docker pull $CI_REGISTRY_IMAGE/ledger-app-tezos-integration-tests:$CI_COMMIT_REF_SLUG || true
-    - docker build --cache-from $CI_REGISTRY_IMAGE/ledger-app-tezos-integration-tests:$CI_COMMIT_REF_SLUG
-                   --tag $CI_REGISTRY_IMAGE/ledger-app-tezos-integration-tests:$CI_COMMIT_REF_SLUG
-                   --tag ledger-app-tezos-integration-tests:$CI_COMMIT_REF_SLUG
-                   -f docker/Dockerfile.integration-tests
-             docker
-    - docker push $CI_REGISTRY_IMAGE/ledger-app-tezos-integration-tests:$CI_COMMIT_REF_SLUG
+    - eval "$BUILD_LEDGER_APP_TEZOS_INTEGRATION_TESTS"
 
 sync docker images:
   services:
