@@ -1,0 +1,13 @@
+.generate_samples:
+  image: $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG
+  stage: generate
+  variables:
+    DEVICE = ""
+  script:
+    - mkdir -p tests/samples/micheline/$DEVICE
+    - mkdir -p tests/samples/operations/$DEVICE
+    - dune exec ./tests/generate/generate.exe micheline 1000 $DEVICE tests/samples/micheline
+    - dune exec ./tests/generate/generate.exe operations 1000 $DEVICE tests/samples/operations
+  artifacts:
+    paths:
+      - tests/samples

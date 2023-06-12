@@ -1,6 +1,7 @@
 include:
   - template: 'Workflows/MergeRequest-Pipelines.gitlab-ci.yml'
   - local: .gitlab-ci-build-docker.yml
+  - local: .gitlab/generate-template.yml
   - local: .gitlab/build-template.yml
   - local: .gitlab/integration-template.yml
 
@@ -20,17 +21,10 @@ generate_builtin_patterns:
     paths:
       - app/src/parser/generated_patterns.h
 
-generate_samples:
-  image: $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG
-  stage: generate
-  script:
-    - mkdir -p tests/samples/micheline/nanos
-    - mkdir -p tests/samples/operations/nanos
-    - dune exec ./tests/generate/generate.exe micheline 1000 nanos tests/samples/micheline
-    - dune exec ./tests/generate/generate.exe operations 1000 nanos tests/samples/operations
-  artifacts:
-    paths:
-      - tests/samples
+generate_samples_nanos:
+  extends: .generate_samples
+  variables:
+    DEVICE: nanos
 
 build_nanos:
   extends: .build_app
@@ -77,7 +71,7 @@ unit:
   script:
     - make -C tests/unit
   needs:
-    - generate_samples
+    - generate_samples_nanos
 
 integration_nanos_basic:
   extends: .integration
@@ -107,7 +101,7 @@ integration_nanos_micheline_samples:
   extends: .integration
   needs:
     - build_nanos_dbg
-    - generate_samples
+    - generate_samples_nanos
   variables:
     DEVICE: nanos
     TESTDIR: tests/samples/micheline/nanos
@@ -116,7 +110,7 @@ integration_nanos_operations_samples:
   extends: .integration
   needs:
     - build_nanos_dbg
-    - generate_samples
+    - generate_samples_nanos
   variables:
     DEVICE: nanos
     TESTDIR: tests/samples/operations/nanos
