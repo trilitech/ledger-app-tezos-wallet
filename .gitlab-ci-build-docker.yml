@@ -60,18 +60,18 @@ sync docker images:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
     - if ! docker manifest inspect $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_SLUG ; then
-        docker manifest create $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_SLUG $CI_REGISTRY_IMAGE/ledger-app-builder:main ;
+        docker manifest create $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_SLUG $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_MERGE_REQUEST_TARGET_BRANCH_NAME ;
         docker manifest push $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_SLUG ;
       fi
     - if ! docker manifest inspect $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG ; then
-        docker manifest create $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:main ;
+        docker manifest create $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_MERGE_REQUEST_TARGET_BRANCH_NAME ;
         docker manifest push $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG ;
       fi
     - if ! docker manifest inspect $CI_REGISTRY_IMAGE/ledger-app-tezos-integration-tests:$CI_COMMIT_REF_SLUG ; then
-        docker manifest create $CI_REGISTRY_IMAGE/ledger-app-tezos-integration-tests:$CI_COMMIT_REF_SLUG $CI_REGISTRY_IMAGE/ledger-app-tezos-integration-tests:main ;
+        docker manifest create $CI_REGISTRY_IMAGE/ledger-app-tezos-integration-tests:$CI_COMMIT_REF_SLUG $CI_REGISTRY_IMAGE/ledger-app-tezos-integration-tests:$CI_MERGE_REQUEST_TARGET_BRANCH_NAME ;
         docker manifest push $CI_REGISTRY_IMAGE/ledger-app-tezos-integration-tests:$CI_COMMIT_REF_SLUG ;
       fi
   only:
     - merge_requests
   except:
-    - main
+    - $CI_DEFAULT_BRANCH
