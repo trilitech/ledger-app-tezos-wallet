@@ -67,17 +67,23 @@ sync docker images:
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - if ! docker manifest inspect $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_SLUG ; then
+    - if docker manifest inspect $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_MERGE_REQUEST_TARGET_BRANCH_NAME ; then
         docker manifest create $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_SLUG $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_MERGE_REQUEST_TARGET_BRANCH_NAME ;
         docker manifest push $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_SLUG ;
+      elif ! docker manifest inspect $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_SLUG ; then
+        eval "$BUILD_LEDGER_APP" ;
       fi
-    - if ! docker manifest inspect $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG ; then
+    - if docker manifest inspect $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_MERGE_REQUEST_TARGET_BRANCH_NAME ; then
         docker manifest create $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_MERGE_REQUEST_TARGET_BRANCH_NAME ;
         docker manifest push $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG ;
+      elif ! docker manifest inspect $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG ; then
+        eval "$BUILD_LEDGER_APP_TEZOS_OCAML" ;
       fi
-    - if ! docker manifest inspect $CI_REGISTRY_IMAGE/ledger-app-tezos-integration-tests:$CI_COMMIT_REF_SLUG ; then
+    - if docker manifest inspect $CI_REGISTRY_IMAGE/ledger-app-tezos-integration-tests:$CI_MERGE_REQUEST_TARGET_BRANCH_NAME ; then
         docker manifest create $CI_REGISTRY_IMAGE/ledger-app-tezos-integration-tests:$CI_COMMIT_REF_SLUG $CI_REGISTRY_IMAGE/ledger-app-tezos-integration-tests:$CI_MERGE_REQUEST_TARGET_BRANCH_NAME ;
         docker manifest push $CI_REGISTRY_IMAGE/ledger-app-tezos-integration-tests:$CI_COMMIT_REF_SLUG ;
+      elif ! docker manifest inspect $CI_REGISTRY_IMAGE/ledger-app-tezos-integration-tests:$CI_COMMIT_REF_SLUG ; then
+        eval "$BUILD_LEDGER_APP_TEZOS_INTEGRATION_TESTS" ;
       fi
   only:
     - merge_requests
