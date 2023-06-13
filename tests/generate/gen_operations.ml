@@ -116,16 +116,34 @@ let gen_manager_operation gen_operation =
     (Manager_operation
        { source; fee; counter; operation; gas_limit; storage_limit })
 
-let gen () =
+type hidden_manager_operation_list =
+  | H :
+      _ Protocol.Alpha_context.Kind.manager Protocol.Alpha_context.contents_list
+      -> hidden_manager_operation_list
+
+let gen_packed_contents_list =
   let open Protocol.Alpha_context in
+  let open QCheck2.Gen in
+  let* size = int_range 1 3 in
+  let rec aux i =
+    if i <= 1 then
+      let* transaction = gen_manager_operation gen_transaction in
+      return (H (Single transaction))
+    else
+      let* transaction = gen_manager_operation gen_transaction in
+      let* (H contents_list) = aux (i - 1) in
+      return (H (Cons (transaction, contents_list)))
+  in
+  let* (H contents_list) = aux size in
+  return (Contents_list contents_list)
+
+let gen () =
   let shell =
     { Tezos_base.Operation.branch = Tezos_crypto.Hashed.Block_hash.zero }
   in
-  let transaction =
-    QCheck2.Gen.generate1 ~rand:Gen_utils.random_state
-      (gen_manager_operation gen_transaction)
+  let contents =
+    QCheck2.Gen.generate1 ~rand:Gen_utils.random_state gen_packed_contents_list
   in
-  let contents = Contents_list (Single transaction) in
   (shell, contents)
 
 let op = Seq.forever gen
