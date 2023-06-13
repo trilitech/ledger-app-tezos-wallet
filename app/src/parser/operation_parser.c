@@ -1,6 +1,7 @@
 /* Tezos Embedded C parser for Ledger - Operation parser
 
    Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
+   Copyright 2023 Functori <contact@functori.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -485,10 +486,10 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state, tz_parser_regs
       state->operation.frame->step_read_bytes.len = 33;
       break;
     case 1: // sppk
-      state->operation.frame->step_read_bytes.len = 65;
+      state->operation.frame->step_read_bytes.len = 34;
       break;
     case 2: // p2pk
-      state->operation.frame->step_read_bytes.len = 65;
+      state->operation.frame->step_read_bytes.len = 34;
       break;
     case 3: // BLpk
       state->operation.frame->step_read_bytes.len = 49;
