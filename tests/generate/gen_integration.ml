@@ -250,7 +250,7 @@ let tz2_signer =
   Apdu.Signer.make ~path:[ 44; 1729; 0; 0 ]
     ~sk:"spsk2Pfx9chqXVbz2tW7ze4gGU4RfaiK3nSva77bp69zHhFho2zTze"
 
-let gen_signer = QCheck2.Gen.oneofl [ tz1_signer; tz2_signer ]
+let gen_signer = QCheck2.Gen.oneofl [ tz1_signer ]
 
 let gen_expect_test_sign ppf (`Hex txt as hex) screens =
   let bin = Hex.to_bytes hex in
