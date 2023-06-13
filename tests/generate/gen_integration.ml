@@ -26,14 +26,18 @@ let pp_hex_bytes ppf bytes = Format.fprintf ppf "%a" Hex.pp (Hex.of_bytes bytes)
 
 (** General *)
 module Device = struct
-  type t = Nanos | Nanosp
+  type t = Nanos | Nanosp | Nanox
 
   let of_string_exn = function
     | "nanos" -> Nanos
     | "nanosp" -> Nanosp
+    | "nanox" -> Nanox
     | d -> failwith @@ Format.sprintf "invalid device %s" d
 
-  let to_string = function Nanos -> "nanos" | Nanosp -> "nanosp"
+  let to_string = function
+    | Nanos -> "nanos"
+    | Nanosp -> "nanosp"
+    | Nanox -> "nanox"
 end
 
 let expect_full_text ppf l =
@@ -91,12 +95,12 @@ let home ppf () =
 
 let expect_accept ppf = function
   | Device.Nanos -> expect_full_text ppf [ "Accept?" ]
-  | Device.Nanosp ->
+  | Device.Nanosp | Device.Nanox ->
       expect_full_text ppf [ "Accept?"; "Press both buttons"; "to accept." ]
 
 let expect_reject ppf = function
   | Device.Nanos -> expect_full_text ppf [ "Reject?" ]
-  | Device.Nanosp ->
+  | Device.Nanosp | Device.Nanox ->
       expect_full_text ppf [ "Accept?"; "Press both buttons"; "to reject." ]
 
 let expect_quit ppf () = expect_full_text ppf [ "Quit?" ]
@@ -283,6 +287,7 @@ let gen_expect_test_sign ppf (`Hex txt as hex) ~device screens =
   let signer = QCheck2.Gen.generate1 ~rand:Gen_utils.random_state gen_signer in
   Format.fprintf ppf "# signer: %a@." Tezos_crypto.Signature.Public_key_hash.pp
     signer.pkh;
+  home ppf ();
   sign ppf ~signer bin;
   go_through_screens ppf ~device screens;
   accept ppf device;
@@ -295,7 +300,7 @@ let gen_expect_test_sign_micheline_data ~device ppf hex =
   in
   gen_expect_test_sign ppf hex ~device screens
 
-let gen_expect_test_sign_operation ?(device = Device.Nanos) ppf hex =
+let gen_expect_test_sign_operation ~device ppf hex =
   let screens bin =
     let op = Gen_operations.decode bin in
     operation_to_screens ppf op

@@ -14,7 +14,7 @@
 
 let () =
   match Sys.argv with
-  | [| _; "micheline"; m; ("nanos" | "nanosp") as model; dir |] ->
+  | [| _; "micheline"; m; ("nanos" | "nanosp" | "nanox") as model; dir |] ->
       let device = Gen_integration.Device.of_string_exn model in
       let m = int_of_string m in
       let fp_hex = open_out @@ Format.sprintf "%s/%s/samples.hex" dir model in
@@ -38,7 +38,7 @@ let () =
         (Seq.take m Gen_micheline.hex);
       Format.fprintf ppf_hex "%!";
       print_newline ()
-  | [| _; "operations"; m; ("nanos" | "nanosp") as model; dir |] ->
+  | [| _; "operations"; m; ("nanos" | "nanosp" | "nanox") as model; dir |] ->
       let device = Gen_integration.Device.of_string_exn model in
       let m = int_of_string m in
       let fp_hex = open_out @@ Format.sprintf "%s/%s/samples.hex" dir model in
@@ -58,11 +58,11 @@ let () =
         (Seq.take m Gen_operations.hex);
       Format.fprintf ppf_hex "%!";
       print_newline ()
-  | [| _; _; _m; "nanox"; _dir |] ->
-      Format.eprintf "Actually, only nanos & nanox is supported for now.@.";
+  | [| _; _; _m; "stax"; _dir |] ->
+      Format.eprintf "Only nanos|nanosp|nanox supported for now.@.";
       exit 1
   | _ ->
       Format.eprintf
-        "Usage: %s micheline <samples> <nanos|nanosp|nanox> <dir>@."
+        "Usage: %s micheline <samples> <nanos|nanosp|nanox|stax> <dir>@."
         Sys.executable_name;
       exit 1

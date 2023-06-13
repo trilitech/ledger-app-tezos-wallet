@@ -94,7 +94,7 @@ def check_multi_screen(url, title, content, content_lines):
 def device_content_lines(device: str) -> int:
   if device == "nanos":
     return 2
-  if device == "nanosp":
+  if device in ["nanosp", "nanox"]:
     return 4
 
   raise ValueError(f"unsupported device '{device}'")
@@ -102,7 +102,7 @@ def device_content_lines(device: str) -> int:
 def device_alter_content(device: str, content: str) -> str:
   if device == "nanos":
     return content
-  if device == "nanosp":
+  if device in ["nanosp", "nanox"]:
     # OCR issue https://github.com/LedgerHQ/speculos/issues/204
     content = content.replace('S', '')
     content = content.replace('I', 'l')
