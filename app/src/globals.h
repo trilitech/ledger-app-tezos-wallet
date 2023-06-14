@@ -53,7 +53,6 @@ void init_globals(void);
 
 #define PRIVATE_KEY_DATA_SIZE 64
 #define MAX_SIGNATURE_SIZE 100
-#define B2B_BLOCKBYTES 128
 
 typedef enum {
   ST_IDLE,
