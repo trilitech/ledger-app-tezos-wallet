@@ -182,7 +182,8 @@ static tz_parser_result may_start_capture(tz_parser_state *state, uint8_t t) {
       tz_raise (BAD_PATTERN);
     uint16_t pat_name_size;
     tz_must (size_pat(state, &pat_name_size));
-    if (pat_name_size >= TZ_CAPTURE_BUFFER_SIZE)
+    /* XXXrcd: We need to test this next conditional */
+    if (pat_name_size >= MIN(TZ_CAPTURE_BUFFER_SIZE, TZ_FIELD_NAME_SIZE))
       tz_raise (BAD_PATTERN);
     int i;
     for(i=0;i<pat_name_size;i++) {

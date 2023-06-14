@@ -49,3 +49,8 @@
 #define true ((bool) 1)
 #undef false
 #define false ((bool) 0)
+
+#ifdef MIN
+#undef MIN
+#endif
+#define MIN(a,b) (((a)<(b))?(a):(b))
