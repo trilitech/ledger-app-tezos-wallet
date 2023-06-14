@@ -64,6 +64,7 @@ build docker ledger-app-tezos-integration-tests:
     BUILD_VOLUME: VOL_$CI_JOB_ID
     IMAGE: ""
     BUILD: ""
+    DEFAULT: $CI_REGISTRY_IMAGE/$IMAGE:$CI_DEFAULT_BRANCH
     SOURCE: $CI_REGISTRY_IMAGE/$IMAGE:$CI_COMMIT_REF_SLUG
     # https://gitlab.com/gitlab-org/gitlab-runner/-/blob/main/Makefile.build.mk#L63
     TARGET: $CI_REGISTRY_IMAGE/$IMAGE:$(echo $CI_MERGE_REQUEST_TARGET_BRANCH_NAME | cut -c -63 | sed -E 's/[^a-z0-9-]+/-/g' | sed -E 's/^-*([a-z0-9-]+[a-z0-9])-*$$/\1/g')
@@ -72,11 +73,17 @@ build docker ledger-app-tezos-integration-tests:
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - if docker manifest inspect $TARGET ; then
-        docker manifest create $SOURCE $TARGET ;
-        docker manifest push $SOURCE ;
-      elif ! docker manifest inspect $SOURCE ; then
-        eval "$BUILD" ;
+    - if ! docker manifest inspect $SOURCE; then
+        if docker manifest inspect $TARGET; then
+          docker pull $TARGET;
+          docker manifest create $SOURCE $TARGET;
+        elif docker inspect $DEFAULT; then
+          docker manifest create $SOURCE $DEFAULT;
+        else
+          eval "$BUILD";
+          docker manifest create $SOURCE $SOURCE;
+        fi;
+        docker manifest push $SOURCE;
       fi
   only:
     - merge_requests
