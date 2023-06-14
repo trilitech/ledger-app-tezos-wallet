@@ -88,7 +88,6 @@ typedef struct {
 
 typedef struct {
   main_step_t step;
-  uint8_t *stack_root;
   tz_ui_stream_t stream;
   bip32_path_with_curve_t path_with_curve;
   struct {

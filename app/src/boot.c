@@ -35,9 +35,7 @@ __attribute__((section(".boot"))) int main(void) {
 
     UX_INIT();
 
-    uint8_t tag;
     init_globals();
-    global.stack_root = &tag;
 
     for (;;) {
       BEGIN_TRY {
