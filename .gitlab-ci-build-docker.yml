@@ -62,12 +62,12 @@ sync docker images:
     - docker:20.10.16-dind
   variables:
     BUILD_VOLUME: VOL_$CI_JOB_ID
-    # https://gitlab.com/gitlab-org/gitlab-runner/-/blob/main/Makefile.build.mk#L63
-    TARGET_REF_SLUG: $(echo $CI_MERGE_REQUEST_TARGET_BRANCH_NAME | cut -c -63 | sed -E 's/[^a-z0-9-]+/-/g' | sed -E 's/^-*([a-z0-9-]+[a-z0-9])-*$$/\1/g')
   image: docker:20.10.16
   stage: sync
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    # https://gitlab.com/gitlab-org/gitlab-runner/-/blob/main/Makefile.build.mk#L63
+    - export TARGET_REF_SLUG=$(echo $CI_MERGE_REQUEST_TARGET_BRANCH_NAME | cut -c -63 | sed -E 's/[^a-z0-9-]+/-/g' | sed -E 's/^-*([a-z0-9-]+[a-z0-9])-*$$/\1/g')
   script:
     - if docker manifest inspect $CI_REGISTRY_IMAGE/ledger-app-builder:$TARGET_REF_SLUG ; then
         docker manifest create $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_SLUG $CI_REGISTRY_IMAGE/ledger-app-builder:$TARGET_REF_SLUG ;
