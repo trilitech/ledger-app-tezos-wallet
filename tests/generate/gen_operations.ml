@@ -28,15 +28,77 @@ let gen_expr =
 let gen_algo =
   QCheck2.Gen.oneofl Tezos_crypto.Signature.[ Ed25519; Secp256k1; P256 ]
 
-let gen_keys =
-  let open QCheck2.Gen in
-  let* seed = QCheck2.Gen.bytes_size (return 32) in
-  let* algo = gen_algo in
-  return @@ Tezos_crypto.Signature.generate_key ~algo ~seed ()
+let some_private_key =
+  [
+    "edsk3ayZxYsCj8jhgq8ioN4ETy99DqU8yksnq6s7fwcC95ZkDPypkC";
+    "edsk41r5Z37fXTTFF5EwQ2Xonr7KsZ8tzvTB3dxCyQn3QsaFbE4MzZ";
+    "edsk2w3gCWojHtZdkTFBsWZxvkqEo7zYMPrdmeujyMZsoPfBiFBxsf";
+    "edsk3VhsjdEYFg7ZDTL5GB2vnX9Ee9k57GH2VM2emy2Z2A9dcYq8D9";
+    "edsk3cWjLMKHahZVFEdvf46VkChebQPd1ctnHWJmLKiui7GHYxxxnK";
+    "spsk2vcxPgevMHEU7LTDqg2ypar6gqmwSEz9aM4E3r4mW5B4HMTxDa";
+    "spsk39ofnvbpah21bVLzEsEGZDFDZobmh18tde1VGi7CMJNYyFY9Dh";
+    "spsk2Ze8YwUjYtmnevdZwQbj7Xyph7orZpTCfeQgyFxCXa3konv9aT";
+    "spsk2GiCPV1oR3qnybxGwsHyCcgwFSXL1FVDxZyzDFYTUgrBVJkea5";
+    "spsk2xJELkNQ3m7uS9Z6pTtctAmAg76REAME5b8puPvperSofRyU9y";
+    "p2sk4APEttm8QwZFsaLq45YaYe3MTWPYwjoGcpvJ6NqRFvUNE8Btmv";
+    "p2sk3KhuPgM96N136J2oZ39k4PLG6aUU8QLdMTtgYeShxd1fDtimw7";
+    "p2sk3PE1VCKFTutZbfUBf8fwWkutzKhg3DSGgdCNrYLhnxLsPBPc86";
+    "p2sk32wjLHQ1iyjnGnH3fPVCiY5MniQnBHBfDosiSeSjPzr7HFLEdM";
+    "p2sk3RDMM4PkWDVjEcVTdLru2MifiboZLYrmxwCExUzTnLTuGSygrx";
+  ]
 
-let gen_secret_key = QCheck2.Gen.map (fun (_, _, sk) -> sk) gen_keys
-let gen_public_key = QCheck2.Gen.map (fun (_, pk, _) -> pk) gen_keys
-let gen_public_key_hash = QCheck2.Gen.map (fun (pkh, _, _) -> pkh) gen_keys
+let some_public_key =
+  [
+    "edpkvMUjmJu9CYyKBAjUV3jtU8Y89TemDAcD29bSNh393Bc8z8BH3t";
+    "edpkvYT4Cbzg4BFDBMJKEsgUbFsrK8GPtpZcYVUufE88rkSoo7saXo";
+    "edpkv5maJHfQAJdLyXefDEVFyK9tfbzKXSKmcT1YYqHc8MmKMphE6v";
+    "edpkuGnyR1TBGbWznAvmBfMAFFk321v4bWsHYA5nR75uNyLinK23Go";
+    "edpkv1cpS2U1VbviarXs3ZcSdYVXdcad4hVWk3SSGgjFXZUj8xnryJ";
+    "sppk7ZT8R42AGSy672NHz9ps6Q4idqWYejAgMwqTWnyYAeq9XZEqWvZ";
+    "sppk7a9FzG5f7quhhgiijyiNyktfP9CmqoP6sAa9iV7my2QErYDnk1k";
+    "sppk7aVFzHeLSgsqMfKXP3PySiuXXTm7qju9SpqdXFasyNGNu2xiSBB";
+    "sppk7busdHfsMPFsp2JYMgY8y3sqyAdbpowhS11BnfZ4RMomy4EQ8V2";
+    "sppk7cZHYhQvxTDrsmokcUuJvRTp1amwQdYfGSrPxjL47GRGscDcLkq";
+    "p2pk665znpiyPRWEwpu8tZ7JdNPipkfYpGUhYALjaS4Tm7F7wcx1iRs";
+    "p2pk65U84BdxaihUbaJX9qdFzcx7QAJnVioLtvotYbZtehhU6tm1tcg";
+    "p2pk64hc2xSWmKEztoTxkRtioDhG46qUfBuhvxpTA69kNEcGsLsPg8T";
+    "p2pk66Y3TrkdsL8fYZq6cXBpLqgEVcSZDErYDctJWJc5ZzWkgech8Uj";
+    "p2pk68CE92CP8tAjbp6LgNagDcns8acLLv3fPfgkHcBpvyQB4ka81BQ";
+  ]
+
+let some_public_key_hash =
+  [
+    "tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa";
+    "tz1er74kx433vTtpYddGsf3dDt5piBZeeHyQ";
+    "tz1McCh72NRhYmJBcWr3zDrLJAxnfR9swcFh";
+    "tz1TmFPVZsGQ8MnrBJtnECJgkFUwLa6EWYDm";
+    "tz1e8fEumaLvXXe5jV52gejCSt3mGodoKut9";
+    "tz2W3Tvcm64GjcV2bipUynnEsctLFz5Z6yRa";
+    "tz2JPgTWZZpxZZLqHMfS69UAy1UHm4Aw5iHu";
+    "tz2CJBeWWLsUDjVUDqGZL6od3DeBCNzYXrXk";
+    "tz2KC42yW9FXFMJpkUooae2NFYQsM5do3E8H";
+    "tz2PPZ2WN4j92Rdx4NM7oW3HAp3x825HUyac";
+    "tz3XeTwXXJeWNgVR3LqMcyBDdnxjbZ7TeEGH";
+    "tz3fLwHKthqhTPK6Lar6CTXN1WbDETw1YpGB";
+    "tz3eydffbLkjdVb8zx42BvxpGV87zaRnqL3r";
+    "tz3hCsUiQDfneTgD7CSZDaUro8SA5aEhwCp2";
+    "tz3Wazpbs4CFj78qv2KBJ8Z7HEyqk6ZPxwWZ";
+  ]
+
+let gen_secret_key =
+  let open QCheck2.Gen in
+  let+ sk = oneofl some_private_key in
+  Tezos_crypto.Signature.Secret_key.of_b58check_exn sk
+
+let gen_public_key =
+  let open QCheck2.Gen in
+  let+ pk = oneofl some_public_key in
+  Tezos_crypto.Signature.Public_key.of_b58check_exn pk
+
+let gen_public_key_hash =
+  let open QCheck2.Gen in
+  let+ pkh = oneofl some_public_key_hash in
+  Tezos_crypto.Signature.Public_key_hash.of_b58check_exn pkh
 
 let gen_tez =
   QCheck2.Gen.map Protocol.Alpha_context.Tez.(mul_exn one_cent)
@@ -68,6 +130,25 @@ let gen_origination_nonce =
   in
   incr i initial_nonce
 
+let some_implicit_contract =
+  [
+    "KT1BEqzn5Wx8uJrZNvuS9DVHmLvG9td3fDLi";
+    "KT1Vk1K7SWCZKhaF5KiuP7GEpPZ6wzukaUpG";
+    "KT1TKXZqQa2D5ZC2VgYdCtoyPReUSCasmJ61";
+    "KT1QWdbASvaTXW8GWfhfNh3JMjgXvnZAATJW";
+    "KT1SnUMh6K7M2Rdz1AvLtxZSmeErhJUr3wH9";
+    "KT1VogMpwUD8xJR7pJMwhbCnTkJGM92WD2NL";
+    "KT1Bt8FwiW7EEQyfB3iLz7iaJ3eSYvrYoTvv";
+    "KT1TGa4r6j84k8vFc9QsfAJmTQfVtwGmh6ss";
+    "KT1GqFTwDrEnowTZaHr5dEFo5CLX75fAXCTW";
+    "KT1QWdbASvaTXW8GWfhfNh3JMjgXvnZAATJW";
+    "KT1HMCxCyeGbZaGBsLMKVyMbMRzFpZBxKoY7";
+    "KT1XULaVx5dQmQPuWsNcZod3Dk2N9ZFQmfQp";
+    "KT1VvcxT3QHBjJd2EKkREXyYQBi7LVcCRc5H";
+    "KT1DfDzRjbXnTGogM2Nih8mpXcSVM54igtNs";
+    "KT1Mjjcb6tmSsLm7Cb3DSQszePjfchPM4Uxm";
+  ]
+
 let gen_contract =
   let open Protocol.Alpha_context in
   let open QCheck2.Gen in
@@ -76,8 +157,10 @@ let gen_contract =
     return (Contract.Implicit public_key_hash)
   in
   let gen_implict =
-    let* origination_nonce = gen_origination_nonce in
-    return (Contract.Internal_for_tests.originated_contract origination_nonce)
+    let+ contract = oneofl some_implicit_contract in
+    match Contract.of_b58check contract with
+    | Ok contract -> contract
+    | Error _ -> assert false
   in
   oneof [ gen_implict; gen_originated ]
 
