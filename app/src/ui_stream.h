@@ -1,6 +1,7 @@
 /* Tezos Ledger application - Dynamic UI to display a stream of pages
 
    Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
+   Copyright 2023 TriliTech <contact@trili.tech>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -57,6 +58,9 @@ typedef struct {
   int16_t current;
   int16_t total;
   bool full;
+  // FIXME: workaround for issue with non-local control flow. Remove once fixed
+  // see !66
+  bool pressed_right;
 } tz_ui_stream_t;
 
 typedef enum {

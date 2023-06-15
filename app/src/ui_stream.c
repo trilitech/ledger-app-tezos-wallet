@@ -1,6 +1,7 @@
 /* Tezos Ledger application - Generic stream display
 
    Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
+   Copyright 2023 TriliTech <contact@trili.tech>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -104,6 +105,7 @@ static void pred () {
 
 static void succ () {
   if (global.stream.current < global.stream.total + (global.stream.full ? 2 : 0)) {
+    global.stream.pressed_right = false;
     global.stream.current++;
   }
 }
@@ -221,6 +223,8 @@ static void change_screen_left() {
 }
 
 static void change_screen_right() {
+  global.stream.pressed_right = true;
+
   if (global.stream.current == global.stream.total) {
     if (!global.stream.full)
       global.stream.cb(TZ_UI_STREAM_CB_REFILL);
@@ -231,6 +235,9 @@ static void change_screen_right() {
 }
 
 __attribute__((noreturn)) void tz_ui_stream() {
+  if (global.stream.pressed_right)
+    succ();
+
   redisplay();
   THROW(ASYNC_EXCEPTION);
 }
