@@ -6,18 +6,15 @@ variables:
     git checkout 79a7c077b6c0223dca614ef391e8df93ef2ca40e &&
     docker build --cache-from $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_SLUG \
                  --tag $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_SLUG        \
-                 --tag ledger-app-builder:$CI_COMMIT_REF_SLUG                           \
            .
   BUILD_LEDGER_APP_TEZOS_OCAML: |
     docker build --cache-from $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG \
                  --tag $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG        \
-                 --tag ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG                           \
                  -f docker/Dockerfile.ocaml                                                 \
            docker
   BUILD_LEDGER_APP_TEZOS_INTEGRATION_TESTS: |
     docker build --cache-from $CI_REGISTRY_IMAGE/ledger-app-tezos-integration-tests:$CI_COMMIT_REF_SLUG \
                  --tag $CI_REGISTRY_IMAGE/ledger-app-tezos-integration-tests:$CI_COMMIT_REF_SLUG        \
-                 --tag ledger-app-tezos-integration-tests:$CI_COMMIT_REF_SLUG                           \
                  -f docker/Dockerfile.integration-tests                                                 \
            docker
 
