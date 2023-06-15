@@ -101,19 +101,18 @@ let gen_public_key_hash =
   Tezos_crypto.Signature.Public_key_hash.of_b58check_exn pkh
 
 let gen_tez =
-  QCheck2.Gen.map Protocol.Alpha_context.Tez.(mul_exn one_cent)
-  @@ QCheck2.Gen.int_range 1 100
+  QCheck2.Gen.map Protocol.Alpha_context.Tez.(mul_exn one_cent) QCheck2.Gen.nat
 
 let gen_manager_counter =
   QCheck2.Gen.map
     Protocol.Alpha_context.Manager_counter.Internal_for_tests.of_int
-  @@ QCheck2.Gen.int_range 0 1000
+    QCheck2.Gen.nat
 
-let gen_z_bound b = QCheck2.Gen.map Z.of_int QCheck2.Gen.(int_bound b)
+let gen_z_bound = QCheck2.Gen.map Z.of_int QCheck2.Gen.nat
 
-let gen_gaz_bound b =
+let gen_gaz_bound =
   QCheck2.Gen.map Protocol.Alpha_context.Gas.Arith.integral_of_int_exn
-    QCheck2.Gen.(int_bound b)
+    QCheck2.Gen.nat
 
 let gen_origination_nonce =
   let open Protocol.Alpha_context in
@@ -124,7 +123,7 @@ let gen_origination_nonce =
       let nonce = Origination_nonce.Internal_for_tests.incr nonce in
       incr (i - 1) nonce
   in
-  let* i = int_range 1 100 in
+  let* i = small_nat in
   let initial_nonce =
     Origination_nonce.Internal_for_tests.initial Environment.Operation_hash.zero
   in
@@ -192,8 +191,8 @@ let gen_manager_operation gen_operation =
   let* source = gen_public_key_hash in
   let* fee = gen_tez in
   let* counter = gen_manager_counter in
-  let* gas_limit = gen_gaz_bound 1000 in
-  let* storage_limit = gen_z_bound 1000 in
+  let* gas_limit = gen_gaz_bound in
+  let* storage_limit = gen_z_bound in
   let* operation = gen_operation in
   return
     (Manager_operation
@@ -207,6 +206,7 @@ type hidden_manager_operation_list =
 let gen_packed_contents_list =
   let open Protocol.Alpha_context in
   let open QCheck2.Gen in
+  (* Do not make operation batches too large *)
   let* size = int_range 1 3 in
   let rec aux i =
     if i <= 1 then
