@@ -6,7 +6,6 @@ include:
 
 stages:
   - sync
-  - prepare
   - generate
   - build
   - test

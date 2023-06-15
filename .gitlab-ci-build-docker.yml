@@ -1,108 +1,59 @@
-variables:
-  BUILD_LEDGER_APP: |
-    apk add --update git
-    git clone https://github.com/LedgerHQ/ledger-app-builder.git TMP
-    cd TMP/full &&
-    git checkout 79a7c077b6c0223dca614ef391e8df93ef2ca40e &&
-    docker build --cache-from $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_SLUG \
-                 --tag $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_SLUG        \
-           .
-  BUILD_LEDGER_APP_TEZOS_OCAML: |
-    docker build --cache-from $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG \
-                 --tag $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG        \
-                 -f docker/Dockerfile.ocaml                                                 \
-           docker
-  BUILD_LEDGER_APP_TEZOS_INTEGRATION_TESTS: |
-    docker build --cache-from $CI_REGISTRY_IMAGE/ledger-app-tezos-integration-tests:$CI_COMMIT_REF_SLUG \
-                 --tag $CI_REGISTRY_IMAGE/ledger-app-tezos-integration-tests:$CI_COMMIT_REF_SLUG        \
-                 -f docker/Dockerfile.integration-tests                                                 \
-           docker
-
-.build_docker_template:
-  services:
-    - docker:20.10.16-dind
-  variables:
-    BUILD_VOLUME: VOL_$CI_JOB_ID
-    IMAGE: ""
-    BUILD: ""
-    SOURCE: $CI_REGISTRY_IMAGE/$IMAGE:$CI_COMMIT_REF_SLUG
-  image: docker:20.10.16
-  stage: prepare
-  before_script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-  script:
-    - docker pull $SOURCE || true
-    - eval "$BUILD"
-    - docker push $SOURCE
-  rules:
-    - if: $CI_MERGE_REQUEST_IID || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-
-build docker ledger-app-builder:
-  extends: .build_docker_template
-  variables:
-    IMAGE: ledger-app-builder
-    BUILD: $BUILD_LEDGER_APP
-
-build docker ledger-app-tezos-ocaml:
-  extends: .build_docker_template
-  variables:
-    IMAGE: ledger-app-tezos-ocaml
-    BUILD: $BUILD_LEDGER_APP_TEZOS_OCAML
-
-build docker ledger-app-tezos-integration-tests:
-  extends: .build_docker_template
-  variables:
-    IMAGE: ledger-app-tezos-integration-tests
-    BUILD: $BUILD_LEDGER_APP_TEZOS_INTEGRATION_TESTS
-
 .sync_docker_template:
   services:
     - docker:20.10.16-dind
   variables:
     BUILD_VOLUME: VOL_$CI_JOB_ID
     IMAGE: ""
-    BUILD: ""
+    DOCKERFILE: ""
     DEFAULT: $CI_REGISTRY_IMAGE/$IMAGE:$CI_DEFAULT_BRANCH
     SOURCE: $CI_REGISTRY_IMAGE/$IMAGE:$CI_COMMIT_REF_SLUG
   image: docker:20.10.16
   stage: sync
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    # https://gitlab.com/gitlab-org/gitlab-runner/-/blob/main/Makefile.build.mk#L63
     - export TARGET_REF_SLUG=$(eval echo $CI_MERGE_REQUEST_TARGET_BRANCH_NAME | cut -c -63 | sed -E 's/[^a-z0-9-]+/-/g' | sed -E 's/^-*([a-z0-9-]+[a-z0-9])-*$$/\1/g')
     - export TARGET=$CI_REGISTRY_IMAGE/$IMAGE:$TARGET_REF_SLUG
+    - eval "$BEFORE_SCRIPT"
   script:
-    - if ! docker manifest inspect $SOURCE; then
-        if docker manifest inspect $TARGET; then
-          docker pull $TARGET;
-          docker manifest create $SOURCE $TARGET;
-        elif docker inspect $DEFAULT; then
-          docker manifest create $SOURCE $DEFAULT;
-        else
-          eval "$BUILD";
-          docker manifest create $SOURCE $SOURCE;
-        fi;
-        docker manifest push $SOURCE;
+    - docker pull $SOURCE ||
+      docker pull $TARGET ||
+      docker pull $DEFAULT ||
+      true
+    - docker build --cache-from $SOURCE
+                   --cache-from $TARGET
+                   --cache-from $DEFAULT
+                   --tag $SOURCE
+                   -f $DOCKERFILE
+                   .
+    - if docker manifest inspect $SOURCE; then
+        docker push $SOURCE;
+      else
+        docker manifest create $SOURCE $SOURCE;
       fi
-  only:
-    - merge_requests
-  except:
-    - $CI_DEFAULT_BRANCH
+  rules:
+    - if: $CI_MERGE_REQUEST_IID || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
 sync docker ledger-app-builder:
   extends: .sync_docker_template
   variables:
+    BEFORE_SCRIPT: |
+      apk add --update git
+      git clone https://github.com/LedgerHQ/ledger-app-builder.git TMP
+      cd TMP/full &&
+      git checkout 79a7c077b6c0223dca614ef391e8df93ef2ca40e
     IMAGE: ledger-app-builder
-    BUILD: $BUILD_LEDGER_APP
+    DOCKERFILE: Dockerfile
 
 sync docker ledger-app-tezos-ocaml:
   extends: .sync_docker_template
   variables:
+    BEFORE_SCRIPT: cd docker
     IMAGE: ledger-app-tezos-ocaml
-    BUILD: $BUILD_LEDGER_APP_TEZOS_OCAML
+    DOCKERFILE: Dockerfile.ocaml
 
 sync docker ledger-app-tezos-integration-tests:
   extends: .sync_docker_template
   variables:
+    BEFORE_SCRIPT: cd docker
     IMAGE: ledger-app-tezos-integration-tests
-    BUILD: $BUILD_LEDGER_APP_TEZOS_INTEGRATION_TESTS
+    DOCKERFILE: Dockerfile.integration-tests
