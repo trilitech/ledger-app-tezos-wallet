@@ -28,7 +28,9 @@ typedef struct {
   const uint16_t length;
 } pattern_association;
 
-#include "generated_patterns.h"
+const pattern_association builtin_entrypoints[] = {
+  { NULL, NULL, NULL, 0 }
+};
 
 bool find_pattern(uint8_t* address, const char* entrypoint, const uint8_t** pattern, uint16_t* length) {
   const pattern_association *assoc = &builtin_entrypoints[0];

@@ -12,15 +12,6 @@ stages:
   - build
   - test
 
-generate_builtin_patterns:
-  image: $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG
-  stage: generate
-  script:
-    - make -C pattern_registry
-  artifacts:
-    paths:
-      - app/src/parser/generated_patterns.h
-
 generate_samples_nanos:
   extends: .generate_samples
   variables:

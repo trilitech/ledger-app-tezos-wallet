@@ -1,7 +1,0 @@
-# Entrypoint,               Display entrypoint,       Symbolic pattern,                                                                            Binary pattern
-  create_artist_collection, Create artist collection, ${bytes Metadata},                                                                           _
-  accept_invitation,        Accept invitation,        ${int Invitation number},                                                                    _
-  add_mod,                  Add mod,                  ${address New mod},                                                                          _
-  invite_collaborator,      Invite collaborator,      Pair ${address Collaborator} ${int Collection id},                                           _
-  mint_artist,              Mint artist,              Pair (Pair ${int Collection id} ${int Editions}) (Pair ${bytes Metadata} ${address Target}), _
-  update_artist_metadata,   Update artist metadata,   Pair ${int Collection id} ${string Metadata},                                                _

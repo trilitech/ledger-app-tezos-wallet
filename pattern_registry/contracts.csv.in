@@ -1,7 +1,0 @@
-# Contract instance ID,  Display Name,                   Display address,                      Binary address,                                 Contract type ID
-  kusd,                  kUSD,                           KT1K9gCRgaLRFKTErYt1wVxA3Frb9FjasjTV, 0x0173EA80F05BE778BE227CD8E986F714F279BDE04200, kusd
-  tether,                Tether Token,                   KT1XnTn74bUtxHfDtBmm2bGZAQfhPbvKWR8o, 0x01FE810959C3D6127A41CBD471E7CB4E91A61B780B00, tether
-  objkt_mint,            OBJKT Minting Factory,          KT1Aq4wWmVanpQhq4TTfjZXB5AjFpx15iQMM, _                                             , objkt_mint
-  objkt_market,          OBJKT Marketplace,              KT1WvzYHCNBvDSdwafTHv7nJ1dWmZ8GCYuuC, _                                             , objkt_market
-  objkt_mint_ghostnet,   Ghostnet OBJKT Minting Factory, KT1QnQzmpWBGg8asDw1HdejqSfa6fM8KBoq9, _                                             , objkt_mint
-  objkt_market_ghostnet, Ghostnet OBJKT Marketplace,     KT1USKbTeKWG8g7KRJu7XbzBF1GoRy1FXpDg, _                                             , objkt_market

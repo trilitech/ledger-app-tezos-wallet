@@ -1,2 +1,0 @@
-# Entrypoint,               Display entrypoint,       Symbolic pattern,                                                                            Binary pattern
-  approve,                  Approve operator,         Pair ${address Owner} ${int Value},                                                          _

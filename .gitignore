@@ -5,9 +5,7 @@ app/obj
 app/build
 app/src/glyphs.h
 app/src/glyphs.c
-app/src/parser/generated_patterns.h
 app/.target
-pattern_registry/*.csv
 _build
 tests/samples
 app_*.tgz

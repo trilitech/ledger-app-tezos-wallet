@@ -13,8 +13,6 @@ DOCKER_RUN		= $(DOCKER) run --rm -i -v "$(realpath .):/app"
 DOCKER_RUN_APP_BUILDER	= $(DOCKER_RUN) ledger-app-builder:latest
 DOCKER_RUN_APP_OCAML	= $(DOCKER_RUN) ledger-app-tezos-ocaml:latest
 
-GENERATED_PATTERNS	= app/src/parser/generated_patterns.h
-
 #
 # Fetch the docker images:
 
@@ -42,22 +40,14 @@ docker_images:	docker_speculos			\
 		docker_ledger_app_ocaml		\
 		docker_ledger_app_integration_tests
 
-$(GENERATED_PATTERNS):	pattern_registry/*.ml*		\
-			pattern_registry/Makefile	\
-			pattern_registry/dune		\
-			pattern_registry/*.csv.in	\
-			pattern_registry/*.sh
-	$(DOCKER_RUN_APP_OCAML) make -C /app/pattern_registry
-
-app_%.tgz:	$(GENERATED_PATTERNS)	\
-		app/src/*.[ch]		\
+app_%.tgz:	app/src/*.[ch]		\
 		app/src/parser/*.[ch]	\
 		app/Makefile
 	$(DOCKER_RUN_APP_BUILDER) bash -c \
           'BOLOS_SDK=$$$(shell echo $(patsubst app_%.tgz,%,$@) | tr '[:lower:]' '[:upper:]')_SDK make -C app'
 	$(DOCKER_RUN_APP_BUILDER) bash -c "cd app/bin/ && tar cz ." > $@
 
-app_%_dbg.tgz: $(GENERATED_PATTERNS) app/src/*.[ch] app/src/parser/*.[ch] app/Makefile
+app_%_dbg.tgz: app/src/*.[ch] app/src/parser/*.[ch] app/Makefile
 	$(DOCKER_RUN_APP_BUILDER) bash -c \
           'BOLOS_SDK=$$$(shell echo $(patsubst app_%_dbg.tgz,%,$@) | tr '[:lower:]' '[:upper:]')_SDK make -C app DEBUG=true'
 	$(DOCKER_RUN_APP_BUILDER) bash -c "cd app/bin/ && tar cz ." > $@
@@ -65,8 +55,7 @@ app_%_dbg.tgz: $(GENERATED_PATTERNS) app/src/*.[ch] app/src/parser/*.[ch] app/Ma
 clean:
 	rm -rf bin app_*.tgz
 	$(DOCKER_RUN_APP_BUILDER) make -C app mrproper
-	$(DOCKER_RUN_APP_OCAML) bash -c \
-	  "make -C /app/pattern_registry clean && make -C /app/tests/generate clean && cd /app && rm -rf _build"
+	$(DOCKER_RUN_APP_OCAML) bash -c "make -C /app/tests/generate clean && cd /app && rm -rf _build"
 
 unit_tests:	test/samples/micheline/nanos/samples.hex	\
 		test/samples/operations/nanos/samples.hex	\
