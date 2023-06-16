@@ -397,18 +397,16 @@ function main {
     done
     END=$(date +%s)
 
-    jq -s . $DATA_DIR/ret-* | tee integration_tests.json |     \
+    jq -s . $DATA_DIR/ret-* | jq -e 'map(select(.retcode != "0"))' | \
+       tee integration_tests.json |     \
        jq -r '
-           def fails: map(select(.retcode != "0"));
-
              "Tests took " + ('$END'-'$START'|tostring) + " seconds."
-           + "\nTotal Number of Tests: " + (.|length|tostring)
-           + "\nNumber of Failures:    " + (fails|length|tostring)
-           + if ((fails|length) > 0) then
+           + "\nNumber of Failures:    " + (.|length|tostring)
+           + if ((.|length) > 0) then
                  "\nFailed cases:          "
                + "\n\t"
-               + ([(fails[]|.path)]|[limit(5;.[])]|join("\n\t"))
-               + if ((fails|length) > 5) then "\n\t..." else "" end
+               + ([(.[]|.path)]|[limit(5;.[])]|join("\n\t"))
+               + if ((.|length) > 5) then "\n\t..." else "" end
                + "\n\nFailures occurred in the test suite.  Please find"
                + "\nthe results in ./integration_tests.json"
              else "" end
