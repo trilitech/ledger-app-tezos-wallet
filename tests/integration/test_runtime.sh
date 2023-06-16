@@ -252,10 +252,14 @@ run_a_test() {
 MAX_DOTS=40
 TEST_BANNER="%-30.30s  "
 TEST_BANNER_HEAD="$TEST_BANNER|                                        |\n"
-test_a_dir() {
-    DIR="$1"
+test_a_path() {
+    THE_PATH="$1"
 
-    set -- $DIR/*.sh                # XXXrcd: maybe *.t?
+    if [ -d "$THE_PATH" ]; then
+        set -- $THE_PATH/*.sh                # XXXrcd: maybe *.t?
+    else
+        set -- $THE_PATH
+    fi
 
     num_left=$#
     if [ -n "$TESTS_LEFT" ]; then
@@ -267,7 +271,7 @@ test_a_dir() {
     DOT_PER_NUM=$(( $num_left / $MAX_DOTS + 1 ))
     THE_DOT=.
 
-    printf "$TEST_BANNER|" $DIR
+    printf "$TEST_BANNER|" $THE_PATH
 
     PIDS=" "
     while :; do
@@ -352,10 +356,12 @@ function expect_exited {
 
 function usage {
     echo "$@"                                                  >&2
-    echo "Usage: $0 [-l lim] type app dir [dir ...]"           >&2
+    echo "Usage: $0 [-l lim] type app path [path ...]"         >&2
     echo "    where type is nanos, nanosp, or nanox"           >&2
-    echo "     and app is a tar.gz containing the app"         >&2
-    echo "     and the dirs contain the test scripts"          >&2
+    echo "       and app is a tar.gz containing the app"       >&2
+    echo "       and the path is either a file containing"     >&2
+    echo "       a single test or a directory containing"      >&2
+    echo "       many tests"                                   >&2
     exit 1
 }
 
@@ -393,7 +399,7 @@ function main {
 
     START=$(date +%s)
     for dir; do
-       test_a_dir "$dir"
+       test_a_path "$dir"
     done
     END=$(date +%s)
 
