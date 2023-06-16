@@ -1,4 +1,5 @@
 (* Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
+   Copyright 2023 Functori <contact@functori.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -21,7 +22,7 @@ let () =
       let ppf_hex = Format.formatter_of_out_channel fp_hex in
       print_string "Generating Micheline samples";
       Seq.iteri
-        (fun i (expr, _, (`Hex txt as hex)) ->
+        (fun i (expr, bin, `Hex txt) ->
           if Gen_utils.micheline_too_large_or_too_deep expr then (
             print_string "!";
             flush stdout)
@@ -33,7 +34,7 @@ let () =
               open_out (Format.asprintf "%s/%s/test_%03d.sh" dir model i)
             in
             let ppf = Format.formatter_of_out_channel fp in
-            Gen_integration.gen_expect_test_sign_micheline_data ~device ppf hex;
+            Gen_integration.gen_expect_test_sign_micheline_data ~device ppf bin;
             close_out fp))
         (Seq.take m Gen_micheline.hex);
       Format.fprintf ppf_hex "%!";
@@ -43,9 +44,9 @@ let () =
       let m = int_of_string m in
       let fp_hex = open_out @@ Format.sprintf "%s/%s/samples.hex" dir model in
       let ppf_hex = Format.formatter_of_out_channel fp_hex in
-      print_string "Generating Micheline samples";
+      print_string "Generating Operation samples";
       Seq.iteri
-        (fun i (_op, _, (`Hex txt as hex)) ->
+        (fun i (_op, bin, `Hex txt) ->
           print_string ".";
           flush stdout;
           Format.fprintf ppf_hex "%s@\n" txt;
@@ -53,7 +54,7 @@ let () =
             open_out (Format.asprintf "%s/%s/test_%03d.sh" dir model i)
           in
           let ppf = Format.formatter_of_out_channel fp in
-          Gen_integration.gen_expect_test_sign_operation ~device ppf hex;
+          Gen_integration.gen_expect_test_sign_operation ~device ppf bin;
           close_out fp)
         (Seq.take m Gen_operations.hex);
       Format.fprintf ppf_hex "%!";
