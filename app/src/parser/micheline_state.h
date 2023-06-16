@@ -41,15 +41,11 @@ typedef enum {
   TZ_MICHELINE_STEP_PRIM,
   TZ_MICHELINE_STEP_SIZE,
   TZ_MICHELINE_STEP_SEQ,
-  TZ_MICHELINE_STEP_CAPTURING,
-  TZ_MICHELINE_STEP_LISTING,
-  TZ_MICHELINE_STEP_BRANCHING,
   TZ_MICHELINE_STEP_BYTES,
   TZ_MICHELINE_STEP_STRING,
   TZ_MICHELINE_STEP_ANNOT,
   TZ_MICHELINE_STEP_INT,
   TZ_MICHELINE_STEP_PRINT_INT,
-  TZ_MICHELINE_STEP_CAPTURE_BYTES,
   TZ_MICHELINE_STEP_PRINT_CAPTURE
 } tz_micheline_parser_step_kind;
 
@@ -66,7 +62,6 @@ typedef enum {
 typedef struct {
   tz_micheline_parser_step_kind step : 4;
   uint16_t stop;
-  uint16_t pat_stop;
   union {
     struct {
       uint16_t size;
@@ -93,14 +88,6 @@ typedef struct {
     struct {
       int ofs;
     } step_capture; // TZ_MICHELINE_STEP_CAPTURE_BYTES, TZ_MICHELINE_STEP_PRINT_CAPTURE
-    struct {
-      uint16_t saved_pat_ofs;
-      uint16_t seq;
-    } step_listing; // TZ_MICHELINE_STEP_LISTING
-    struct {
-      uint16_t pat_ofs_after;
-      uint8_t tag;
-    } step_branching; // TZ_MICHELINE_STEP_BRANCHING
     tz_micheline_capture_kind step_capturing; // TZ_MICHELINE_STEP_CAPTURING
   };
 } tz_micheline_parser_frame;
@@ -108,8 +95,4 @@ typedef struct {
 typedef struct {
   tz_micheline_parser_frame stack[TZ_MICHELINE_STACK_DEPTH];
   tz_micheline_parser_frame *frame; // init == stack, NULL when done
-  const uint8_t* pat; // NULL if no pattern, in case capture.frame == stack
-  int pat_ofs;
-  size_t pat_len;
-  bool capturing;
 } tz_micheline_state;

@@ -57,10 +57,8 @@ typedef enum {
   TZ_ERR_INVALID_OP,
   TZ_ERR_UNSUPPORTED,
   TZ_ERR_TOO_LARGE,
-  TZ_ERR_MISMATCH,
   TZ_ERR_TOO_DEEP,
   TZ_ERR_INVALID_STATE,
-  TZ_ERR_BAD_PATTERN
 } tz_parser_result;
 #define TZ_IS_BLOCKED(code) (code >= 100)
 #define TZ_IS_ERR(code) (code >= 200)

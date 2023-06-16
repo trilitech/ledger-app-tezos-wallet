@@ -24,7 +24,7 @@ void tz_parse_num_state_init (tz_num_parser_buffer *buffers, tz_num_parser_regs 
 }
 
 tz_parser_result tz_parse_num_step (tz_num_parser_buffer *buffers, tz_num_parser_regs *regs,
-                                    uint8_t b, bool natural, bool pretty_print) {
+                                    uint8_t b, bool natural) {
   uint8_t v, cont, s;
   cont = b >> 7;
   if (regs->size == 0 && !natural) {
@@ -50,18 +50,17 @@ tz_parser_result tz_parse_num_step (tz_num_parser_buffer *buffers, tz_num_parser
   }
   if(!cont) {
     regs->stop = true;
-    if (pretty_print)
-      tz_format_decimal (buffers->bytes, (regs->size+7)/8, buffers->decimal);
+    tz_format_decimal (buffers->bytes, (regs->size+7)/8, buffers->decimal);
   }
   return TZ_CONTINUE;
 }
 
 tz_parser_result tz_parse_int_step (tz_num_parser_buffer *buffers, tz_num_parser_regs *regs,
-                                    uint8_t b, bool pretty_print) {
-  return tz_parse_num_step (buffers, regs, b, 0, pretty_print);
+                                    uint8_t b) {
+  return tz_parse_num_step (buffers, regs, b, 0);
 }
 
 tz_parser_result tz_parse_nat_step (tz_num_parser_buffer *buffers, tz_num_parser_regs *regs,
-                                    uint8_t b, bool pretty_print) {
-  return tz_parse_num_step (buffers, regs, b, 1, pretty_print);
+                                    uint8_t b) {
+  return tz_parse_num_step (buffers, regs, b, 1);
 }

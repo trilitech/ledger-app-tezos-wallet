@@ -232,12 +232,12 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state, tz_parser_regs
     if (!state->operation.frame->step_read_micheline.inited) {
       state->operation.frame->step_read_micheline.inited = 1;
       strcpy(state->field_name, state->operation.frame->step_read_micheline.name);
-      tz_micheline_parser_init(state, NULL, 0);
+      tz_micheline_parser_init(state);
     }
     tz_micheline_parser_step(state, regs);
     if (state->errno == TZ_BLO_DONE) {
       if (state->operation.frame->stop != 0 && state->ofs != state->operation.frame->stop)
-        tz_raise (MISMATCH);
+        tz_raise (TOO_LARGE);
       tz_must (pop_frame(state));
       if (regs->oofs > 0)
         tz_stop (IM_FULL);
@@ -249,7 +249,7 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state, tz_parser_regs
   case TZ_OPERATION_STEP_READ_NUM: {
     uint8_t b;
     tz_must (tz_parser_read(state, regs,&b));
-    tz_must (tz_parse_num_step (&state->buffers.num, &state->operation.frame->step_read_num.state, b, state->operation.frame->step_read_num.natural, 1));
+    tz_must (tz_parse_num_step (&state->buffers.num, &state->operation.frame->step_read_num.state, b, state->operation.frame->step_read_num.natural));
     if (state->operation.frame->step_read_num.state.stop) {
       if (state->operation.frame->step_read_num.skip) {
         tz_must (pop_frame (state));
@@ -263,7 +263,7 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state, tz_parser_regs
       case TZ_OPERATION_FIELD_AMOUNT: {
         int len = 0;
         while (str[len])len++;
-        if (len == 1 && str[0] == 0) 
+        if (len == 1 && str[0] == 0)
           // just 0
           goto add_currency;
         if (len < 7) {

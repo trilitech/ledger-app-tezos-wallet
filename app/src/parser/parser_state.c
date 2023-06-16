@@ -29,10 +29,8 @@ const char* tz_parser_result_name(tz_parser_result code) {
   case TZ_ERR_INVALID_OP: return "ERR_INVALID_OP";
   case TZ_ERR_UNSUPPORTED: return "ERR_UNSUPPORTED";
   case TZ_ERR_TOO_LARGE: return "ERR_TOO_LARGE";
-  case TZ_ERR_MISMATCH: return "ERR_MISMATCH";
   case TZ_ERR_TOO_DEEP: return "ERR_TOO_DEEP";
   case TZ_ERR_INVALID_STATE: return "ERR_INVALID_STATE";
-  case TZ_ERR_BAD_PATTERN: return "ERR_BAD_PATTERN";
   default: return "???";
   }
 }
