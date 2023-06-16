@@ -250,7 +250,8 @@ run_a_test() {
 }
 
 MAX_DOTS=40
-TEST_BANNER="%-30.30s  "
+BANSIZE=30
+TEST_BANNER="%-${BANSIZE}.${BANSIZE}s  "
 TEST_BANNER_HEAD="$TEST_BANNER|                                        |\n"
 test_a_path() {
     THE_PATH="$1"
@@ -271,7 +272,7 @@ test_a_path() {
     DOT_PER_NUM=$(( $num_left / $MAX_DOTS + 1 ))
     THE_DOT=.
 
-    printf "$TEST_BANNER|" $THE_PATH
+    printf "$TEST_BANNER|" $(echo $THE_PATH | sed -E "s/.*(.{$BANSIZE})$/\1/")
 
     PIDS=" "
     while :; do
