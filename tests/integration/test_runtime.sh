@@ -237,8 +237,8 @@ run_a_test() {
           --rawfile speculog $SPECULOG                         \
     '
         { "path":     "'"$CMD"'"
-        , "pid":  "'$PID'"
-        , "port":  "'$PORT'"
+        , "pid":      "'$PID'"
+        , "port":     "'$PORT'"
         , "retcode":  "'$RETCODE'"
         , "stdout":   $stdout
         , "stderr":   $stderr
