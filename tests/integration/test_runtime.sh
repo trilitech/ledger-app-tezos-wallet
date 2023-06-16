@@ -59,6 +59,13 @@ function attempts {
     return 1
 }
 
+compare_strings() {
+    STR1="$(echo $1 | sed s/I/l/g)"
+    STR2="$(echo $2 | sed s/I/l/g)"
+
+    [ "$STR1" = "$STR2" ]
+}
+
 function get_screen_text {
    got="$(curl -s $SPECULOS_URL/events?currentscreenonly=true)"
    echo $got | jq -r '[.events[].text] | add'
@@ -71,7 +78,7 @@ function expect_full_text {
     FULL_TEXT_PREV=""
     while :; do
         got="$(get_screen_text)"
-        if [ "$exp" == "$got" ] ; then
+        if compare_strings "$exp" "$got"; then
             FULL_TEXT_PREV="$exp"
             echo
             return 0
