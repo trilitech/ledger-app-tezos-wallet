@@ -146,7 +146,7 @@ let gen_origination_nonce =
   in
   incr i initial_nonce
 
-let some_implicit_contract =
+let some_contract_hash =
   [
     "KT1BEqzn5Wx8uJrZNvuS9DVHmLvG9td3fDLi";
     "KT1Vk1K7SWCZKhaF5KiuP7GEpPZ6wzukaUpG";
@@ -165,14 +165,22 @@ let some_implicit_contract =
     "KT1Mjjcb6tmSsLm7Cb3DSQszePjfchPM4Uxm";
   ]
 
+let gen_contract_hash =
+  let open QCheck2.Gen in
+  let+ contract = oneofl some_contract_hash in
+  Protocol.Contract_hash.of_b58check_exn contract
+
 let gen_contract =
   let open Protocol.Alpha_context in
   let open QCheck2.Gen in
-  let gen_originated =
+  let gen_implict =
     let* public_key_hash = gen_public_key_hash in
     return (Contract.Implicit public_key_hash)
   in
-  let gen_implict = return @@ Contract.Originated Protocol.Contract_hash.zero in
+  let gen_originated =
+    let* contract_hash = gen_contract_hash in
+    return (Contract.Originated contract_hash)
+  in
   oneof [ gen_implict; gen_originated ]
 
 let gen_entrypoint =
