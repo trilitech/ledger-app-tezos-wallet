@@ -228,6 +228,11 @@ run_a_test() {
      RETCODE=$?
      set -e
 
+    if [ "$ONLY_FAILURES" = "YES" ]; then
+        rm $OUTF $ERRF $SPECULOG
+        return
+    fi
+
     jq -sR --rawfile stdout $OUTF --rawfile stderr $ERRF       \
           --rawfile speculog $SPECULOG                         \
     '
@@ -357,7 +362,7 @@ function expect_exited {
 
 function usage {
     echo "$@"                                                  >&2
-    echo "Usage: $0 [-l lim] type app path [path ...]"         >&2
+    echo "Usage: $0 [-F] [-l lim] type app path [path ...]"    >&2
     echo "    where type is nanos, nanosp, or nanox"           >&2
     echo "       and app is a tar.gz containing the app"       >&2
     echo "       and the path is either a file containing"     >&2
@@ -369,8 +374,9 @@ function usage {
 function main {
 
     TEST_TRACE=0
-    while getopts T:l:x o; do
+    while getopts FT:l:x o; do
        case $o in
+       F)  ONLY_FAILURES=YES                ;;
        T)  ONLY_TESTS="$ONLY_TESTS $OPTARG" ;;
        l)  TESTS_LEFT=$OPTARG               ;;
        x)  TEST_TRACE=1                     ;;
