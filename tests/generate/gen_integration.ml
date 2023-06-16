@@ -188,10 +188,10 @@ let rec pp_node ~wrap ppf (node : Protocol.Script_repr.node) =
         (if a = [] then "" else " " ^ String.concat " " a)
         rwrap
 
-let node_to_screens ppf node =
+let node_to_screens ~title ppf node =
   let whole = Format.asprintf "%a" (pp_node ~wrap:false) node in
   Format.fprintf ppf "# full output: %s@\n" whole;
-  [ make_screen ~title:"Data" whole ]
+  [ make_screen ~title whole ]
 
 let pp_opt_field pp ppf = function
   | None -> Format.fprintf ppf "Field unset"
@@ -250,7 +250,7 @@ let operation_to_screens ppf
              make_screen ~title:"Destination" "%a" Contract.pp destination;
              make_screen ~title:"Entrypoint" "%a" Entrypoint.pp entrypoint;
            ]
-          @ node_to_screens ppf parameters)
+          @ node_to_screens ~title:"Parameter" ppf parameters)
     | Update_consensus_key public_key ->
         aux ~kind:"Set consensus key"
           [
@@ -296,8 +296,9 @@ let gen_expect_test_sign ppf ~device ~watermark bin screens =
 let gen_expect_test_sign_micheline_data ~device ppf bin =
   let screens =
     let node = Gen_micheline.decode bin in
-    node_to_screens ppf (Micheline.root node)
+    node_to_screens ~title:"Expression" ppf (Micheline.root node)
   in
+
   gen_expect_test_sign ppf ~device ~watermark:Gen_micheline.watermark bin
     screens
 

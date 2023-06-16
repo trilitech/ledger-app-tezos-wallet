@@ -29,20 +29,13 @@ CAMLprim value micheline_cparse_capture_name(value mlstate) {
   CAMLreturn(r);
 }
 
-CAMLprim value micheline_cparse_init(value pattern_option, value size) {
-  CAMLparam2(pattern_option, size);
+CAMLprim value micheline_cparse_init(value size) {
+  CAMLparam1(size);
   CAMLlocal1(r);
   r = caml_alloc(sizeof(value), Abstract_tag);
   tz_parser_state *state = malloc(sizeof(tz_parser_state));
   *((tz_parser_state**) Data_abstract_val(r)) = state;
-  if(Is_block(pattern_option)) {
-    size_t len = caml_string_length(Field(pattern_option, 0));
-    uint8_t* pat = malloc(len+1);
-    memcpy(pat, Bytes_val(Field(pattern_option, 0)), len);
-    tz_micheline_parser_init(state, pat, len);
-  } else {
-    tz_micheline_parser_init(state, NULL, 0);
-  }
+  tz_micheline_parser_init(state);
   size_t s = Long_val (size);
   if (s >= 0xFFFF) caml_failwith("micheline_cparse_init: size too large");
   tz_operation_parser_init(state, (uint16_t) s, 1);
@@ -94,10 +87,6 @@ CAMLprim value micheline_cparse_step(value mlstate, value input, value output) {
     caml_failwith("micheline_cparse_step: unsupported data");
   case TZ_ERR_TOO_LARGE:
     caml_failwith("micheline_cparse_step: data size limitation exceeded");
-  case TZ_ERR_BAD_PATTERN:
-    caml_failwith("micheline_cparse_step: the pattern is bad");
-  case TZ_ERR_MISMATCH:
-    caml_failwith("micheline_cparse_step: pattern matching failed");
   case TZ_ERR_TOO_DEEP:
     caml_failwith("micheline_cparse_step: expression too deep");
   case TZ_ERR_INVALID_STATE:
@@ -155,10 +144,6 @@ CAMLprim value operation_cparse_step(value mlstate, value input, value output) {
     caml_failwith("operation_cparse_step: unsupported data");
   case TZ_ERR_TOO_LARGE:
     caml_failwith("operation_cparse_step: data size limitation exceeded");
-  case TZ_ERR_BAD_PATTERN:
-    caml_failwith("operation_cparse_step: the pattern is bad");
-  case TZ_ERR_MISMATCH:
-    caml_failwith("operation_cparse_step: pattern matching failed");
   case TZ_ERR_TOO_DEEP:
     caml_failwith("operation_cparse_step: expression too deep");
   case TZ_ERR_INVALID_STATE:

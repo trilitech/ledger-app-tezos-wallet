@@ -17,8 +17,7 @@ type cparse_state
 
 [@@@ocaml.warning "-37"]
 
-external cparse_init : bytes option -> int -> cparse_state
-  = "micheline_cparse_init"
+external cparse_init : int -> cparse_state = "micheline_cparse_init"
 
 type st = DONE | FEED_ME | IM_FULL
 

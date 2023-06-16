@@ -9,17 +9,17 @@ send_async_apdus \
         800f8200502000040743036c030b07430359030a074303680100000009225c365f340a246b25074303680100000024635e31225c3f45795f31214556627e393b45583b59550a234b6a325a54386860552158200345 "expect_apdu_return dcba96786c40c7894527a85050bc0b75eaee37aa020a52c634275450018da47822d552099146915f4c3280b3dbd4ab5d459b96b585247e58fda9bf53c9951dbe017811d074e688f11d8f47ce7f94c0548dca76be9ae9e87df794d3facdb4bb0a9000
 "
 
-expect_full_text 'Data' '{lF_NONE {{WAP;lF {DlP {{DROP 1;PUH unit Unit;PUH bool True;PUH string "'
+expect_full_text 'Expression' '{lF_NONE {{WAP;lF {DlP {{DROP 1;PUH unit Unit;PUH bool True;PUH string "'
 press_button right
-expect_full_text 'Data' ';L\\?p$-Fq)VDg\n]te\no4v0_8)\""}}} {{DROP 2;PUH unit Unit;PUH bool False;'
+expect_full_text 'Expression' ';L\\?p$-Fq)VDg\n]te\no4v0_8)\""}}} {{DROP 2;PUH unit Unit;PUH bool False;'
 press_button right
-expect_full_text 'Data' 'PUH string "Li-%*edF6~?E[5Kmu?dyviwJ^2\"\\d$FyQ>>!>D$g(Qg";PUH string "*Tx'
+expect_full_text 'Expression' 'PUH string "Li-%*edF6~?E[5Kmu?dyviwJ^2\"\\d$FyQ>>!>D$g(Qg";PUH string "*Tx'
 press_button right
-expect_full_text 'Data' '<E`iG6Yf*A^kZ\\=7?H[mOlQ\n]Ehs"}}}} {lF_NONE {DUP} {{DROP 4;PUH unit Unit;'
+expect_full_text 'Expression' '<E`iG6Yf*A^kZ\\=7?H[mOlQ\n]Ehs"}}}} {lF_NONE {DUP} {{DROP 4;PUH unit Unit;'
 press_button right
-expect_full_text 'Data' 'PUH bool True;PUH string "\"\\6_4\n$k%";PUH string "c^1\"\\?Ey_1!EVb~9;EX'
+expect_full_text 'Expression' 'PUH bool True;PUH string "\"\\6_4\n$k%";PUH string "c^1\"\\?Ey_1!EVb~9;EX'
 press_button right
-expect_full_text 'Data' ';YU\n#Kj2ZT8h`U!X "}}};lZE}'
+expect_full_text 'Expression' ';YU\n#Kj2ZT8h`U!X "}}};lZE}'
 press_button right
 
 expect_full_text 'Accept?' 'Press both buttons' 'to accept.'

@@ -28,7 +28,7 @@ let read_hex_file ~encoding path =
 
 let pp_c_bin ~(cparse_step : cparse_step) ppf bytes =
   let len = Bytes.length bytes in
-  let state = cparse_init None len in
+  let state = cparse_init len in
   let ss = 1 + Random.int 1000 in
   let rec screen_by_screen ofs =
     let buf = Bytes.make ss ' ' in
