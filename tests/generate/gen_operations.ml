@@ -155,12 +155,7 @@ let gen_contract =
     let* public_key_hash = gen_public_key_hash in
     return (Contract.Implicit public_key_hash)
   in
-  let gen_implict =
-    let+ contract = oneofl some_implicit_contract in
-    match Contract.of_b58check contract with
-    | Ok contract -> contract
-    | Error _ -> assert false
-  in
+  let gen_implict = return @@ Contract.Originated Protocol.Contract_hash.zero in
   oneof [ gen_implict; gen_originated ]
 
 let gen_entrypoint =
