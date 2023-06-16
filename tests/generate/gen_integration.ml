@@ -131,7 +131,9 @@ let go_through_screens ppf ~device screens =
       Button.(press ppf Right))
     screens
 
-let sign ppf ~signer:Apdu.Signer.({ sk; pk; _ } as signer) bin =
+let sign ppf ~signer:Apdu.Signer.({ sk; pk; _ } as signer) ~watermark bin =
+  let watermark = Tezos_crypto.Signature.bytes_of_watermark watermark in
+  let bin = Bytes.cat watermark bin in
   let packets = Apdu.sign ~signer bin in
   let bin_accept_check ppf () =
     let bin_hash = Tezos_crypto.Blake2B.(to_bytes (hash_bytes [ bin ])) in
@@ -280,29 +282,29 @@ let tz2_signer =
 
 let gen_signer = QCheck2.Gen.oneofl [ tz1_signer ]
 
-let gen_expect_test_sign ppf (`Hex txt as hex) ~device screens =
-  let bin = Hex.to_bytes hex in
-  Format.fprintf ppf "# full input: %s@." txt;
-  let screens = screens bin in
+let gen_expect_test_sign ppf ~device ~watermark bin screens =
+  Format.fprintf ppf "# full input: %a@." pp_hex_bytes bin;
   let signer = QCheck2.Gen.generate1 ~rand:Gen_utils.random_state gen_signer in
   Format.fprintf ppf "# signer: %a@." Tezos_crypto.Signature.Public_key_hash.pp
     signer.pkh;
   home ppf ();
-  sign ppf ~signer bin;
+  sign ppf ~signer ~watermark bin;
   go_through_screens ppf ~device screens;
   accept ppf device;
   expect_async_apdus_sent ppf ()
 
-let gen_expect_test_sign_micheline_data ~device ppf hex =
-  let screens bin =
+let gen_expect_test_sign_micheline_data ~device ppf bin =
+  let screens =
     let node = Gen_micheline.decode bin in
-    node_to_screens ppf node
+    node_to_screens ppf (Micheline.root node)
   in
-  gen_expect_test_sign ppf hex ~device screens
+  gen_expect_test_sign ppf ~device ~watermark:Gen_micheline.watermark bin
+    screens
 
-let gen_expect_test_sign_operation ~device ppf hex =
-  let screens bin =
+let gen_expect_test_sign_operation ~device ppf bin =
+  let screens =
     let op = Gen_operations.decode bin in
     operation_to_screens ppf op
   in
-  gen_expect_test_sign ppf ~device hex screens
+  gen_expect_test_sign ppf ~device ~watermark:Gen_operations.watermark bin
+    screens

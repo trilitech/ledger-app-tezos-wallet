@@ -269,21 +269,13 @@ let gen () =
   (shell, contents)
 
 let op = Seq.forever gen
-let operation_watermark = Tezos_crypto.Signature.Generic_operation
-
-let operation_watermark_bytes =
-  Tezos_crypto.Signature.bytes_of_watermark operation_watermark
+let watermark = Tezos_crypto.Signature.Generic_operation
 
 let encode op =
-  Bytes.cat operation_watermark_bytes
-    (Data_encoding.Binary.to_bytes_exn
-       Protocol.Alpha_context.Operation.unsigned_encoding op)
+  Data_encoding.Binary.to_bytes_exn
+    Protocol.Alpha_context.Operation.unsigned_encoding op
 
 let decode bin =
-  let watermark = Bytes.sub bin 0 1 in
-  if not @@ Bytes.equal watermark operation_watermark_bytes then
-    failwith @@ Format.sprintf "%s: invalid watermark" __FUNCTION__;
-  let bin = Bytes.sub bin 1 (Bytes.length bin - 1) in
   Data_encoding.Binary.of_bytes_exn
     Protocol.Alpha_context.Operation.unsigned_encoding bin
 

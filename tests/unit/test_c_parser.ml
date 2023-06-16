@@ -58,10 +58,9 @@ let () =
         Seq.of_dispenser (fun () ->
             try
               let bin = Hex.to_string (`Hex (input_line fp)) in
-              let _, expr =
-                Data_encoding.Binary.read_exn Protocol.Script_repr.expr_encoding
-                  bin 1
-                  (String.length bin - 1)
+              let expr =
+                Data_encoding.Binary.of_string_exn
+                  Protocol.Script_repr.expr_encoding bin
               in
               Some expr
             with End_of_file ->
@@ -106,10 +105,9 @@ let () =
         Seq.of_dispenser (fun () ->
             try
               let bin = Hex.to_string (`Hex (input_line fp)) in
-              let _, op =
-                Data_encoding.Binary.read_exn
-                  Protocol.Alpha_context.Operation.unsigned_encoding bin 1
-                  (String.length bin - 1)
+              let op =
+                Data_encoding.Binary.of_string_exn
+                  Protocol.Alpha_context.Operation.unsigned_encoding bin
               in
               Some op
             with End_of_file ->
