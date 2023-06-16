@@ -18,7 +18,6 @@
 #include "operation_parser.h"
 #include "micheline_parser.h"
 #include "num_parser.h"
-#include "pattern_registry.h"
 
 /* Prototypes */
 
@@ -194,7 +193,6 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state, tz_parser_regs
       state->operation.frame->step_read_micheline.inited = 0;
       state->operation.frame->step_read_micheline.skip = false;
       state->operation.frame->step_read_micheline.name = (char*) PIC(expression_name);
-      state->operation.frame->step_read_micheline.pattern_entrypoint = NULL;
       state->operation.frame->stop = 0;
       break;
     default: tz_raise (INVALID_TAG);
@@ -234,12 +232,7 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state, tz_parser_regs
     if (!state->operation.frame->step_read_micheline.inited) {
       state->operation.frame->step_read_micheline.inited = 1;
       strcpy(state->field_name, state->operation.frame->step_read_micheline.name);
-      const uint8_t* pattern = NULL;
-      uint16_t length = 0;
-      if (state->operation.frame->step_read_micheline.pattern_entrypoint) {
-        find_pattern(state->operation.destination, state->operation.frame->step_read_micheline.pattern_entrypoint, &pattern, &length);
-      }
-      tz_micheline_parser_init(state, pattern, length);
+      tz_micheline_parser_init(state, NULL, 0);
     }
     tz_micheline_parser_step(state, regs);
     if (state->errno == TZ_BLO_DONE) {
@@ -332,12 +325,7 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state, tz_parser_regs
         break;
       case TZ_OPERATION_FIELD_DESTINATION:
         memcpy(state->operation.destination, state->buffers.capture, 22);
-        const char* name;
-        if (find_name(state->buffers.capture, &name)) {
-          strcpy((char*) state->buffers.capture, name);
-        } else {
-          if (tz_format_address (state->buffers.capture, 22, (char*) state->buffers.capture)) tz_raise (INVALID_TAG);
-        }
+        if (tz_format_address (state->buffers.capture, 22, (char*) state->buffers.capture)) tz_raise (INVALID_TAG);
         break;
       case TZ_OPERATION_FIELD_OPH:
         if (tz_format_oph (state->buffers.capture, 32, (char*) state->buffers.capture)) tz_raise (INVALID_TAG);
@@ -395,7 +383,6 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state, tz_parser_regs
           state->operation.frame->step_read_micheline.inited = 0;
           state->operation.frame->step_read_micheline.skip = skip;
           state->operation.frame->step_read_micheline.name = (char*) PIC(parameter_name);
-          state->operation.frame->step_read_micheline.pattern_entrypoint = (char*) state->buffers.capture+2;
           tz_must (push_frame(state, TZ_OPERATION_STEP_SIZE));
           state->operation.frame->step_size.size = 0;
           state->operation.frame->stop = state->ofs+4;

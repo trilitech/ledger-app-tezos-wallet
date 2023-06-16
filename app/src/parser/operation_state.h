@@ -103,7 +103,6 @@ typedef struct {
       const char *name;
       uint8_t inited : 1;
       uint8_t skip : 1;
-      const char *pattern_entrypoint;
     } step_read_micheline;
   };
 } tz_operation_parser_frame;
