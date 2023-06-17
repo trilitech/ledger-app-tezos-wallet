@@ -11,8 +11,7 @@
     TESTDIR: ""
   script:
     - COLUMNS=80
-      ./tests/integration/run_test_local.sh -F ${DEVICE}
-      app_${DEVICE}_dbg.tgz
+      ./tests/integration/run_test_local.sh -F -m ${DEVICE}
       ${TESTDIR}
   artifacts:
     when: always

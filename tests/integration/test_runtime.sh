@@ -32,7 +32,7 @@
 #              the port $PORT.  seed (defined below) should be
 #              passed to --seed on invocation to ensure that the
 #              PRNG is reproducible.  Obviously headless because
-#              we are testing.  And the target is in an env var
+#              we are testing.  And the TARGET is in an env var
 #              of the same name.  Logs must be stored in $SPECULOG.
 #
 #      kill_speculos_runner
@@ -377,40 +377,46 @@ function expect_exited {
 }
 
 function usage {
-    echo "$@"                                                  >&2
-    echo "Usage: $0 [-F] [-l lim] type app path [path ...]"    >&2
-    echo "    where type is nanos, nanosp, or nanox"           >&2
-    echo "       and app is a tar.gz containing the app"       >&2
-    echo "       and the path is either a file containing"     >&2
-    echo "       a single test or a directory containing"      >&2
-    echo "       many tests"                                   >&2
+    echo "$@"                                                            >&2
+    echo "Usage: $0 [-F] [-l lim] [-m arch] [-t tgz] path [path ...]"    >&2
+    echo "    where paths are either a test or a dir containing tests"   >&2
+    echo "            -F means that only failures are stored"            >&2
+    echo "            -l lim limits the number of tests run to lim"      >&2
+    echo "            -m arch is one of nanos, nanosp, nanox, or stax"   >&2
+    echo "            -t tgz specifies that tgz contains the app"        >&2
     exit 1
 }
 
 function main {
 
+    # Defaults:
+    TARGET=nanos
     TEST_TRACE=0
-    while getopts FT:l:x o; do
+
+    while getopts FT:l:m:t:x o; do
        case $o in
        F)  ONLY_FAILURES=YES                ;;
        T)  ONLY_TESTS="$ONLY_TESTS $OPTARG" ;;
        l)  TESTS_LEFT=$OPTARG               ;;
+       m)  TARGET="$OPTARG"                 ;;
+       t)  TGZ="$OPTARG"                    ;;
        x)  TEST_TRACE=1                     ;;
        \?) usage "Unknown option."          ;;
        esac
     done
     shift $((OPTIND - 1))
 
-    [ $# -lt 3 ] && usage "At least three non-option arguments are required"
+    [ $# -lt 1 ] && usage "At least one test must be provided"
 
-    target="$1";       shift
-    tgz="$1";          shift
-
-    if ! echo $target | grep -qE '^nano(s|sp|x)$'; then
-       usage "Target \"$target\" must be nanos, nanosp, or nanox."
+    if ! echo $TARGET | grep -qE '^nano(s|sp|x)$'; then
+       usage "Target \"$TARGET\" must be nanos, nanosp, or nanox."
     fi
 
-    [ ! -f "$tgz" ] && usage "Tarball \"$tgz\" does not exist."
+    if [ -z "$TGZ" ]; then    
+        TGZ="app_${TARGET}_dbg.tgz"
+    fi
+
+    [ ! -f "$TGZ" ] && usage "Tarball \"$TGZ\" does not exist."
 
     FINISHED_TESTING=
     trap cleanup EXIT
