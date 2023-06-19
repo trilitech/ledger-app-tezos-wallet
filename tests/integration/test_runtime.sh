@@ -235,9 +235,9 @@ run_a_test() {
      RETCODE=$?
      set -e
 
-    if [ "$ONLY_FAILURES" = "YES" ]; then
+    if [ $RETCODE = 0 -a "$ONLY_FAILURES" = "YES" ]; then
         rm $OUTF $ERRF $SPECULOG
-        return
+        return $RETCODE
     fi
 
     jq -sR --rawfile stdout $OUTF --rawfile stderr $ERRF       \
