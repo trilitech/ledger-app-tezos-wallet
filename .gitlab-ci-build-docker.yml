@@ -75,7 +75,7 @@ build docker ledger-app-tezos-integration-tests:
   script:
     - if docker manifest inspect $TARGET ; then
         docker pull $TARGET ;
-        docker manifest create $SOURCE $TARGET ;
+        docker manifest create $SOURCE $IMAGE:$TARGET_REF_SLUG ;
         docker manifest push $SOURCE ;
       elif ! docker manifest inspect $SOURCE ; then
         eval "$BUILD" ;
