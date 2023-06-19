@@ -215,35 +215,29 @@ let node_to_screens ppf node =
 let operation_to_screens ppf
     ( (_shell : Tezos_base.Operation.shell_header),
       (Contents_list contents : Protocol.Alpha_context.packed_contents_list) ) =
+  let open Protocol.Alpha_context in
   let make_screen ~title fmt =
     Format.kasprintf (fun content -> make_screen ~title [ content ]) fmt
   in
   let screen_of_manager n (type t)
       (Manager_operation { fee; operation; storage_limit; _ } :
-        t Protocol.Alpha_context.Kind.manager Protocol.Alpha_context.contents) =
+        t Kind.manager contents) =
     match operation with
     | Transaction { amount; entrypoint; destination; parameters } ->
         let operation_title = Format.asprintf "Operation (%d)" n in
         let operation_screen =
           make_screen ~title:operation_title "Transaction"
         in
-        let fee_screen =
-          make_screen ~title:"Fee" "%a tz" Protocol.Alpha_context.Tez.pp fee
-        in
+        let fee_screen = make_screen ~title:"Fee" "%a tz" Tez.pp fee in
         let storage_screen =
           make_screen ~title:"Storage limit" "%s" (Z.to_string storage_limit)
         in
-        let amount_screen =
-          make_screen ~title:"Amount" "%a tz" Protocol.Alpha_context.Tez.pp
-            amount
-        in
+        let amount_screen = make_screen ~title:"Amount" "%a tz" Tez.pp amount in
         let destination_screen =
-          make_screen ~title:"Destination" "%a"
-            Protocol.Alpha_context.Contract.pp destination
+          make_screen ~title:"Destination" "%a" Contract.pp destination
         in
         let entrypoint_screen =
-          make_screen ~title:"Entrypoint" "%a"
-            Protocol.Alpha_context.Entrypoint.pp entrypoint
+          make_screen ~title:"Entrypoint" "%a" Entrypoint.pp entrypoint
         in
         let node =
           let expr =
@@ -256,8 +250,7 @@ let operation_to_screens ppf
         :: destination_screen :: entrypoint_screen :: node_screens
     | _ -> assert false
   in
-  let rec screen_of_operations :
-      type t. int -> t Protocol.Alpha_context.contents_list -> screen list =
+  let rec screen_of_operations : type t. int -> t contents_list -> screen list =
    fun n -> function
     | Single (Manager_operation _ as m) -> screen_of_manager n m
     | Cons ((Manager_operation _ as m), rest) ->

@@ -18,9 +18,10 @@ open Test_c_parser_utils
 let to_string
     ( (_shell : Tezos_base.Operation.shell_header),
       (Contents_list contents : Protocol.Alpha_context.packed_contents_list) ) =
+  let open Protocol.Alpha_context in
   let manager_to_string (type t)
       (Manager_operation { fee; operation; storage_limit; _ } :
-        t Protocol.Alpha_context.Kind.manager Protocol.Alpha_context.contents) =
+        t Kind.manager contents) =
     match operation with
     | Transaction { amount; entrypoint; destination; parameters } ->
         let parameters =
@@ -29,17 +30,16 @@ let to_string
         String.concat ""
           [
             "Transaction";
-            Format.asprintf "%a tz" Protocol.Alpha_context.Tez.pp fee;
+            Format.asprintf "%a tz" Tez.pp fee;
             Z.to_string storage_limit;
-            Format.asprintf "%a tz" Protocol.Alpha_context.Tez.pp amount;
-            Format.asprintf "%a" Protocol.Alpha_context.Contract.pp destination;
-            Format.asprintf "%a" Protocol.Alpha_context.Entrypoint.pp entrypoint;
+            Format.asprintf "%a tz" Tez.pp amount;
+            Format.asprintf "%a" Contract.pp destination;
+            Format.asprintf "%a" Entrypoint.pp entrypoint;
             Test_micheline_c_parser.to_string parameters;
           ]
     | _ -> assert false
   in
-  let rec operations_to_string :
-      type t. t Protocol.Alpha_context.contents_list -> string = function
+  let rec operations_to_string : type t. t contents_list -> string = function
     | Single (Manager_operation _ as m) -> manager_to_string m
     | Cons ((Manager_operation _ as m), rest) ->
         manager_to_string m ^ operations_to_string rest
