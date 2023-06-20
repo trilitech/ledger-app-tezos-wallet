@@ -187,26 +187,6 @@ let rec pp_node ~wrap ppf (node : Protocol.Script_repr.node) =
         (if a = [] then "" else " " ^ String.concat " " a)
         rwrap
 
-let screen_width = 19
-let nanos_screen_lines = 3
-
-let split_screens ~title whole =
-  let screen_data_lines = nanos_screen_lines - 1 in
-  let max_size = screen_data_lines * screen_width in
-  let len = String.length whole in
-  let rec split ofs acc =
-    let remaining_size = len - ofs in
-    if remaining_size <= max_size then
-      let content = String.sub whole ofs remaining_size in
-      let screen = make_screen ~title [ content ] in
-      screen :: acc
-    else
-      let content = String.sub whole ofs max_size in
-      let screen = make_screen ~title [ content ] in
-      split (ofs + max_size) (screen :: acc)
-  in
-  List.rev @@ split 0 []
-
 let node_to_screens ppf node =
   let whole = Format.asprintf "%a" (pp_node ~wrap:false) node in
   Format.fprintf ppf "# full output: %s@\n" whole;
