@@ -54,9 +54,9 @@ static void update () {
 
   bucket = global.stream.current % TZ_UI_STREAM_HISTORY_SCREENS;
 
-  STRLCPY(global.ux.lines[0], global.stream.titles[bucket]);
+  STRLCPY(global.ux.lines[0], global.stream.screens[bucket].title);
   for (i = 0; i < TZ_UI_STREAM_CONTENTS_LINES; i++) {
-    STRLCPY(global.ux.lines[i+1], global.stream.values[bucket] + i * TZ_UI_STREAM_CONTENTS_WIDTH);
+    STRLCPY(global.ux.lines[i+1], global.stream.screens[bucket].value + i * TZ_UI_STREAM_CONTENTS_WIDTH);
   }
   FUNC_LEAVE();
 }
@@ -103,7 +103,8 @@ uint8_t tz_ui_max_line_chars(const char* value, int length) {
 }
 
 size_t tz_ui_stream_push(const char *title, const char *value) {
-  return tz_ui_stream_pushl(title, value, sizeof(global.stream.values[0]));
+  return tz_ui_stream_pushl(title, value,
+                            sizeof(global.stream.screens[0].value));
 }
 
 size_t tz_ui_stream_pushl(const char *title, const char *value, size_t max) {
@@ -122,9 +123,9 @@ size_t tz_ui_stream_pushl(const char *title, const char *value, size_t max) {
   s->total++;
   int bucket = s->total % TZ_UI_STREAM_HISTORY_SCREENS;
 
-  STRLCPY(s->titles[bucket], title);
+  STRLCPY(s->screens[bucket].title, title);
   for (i = 0; i < TZ_UI_STREAM_CONTENTS_LINES; i++)
-    s->values[bucket][i * TZ_UI_STREAM_CONTENTS_WIDTH] = '\0';
+    s->screens[bucket].value[i * TZ_UI_STREAM_CONTENTS_WIDTH] = '\0';
 
   // Ensure things fit on one line
   size_t length = strlen(value);
@@ -141,7 +142,7 @@ size_t tz_ui_stream_pushl(const char *title, const char *value, size_t max) {
     PRINTF("[DEBUG] split(value: \"%s\", will_fit: %d, len: %d, line: %d, offset: %d)\n",
             start, will_fit, len, line, offset);
 
-    char* buffer = s->values[bucket] + line * TZ_UI_STREAM_CONTENTS_WIDTH;
+    char* buffer = s->screens[bucket].value + line * TZ_UI_STREAM_CONTENTS_WIDTH;
     strlcpy(buffer, start, will_fit + 1);
     offset += will_fit;
 
@@ -153,8 +154,8 @@ size_t tz_ui_stream_pushl(const char *title, const char *value, size_t max) {
 
   PRINTF("[DEBUG] tz_ui_stream_pushl(%s, %s, %u)\n", title, value, max);
   PRINTF("[DEBUG]        bucket   %d\n", bucket);
-  PRINTF("[DEBUG]        title:   \"%s\"\n", s->titles[bucket]);
-  PRINTF("[DEBUG]        value:   \"%s\"\n", s->values[bucket]);
+  PRINTF("[DEBUG]        title:   \"%s\"\n", s->screens[bucket].title);
+  PRINTF("[DEBUG]        value:   \"%s\"\n", s->screens[bucket].value);
   PRINTF("[DEBUG]        total:   %d -> %d\n", prev_total, s->total);
   PRINTF("[DEBUG]        current: %d -> %d\n", prev_current, s->current);
   PRINTF("[DEBUG]        offset:  %d\n", offset);

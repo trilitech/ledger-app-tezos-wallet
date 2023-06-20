@@ -52,9 +52,13 @@ typedef enum {
 } tz_ui_cb_type_t;
 
 typedef struct {
+  char title[TZ_UI_STREAM_TITLE_WIDTH + 1];
+  char value[TZ_UI_STREAM_CONTENTS_SIZE + 1];
+} tz_ui_stream_screen_t;
+
+typedef struct {
   void (*cb)(tz_ui_cb_type_t);
-  char titles[TZ_UI_STREAM_HISTORY_SCREENS][TZ_UI_STREAM_TITLE_WIDTH + 1];
-  char values[TZ_UI_STREAM_HISTORY_SCREENS][TZ_UI_STREAM_CONTENTS_SIZE + 1];
+  tz_ui_stream_screen_t screens[TZ_UI_STREAM_HISTORY_SCREENS];
   int16_t current;
   int16_t total;
   bool full;
