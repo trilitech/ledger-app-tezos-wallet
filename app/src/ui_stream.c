@@ -56,7 +56,7 @@ static void update () {
 
   STRLCPY(global.ux.lines[0], global.stream.screens[bucket].title);
   for (i = 0; i < TZ_UI_STREAM_CONTENTS_LINES; i++) {
-    STRLCPY(global.ux.lines[i+1], global.stream.screens[bucket].value + i * TZ_UI_STREAM_CONTENTS_WIDTH);
+    STRLCPY(global.ux.lines[i+1], global.stream.screens[bucket].body[i]);
   }
   FUNC_LEAVE();
 }
@@ -124,7 +124,7 @@ size_t tz_ui_stream_pushl(const char *title, const char *value, ssize_t max) {
 
   STRLCPY(s->screens[bucket].title, title);
   for (i = 0; i < TZ_UI_STREAM_CONTENTS_LINES; i++)
-    s->screens[bucket].value[i * TZ_UI_STREAM_CONTENTS_WIDTH] = '\0';
+    s->screens[bucket].body[i][0] = '\0';
 
   // Ensure things fit on one line
   size_t length = strlen(value);
@@ -142,8 +142,8 @@ size_t tz_ui_stream_pushl(const char *title, const char *value, ssize_t max) {
     PRINTF("[DEBUG] split(value: \"%s\", will_fit: %d, len: %d, line: %d, offset: %d)\n",
             start, will_fit, len, line, offset);
 
-    char* buffer = s->screens[bucket].value + line * TZ_UI_STREAM_CONTENTS_WIDTH;
-    strlcpy(buffer, start, will_fit + 1);
+    strlcpy(s->screens[bucket].body[line], start, will_fit + 1);
+    
     offset += will_fit;
 
     line++;
@@ -153,12 +153,14 @@ size_t tz_ui_stream_pushl(const char *title, const char *value, ssize_t max) {
     s->current++;
 
   PRINTF("[DEBUG] tz_ui_stream_pushl(%s, %s, %u)\n", title, value, max);
-  PRINTF("[DEBUG]        bucket   %d\n", bucket);
-  PRINTF("[DEBUG]        title:   \"%s\"\n", s->screens[bucket].title);
-  PRINTF("[DEBUG]        value:   \"%s\"\n", s->screens[bucket].value);
-  PRINTF("[DEBUG]        total:   %d -> %d\n", prev_total, s->total);
-  PRINTF("[DEBUG]        current: %d -> %d\n", prev_current, s->current);
-  PRINTF("[DEBUG]        offset:  %d\n", offset);
+  PRINTF("[DEBUG]        bucket     %d\n", bucket);
+  PRINTF("[DEBUG]        title:     \"%s\"\n", s->screens[bucket].title);
+  for (line=0; line < TZ_UI_STREAM_CONTENTS_LINES; line++)
+    PRINTF("[DEBUG]        value[%d]: \"%s\"\n", line,
+           s->screens[bucket].body[line]);
+  PRINTF("[DEBUG]        total:     %d -> %d\n", prev_total, s->total);
+  PRINTF("[DEBUG]        current:   %d -> %d\n", prev_current, s->current);
+  PRINTF("[DEBUG]        offset:    %d\n", offset);
   FUNC_LEAVE();
 
   return offset;

@@ -53,7 +53,7 @@ typedef enum {
 
 typedef struct {
   char title[TZ_UI_STREAM_TITLE_WIDTH + 1];
-  char value[TZ_UI_STREAM_CONTENTS_SIZE + 1];
+  char body[TZ_UI_STREAM_CONTENTS_LINES][TZ_UI_STREAM_CONTENTS_WIDTH + 1];
 } tz_ui_stream_screen_t;
 
 typedef struct {
