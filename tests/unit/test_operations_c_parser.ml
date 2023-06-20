@@ -22,16 +22,19 @@ let to_string
   let manager_to_string (type t)
       (Manager_operation { fee; operation; storage_limit; _ } :
         t Kind.manager contents) =
+    let aux ~kind operation_fields =
+      let manager_fields =
+        [ kind; Format.asprintf "%a tz" Tez.pp fee; Z.to_string storage_limit ]
+      in
+      String.concat "" (manager_fields @ operation_fields)
+    in
     match operation with
     | Transaction { amount; entrypoint; destination; parameters } ->
         let parameters =
           Result.get_ok @@ Protocol.Script_repr.force_decode parameters
         in
-        String.concat ""
+        aux ~kind:"Transaction"
           [
-            "Transaction";
-            Format.asprintf "%a tz" Tez.pp fee;
-            Z.to_string storage_limit;
             Format.asprintf "%a tz" Tez.pp amount;
             Format.asprintf "%a" Contract.pp destination;
             Format.asprintf "%a" Entrypoint.pp entrypoint;

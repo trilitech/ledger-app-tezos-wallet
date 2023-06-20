@@ -222,32 +222,32 @@ let operation_to_screens ppf
   let screen_of_manager n (type t)
       (Manager_operation { fee; operation; storage_limit; _ } :
         t Kind.manager contents) =
+    let aux ~kind operation_screens =
+      let operation_index = Format.asprintf "Operation (%d)" n in
+      let manager_screens =
+        [
+          make_screen ~title:operation_index "%s" kind;
+          make_screen ~title:"Fee" "%a tz" Tez.pp fee;
+          make_screen ~title:"Storage limit" "%s" (Z.to_string storage_limit);
+        ]
+      in
+      manager_screens @ operation_screens
+    in
     match operation with
     | Transaction { amount; entrypoint; destination; parameters } ->
-        let operation_title = Format.asprintf "Operation (%d)" n in
-        let operation_screen =
-          make_screen ~title:operation_title "Transaction"
-        in
-        let fee_screen = make_screen ~title:"Fee" "%a tz" Tez.pp fee in
-        let storage_screen =
-          make_screen ~title:"Storage limit" "%s" (Z.to_string storage_limit)
-        in
-        let amount_screen = make_screen ~title:"Amount" "%a tz" Tez.pp amount in
-        let destination_screen =
-          make_screen ~title:"Destination" "%a" Contract.pp destination
-        in
-        let entrypoint_screen =
-          make_screen ~title:"Entrypoint" "%a" Entrypoint.pp entrypoint
-        in
-        let node =
+        let parameters =
           let expr =
             Result.get_ok @@ Protocol.Script_repr.force_decode parameters
           in
           Micheline.root expr
         in
-        let node_screens = node_to_screens ppf node in
-        operation_screen :: fee_screen :: storage_screen :: amount_screen
-        :: destination_screen :: entrypoint_screen :: node_screens
+        aux ~kind:"Transaction"
+          ([
+             make_screen ~title:"Amount" "%a tz" Tez.pp amount;
+             make_screen ~title:"Destination" "%a" Contract.pp destination;
+             make_screen ~title:"Entrypoint" "%a" Entrypoint.pp entrypoint;
+           ]
+          @ node_to_screens ppf parameters)
     | _ -> assert false
   in
   let rec screen_of_operations : type t. int -> t contents_list -> screen list =
