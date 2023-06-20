@@ -117,13 +117,12 @@ let quit ppf () =
   expect_quit ppf ();
   Button.(press ppf Both)
 
-type screen = { title : string; contents : string list; multi : bool }
+type screen = { title : string; contents : string }
 
-let make_screen ~title ?(multi = false) contents = { title; contents; multi }
+let make_screen ~title contents = { title; contents }
 
-let expected_screen ppf ~device { title; contents; multi } =
-  if multi then expect_section_content ppf ~device ~title @@ List.hd contents
-  else expect_full_text ppf (title :: contents)
+let expected_screen ppf ~device { title; contents } =
+  expect_section_content ppf ~device ~title contents
 
 let go_through_screens ppf ~device screens =
   List.iter
@@ -190,7 +189,7 @@ let rec pp_node ~wrap ppf (node : Protocol.Script_repr.node) =
 let node_to_screens ppf node =
   let whole = Format.asprintf "%a" (pp_node ~wrap:false) node in
   Format.fprintf ppf "# full output: %s@\n" whole;
-  [ make_screen ~title:"Data" ~multi:true [ whole ] ]
+  [ make_screen ~title:"Data" whole ]
 
 let pp_opt_field pp ppf = function
   | None -> Format.fprintf ppf "Field unset"
@@ -200,9 +199,7 @@ let operation_to_screens ppf
     ( (_shell : Tezos_base.Operation.shell_header),
       (Contents_list contents : Protocol.Alpha_context.packed_contents_list) ) =
   let open Protocol.Alpha_context in
-  let make_screen ~title fmt =
-    Format.kasprintf (fun content -> make_screen ~title [ content ]) fmt
-  in
+  let make_screen ~title fmt = Format.kasprintf (make_screen ~title) fmt in
   let screen_of_manager n (type t)
       (Manager_operation { fee; operation; storage_limit; _ } :
         t Kind.manager contents) =
