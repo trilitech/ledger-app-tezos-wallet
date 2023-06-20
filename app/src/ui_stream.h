@@ -83,7 +83,7 @@ void tz_ui_stream_init(void (*)(tz_ui_cb_type_t));
  * bytes of content written.
  */
 size_t tz_ui_stream_push(const char *, const char *);
-size_t tz_ui_stream_pushl(const char *, const char *, size_t);
+size_t tz_ui_stream_pushl(const char *, const char *, ssize_t);
 void tz_ui_stream_close(void);
 tz_ui_stream_screen_kind tz_ui_stream_current_screen_kind(void);
 __attribute__((noreturn)) void tz_ui_stream(void);

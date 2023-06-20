@@ -103,11 +103,10 @@ uint8_t tz_ui_max_line_chars(const char* value, int length) {
 }
 
 size_t tz_ui_stream_push(const char *title, const char *value) {
-  return tz_ui_stream_pushl(title, value,
-                            sizeof(global.stream.screens[0].value));
+  return tz_ui_stream_pushl(title, value, -1);
 }
 
-size_t tz_ui_stream_pushl(const char *title, const char *value, size_t max) {
+size_t tz_ui_stream_pushl(const char *title, const char *value, ssize_t max) {
   tz_ui_stream_t *s = &global.stream;
   size_t i;
 
@@ -131,7 +130,8 @@ size_t tz_ui_stream_pushl(const char *title, const char *value, size_t max) {
   size_t length = strlen(value);
   size_t offset = 0;
 
-  length = MIN(length, max);
+  if (max != -1)
+    length = MIN(length, (size_t)max);
 
   int line = 0;
   while (offset < length && line < TZ_UI_STREAM_CONTENTS_LINES) {
