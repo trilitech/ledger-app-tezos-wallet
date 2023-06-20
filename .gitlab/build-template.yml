@@ -4,12 +4,14 @@
   image: $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_SLUG
   stage: build
   variables:
-    DEVICE_APP: ""
-    DEVICE_SDK: ""
-    DEBUG: "false"
+    DEVICE: ""
   script:
-    - bash -c "make -C app BOLOS_SDK=\$${DEVICE_SDK} DEBUG=${DEBUG}"
-    - cd app/bin/ && tar czf ../../app_${DEVICE_APP}.tgz .
+    - DEVICE_SDK="$(echo $DEVICE | tr a-z A-Z)_SDK"
+    - bash -c "make -C app BOLOS_SDK=\$${DEVICE_SDK}"
+    - tar -C app/bin -czf app_${DEVICE}.tgz .
+    - bash -c "make -C app BOLOS_SDK=\$${DEVICE_SDK} DEBUG=1"
+    - tar -C app/bin -czf app_${DEVICE}_dbg.tgz .
   artifacts:
     paths:
-      - app_${DEVICE_APP}.tgz
+      - app_${DEVICE}.tgz
+      - app_${DEVICE}_dbg.tgz

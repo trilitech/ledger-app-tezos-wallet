@@ -20,10 +20,16 @@ set -e
 . "`dirname $0`/test_runtime.sh"
 
 function start_speculos_runner {
-    echo "Starting speculos on port $PORT..."
+    echo "Starting speculos (debug=$1) on port $PORT..."
+
+    if [ "$1" = "DEBUG" ]; then
+        tgz=$DTGZ
+    else
+        tgz=$TGZ
+    fi
 
     app_dir="$(mktemp -d $DATA_DIR/appdir-XXXXXX)"
-    tar xfz "$TGZ" -C $app_dir
+    tar xfz "$tgz" -C $app_dir
     $SPECULOS --display headless --apdu-port 0 --api-port $PORT          \
               --seed "$seed" -m $TARGET $app_dir/app.elf                 \
                 > $SPECULOG 2>&1 < /dev/null &

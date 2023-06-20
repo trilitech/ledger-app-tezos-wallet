@@ -215,8 +215,9 @@ function check_tlv_signature_from_sent_apdu {
 }
 
 run_a_test() {
-    PORT=$1
-    CMD="$2"
+    DBG=$1
+    PORT=$2
+    CMD="$3"
     pid=$BASHPID    # XXXrcd: $BASHPID is only good for bash and mksh
                     # XXXrcd: should replace with $(sh -c 'echo $PPID')
     JOBID=$RANDOM   # XXXrcd: does POSIX /bin/sh have $RANDOM?
@@ -235,7 +236,7 @@ run_a_test() {
         if [ $TEST_TRACE = 1 ]; then
             set -x
         fi
-        start_speculos_runner
+        start_speculos_runner $DBG
         ( set -e; . $CMD )
         RETCODE=$?
         kill_speculos_runner
@@ -268,6 +269,13 @@ run_a_test() {
         rm $OUTF $ERRF $SPECULOG
     fi
     return $RETCODE
+}
+
+run_both_tests() {
+    PORT=$1
+    CMD="$2"
+
+    run_a_test NORMAL $PORT "$CMD" || run_a_test DEBUG $PORT "$CMD"
 }
 
 MAX_DOTS=40
@@ -309,7 +317,7 @@ test_a_path() {
                      -a "${ONLY_TESTS/$job/}" = "$ONLY_TESTS" ]; then
                     continue
                 fi
-                run_a_test $port "$job" &
+                run_both_tests $port "$job" &
                 new_pid=$!
                 eval $SLOTNAME=\$new_pid
                 eval PIDS$new_pid=\$port
@@ -378,9 +386,11 @@ function expect_exited {
 
 function usage {
     echo "$@"                                                            >&2
-    echo "Usage: $0 [-F] [-l lim] [-m arch] [-t tgz] path [path ...]"    >&2
+    echo -n "Usage: $0 [-F] [-l lim] [-m arch] [-t tgz] [-d tgz] "       >&2
+    echo               "path [path...]"                                  >&2
     echo "    where paths are either a test or a dir containing tests"   >&2
     echo "            -F means that only failures are stored"            >&2
+    echo "            -d tgz specifies that tgz contains the debug app"  >&2
     echo "            -l lim limits the number of tests run to lim"      >&2
     echo "            -m arch is one of nanos, nanosp, nanox, or stax"   >&2
     echo "            -t tgz specifies that tgz contains the app"        >&2
@@ -397,6 +407,7 @@ function main {
        case $o in
        F)  ONLY_FAILURES=YES                ;;
        T)  ONLY_TESTS="$ONLY_TESTS $OPTARG" ;;
+       d)  DTGZ="$OPTARG"                   ;;
        l)  TESTS_LEFT=$OPTARG               ;;
        m)  TARGET="$OPTARG"                 ;;
        t)  TGZ="$OPTARG"                    ;;
@@ -413,10 +424,15 @@ function main {
     fi
 
     if [ -z "$TGZ" ]; then    
-        TGZ="app_${TARGET}_dbg.tgz"
+        TGZ="app_${TARGET}.tgz"
     fi
 
-    [ ! -f "$TGZ" ] && usage "Tarball \"$TGZ\" does not exist."
+    if [ -z "$DTGZ" ]; then    
+        DTGZ="app_${TARGET}_dbg.tgz"
+    fi
+
+    [ ! -f "$TGZ" ]  && usage "Tarball \"$TGZ\" does not exist."
+    [ ! -f "$DTGZ" ] && usage "Debug Tarball \"$DTGZ\" does not exist."
 
     FINISHED_TESTING=
     trap cleanup EXIT
@@ -434,15 +450,16 @@ function main {
 
     jq -s . $DATA_DIR/ret-* | tee integration_tests.json |     \
        jq -r '
+           def num_tests: [.[].path]|unique|length|tostring;
            def fails: map(select(.retcode != "0"));
 
              "Tests took " + ('$END'-'$START'|tostring) + " seconds."
-           + "\nTotal Number of Tests: " + (.|length|tostring)
-           + "\nNumber of Failures:    " + (fails|length|tostring)
+           + "\nTotal Number of Tests: " + (.|num_tests)
+           + "\nNumber of Failures:    " + (fails|num_tests)
            + if ((fails|length) > 0) then
                  "\nFailed cases:          "
                + "\n\t"
-               + ([(fails[]|.path)]|[limit(5;.[])]|join("\n\t"))
+               + ([(fails[]|.path)]|unique|[limit(5;.[])]|join("\n\t"))
                + if ((fails|length) > 5) then "\n\t..." else "" end
                + "\n\nFailures occurred in the test suite.  Please find"
                + "\nthe results in ./integration_tests.json"

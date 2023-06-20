@@ -30,41 +30,17 @@ generate_samples_nanox:
 build_nanos:
   extends: .build_app
   variables:
-    DEVICE_APP: nanos
-    DEVICE_SDK: NANOS_SDK
-
-build_nanos_dbg:
-  extends: .build_app
-  variables:
-    DEVICE_APP: nanos_dbg
-    DEVICE_SDK: NANOS_SDK
-    DEBUG: "true"
+    DEVICE: nanos
 
 build_nanosp:
   extends: .build_app
   variables:
-    DEVICE_APP: nanosp
-    DEVICE_SDK: NANOSP_SDK
-
-build_nanosp_dbg:
-  extends: .build_app
-  variables:
-    DEVICE_APP: nanosp_dbg
-    DEVICE_SDK: NANOSP_SDK
-    DEBUG: "true"
+    DEVICE: nanosp
 
 build_nanox:
   extends: .build_app
   variables:
-    DEVICE_APP: nanox
-    DEVICE_SDK: NANOX_SDK
-
-build_nanox_dbg:
-  extends: .build_app
-  variables:
-    DEVICE_APP: nanox_dbg
-    DEVICE_SDK: NANOX_SDK
-    DEBUG: "true"
+    DEVICE: nanox
 
 unit:
   image: $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG
@@ -77,7 +53,7 @@ unit:
 integration_nanos_basic:
   extends: .integration
   needs:
-    - build_nanos_dbg
+    - build_nanos
   variables:
     DEVICE: nanos
     TESTDIR: tests/integration/nanos
@@ -85,7 +61,7 @@ integration_nanos_basic:
 integration_nanosp_basic:
   extends: .integration
   needs:
-    - build_nanosp_dbg
+    - build_nanosp
   variables:
     DEVICE: nanosp
     TESTDIR: tests/integration/nanosp
@@ -93,7 +69,7 @@ integration_nanosp_basic:
 integration_nanox_basic:
   extends: .integration
   needs:
-    - build_nanox_dbg
+    - build_nanox
   variables:
     DEVICE: nanox
     TESTDIR: tests/integration/nanox
@@ -101,7 +77,7 @@ integration_nanox_basic:
 integration_nanos_micheline_samples:
   extends: .integration
   needs:
-    - build_nanos_dbg
+    - build_nanos
     - generate_samples_nanos
   variables:
     DEVICE: nanos
@@ -110,7 +86,7 @@ integration_nanos_micheline_samples:
 integration_nanosp_micheline_samples:
   extends: .integration
   needs:
-    - build_nanosp_dbg
+    - build_nanosp
     - generate_samples_nanosp
   variables:
     DEVICE: nanosp
@@ -119,7 +95,7 @@ integration_nanosp_micheline_samples:
 integration_nanox_micheline_samples:
   extends: .integration
   needs:
-    - build_nanox_dbg
+    - build_nanox
     - generate_samples_nanox
   variables:
     DEVICE: nanox
@@ -128,7 +104,7 @@ integration_nanox_micheline_samples:
 integration_nanos_operations_samples:
   extends: .integration
   needs:
-    - build_nanos_dbg
+    - build_nanos
     - generate_samples_nanos
   variables:
     DEVICE: nanos
@@ -137,7 +113,7 @@ integration_nanos_operations_samples:
 integration_nanosp_operations_samples:
   extends: .integration
   needs:
-    - build_nanosp_dbg
+    - build_nanosp
     - generate_samples_nanosp
   variables:
     DEVICE: nanosp
@@ -146,7 +122,7 @@ integration_nanosp_operations_samples:
 integration_nanox_operations_samples:
   extends: .integration
   needs:
-    - build_nanox_dbg
+    - build_nanox
     - generate_samples_nanox
   variables:
     DEVICE: nanox
