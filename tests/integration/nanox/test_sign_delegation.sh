@@ -14,6 +14,6 @@ expect_full_text 'Storage limit' '889'
 press_button right
 expect_full_text 'Delegate' 'tz1TmFPVZsGQ8MnrBJtnECJgkFUwLa6EWYDm'
 press_button right
-expect_full_text 'Accept?' 'Press both buttons' 'to accept.'
+expect_full_text 'Accept?' 'Press both buttons to accept.'
 press_button both
 expect_async_apdus_sent

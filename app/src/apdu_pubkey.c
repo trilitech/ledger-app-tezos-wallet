@@ -98,7 +98,8 @@ __attribute__((noreturn)) static void prompt_address () {
   FUNC_ENTER(("void"));
   tz_ui_stream_init(stream_cb);
   format_pkh(buf);
-  tz_ui_stream_push("Provide Key", buf);
+  tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Provide Key", buf, TZ_UI_ICON_NONE);
+  tz_ui_stream_push_accept_reject();
   tz_ui_stream_close();
   tz_ui_stream();
   FUNC_LEAVE();

@@ -13,6 +13,6 @@ expect_section_content nanox 'Sign Hash (2/3)' 'mGWQM8Z2dznb215sm'
 press_button right
 expect_section_content nanox 'Sign Hash (3/3)' 'mWzkSLY3qY'
 press_button right
-expect_full_text 'Accept?' 'Press both buttons' 'to accept.'
+expect_full_text 'Accept?' 'Press both buttons to accept.'
 press_button both
 expect_async_apdus_sent

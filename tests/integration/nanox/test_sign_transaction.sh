@@ -21,6 +21,6 @@ expect_full_text 'Entrypoint' 'do'
 press_button right
 expect_section_content nanos 'Parameter' 'CAR'
 press_button right
-expect_full_text 'Accept?' 'Press both buttons' 'to accept.'
+expect_full_text 'Accept?' 'Press both buttons to accept.'
 press_button both
 expect_async_apdus_sent

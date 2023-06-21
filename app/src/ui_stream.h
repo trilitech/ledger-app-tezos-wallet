@@ -45,13 +45,38 @@
 
 #define TZ_UI_STREAM_CONTENTS_SIZE (TZ_UI_STREAM_CONTENTS_WIDTH * TZ_UI_STREAM_CONTENTS_LINES)
 
-typedef enum {
-  TZ_UI_STREAM_CB_ACCEPT,
-  TZ_UI_STREAM_CB_REFILL,
-  TZ_UI_STREAM_CB_REJECT
-} tz_ui_cb_type_t;
+/*
+ * In the following structure, "type" is passed to our callback and
+ * it can be used to determine which screen was displayed when both
+ * buttons were pressed.
+ *
+ * If TZ_UI_STREAM_SCREEN_NOCB is specified, no callback will be called
+ * when both buttons are pressed.
+ *
+ * If (type | TZ_UI_STREAM_SCREEN_MAINMASK) > 0 then we will return
+ * to the main menu after the callback has been processed.  Developers
+ * can use this in their own definitions.
+ */
+
+typedef uint8_t tz_ui_cb_type_t;
+#define TZ_UI_STREAM_CB_NOCB            0x00
+#define TZ_UI_STREAM_CB_REFILL          0xef
+#define TZ_UI_STREAM_CB_MAINMASK        0xf0
+#define TZ_UI_STREAM_CB_REJECT          0xfe
+#define TZ_UI_STREAM_CB_ACCEPT          0xff
+
+/*
+ * The icons we used are generalised to allow for seamless Stax support
+ */
+
+typedef uint8_t tz_ui_icon_t;
+#define TZ_UI_ICON_NONE		0x00
+#define TZ_UI_ICON_TICK		0x01
+#define TZ_UI_ICON_CROSS	0x02
 
 typedef struct {
+  tz_ui_icon_t icon;
+  tz_ui_cb_type_t type;
   char title[TZ_UI_STREAM_TITLE_WIDTH + 1];
   char body[TZ_UI_STREAM_CONTENTS_LINES][TZ_UI_STREAM_CONTENTS_WIDTH + 1];
 } tz_ui_stream_screen_t;
@@ -72,8 +97,7 @@ typedef enum {
   TZ_UI_STREAM_DISPLAY_FIRST,
   TZ_UI_STREAM_DISPLAY_CANNOT_GO_BACK,
   TZ_UI_STREAM_DISPLAY_CONT,
-  TZ_UI_STREAM_DISPLAY_ACCEPT,
-  TZ_UI_STREAM_DISPLAY_REJECT,
+  TZ_UI_STREAM_DISPLAY_LAST,
 } tz_ui_stream_screen_kind;
 
 void tz_ui_stream_init(void (*)(tz_ui_cb_type_t));
@@ -82,8 +106,11 @@ void tz_ui_stream_init(void (*)(tz_ui_cb_type_t));
  * content may not always fit on screen entirely - returns total
  * bytes of content written.
  */
-size_t tz_ui_stream_push(const char *, const char *);
-size_t tz_ui_stream_pushl(const char *, const char *, ssize_t);
+size_t tz_ui_stream_push(tz_ui_cb_type_t, const char *, const char *,
+                         tz_ui_icon_t);
+size_t tz_ui_stream_pushl(tz_ui_cb_type_t, const char *, const char *,
+                          ssize_t, tz_ui_icon_t);
+void tz_ui_stream_push_accept_reject(void);
 void tz_ui_stream_close(void);
 tz_ui_stream_screen_kind tz_ui_stream_current_screen_kind(void);
 __attribute__((noreturn)) void tz_ui_stream(void);

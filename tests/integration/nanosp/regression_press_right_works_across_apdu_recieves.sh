@@ -22,6 +22,6 @@ press_button right
 expect_full_text 'Expression' ';YU\n#Kj2ZT8h`U!X "}}};lZE}'
 press_button right
 
-expect_full_text 'Accept?' 'Press both buttons' 'to accept.'
+expect_full_text 'Accept?' 'Press both buttons to accept.'
 press_button both
 expect_async_apdus_sent

@@ -20,7 +20,7 @@
 /* Prototypes */
 
 static unsigned int cb(unsigned int, unsigned int);
-static void update(void);
+static const char *find_icon(tz_ui_icon_t);
 static void pred(void);
 static void succ(void);
 static void change_screen_left(void);
@@ -30,47 +30,24 @@ static void redisplay(void);
 
 // Model
 
-static void update () {
-  tz_ui_stream_t *s = &global.stream;
-  size_t bucket, i;
-
-  FUNC_ENTER(("void"));
-
-  for (i = 0; i < TZ_SCREEN_LINES_11PX; i++)
-    global.ux.lines[i][0]=0;
-
-  if (s->current == s->total + 1) {
-    STRLCPY(global.ux.lines[0], "Accept?");
-    STRLCPY(global.ux.lines[1], "Press both buttons");
-    STRLCPY(global.ux.lines[2], "to accept.");
-    return;
-  }
-
-  if (s->current == s->total + 2) {
-    STRLCPY(global.ux.lines[0], "Reject?");
-    STRLCPY(global.ux.lines[1], "Press both buttons");
-    STRLCPY(global.ux.lines[2], "to reject.");
-    return;
-  }
-
-  bucket = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
-
-  STRLCPY(global.ux.lines[0], s->screens[bucket].title);
-  for (i = 0; i < TZ_UI_STREAM_CONTENTS_LINES; i++) {
-    STRLCPY(global.ux.lines[i+1], s->screens[bucket].body[i]);
-  }
-  FUNC_LEAVE();
-}
-
-void tz_ui_stream_init (void (*cb)(tz_ui_cb_type_t)) {
+void tz_ui_stream_init (void (*cb)(uint8_t)) {
   tz_ui_stream_t *s = &global.stream;
 
   FUNC_ENTER(("cb=%p", cb));
   memset(s, 0x0, sizeof(*s));
   s->cb = cb;
   s->full = false;
-  s->current = -1;
+  s->current = 0;
   s->total = -1;
+  FUNC_LEAVE();
+}
+
+void tz_ui_stream_push_accept_reject(void) {
+  FUNC_ENTER(("void"));
+  tz_ui_stream_push(TZ_UI_STREAM_CB_ACCEPT, "Accept?",
+                    "Press both buttons to accept.", TZ_UI_ICON_TICK);
+  tz_ui_stream_push(TZ_UI_STREAM_CB_REJECT, "Reject?",
+                    "Press both buttons to reject.", TZ_UI_ICON_CROSS);
   FUNC_LEAVE();
 }
 
@@ -106,11 +83,13 @@ uint8_t tz_ui_max_line_chars(const char* value, int length) {
     return will_fit;
 }
 
-size_t tz_ui_stream_push(const char *title, const char *value) {
-  return tz_ui_stream_pushl(title, value, -1);
+size_t tz_ui_stream_push(tz_ui_cb_type_t type, const char *title,
+                         const char *value, tz_ui_icon_t icon) {
+  return tz_ui_stream_pushl(type, title, value, -1, icon);
 }
 
-size_t tz_ui_stream_pushl(const char *title, const char *value, ssize_t max) {
+size_t tz_ui_stream_pushl(tz_ui_cb_type_t type, const char *title,
+                          const char *value, ssize_t max, tz_ui_icon_t icon) {
   tz_ui_stream_t *s = &global.stream;
   size_t i;
 
@@ -137,6 +116,9 @@ size_t tz_ui_stream_pushl(const char *title, const char *value, ssize_t max) {
   if (max != -1)
     length = MIN(length, (size_t)max);
 
+  s->screens[bucket].type = type;
+  s->screens[bucket].icon = icon;
+
   int line = 0;
   while (offset < length && line < TZ_UI_STREAM_CONTENTS_LINES) {
     const char* start = value + offset;
@@ -152,9 +134,6 @@ size_t tz_ui_stream_pushl(const char *title, const char *value, ssize_t max) {
 
     line++;
   }
-
-  if (s->total == 0 || s->total >= TZ_UI_STREAM_HISTORY_SCREENS) 
-    s->current++;
 
   PRINTF("[DEBUG] tz_ui_stream_pushl(%s, %s, %u)\n", title, value, max);
   PRINTF("[DEBUG]        bucket     %d\n", bucket);
@@ -185,7 +164,7 @@ static void succ () {
   tz_ui_stream_t *s = &global.stream;
 
   FUNC_ENTER(("void"));
-  if (s->current < s->total + (s->full ? 2 : 0)) {
+  if (s->current < s->total) {
     s->pressed_right = false;
     s->current++;
   }
@@ -202,10 +181,8 @@ tz_ui_stream_screen_kind tz_ui_stream_current_screen_kind () {
     return TZ_UI_STREAM_DISPLAY_FIRST;
   else if (s->current == s->total - TZ_UI_STREAM_HISTORY_SCREENS + 1)
     return TZ_UI_STREAM_DISPLAY_CANNOT_GO_BACK;
-  else if (s->current == s->total + 1)
-    return TZ_UI_STREAM_DISPLAY_ACCEPT;
-  else if (s->current == s->total + 2)
-    return TZ_UI_STREAM_DISPLAY_REJECT;
+  else if (s->full && s->current == s->total)
+    return TZ_UI_STREAM_DISPLAY_LAST;
   else
     return TZ_UI_STREAM_DISPLAY_CONT;
   FUNC_LEAVE();
@@ -215,6 +192,8 @@ tz_ui_stream_screen_kind tz_ui_stream_current_screen_kind () {
 
 static unsigned int cb(unsigned int button_mask, __attribute__((unused)) unsigned int button_mask_counter) {
   tz_ui_stream_t *s = &global.stream;
+  size_t bucket = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
+  uint8_t type = s->screens[bucket].type;
 
   FUNC_ENTER(("button_mask=%d, button_mask_counter=%d", button_mask,
               button_mask_counter));
@@ -227,23 +206,25 @@ static unsigned int cb(unsigned int button_mask, __attribute__((unused)) unsigne
     change_screen_right();
     break;
   case BUTTON_EVT_RELEASED | BUTTON_LEFT | BUTTON_RIGHT:
-    switch (tz_ui_stream_current_screen_kind ()) {
-    case TZ_UI_STREAM_DISPLAY_ACCEPT:
-      ui_initial_screen ();
-      s->cb(TZ_UI_STREAM_CB_ACCEPT);
-      break;
-    case TZ_UI_STREAM_DISPLAY_REJECT:
-      ui_initial_screen ();
-      s->cb(TZ_UI_STREAM_CB_REJECT);
-      break;
-    default: break;
-    }
+    if (type)
+      s->cb(type);
+    if (type & TZ_UI_STREAM_CB_MAINMASK)
+      ui_initial_screen();
     break;
   default:
     break;
   }
   FUNC_LEAVE();
   return 0;
+}
+
+static const char *find_icon(tz_ui_icon_t icon) {
+
+  switch (icon) {
+  case TZ_UI_ICON_TICK:   return (const char *)&C_icon_validate_14;
+  case TZ_UI_ICON_CROSS:  return (const char *)&C_icon_crossmark;
+  default:                return NULL;
+  }
 }
 
 static void redisplay () {
@@ -270,9 +251,29 @@ static void redisplay () {
 #endif
   };
 
+  tz_ui_stream_t *s = &global.stream;
+  size_t bucket, i;
+
   FUNC_ENTER(("void"));
 
-  update();
+  for (i = 0; i < TZ_SCREEN_LINES_11PX; i++)
+    global.ux.lines[i][0]=0;
+
+  bucket = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
+
+  STRLCPY(global.ux.lines[0], s->screens[bucket].title);
+  for (i = 0; i < TZ_UI_STREAM_CONTENTS_LINES; i++) {
+    STRLCPY(global.ux.lines[i+1], s->screens[bucket].body[i]);
+  }
+
+  tz_ui_icon_t icon = s->screens[bucket].icon;
+  if (icon) {
+#ifdef TARGET_NANOS
+    global.ux.lines[1][0] = 0;
+    global.ux.lines[2][0] = 0;
+#endif
+    init[sizeof(init)/sizeof(bagl_element_t)-1].text = find_icon(icon);
+  }
 
   switch (tz_ui_stream_current_screen_kind ()) {
   case TZ_UI_STREAM_DISPLAY_INIT:
@@ -287,22 +288,8 @@ static void redisplay () {
     init[1].text = (const char*) &C_icon_go_left;
     init[2].text = (const char*) &C_icon_go_right;
     break;
-  case TZ_UI_STREAM_DISPLAY_ACCEPT:
+  case TZ_UI_STREAM_DISPLAY_LAST:
     init[1].text = (const char*) &C_icon_go_left;
-    init[2].text = (const char*) &C_icon_go_right;
-#ifdef TARGET_NANOS
-    global.ux.lines[1][0] = 0;
-    global.ux.lines[2][0] = 0;
-#endif
-    init[sizeof(init)/sizeof(bagl_element_t)-1].text = (const char*) &C_icon_validate_14;
-    break;
-  case TZ_UI_STREAM_DISPLAY_REJECT:
-    init[1].text = (const char*) &C_icon_go_left;
-    init[sizeof(init)/sizeof(bagl_element_t)-1].text = (const char*) &C_icon_crossmark;
-#ifdef TARGET_NANOS
-    global.ux.lines[1][0] = 0;
-    global.ux.lines[2][0] = 0;
-#endif
     break;
   }
   DISPLAY(init, cb);

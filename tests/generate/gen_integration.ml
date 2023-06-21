@@ -96,12 +96,12 @@ let home ppf () =
 let expect_accept ppf = function
   | Device.Nanos -> expect_full_text ppf [ "Accept?" ]
   | Device.Nanosp | Device.Nanox ->
-      expect_full_text ppf [ "Accept?"; "Press both buttons"; "to accept." ]
+      expect_full_text ppf [ "Accept?"; "Press both buttons to accept." ]
 
 let expect_reject ppf = function
   | Device.Nanos -> expect_full_text ppf [ "Reject?" ]
   | Device.Nanosp | Device.Nanox ->
-      expect_full_text ppf [ "Accept?"; "Press both buttons"; "to reject." ]
+      expect_full_text ppf [ "Accept?"; "Press both buttons to reject." ]
 
 let expect_quit ppf () = expect_full_text ppf [ "Quit?" ]
 

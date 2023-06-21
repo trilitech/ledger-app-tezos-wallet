@@ -188,8 +188,9 @@ static void refill() {
   switch (global.apdu.sign.parser_state.errno) {
   case TZ_BLO_IM_FULL:
   last_screen:
-    wrote = tz_ui_stream_push(global.apdu.sign.parser_state.field_name,
-                              global.apdu.sign.line_buf);
+    wrote = tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB,
+                              global.apdu.sign.parser_state.field_name,
+                              global.apdu.sign.line_buf, TZ_UI_ICON_NONE);
 
     tz_parser_regs_flush_up_to(&global.apdu.sign.parser_regs,
                                global.apdu.sign.line_buf,
@@ -205,6 +206,7 @@ static void refill() {
       failwith ("parsing done but some data left");
     }
     if(global.apdu.sign.parser_regs.oofs != 0) goto last_screen;
+    tz_ui_stream_push_accept_reject();
     tz_ui_stream_close ();
     break;
   default:
@@ -327,9 +329,13 @@ static size_t handle_data_apdu_blind(packet_t *pkt) {
                      sizeof(global.apdu.hash.final_hash), obuf);
     obuf[44] = '\0';
 
-    tz_ui_stream_pushl("Sign Hash (1/3)", obuf, 19);
-    tz_ui_stream_pushl("Sign Hash (2/3)", obuf + 18, 17);
-    tz_ui_stream_push("Sign Hash (3/3)", obuf + 18 + 16);
+    tz_ui_stream_pushl(TZ_UI_STREAM_CB_NOCB, "Sign Hash (1/3)",
+                       obuf, 19, TZ_UI_ICON_NONE);
+    tz_ui_stream_pushl(TZ_UI_STREAM_CB_NOCB, "Sign Hash (2/3)",
+                       obuf + 18, 17, TZ_UI_ICON_NONE);
+    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Sign Hash (3/3)",
+                      obuf + 18 + 16, TZ_UI_ICON_NONE);
+    tz_ui_stream_push_accept_reject();
     tz_ui_stream_close();
     tz_ui_stream();
   } else {

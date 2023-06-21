@@ -14,6 +14,6 @@ expect_section_content nanox 'Storage limit' '4'
 press_button right
 expect_section_content nanox 'Public key' 'edpkuXX2VdkdXzkN11oLCb8Aurdo1BTAtQiK8ZY9UPj2YMt3AHEpcY'
 press_button right
-expect_full_text 'Accept?' 'Press both buttons' 'to accept.'
+expect_full_text 'Accept?' 'Press both buttons to accept.'
 press_button both
 expect_async_apdus_sent
