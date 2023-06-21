@@ -1,6 +1,7 @@
 /* Tezos Ledger application - Application main loop
 
    Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
+   Copyright 2023 TriliTech <contact@trili.tech>
 
    With code excerpts from:
     - Legacy Tezos app, Copyright 2019 Obsidian Systems
@@ -92,7 +93,6 @@ __attribute__((noreturn)) void main_loop() {
     PRINTF("[SIZEOF] global.apdu.sign: %d\n", sizeof(global.apdu.sign));
     PRINTF("[SIZEOF] global.apdu.hash: %d\n", sizeof(global.apdu.hash));
     PRINTF("[SIZEOF] global.stream: %d\n", sizeof(global.stream));
-    PRINTF("[SIZEOF] global.ux: %d\n", sizeof(global.ux));
     PRINTF("[PTR]    G_io_apdu_buffer: 0x%p\n", G_io_apdu_buffer);
     PRINTF("[SIZEOF] G_io_apdu_buffer: %u\n", sizeof(G_io_apdu_buffer));
     PRINTF("[PTR]    G_io_seproxyhal_spi_buffer: 0x%p\n",

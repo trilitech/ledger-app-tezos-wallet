@@ -20,6 +20,7 @@
 
 #include "globals.h"
 
+#ifdef HAVE_BAGL
 /* Prototypes */
 
 static unsigned int cb(unsigned int, unsigned int);
@@ -117,6 +118,7 @@ static void redisplay() {
   DISPLAY(init, cb);
   FUNC_LEAVE();
 }
+#endif // HAVE_BAGL
 
 void ui_initial_screen(void) {
   FUNC_ENTER(("void"));
@@ -126,6 +128,8 @@ void ui_initial_screen(void) {
  *         we start again?
  */         
   global.home_screen = SCREEN_CLEAR_SIGN;
+#ifdef HAVE_BAGL
   redisplay();
+#endif
   FUNC_LEAVE();
 }

@@ -101,10 +101,12 @@ typedef struct {
     apdu_hash_state_t hash;
     apdu_sign_state_t sign;
   } apdu;
+# ifdef HAVE_BAGL
   struct {
     bagl_element_t bagls[5 + TZ_SCREEN_LINES_11PX];
     char lines[TZ_SCREEN_LINES_11PX][TZ_SCREEN_WITDH_FULL_REGULAR_11PX + 1];
   } ux;
+# endif
 } globals_t;
 
 extern globals_t global;

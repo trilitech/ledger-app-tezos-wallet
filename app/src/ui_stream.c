@@ -19,6 +19,7 @@
 
 /* Prototypes */
 
+#ifdef HAVE_BAGL
 static unsigned int cb(unsigned int, unsigned int);
 static const char *find_icon(tz_ui_icon_t);
 static void pred(void);
@@ -26,7 +27,7 @@ static void succ(void);
 static void change_screen_left(void);
 static void change_screen_right(void);
 static void redisplay(void);
-
+#endif // HAVE_BAGL
 
 // Model
 
@@ -61,6 +62,7 @@ void tz_ui_stream_close () {
   FUNC_LEAVE();
 }
 
+#ifdef HAVE_BAGL
 uint8_t tz_ui_max_line_chars(const char* value, int length) {
   if (length > TZ_UI_STREAM_CONTENTS_WIDTH) {
     length = TZ_UI_STREAM_CONTENTS_WIDTH;
@@ -129,7 +131,7 @@ size_t tz_ui_stream_pushl(tz_ui_cb_type_t type, const char *title,
             start, will_fit, len, line, offset);
 
     strlcpy(s->screens[bucket].body[line], start, will_fit + 1);
-    
+
     offset += will_fit;
 
     line++;
@@ -170,6 +172,7 @@ static void succ () {
   }
   FUNC_LEAVE();
 }
+#endif // HAVE_BAGL
 
 tz_ui_stream_screen_kind tz_ui_stream_current_screen_kind () {
   tz_ui_stream_t *s = &global.stream;
@@ -190,6 +193,7 @@ tz_ui_stream_screen_kind tz_ui_stream_current_screen_kind () {
 
 // View
 
+#ifdef HAVE_BAGL
 static unsigned int cb(unsigned int button_mask, __attribute__((unused)) unsigned int button_mask_counter) {
   tz_ui_stream_t *s = &global.stream;
   size_t bucket = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
@@ -317,14 +321,18 @@ static void change_screen_right() {
   redisplay();
   FUNC_LEAVE();
 }
+#endif // HAVE_BAGL
 
 __attribute__((noreturn)) void tz_ui_stream() {
-  tz_ui_stream_t *s = &global.stream;
-
   FUNC_ENTER(("void"));
+
+#ifdef HAVE_BAGL
+  tz_ui_stream_t *s = &global.stream;
   if (s->pressed_right)
     succ();
 
   redisplay();
+#endif // HAVE_BAGL
+
   THROW(ASYNC_EXCEPTION);
 }
