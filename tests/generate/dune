@@ -1,4 +1,4 @@
 (executable
         (name generate)
-        (libraries "tezos-protocol-016-PtMumbai"
-                   "tezos-benchmarks-proto-016-PtMumbai"))
+        (libraries "tezos-protocol-017-PtNairob"
+                   "tezos-benchmarks-proto-017-PtNairob"))

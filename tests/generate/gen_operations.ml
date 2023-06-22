@@ -13,8 +13,8 @@
    See the License for the specific language governing permissions and
    limitations under the License. *)
 
-open Tezos_protocol_016_PtMumbai
-open Tezos_benchmarks_proto_016_PtMumbai
+open Tezos_protocol_017_PtNairob
+open Tezos_benchmarks_proto_017_PtNairob
 
 (* Only use this function to generate values *)
 let gen_expr =
