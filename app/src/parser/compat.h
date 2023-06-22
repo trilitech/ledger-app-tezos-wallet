@@ -37,7 +37,11 @@
 #else
 #  include <stdio.h>
 #  define PIC(x) ((void*) x)
-#  define PRINTF printf
+#  ifdef TEZOS_DEBUG
+#    define PRINTF printf
+#  else
+#    define PRINTF(...) do {} while(0)
+#  endif
 #endif
 
 #include <stdbool.h>

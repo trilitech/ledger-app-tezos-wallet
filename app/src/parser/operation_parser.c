@@ -164,7 +164,6 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state, tz_parser_regs
   // nothing else to do
   if (state->operation.frame == NULL) tz_stop (DONE);
 
-#ifdef TEZOS_DEBUG
   PRINTF("[DEBUG] operation(frame: %d, offset:%d/%d, ilen: %d, step: %s, errno: %s)\n",
          (int) (state->operation.frame - state->operation.stack),
          (int) state->ofs,
@@ -172,7 +171,6 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state, tz_parser_regs
          (int) regs->ilen,
          (const char*) PIC(tz_operation_parser_step_name[state->operation.frame->step]),
          tz_parser_result_name(state->errno));
-#endif
 
   switch (state->operation.frame->step) {
   case TZ_OPERATION_STEP_MAGIC: {

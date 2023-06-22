@@ -97,9 +97,7 @@ static tz_parser_result print_escaped(tz_parser_state *state, uint8_t b) {
 }
 
 static tz_parser_result parser_put(tz_parser_state *state, tz_parser_regs *regs, char c) {
-#ifdef TEZOS_DEBUG
   PRINTF("[DEBUG] put(char: '%c',int: %d)\n", c, (int) c);
-#endif
   return (tz_parser_put (state, regs, c));
 }
 
@@ -167,14 +165,12 @@ tz_parser_result tz_micheline_parser_step(tz_parser_state *state, tz_parser_regs
   // nothing else to do
   if (state->micheline.frame == NULL) tz_stop (DONE);
 
-#ifdef TEZOS_DEBUG
   PRINTF("[DEBUG] micheline(frame: %d, offset:%d/%d, step: %s, errno: %s)\n",
          (int) (state->micheline.frame - state->micheline.stack),
          (int) state->ofs,
          (int) state->micheline.frame->stop,
          (const char*) PIC(tz_micheline_parser_step_name[state->micheline.frame->step]),
          tz_parser_result_name(state->errno));
-#endif
 
   switch (state->micheline.frame->step) {
   case TZ_MICHELINE_STEP_INT: {
