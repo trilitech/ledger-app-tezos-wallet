@@ -17,6 +17,7 @@
 
 #include "globals.h"
 #include "ui_stream_bagl.h"
+#include "ui_stream_nbgl.h"
 
 void tz_ui_stream_init (void (*cb)(tz_ui_cb_type_t)) {
   FUNC_ENTER(("cb=%p", cb));

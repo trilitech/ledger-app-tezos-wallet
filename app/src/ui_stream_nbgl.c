@@ -1,10 +1,7 @@
-/* Tezos Ledger application - Home screen display
+/* Tezos Ledger application - Generic stream display
 
    Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
-
-   With code excerpts from:
-    - Legacy Tezos app, Copyright 2019 Obsidian Systems
-    - Ledger Blue sample apps, Copyright 2016 Ledger
+   Copyright 2023 TriliTech <contact@trili.tech>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -18,18 +15,16 @@
    See the License for the specific language governing permissions and
    limitations under the License. */
 
-#include "globals.h"
-#include "ui_home_bagl.h"
-#include "ui_home_nbgl.h"
+#ifdef HAVE_NBGL
 
-void ui_initial_screen(void) {
-  FUNC_ENTER(("void"));
-/*
- * XXXrcd: consider decision...
- *         should we revert to clear signing when
- *         we start again?
- */
-  global.home_screen = SCREEN_CLEAR_SIGN;
-  tz_ui_home_redisplay();
-  FUNC_LEAVE();
+#include "globals.h"
+
+size_t tz_ui_stream_push(const char *title, const char *value) {
+  return tz_ui_stream_pushl(title, value, sizeof(global.stream.values[0]));
 }
+
+size_t tz_ui_stream_pushl(__attribute__((unused))const char *title, __attribute__((unused))const char *value, size_t max) {
+  return max;
+}
+
+#endif

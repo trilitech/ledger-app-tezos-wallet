@@ -21,21 +21,13 @@
 #include "ui_commons.h"
 #include "utils.h"
 
+#ifdef HAVE_BAGL
 void io_seproxyhal_display(const bagl_element_t *element) {
     return io_seproxyhal_display_default((bagl_element_t *)element);
 }
 
-__attribute__((noreturn)) bool exit_app(void) {
-  BEGIN_TRY_L(exit) {
-    TRY_L(exit) {
-      os_sched_exit(-1);
-    }
-    FINALLY_L(exit) {
-    }
-  }
-  END_TRY_L(exit);
-  THROW(0);  // Suppress warning
-}
+const bagl_icon_details_t C_icon_rien = { 0, 0, 1, NULL, NULL };
+#endif
 
 unsigned char io_event(__attribute__((unused)) unsigned char channel) {
   // nothing done with the event, throw an error on the transport layer if
@@ -43,11 +35,16 @@ unsigned char io_event(__attribute__((unused)) unsigned char channel) {
 
   // can't have more than one tag in the reply, not supported yet.
   switch (G_io_seproxyhal_spi_buffer[0]) {
+#ifdef HAVE_NBGL
   case SEPROXYHAL_TAG_FINGER_EVENT:
     UX_FINGER_EVENT(G_io_seproxyhal_spi_buffer);
     break;
+#endif // HAVE_NBGL
+
   case SEPROXYHAL_TAG_BUTTON_PUSH_EVENT:
+#ifdef HAVE_BAGL
     UX_BUTTON_PUSH_EVENT(G_io_seproxyhal_spi_buffer);
+#endif // HAVE_BAGL
     break;
   case SEPROXYHAL_TAG_STATUS_EVENT:
     if (G_io_apdu_media == IO_APDU_MEDIA_USB_HID &&
@@ -62,7 +59,12 @@ unsigned char io_event(__attribute__((unused)) unsigned char channel) {
     break;
 
   case SEPROXYHAL_TAG_DISPLAY_PROCESSED_EVENT:
+#ifdef HAVE_BAGL
     UX_DISPLAYED_EVENT({});
+#endif // HAVE_BAGL
+#ifdef HAVE_NBGL
+    UX_DEFAULT_EVENT();
+#endif // HAVE_NBGL
     break;
 
   case SEPROXYHAL_TAG_TICKER_EVENT:
@@ -78,4 +80,16 @@ unsigned char io_event(__attribute__((unused)) unsigned char channel) {
   return 1;
 }
 
-const bagl_icon_details_t C_icon_rien = { 0, 0, 1, NULL, NULL };
+
+// can't no return
+void exit_app(void) {
+  BEGIN_TRY_L(exit) {
+    TRY_L(exit) {
+      os_sched_exit(-1);
+    }
+    FINALLY_L(exit) {
+    }
+  }
+  END_TRY_L(exit);
+  THROW(0);  // Suppress warning
+}

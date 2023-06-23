@@ -1,6 +1,9 @@
+#pragma once
+
 /* Tezos Ledger application - Home screen display
 
    Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
+   Copyright 2023 TriliTech <contact@trili.tech>
 
    With code excerpts from:
     - Legacy Tezos app, Copyright 2019 Obsidian Systems
@@ -18,18 +21,8 @@
    See the License for the specific language governing permissions and
    limitations under the License. */
 
-#include "globals.h"
-#include "ui_home_bagl.h"
-#include "ui_home_nbgl.h"
+#ifdef HAVE_NBGL
 
-void ui_initial_screen(void) {
-  FUNC_ENTER(("void"));
-/*
- * XXXrcd: consider decision...
- *         should we revert to clear signing when
- *         we start again?
- */
-  global.home_screen = SCREEN_CLEAR_SIGN;
-  tz_ui_home_redisplay();
-  FUNC_LEAVE();
-}
+void tz_ui_home_redisplay(void);
+
+#endif // HAVE_NBGL
