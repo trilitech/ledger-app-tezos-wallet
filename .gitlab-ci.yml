@@ -42,6 +42,11 @@ build_nanox:
   variables:
     DEVICE: nanox
 
+build_stax:
+  extends: .build_app
+  variables:
+    DEVICE: stax
+
 unit:
   image: $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG
   stage: test
@@ -73,6 +78,14 @@ integration_nanox_basic:
   variables:
     DEVICE: nanox
     TESTDIR: tests/integration/nanox
+
+integration_stax_basic:
+  extends: .integration
+  needs:
+    - build_stax
+  variables:
+    DEVICE: stax
+    TESTDIR: tests/integration/stax
 
 integration_nanos_micheline_samples:
   extends: .integration

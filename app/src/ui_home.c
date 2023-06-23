@@ -19,6 +19,7 @@
    limitations under the License. */
 
 #include "globals.h"
+#include "ui_home_nbgl.h"
 
 #ifdef HAVE_BAGL
 /* Prototypes */
@@ -130,6 +131,8 @@ void ui_initial_screen(void) {
   global.home_screen = SCREEN_CLEAR_SIGN;
 #ifdef HAVE_BAGL
   redisplay();
+#elif defined(HAVE_NBGL)
+  tz_ui_home_redisplay();
 #endif
   FUNC_LEAVE();
 }

@@ -419,8 +419,8 @@ function main {
 
     [ $# -lt 1 ] && usage "At least one test must be provided"
 
-    if ! echo $TARGET | grep -qE '^nano(s|sp|x)$'; then
-       usage "Target \"$TARGET\" must be nanos, nanosp, or nanox."
+    if ! echo $TARGET | grep -qE '^(stax)|(nano(s|sp|x))$'; then
+       usage "Target \"$TARGET\" must be nanos, nanosp, nanox or stax."
     fi
 
     if [ -z "$TGZ" ]; then    

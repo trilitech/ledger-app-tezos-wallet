@@ -1,6 +1,7 @@
 /* Tezos Ledger application - Some UI primitives
 
    Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
+   Copyright 2023 TriliTech <contact@trili.tech>
 
    With code excerpts from:
     - Legacy Tezos app, Copyright 2019 Obsidian Systems
@@ -24,6 +25,7 @@
 #include "os.h"
 #include "ux.h"
 
+#ifdef HAVE_BAGL
 #define DISPLAY(elts, cb)\
   memcpy(global.ux.bagls, elts, sizeof(elts)); \
   G_ux.stack[0].element_arrays[0].element_array = global.ux.bagls; \
@@ -37,4 +39,6 @@
 #define BOLD BAGL_FONT_OPEN_SANS_EXTRABOLD_11px | BAGL_FONT_ALIGNMENT_CENTER
 
 extern const bagl_icon_details_t C_icon_rien;
-__attribute__((noreturn)) bool exit_app(void);
+#endif // HAVE_BAGL
+
+void exit_app(void);
