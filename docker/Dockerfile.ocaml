@@ -8,7 +8,8 @@ RUN    sudo cp /usr/bin/opam-2.1 /usr/bin/opam;                                 
        opam install                                                                     \
            tezos-client-017-PtNairob.$OCTEZ_VERSION                                     \
            terminal_size                                                                \
-           octez-codec.$OCTEZ_VERSION;                                                  \
+           octez-codec.$OCTEZ_VERSION                                                   \
+           tezos-test-helpers.$OCTEZ_VERSION;                                           \
        opam pin tezos-benchmark.$OCTEZ_VERSION                              $OCTEZ_URL; \
        opam pin tezos-micheline-rewriting.$OCTEZ_VERSION                    $OCTEZ_URL; \
        opam pin tezos-benchmark-type-inference-017-PtNairob.$OCTEZ_VERSION  $OCTEZ_URL; \
