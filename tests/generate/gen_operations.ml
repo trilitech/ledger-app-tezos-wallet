@@ -34,6 +34,11 @@ let gen_script =
 let gen_algo =
   QCheck2.Gen.oneofl Tezos_crypto.Signature.[ Ed25519; Secp256k1; P256 ]
 
+let gen_from_blake ?(tag = Bytes.empty) ?(size = 32) encoding =
+  let open QCheck2.Gen in
+  let+ bytes = bytes_size (return size) in
+  Data_encoding.Binary.of_bytes_exn encoding (Bytes.cat tag bytes)
+
 let some_private_key =
   [
     "edsk3ayZxYsCj8jhgq8ioN4ETy99DqU8yksnq6s7fwcC95ZkDPypkC";
@@ -55,6 +60,11 @@ let some_private_key =
     "p2sk3RDMM4PkWDVjEcVTdLru2MifiboZLYrmxwCExUzTnLTuGSygrx";
     "p2sk4BUTMMWuWuWN5yZDYmwgRSDQiMDRT4a1amNwVFWQRWaREmwmxA";
   ]
+
+let gen_secret_key =
+  let open QCheck2.Gen in
+  let+ sk = oneofl some_private_key in
+  Tezos_crypto.Signature.Secret_key.of_b58check_exn sk
 
 let some_public_key =
   [
@@ -78,6 +88,11 @@ let some_public_key =
     "p2pk66m3NQsd4n6LJWe9WMwx9WHeXwKmBaMwXX92WkMQCR99zmwk2PM";
   ]
 
+let gen_public_key =
+  let open QCheck2.Gen in
+  let+ pk = oneofl some_public_key in
+  Tezos_crypto.Signature.Public_key.of_b58check_exn pk
+
 let some_public_key_hash =
   [
     "tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa";
@@ -100,20 +115,22 @@ let some_public_key_hash =
     "tz3XMQscBFM9vPmpbYMavMmwxRMUWvWGZMQQ";
   ]
 
-let gen_secret_key =
-  let open QCheck2.Gen in
-  let+ sk = oneofl some_private_key in
-  Tezos_crypto.Signature.Secret_key.of_b58check_exn sk
-
-let gen_public_key =
-  let open QCheck2.Gen in
-  let+ pk = oneofl some_public_key in
-  Tezos_crypto.Signature.Public_key.of_b58check_exn pk
-
 let gen_public_key_hash =
   let open QCheck2.Gen in
-  let+ pkh = oneofl some_public_key_hash in
-  Tezos_crypto.Signature.Public_key_hash.of_b58check_exn pkh
+  let pick =
+    let+ pkh = oneofl some_public_key_hash in
+    Tezos_crypto.Signature.Public_key_hash.of_b58check_exn pkh
+  in
+  let gen =
+    let ed25519_tag = Bytes.of_string "\000" in
+    let secp256k1_tag = Bytes.of_string "\001" in
+    let p256_tag = Bytes.of_string "\002" in
+    let public_key_hash_size = 20 in
+    let* tag = oneofl [ ed25519_tag; secp256k1_tag; p256_tag ] in
+    gen_from_blake ~tag ~size:public_key_hash_size
+      Tezos_crypto.Signature.Public_key_hash.encoding
+  in
+  oneof [ pick; gen ]
 
 let gen_tez =
   QCheck2.Gen.map Protocol.Alpha_context.Tez.(mul_exn one_cent) QCheck2.Gen.nat
@@ -177,8 +194,15 @@ let some_contract_hash =
 
 let gen_contract_hash =
   let open QCheck2.Gen in
-  let+ contract = oneofl some_contract_hash in
-  Protocol.Contract_hash.of_b58check_exn contract
+  let pick =
+    let+ contract = oneofl some_contract_hash in
+    Protocol.Contract_hash.of_b58check_exn contract
+  in
+  let gen =
+    gen_from_blake ~size:Protocol.Contract_hash.size
+      Protocol.Contract_hash.encoding
+  in
+  oneof [ pick; gen ]
 
 let gen_contract =
   let open Protocol.Alpha_context in
