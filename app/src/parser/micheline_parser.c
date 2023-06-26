@@ -40,7 +40,8 @@ const char *const tz_micheline_parser_step_name[] = {
   "STRING",
   "ANNOT",
   "INT",
-  "PRINT_INT"
+  "PRINT_INT",
+  "CONTINUE"
 };
 #endif
 
