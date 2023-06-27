@@ -1,14 +1,11 @@
 variables:
+  LEDGER_APP_VERSION: 1d9f741e9bc969b072e2de53762b64993536c0f7
   BUILD_LEDGER_APP: |
-    docker pull $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_SLUG || true
-    apk add --update git
-    git clone https://github.com/LedgerHQ/ledger-app-builder.git TMP
-    cd TMP/full &&
-    git checkout 79a7c077b6c0223dca614ef391e8df93ef2ca40e &&
-    docker build --cache-from $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_SLUG \
-                 --tag $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_SLUG        \
-                 --tag ledger-app-builder:$CI_COMMIT_REF_SLUG                           \
-           .
+    docker pull ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder:$LEDGER_APP_VERSION
+    docker image tag ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder:$LEDGER_APP_VERSION \
+           ledger-app-builder:$CI_COMMIT_REF_SLUG
+    docker image tag ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder:$LEDGER_APP_VERSION \
+           $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_SLUG
     docker push $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_SLUG
   BUILD_LEDGER_APP_TEZOS_OCAML: |
     docker pull $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG || true
