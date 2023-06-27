@@ -46,16 +46,20 @@ let () =
       let ppf_hex = Format.formatter_of_out_channel fp_hex in
       print_string "Generating Operation samples";
       Seq.iteri
-        (fun i (_op, bin, `Hex txt) ->
-          print_string ".";
-          flush stdout;
-          Format.fprintf ppf_hex "%s@\n" txt;
-          let fp =
-            open_out (Format.asprintf "%s/%s/test_%03d.sh" dir model i)
-          in
-          let ppf = Format.formatter_of_out_channel fp in
-          Gen_integration.gen_expect_test_sign_operation ~device ppf bin;
-          close_out fp)
+        (fun i (op, bin, `Hex txt) ->
+          if Gen_utils.operations_too_large_or_too_deep op then (
+            print_string "!";
+            flush stdout)
+          else (
+            print_string ".";
+            flush stdout;
+            Format.fprintf ppf_hex "%s@\n" txt;
+            let fp =
+              open_out (Format.asprintf "%s/%s/test_%03d.sh" dir model i)
+            in
+            let ppf = Format.formatter_of_out_channel fp in
+            Gen_integration.gen_expect_test_sign_operation ~device ppf bin;
+            close_out fp))
         (Seq.take m Gen_operations.hex);
       Format.fprintf ppf_hex "%!";
       print_newline ()

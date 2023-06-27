@@ -13,6 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License. *)
 
+open Tezos_protocol_017_PtNairob
 open Tezos_micheline
 
 let random_state = Random.State.make_self_init ()
@@ -31,3 +32,27 @@ let micheline_too_large_or_too_deep expr =
     traverse 0 (Micheline.root expr);
     false
   with Exit -> true
+
+let operations_too_large_or_too_deep
+    ( (_shell : Tezos_base.Operation.shell_header),
+      (Contents_list contents : Protocol.Alpha_context.packed_contents_list) ) =
+  let open Protocol.Alpha_context in
+  let traverse_manager (type t)
+      (Manager_operation { operation; _ } : t Kind.manager contents) =
+    match operation with
+    | Transaction { parameters; _ } ->
+        let parameters =
+          Result.get_ok @@ Protocol.Script_repr.force_decode parameters
+        in
+        micheline_too_large_or_too_deep parameters
+    | Delegation _ | Reveal _ | Set_deposits_limit _ | Update_consensus_key _ ->
+        false
+    | _ -> assert false
+  in
+  let rec traverse_contents : type t. t contents_list -> bool = function
+    | Single (Manager_operation _ as m) -> traverse_manager m
+    | Cons ((Manager_operation _ as m), rest) ->
+        traverse_manager m || traverse_contents rest
+    | _ -> assert false
+  in
+  traverse_contents contents
