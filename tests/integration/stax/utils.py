@@ -65,6 +65,16 @@ class TezosAppScreen(metaclass=MetaScreen):
 
         with_retry(check, attempts)
 
+    def send_apdu(self, data):
+        """Send hex-encoded bytes to the apdu"""
+        self.__backend.send_raw(bytes.fromhex(data))
+
+    def expect_apdu_return(self, expected):
+        """Expect hex-encoded response from the apdu"""
+        response = self.__backend.receive().raw
+        expected = bytes.fromhex(expected)
+        assert response == expected, f"Expected {expected}, received {response}"
+
 def stax_app() -> TezosAppScreen:
     port = os.environ["PORT"]
     backend = SpeculosBackend("__unused__", Firmware.STAX, port = port)

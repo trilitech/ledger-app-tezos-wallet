@@ -33,7 +33,6 @@ static size_t provide_pubkey(uint8_t *);
 static void format_pkh(char *);
 static void stream_cb(tz_ui_cb_type_t);
 
-
 static size_t provide_pubkey(uint8_t *const io_buffer) {
   cx_ecfp_public_key_t pubkey;
   size_t tx = 0;
@@ -88,6 +87,7 @@ static void stream_cb(tz_ui_cb_type_t type) {
   }
 }
 
+#ifdef HAVE_BAGL
 __attribute__((noreturn)) static void prompt_address() {
   char buf[TZ_UI_STREAM_CONTENTS_SIZE + 1];
 
@@ -100,6 +100,41 @@ __attribute__((noreturn)) static void prompt_address() {
   tz_ui_stream();
   FUNC_LEAVE();
 }
+#elif HAVE_NBGL
+
+#include "nbgl_use_case.h"
+
+static void cancel_callback(void) {
+  stream_cb(TZ_UI_STREAM_CB_REJECT);
+  nbgl_useCaseStatus("Address rejected", false, ui_home_init);
+}
+
+static void approve_callback(void) {
+  stream_cb(TZ_UI_STREAM_CB_ACCEPT);
+  nbgl_useCaseStatus("ADDRESS\nVERIFIED", true, ui_home_init);
+}
+
+static void confirmation_callback(bool confirm) {
+  if (confirm) {
+    approve_callback();
+  } else {
+    cancel_callback();
+  }
+}
+
+static void verify_address(void) {
+  char buf[TZ_UI_STREAM_CONTENTS_SIZE + 1];
+  format_pkh(buf);
+
+  nbgl_useCaseAddressConfirmation(buf, confirmation_callback);
+}
+
+__attribute__((noreturn)) static void prompt_address () {
+  FUNC_ENTER(("void"));
+  nbgl_useCaseReviewStart(&C_tezos, "Verify Tezos\naddress", NULL, "Cancel", verify_address, cancel_callback);
+  THROW(ASYNC_EXCEPTION);
+}
+#endif
 
 size_t handle_apdu_get_public_key(bool prompt) {
   uint8_t *dataBuffer = G_io_apdu_buffer + OFFSET_CDATA;
