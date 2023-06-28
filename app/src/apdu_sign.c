@@ -2,6 +2,7 @@
 
    Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
    Copyright 2023 TriliTech <contact@trili.tech>
+   Copyright 2023 Functori <contact@functori.com>
 
    With code excerpts from:
     - Legacy Tezos app, Copyright 2019 Obsidian Systems
@@ -331,6 +332,8 @@ static size_t handle_data_apdu_blind(packet_t *pkt) {
     tz_ui_stream_push("Sign Hash (3/3)", obuf + 18 + 16);
     tz_ui_stream_close();
     tz_ui_stream();
+  } else {
+    return finalize_successful_send(0);
   }
 
   return 0;
