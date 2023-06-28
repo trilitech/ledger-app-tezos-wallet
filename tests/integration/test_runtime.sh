@@ -413,7 +413,9 @@ main() {
     TARGET=nanos
     TEST_TRACE=0
 
-    while getopts FT:l:m:t:x o; do
+    NUM_SPECULOS=32
+
+    while getopts FT:l:m:t:x:n: o; do
        case $o in
        F)  ONLY_FAILURES=YES                ;;
        T)  ONLY_TESTS="$ONLY_TESTS $OPTARG" ;;
@@ -422,6 +424,7 @@ main() {
        m)  TARGET="$OPTARG"                 ;;
        t)  TGZ="$OPTARG"                    ;;
        x)  TEST_TRACE=1                     ;;
+       n)  NUM_SPECULOS=$OPTARG             ;;
        \?) usage "Unknown option."          ;;
        esac
     done
@@ -433,11 +436,11 @@ main() {
        usage "Target \"$TARGET\" must be nanos, nanosp, nanox or stax."
     fi
 
-    if [ -z "$TGZ" ]; then    
+    if [ -z "$TGZ" ]; then
         TGZ="app_${TARGET}.tgz"
     fi
 
-    if [ -z "$DTGZ" ]; then    
+    if [ -z "$DTGZ" ]; then
         DTGZ="app_${TARGET}_dbg.tgz"
     fi
 
@@ -447,7 +450,6 @@ main() {
     FINISHED_TESTING=
     trap cleanup EXIT
 
-    NUM_SPECULOS=32
     DATA_DIR=$(mktemp -d /tmp/foo-XXXXXX)
 
     printf "$TEST_BANNER_HEAD" "Running tests"
@@ -458,7 +460,7 @@ main() {
     done
     END=$(date +%s)
 
-    jq -s . $DATA_DIR/ret-* | tee integration_tests.json |     \
+    jq -s . $DATA_DIR/ret-* |     \
        jq -r '
            def num_tests: [.[].path]|unique|length|tostring;
            def fails: map(select(.retcode != "0"));
@@ -478,6 +480,9 @@ main() {
        '
 
     FINISHED_TESTING=1
+
+    jq -s . $DATA_DIR/ret-* | jq 'map(select(.retcode != "0"))' > integration_tests.json
+
     < integration_tests.json >/dev/null \
         jq -e 'map(select(.retcode != "0"))|length == 0'
 }
