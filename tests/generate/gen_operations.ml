@@ -41,16 +41,19 @@ let some_private_key =
     "edsk2w3gCWojHtZdkTFBsWZxvkqEo7zYMPrdmeujyMZsoPfBiFBxsf";
     "edsk3VhsjdEYFg7ZDTL5GB2vnX9Ee9k57GH2VM2emy2Z2A9dcYq8D9";
     "edsk3cWjLMKHahZVFEdvf46VkChebQPd1ctnHWJmLKiui7GHYxxxnK";
+    "edsk3GeHYRmSnVAmZZAWQW9wmRWnbJGGGRcEMwkWMpuHH8wKWkuCWv";
     "spsk2vcxPgevMHEU7LTDqg2ypar6gqmwSEz9aM4E3r4mW5B4HMTxDa";
     "spsk39ofnvbpah21bVLzEsEGZDFDZobmh18tde1VGi7CMJNYyFY9Dh";
     "spsk2Ze8YwUjYtmnevdZwQbj7Xyph7orZpTCfeQgyFxCXa3konv9aT";
     "spsk2GiCPV1oR3qnybxGwsHyCcgwFSXL1FVDxZyzDFYTUgrBVJkea5";
     "spsk2xJELkNQ3m7uS9Z6pTtctAmAg76REAME5b8puPvperSofRyU9y";
+    "spsk2McHwqWkWm9QmNaHMojwBPUmwvdUKLWmm8XTKoDaW68ayUwE2w";
     "p2sk4APEttm8QwZFsaLq45YaYe3MTWPYwjoGcpvJ6NqRFvUNE8Btmv";
     "p2sk3KhuPgM96N136J2oZ39k4PLG6aUU8QLdMTtgYeShxd1fDtimw7";
     "p2sk3PE1VCKFTutZbfUBf8fwWkutzKhg3DSGgdCNrYLhnxLsPBPc86";
     "p2sk32wjLHQ1iyjnGnH3fPVCiY5MniQnBHBfDosiSeSjPzr7HFLEdM";
     "p2sk3RDMM4PkWDVjEcVTdLru2MifiboZLYrmxwCExUzTnLTuGSygrx";
+    "p2sk4BUTMMWuWuWN5yZDYmwgRSDQiMDRT4a1amNwVFWQRWaREmwmxA";
   ]
 
 let some_public_key =
@@ -60,16 +63,19 @@ let some_public_key =
     "edpkv5maJHfQAJdLyXefDEVFyK9tfbzKXSKmcT1YYqHc8MmKMphE6v";
     "edpkuGnyR1TBGbWznAvmBfMAFFk321v4bWsHYA5nR75uNyLinK23Go";
     "edpkv1cpS2U1VbviarXs3ZcSdYVXdcad4hVWk3SSGgjFXZUj8xnryJ";
+    "edpkuWUfaAWqaxJoG9QKgQRQUHMWfsN1EmoMMXWMwYoE8kjWMWUGDk";
     "sppk7ZT8R42AGSy672NHz9ps6Q4idqWYejAgMwqTWnyYAeq9XZEqWvZ";
     "sppk7a9FzG5f7quhhgiijyiNyktfP9CmqoP6sAa9iV7my2QErYDnk1k";
     "sppk7aVFzHeLSgsqMfKXP3PySiuXXTm7qju9SpqdXFasyNGNu2xiSBB";
     "sppk7busdHfsMPFsp2JYMgY8y3sqyAdbpowhS11BnfZ4RMomy4EQ8V2";
     "sppk7cZHYhQvxTDrsmokcUuJvRTp1amwQdYfGSrPxjL47GRGscDcLkq";
+    "sppk7c7M9cBMWAfQM8MPmx9YHpWWVoD8xgdVXPMwBWZb2mtDcFNWMmW";
     "p2pk665znpiyPRWEwpu8tZ7JdNPipkfYpGUhYALjaS4Tm7F7wcx1iRs";
     "p2pk65U84BdxaihUbaJX9qdFzcx7QAJnVioLtvotYbZtehhU6tm1tcg";
     "p2pk64hc2xSWmKEztoTxkRtioDhG46qUfBuhvxpTA69kNEcGsLsPg8T";
     "p2pk66Y3TrkdsL8fYZq6cXBpLqgEVcSZDErYDctJWJc5ZzWkgech8Uj";
     "p2pk68CE92CP8tAjbp6LgNagDcns8acLLv3fPfgkHcBpvyQB4ka81BQ";
+    "p2pk66m3NQsd4n6LJWe9WMwx9WHeXwKmBaMwXX92WkMQCR99zmwk2PM";
   ]
 
 let some_public_key_hash =
@@ -79,16 +85,19 @@ let some_public_key_hash =
     "tz1McCh72NRhYmJBcWr3zDrLJAxnfR9swcFh";
     "tz1TmFPVZsGQ8MnrBJtnECJgkFUwLa6EWYDm";
     "tz1e8fEumaLvXXe5jV52gejCSt3mGodoKut9";
+    "tz1Kp8NCAN5WWwvkWkMmQQXMRe68iURmoQ8w";
     "tz2W3Tvcm64GjcV2bipUynnEsctLFz5Z6yRa";
     "tz2JPgTWZZpxZZLqHMfS69UAy1UHm4Aw5iHu";
     "tz2CJBeWWLsUDjVUDqGZL6od3DeBCNzYXrXk";
     "tz2KC42yW9FXFMJpkUooae2NFYQsM5do3E8H";
     "tz2PPZ2WN4j92Rdx4NM7oW3HAp3x825HUyac";
+    "tz2WmivuMG8MMRKMEmzKRMMxMApxZQWYNS4W";
     "tz3XeTwXXJeWNgVR3LqMcyBDdnxjbZ7TeEGH";
     "tz3fLwHKthqhTPK6Lar6CTXN1WbDETw1YpGB";
     "tz3eydffbLkjdVb8zx42BvxpGV87zaRnqL3r";
     "tz3hCsUiQDfneTgD7CSZDaUro8SA5aEhwCp2";
     "tz3Wazpbs4CFj78qv2KBJ8Z7HEyqk6ZPxwWZ";
+    "tz3XMQscBFM9vPmpbYMavMmwxRMUWvWGZMQQ";
   ]
 
 let gen_secret_key =
@@ -163,6 +172,7 @@ let some_contract_hash =
     "KT1VvcxT3QHBjJd2EKkREXyYQBi7LVcCRc5H";
     "KT1DfDzRjbXnTGogM2Nih8mpXcSVM54igtNs";
     "KT1Mjjcb6tmSsLm7Cb3DSQszePjfchPM4Uxm";
+    "KT1GW4QHn66m7WWWMWCMNaWmGYpCRbg5ahwU";
   ]
 
 let gen_contract_hash =
