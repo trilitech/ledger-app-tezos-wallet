@@ -138,6 +138,14 @@ function send_apdu {
     echo " - apdu $1"
     APDU=$DATA_DIR/apdu-$PORT
 
+    if [ "$APDU_OUTSTANDING" = 1 ]; then
+        echo "ERROR IN TEST, ERROR IN TEST"                        >&2
+        echo "send_apdu() called without expecting a return..."    >&2
+        exit 1
+    fi
+
+    APDU_OUTSTANDING=1
+
     rm -f $APDU
     rm -f $APDU.tmp
     ( curl -s $SPECULOS_URL/apdu -d "{\"data\":\"$1\"}" > $APDU.tmp
@@ -159,6 +167,7 @@ function expect_apdu_return {
          echo "  Expected: '$1'") >&2
         exit 1
     fi
+    APDU_OUTSTANDING=0
 }
 
 function send_async_apdus {
