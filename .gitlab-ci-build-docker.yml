@@ -44,10 +44,10 @@ build docker ledger-app-builder:
   script:
     - eval "$BUILD_LEDGER_APP"
 
-build docker ledger-app-tezos-ocaml:
-  <<: *build_docker
-  script:
-    - eval "$BUILD_LEDGER_APP_TEZOS_OCAML"
+# build docker ledger-app-tezos-ocaml:
+#   <<: *build_docker
+#   script:
+#     - eval "$BUILD_LEDGER_APP_TEZOS_OCAML"
 
 build docker ledger-app-tezos-integration-tests:
   <<: *build_docker
@@ -72,12 +72,12 @@ sync docker images:
       elif ! docker manifest inspect $CI_REGISTRY_IMAGE/ledger-app-builder:$CI_COMMIT_REF_SLUG ; then
         eval "$BUILD_LEDGER_APP" ;
       fi
-    - if docker manifest inspect $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$TARGET_REF_SLUG ; then
-        docker manifest create $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$TARGET_REF_SLUG ;
-        docker manifest push $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG ;
-      elif ! docker manifest inspect $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG ; then
-        eval "$BUILD_LEDGER_APP_TEZOS_OCAML" ;
-      fi
+    # - if docker manifest inspect $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$TARGET_REF_SLUG ; then
+    #     docker manifest create $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$TARGET_REF_SLUG ;
+    #     docker manifest push $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG ;
+    #   elif ! docker manifest inspect $CI_REGISTRY_IMAGE/ledger-app-tezos-ocaml:$CI_COMMIT_REF_SLUG ; then
+    #     eval "$BUILD_LEDGER_APP_TEZOS_OCAML" ;
+    #   fi
     - if docker manifest inspect $CI_REGISTRY_IMAGE/ledger-app-tezos-integration-tests:$TARGET_REF_SLUG ; then
         docker manifest create $CI_REGISTRY_IMAGE/ledger-app-tezos-integration-tests:$CI_COMMIT_REF_SLUG $CI_REGISTRY_IMAGE/ledger-app-tezos-integration-tests:$TARGET_REF_SLUG ;
         docker manifest push $CI_REGISTRY_IMAGE/ledger-app-tezos-integration-tests:$CI_COMMIT_REF_SLUG ;

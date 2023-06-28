@@ -15,15 +15,24 @@
 
 from utils import *
 
-if __name__ == "__main__":
-    app = stax_app()
+app = stax_app()
 
-    app.assert_screen(HOME_TEXT)
+app.assert_screen(HOME_TEXT)
 
-    app.welcome.info()
-    app.assert_screen(INFO_TEXT)
-
-    app.info.single_page_exit()
-    app.assert_screen(HOME_TEXT)
-
-    app.welcome.quit()
+#app.send_apdu("8003000011048000002c800006c18000000080000000")
+#app.wait_for_screen_change()
+#app.assert_screen([TEZOS_LOGO, "Verify Tezos", "address"])
+#
+#app.provide_pk.tap()
+#app.wait_for_screen_change()
+#app.assert_screen(["Address", "tz1dyX3B1CFYa2DfdFL", "yPtiJCfQRUgPVME6E", "Show as QR"])
+#
+#app.provide_pk.cancel()
+#app.wait_for_screen_change()
+#app.assert_screen([ICON_CROSS, "Address rejected"])
+#
+#app.provide_pk.tap()
+#app.wait_for_screen_change()
+#app.assert_screen(HOME_TEXT)
+#
+#app.welcome.quit()
