@@ -20,10 +20,16 @@ if __name__ == "__main__":
 
     app.assert_screen(HOME_TEXT)
 
-    app.welcome.info()
-    app.assert_screen(INFO_TEXT)
+    app.send_apdu("8003000011048000002c800006c18000000080000000")
+    app.assert_screen([TEZOS_LOGO, "Verify Tezos", "address"])
 
-    app.info.single_page_exit()
+    app.provide_pk.tap()
+    app.assert_screen(["Address", "tz1dyX3B1CFYa2DfdFL", "yPtiJCfQRUgPVME6E", "Show as QR"])
+
+    app.provide_pk.cancel()
+    app.assert_screen([ICON_CROSS, "Address rejected"])
+
+    app.provide_pk.tap()
     app.assert_screen(HOME_TEXT)
 
     app.welcome.quit()

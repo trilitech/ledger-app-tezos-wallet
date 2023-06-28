@@ -79,13 +79,14 @@ integration_nanox_basic:
     DEVICE: nanox
     TESTDIR: tests/integration/nanox
 
-integration_stax_basic:
-  extends: .integration
-  needs:
-    - build_stax
-  variables:
-    DEVICE: stax
-    TESTDIR: tests/integration/stax
+ntegration_stax_basic:
+ extends: .integration
+ needs:
+   - build_stax
+ variables:
+   DEVICE: stax
+   TESTDIR: tests/integration/stax
+   NUM_SPECULOS: 1
 
 integration_nanos_micheline_samples:
   extends: .integration
