@@ -3,6 +3,7 @@
    TODO: cleanup/refactor
 
    Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
+   Copyright 2023 Functori <contact@functori.com>
 
    With code excerpts from:
     - Legacy Tezos app, Copyright 2019 Obsidian Systems
@@ -94,7 +95,7 @@ int crypto_derive_private_key(cx_ecfp_private_key_t *private_key,
                               bip32_path_t const *const bip32_path) {
     check_null(bip32_path);
     uint8_t raw_private_key[PRIVATE_KEY_DATA_SIZE] = {0};
-    int error = 0;
+    int err = 0;
 
     FUNC_ENTER(("private_key=%p, derivation_type=%d, bip32_path=%p",
                 private_key, derivation_type, bip32_path));
@@ -106,28 +107,28 @@ int crypto_derive_private_key(cx_ecfp_private_key_t *private_key,
         TRY {
             if (derivation_type == DERIVATION_TYPE_ED25519) {
                 // Old, non BIP32_Ed25519 way...
-                os_perso_derive_node_bip32_seed_key(HDW_ED25519_SLIP10,
-                                                    CX_CURVE_Ed25519,
-                                                    bip32_path->components,
-                                                    bip32_path->length,
-                                                    raw_private_key,
-                                                    NULL,
-                                                    NULL,
-                                                    0);
+                CX_THROW(os_derive_bip32_with_seed_no_throw(HDW_ED25519_SLIP10,
+							    CX_CURVE_Ed25519,
+							    bip32_path->components,
+							    bip32_path->length,
+							    raw_private_key,
+							    NULL,
+							    NULL,
+							    0));
             } else {
                 // derive the seed with bip32_path
-                os_perso_derive_node_bip32(cx_curve,
-                                           bip32_path->components,
-                                           bip32_path->length,
-                                           raw_private_key,
-                                           NULL);
+                CX_THROW(os_derive_bip32_no_throw(cx_curve,
+						  bip32_path->components,
+						  bip32_path->length,
+						  raw_private_key,
+						  NULL));
             }
 
             // new private_key from raw
-            cx_ecfp_init_private_key(cx_curve, raw_private_key, 32, private_key);
+            CX_THROW(cx_ecfp_init_private_key_no_throw(cx_curve, raw_private_key, 32, private_key));
         }
         CATCH_OTHER(e) {
-            error = 1;
+            err = 1;
         }
         FINALLY {
             explicit_bzero(raw_private_key, sizeof(raw_private_key));
@@ -136,7 +137,7 @@ int crypto_derive_private_key(cx_ecfp_private_key_t *private_key,
     END_TRY;
 
     FUNC_LEAVE();
-    return error;
+    return err;
 }
 
 int crypto_init_public_key(derivation_type_t const derivation_type,
@@ -148,7 +149,7 @@ int crypto_init_public_key(derivation_type_t const derivation_type,
         derivation_type_to_cx_curve(derivation_type);
 
     // generate corresponding public key
-    cx_ecfp_generate_pair(cx_curve, public_key, private_key, 1);
+    CX_THROW(cx_ecfp_generate_pair_no_throw(cx_curve, public_key, private_key, 1));
 
     // If we're using the old curve, make sure to adjust accordingly.
     if (cx_curve == CX_CURVE_Ed25519) {
@@ -213,13 +214,13 @@ void public_key_hash(uint8_t *const hash_out,
     }
 
     cx_blake2b_t hash_state;
-    cx_blake2b_init(&hash_state, HASH_SIZE * 8);  // cx_blake2b_init takes size in bits.
-    cx_hash((cx_hash_t *) &hash_state,
-            CX_LAST,
-            compressed.W,
-            compressed.W_len,
-            hash_out,
-            HASH_SIZE);
+    CX_THROW(cx_blake2b_init_no_throw(&hash_state, HASH_SIZE * 8));  // cx_blake2b_init_no_throw takes size in bits.
+    CX_THROW(cx_hash_no_throw((cx_hash_t *) &hash_state,
+			      CX_LAST,
+			      compressed.W,
+			      compressed.W_len,
+			      hash_out,
+			      HASH_SIZE));
     if (compressed_out != NULL) {
         memmove(compressed_out, &compressed, sizeof(*compressed_out));
     }
@@ -245,30 +246,29 @@ size_t sign(uint8_t *const out,
         case DERIVATION_TYPE_ED25519: {
             static size_t const SIG_SIZE = 64;
             if (out_size < SIG_SIZE) THROW(EXC_WRONG_LENGTH);
-            tx += cx_eddsa_sign(priv,
-                                0,
-                                CX_SHA512,
-                                (uint8_t const *) PIC(in),
-                                in_size,
-                                NULL,
-                                0,
-                                out,
-                                SIG_SIZE,
-                                NULL);
+            CX_THROW(cx_eddsa_sign_no_throw(priv,
+					    CX_SHA512,
+					    (uint8_t const *) PIC(in),
+					    in_size,
+					    out,
+					    SIG_SIZE));
+	    tx += SIG_SIZE;
         } break;
         case DERIVATION_TYPE_SECP256K1:
         case DERIVATION_TYPE_SECP256R1: {
             static size_t const SIG_SIZE = 100;
             if (out_size < SIG_SIZE) THROW(EXC_WRONG_LENGTH);
-            unsigned int info;
-            tx += cx_ecdsa_sign(priv,
-                                CX_LAST | CX_RND_RFC6979,
-                                CX_SHA256,  // historical reasons...semantically CX_NONE
-                                (uint8_t const *) PIC(in),
-                                in_size,
-                                out,
-                                SIG_SIZE,
-                                &info);
+            uint32_t info;
+	    size_t sig_len = SIG_SIZE;
+            CX_THROW(cx_ecdsa_sign_no_throw(priv,
+					    CX_LAST | CX_RND_RFC6979,
+					    CX_SHA256,  // historical reasons...semantically CX_NONE
+					    (uint8_t const *) PIC(in),
+					    in_size,
+					    out,
+					    &sig_len,
+					    &info));
+	    tx += sig_len;
             if (info & CX_ECCINFO_PARITY_ODD) {
                 out[0] |= 0x01;
             }
