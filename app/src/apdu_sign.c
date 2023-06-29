@@ -243,9 +243,9 @@ static size_t handle_first_apdu(packet_t *pkt) {
 
   tz_ui_stream_init(stream_cb);
 
-  switch (global.home_screen) {
-  case SCREEN_CLEAR_SIGN: handle_first_apdu_clear(pkt); break;
-  case SCREEN_BLIND_SIGN: handle_first_apdu_blind(pkt); break;
+  switch (global.step) {
+  case ST_CLEAR_SIGN: handle_first_apdu_clear(pkt); break;
+  case ST_BLIND_SIGN: handle_first_apdu_blind(pkt); break;
   default:
     THROW (EXC_UNEXPECTED_STATE);
   }
@@ -285,9 +285,9 @@ static size_t handle_data_apdu(packet_t *pkt) {
   if (pkt->is_last)
     global.apdu.sign.received_last_msg = true;
 
-  switch (global.home_screen) {
-  case SCREEN_CLEAR_SIGN: return handle_data_apdu_clear(pkt); break;
-  case SCREEN_BLIND_SIGN: return handle_data_apdu_blind(pkt); break;
+  switch (global.step) {
+  case ST_CLEAR_SIGN: return handle_data_apdu_clear(pkt); break;
+  case ST_BLIND_SIGN: return handle_data_apdu_blind(pkt); break;
   default:
     THROW (EXC_UNEXPECTED_STATE);
   }
@@ -354,11 +354,22 @@ size_t handle_apdu_sign(__attribute__((unused)) bool return_hash) {
   init_packet(&pkt);
 
   if (pkt.is_first) {
-    if (global.step != ST_IDLE) THROW (EXC_UNEXPECTED_STATE);
-    global.step = ST_SIGN;
+    if (global.step != ST_IDLE)
+      THROW (EXC_UNEXPECTED_STATE);
+
+    switch (global.home_screen) {
+    case SCREEN_CLEAR_SIGN: global.step = ST_CLEAR_SIGN; break;
+    case SCREEN_BLIND_SIGN: global.step = ST_BLIND_SIGN; break;
+    default:
+      /* XXXrcd: WRONG */
+      THROW (EXC_UNEXPECTED_STATE);
+    }
+
     ret = handle_first_apdu(&pkt);
   } else {
-    if (global.step != ST_SIGN) THROW (EXC_UNEXPECTED_STATE);
+    if (global.step != ST_BLIND_SIGN && global.step != ST_CLEAR_SIGN)
+      THROW (EXC_UNEXPECTED_STATE);
+
     ret = handle_data_apdu(&pkt);
   }
 

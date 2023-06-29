@@ -46,10 +46,8 @@ static uint8_t dispatch(uint8_t instruction) {
 
   switch (instruction) {
   case INS_SIGN:
-  case INS_SIGN_WITH_HASH: {
-    if (!(global.step == ST_IDLE || global.step == ST_SIGN)) THROW (EXC_UNEXPECTED_STATE);
-    return handle_apdu_sign(instruction == INS_SIGN_WITH_HASH);
-  }
+  case INS_SIGN_WITH_HASH:
+      return handle_apdu_sign(instruction == INS_SIGN_WITH_HASH);
   case INS_VERSION: {
     if (!(global.step == ST_IDLE)) THROW (EXC_UNEXPECTED_STATE);
     return handle_apdu_version();
