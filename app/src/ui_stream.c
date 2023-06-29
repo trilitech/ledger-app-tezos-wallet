@@ -64,25 +64,32 @@ void tz_ui_stream_close () {
 
 #ifdef HAVE_BAGL
 uint8_t tz_ui_max_line_chars(const char* value, int length) {
-  if (length > TZ_UI_STREAM_CONTENTS_WIDTH) {
-    length = TZ_UI_STREAM_CONTENTS_WIDTH;
-  }
+  uint8_t will_fit = MIN(TZ_UI_STREAM_CONTENTS_WIDTH, length);
+
+  FUNC_ENTER(("value=\"%s\", length=%d", value, length));
+
+  /* Wrap on newline */
+  const char *tmp = memchr(value, '\n', will_fit);
+  if (tmp && (tmp - value) <= will_fit)
+    will_fit = (tmp - value);
 
 # ifdef TARGET_NANOS
-    uint8_t will_fit = se_get_cropped_length(value, length, BAGL_WIDTH, BAGL_ENCODING_LATIN1);
+    will_fit = se_get_cropped_length(value, will_fit, BAGL_WIDTH,
+                                     BAGL_ENCODING_LATIN1);
 # else
-    uint8_t will_fit = length + 1;
     uint8_t width;
+    will_fit++;
     do {
-      will_fit--;
-      width = bagl_compute_line_width(BAGL_FONT_OPEN_SANS_REGULAR_11px, 0, value, will_fit, BAGL_ENCODING_LATIN1);
+      width = bagl_compute_line_width(BAGL_FONT_OPEN_SANS_REGULAR_11px, 0,
+                                      value, --will_fit, BAGL_ENCODING_LATIN1);
     } while (width >= BAGL_WIDTH);
 
     PRINTF("[DEBUG] max_line_width(value: \"%s\", width: %d, will_fit: %d)\n",
             value, width, will_fit);
 # endif
 
-    return will_fit;
+  FUNC_LEAVE();
+  return will_fit;
 }
 
 size_t tz_ui_stream_push(tz_ui_cb_type_t type, const char *title,
@@ -123,15 +130,18 @@ size_t tz_ui_stream_pushl(tz_ui_cb_type_t type, const char *title,
 
   int line = 0;
   while (offset < length && line < TZ_UI_STREAM_CONTENTS_LINES) {
-    const char* start = value + offset;
-    int len = length - offset;
-    int will_fit = tz_ui_max_line_chars(start, len);
+    uint8_t will_fit;
 
-    PRINTF("[DEBUG] split(value: \"%s\", will_fit: %d, len: %d, line: %d, offset: %d)\n",
-            start, will_fit, len, line, offset);
+    if (value[offset] == '\n')
+      offset++;
 
-    strlcpy(s->screens[bucket].body[line], start, will_fit + 1);
+    will_fit = tz_ui_max_line_chars(&value[offset], length - offset);
 
+    PRINTF("[DEBUG] split(value: \"%s\", will_fit: %d, line: %d, "
+           "offset: %d)\n", &value[offset], will_fit, line, offset);
+
+    strlcpy(s->screens[bucket].body[line], &value[offset], will_fit + 1);
+    
     offset += will_fit;
 
     line++;
