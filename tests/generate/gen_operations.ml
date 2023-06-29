@@ -25,6 +25,12 @@ let gen_expr =
   let shrink _ = assert false in
   QCheck2.Gen.make_primitive ~gen ~shrink
 
+let gen_script =
+  let open QCheck2.Gen in
+  let* code = gen_expr in
+  let* storage = gen_expr in
+  return Protocol.Alpha_context.Script.{ code; storage }
+
 let gen_algo =
   QCheck2.Gen.oneofl Tezos_crypto.Signature.[ Ed25519; Secp256k1; P256 ]
 
@@ -177,6 +183,14 @@ let gen_delegation =
   let* public_key_hash_opt = option gen_public_key_hash in
   return (Delegation public_key_hash_opt)
 
+let gen_origination =
+  let open Protocol.Alpha_context in
+  let open QCheck2.Gen in
+  let* delegate = option gen_public_key_hash in
+  let* script = gen_script in
+  let* credit = gen_tez in
+  return (Origination { delegate; script; credit })
+
 let gen_reveal =
   let open Protocol.Alpha_context in
   let open QCheck2.Gen in
@@ -231,6 +245,7 @@ let gen_hidden_manager_operation =
   QCheck2.Gen.oneof
     [
       aux gen_delegation;
+      aux gen_origination;
       aux gen_reveal;
       aux gen_set_deposits_limit;
       aux gen_transaction;

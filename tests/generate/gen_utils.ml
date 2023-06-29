@@ -33,6 +33,10 @@ let micheline_too_large_or_too_deep expr =
     false
   with Exit -> true
 
+let lazy_expr_too_large_or_too_deep lazy_expr =
+  let expr = Result.get_ok @@ Protocol.Script_repr.force_decode lazy_expr in
+  micheline_too_large_or_too_deep expr
+
 let operations_too_large_or_too_deep
     ( (_shell : Tezos_base.Operation.shell_header),
       (Contents_list contents : Protocol.Alpha_context.packed_contents_list) ) =
@@ -40,11 +44,11 @@ let operations_too_large_or_too_deep
   let traverse_manager (type t)
       (Manager_operation { operation; _ } : t Kind.manager contents) =
     match operation with
+    | Origination { script = { code; storage }; _ } ->
+        lazy_expr_too_large_or_too_deep code
+        || lazy_expr_too_large_or_too_deep storage
     | Transaction { parameters; _ } ->
-        let parameters =
-          Result.get_ok @@ Protocol.Script_repr.force_decode parameters
-        in
-        micheline_too_large_or_too_deep parameters
+        lazy_expr_too_large_or_too_deep parameters
     | Delegation _ | Reveal _ | Set_deposits_limit _ | Update_consensus_key _ ->
         false
     | _ -> assert false

@@ -21,6 +21,10 @@ let pp_opt_field pp ppf = function
 
 let pp_tz ppf tz = Format.fprintf ppf "%a tz" Protocol.Alpha_context.Tez.pp tz
 
+let pp_lazy_expr ppf lazy_expr =
+  let expr = Result.get_ok @@ Protocol.Script_repr.force_decode lazy_expr in
+  Format.fprintf ppf "%s" @@ Test_micheline_c_parser.to_string expr
+
 let to_string
     ( (_shell : Tezos_base.Operation.shell_header),
       (Contents_list contents : Protocol.Alpha_context.packed_contents_list) ) =
@@ -42,6 +46,16 @@ let to_string
               (pp_opt_field Tezos_crypto.Signature.Public_key_hash.pp)
               public_key_hash_opt;
           ]
+    | Origination { delegate; script = { code; storage }; credit } ->
+        aux ~kind:"Origination"
+          [
+            Format.asprintf "%a" pp_tz credit;
+            Format.asprintf "%a"
+              (pp_opt_field Tezos_crypto.Signature.Public_key_hash.pp)
+              delegate;
+            Format.asprintf "%a" pp_lazy_expr code;
+            Format.asprintf "%a" pp_lazy_expr storage;
+          ]
     | Reveal public_key ->
         aux ~kind:"Reveal"
           [
@@ -51,15 +65,12 @@ let to_string
         aux ~kind:"Set deposit limit"
           [ Format.asprintf "%a" (pp_opt_field pp_tz) tez_opt ]
     | Transaction { amount; entrypoint; destination; parameters } ->
-        let parameters =
-          Result.get_ok @@ Protocol.Script_repr.force_decode parameters
-        in
         aux ~kind:"Transaction"
           [
             Format.asprintf "%a" pp_tz amount;
             Format.asprintf "%a" Contract.pp destination;
             Format.asprintf "%a" Entrypoint.pp entrypoint;
-            Test_micheline_c_parser.to_string parameters;
+            Format.asprintf "%a" pp_lazy_expr parameters;
           ]
     | Update_consensus_key public_key ->
         aux ~kind:"Set consensus key"

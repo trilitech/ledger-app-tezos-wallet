@@ -199,7 +199,11 @@ let pp_opt_field pp ppf = function
 
 let pp_tz ppf tz = Format.fprintf ppf "%a tz" Protocol.Alpha_context.Tez.pp tz
 
-let operation_to_screens ppf
+let pp_lazy_expr ppf lazy_expr =
+  let expr = Result.get_ok @@ Protocol.Script_repr.force_decode lazy_expr in
+  Format.fprintf ppf "%a" (pp_node ~wrap:false) (Micheline.root expr)
+
+let operation_to_screens
     ( (_shell : Tezos_base.Operation.shell_header),
       (Contents_list contents : Protocol.Alpha_context.packed_contents_list) ) =
   let open Protocol.Alpha_context in
@@ -226,6 +230,16 @@ let operation_to_screens ppf
               (pp_opt_field Tezos_crypto.Signature.Public_key_hash.pp)
               public_key_hash_opt;
           ]
+    | Origination { delegate; script = { code; storage }; credit } ->
+        aux ~kind:"Origination"
+          [
+            make_screen ~title:"Balance" "%a" pp_tz credit;
+            make_screen ~title:"Delegate" "%a"
+              (pp_opt_field Tezos_crypto.Signature.Public_key_hash.pp)
+              delegate;
+            make_screen ~title:"Code" "%a" pp_lazy_expr code;
+            make_screen ~title:"Storage" "%a" pp_lazy_expr storage;
+          ]
     | Reveal public_key ->
         aux ~kind:"Reveal"
           [
@@ -238,19 +252,13 @@ let operation_to_screens ppf
             make_screen ~title:"Staking limit" "%a" (pp_opt_field pp_tz) tez_opt;
           ]
     | Transaction { amount; entrypoint; destination; parameters } ->
-        let parameters =
-          let expr =
-            Result.get_ok @@ Protocol.Script_repr.force_decode parameters
-          in
-          Micheline.root expr
-        in
         aux ~kind:"Transaction"
-          ([
-             make_screen ~title:"Amount" "%a" pp_tz amount;
-             make_screen ~title:"Destination" "%a" Contract.pp destination;
-             make_screen ~title:"Entrypoint" "%a" Entrypoint.pp entrypoint;
-           ]
-          @ node_to_screens ~title:"Parameter" ppf parameters)
+          [
+            make_screen ~title:"Amount" "%a" pp_tz amount;
+            make_screen ~title:"Destination" "%a" Contract.pp destination;
+            make_screen ~title:"Entrypoint" "%a" Entrypoint.pp entrypoint;
+            make_screen ~title:"Parameter" "%a" pp_lazy_expr parameters;
+          ]
     | Update_consensus_key public_key ->
         aux ~kind:"Set consensus key"
           [
@@ -298,14 +306,13 @@ let gen_expect_test_sign_micheline_data ~device ppf bin =
     let node = Gen_micheline.decode bin in
     node_to_screens ~title:"Expression" ppf (Micheline.root node)
   in
-
   gen_expect_test_sign ppf ~device ~watermark:Gen_micheline.watermark bin
     screens
 
 let gen_expect_test_sign_operation ~device ppf bin =
   let screens =
     let op = Gen_operations.decode bin in
-    operation_to_screens ppf op
+    operation_to_screens op
   in
   gen_expect_test_sign ppf ~device ~watermark:Gen_operations.watermark bin
     screens
