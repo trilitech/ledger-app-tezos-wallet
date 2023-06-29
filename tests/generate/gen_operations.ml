@@ -14,21 +14,16 @@
    limitations under the License. *)
 
 open Tezos_protocol_017_PtNairob
-open Tezos_benchmarks_proto_017_PtNairob
 
-(* Only use this function to generate values *)
-let gen_expr =
-  let gen rand =
-    Protocol.Script_repr.lazy_expr
-      (Michelson_generation.make_code_sampler rand Gen_micheline.config).term
-  in
-  let shrink _ = assert false in
-  QCheck2.Gen.make_primitive ~gen ~shrink
+let gen_lazy_expr =
+  let open QCheck2.Gen in
+  let* expr = Gen_micheline.gen_code in
+  return (Protocol.Alpha_context.Script.lazy_expr expr)
 
 let gen_script =
   let open QCheck2.Gen in
-  let* code = gen_expr in
-  let* storage = gen_expr in
+  let* code = gen_lazy_expr in
+  let* storage = gen_lazy_expr in
   return Protocol.Alpha_context.Script.{ code; storage }
 
 let gen_algo =
@@ -262,14 +257,14 @@ let gen_transaction =
   let* amount = gen_tez in
   let* destination = gen_contract in
   let* entrypoint = gen_entrypoint in
-  let* parameters = gen_expr in
+  let* parameters = gen_lazy_expr in
   return (Transaction { amount; destination; entrypoint; parameters })
 
 let gen_transfer_ticket =
   let open Protocol.Alpha_context in
   let open QCheck2.Gen in
-  let* contents = gen_expr in
-  let* ty = gen_expr in
+  let* contents = gen_lazy_expr in
+  let* ty = gen_lazy_expr in
   let* ticketer = gen_contract in
   let* amount = gen_ticket_amount in
   let* destination = gen_contract in

@@ -23,13 +23,25 @@ let config =
     burn_in_multiplier = 1;
   }
 
+(* Only use this function to generate values *)
+let gen_code =
+  let gen rand = (Michelson_generation.make_code_sampler rand config).term in
+  let shrink _ = assert false in
+  QCheck2.Gen.make_primitive ~gen ~shrink
+
+(* Only use this function to generate values *)
+let gen_data =
+  let gen rand = (Michelson_generation.make_data_sampler rand config).term in
+  let shrink _ = assert false in
+  QCheck2.Gen.make_primitive ~gen ~shrink
+
+let gen_expr = QCheck2.Gen.oneof [ gen_data; gen_code ]
+
 let gen () =
   List.to_seq
     [
-      (Michelson_generation.make_code_sampler Gen_utils.random_state config)
-        .term;
-      (Michelson_generation.make_data_sampler Gen_utils.random_state config)
-        .term;
+      QCheck2.Gen.generate1 ~rand:Gen_utils.random_state gen_code;
+      QCheck2.Gen.generate1 ~rand:Gen_utils.random_state gen_data;
     ]
 
 let vector =
