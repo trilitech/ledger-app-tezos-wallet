@@ -114,3 +114,4 @@ void tz_ui_stream_push_accept_reject(void);
 void tz_ui_stream_close(void);
 tz_ui_stream_screen_kind tz_ui_stream_current_screen_kind(void);
 __attribute__((noreturn)) void tz_ui_stream(void);
+void tz_ui_stream_start(void);

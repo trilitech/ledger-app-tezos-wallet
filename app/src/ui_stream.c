@@ -323,6 +323,14 @@ static void change_screen_right() {
 }
 #endif // HAVE_BAGL
 
+void tz_ui_stream_start(void) {
+  FUNC_ENTER(("void"));
+#ifdef HAVE_BAGL
+  redisplay();
+#endif
+  FUNC_LEAVE();
+}
+
 __attribute__((noreturn)) void tz_ui_stream() {
   FUNC_ENTER(("void"));
 
