@@ -94,7 +94,6 @@ typedef struct {
 } apdu_sign_state_t;
 
 typedef struct {
-  screen_t home_screen;
   main_step_t step;
   tz_ui_stream_t stream;
   bip32_path_with_curve_t path_with_curve;

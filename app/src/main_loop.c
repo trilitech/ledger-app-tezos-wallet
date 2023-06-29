@@ -35,7 +35,7 @@
 static uint8_t dispatch(uint8_t instruction) {
   FUNC_ENTER(("%u", instruction));
 
-  switch (global.home_screen) {
+  switch (tz_ui_stream_get_type()) {
   case SCREEN_QUIT:
     PRINTF("[ERROR] received instruction whilst on Quit screen\n");
     THROW(EXC_UNEXPECTED_STATE);
@@ -109,7 +109,7 @@ __attribute__((noreturn)) void main_loop() {
     PRINTF("[SIZEOF] G_io_app: %d\n", sizeof(G_io_app));
 
     global.step = ST_IDLE;
-    ui_initial_screen();
+    ui_home_init();
 
     volatile size_t rx = io_exchange(CHANNEL_APDU, 0);
 

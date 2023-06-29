@@ -24,4 +24,4 @@
 
    TODO: add blind signing and settings pages. */
 
-void ui_initial_screen(void);
+void ui_home_init(void);

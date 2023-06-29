@@ -232,7 +232,7 @@ static unsigned int cb(unsigned int button_mask, __attribute__((unused)) unsigne
     if (type)
       s->cb(type);
     if (type & TZ_UI_STREAM_CB_MAINMASK)
-      ui_initial_screen();
+      ui_home_init();
     break;
   default:
     break;
@@ -244,9 +244,10 @@ static unsigned int cb(unsigned int button_mask, __attribute__((unused)) unsigne
 static const char *find_icon(tz_ui_icon_t icon) {
 
   switch (icon) {
-  case TZ_UI_ICON_TICK:   return (const char *)&C_icon_validate_14;
-  case TZ_UI_ICON_CROSS:  return (const char *)&C_icon_crossmark;
-  default:                return NULL;
+  case TZ_UI_ICON_TICK:       return (const char *)&C_icon_validate_14;
+  case TZ_UI_ICON_CROSS:      return (const char *)&C_icon_crossmark;
+  case TZ_UI_ICON_DASHBOARD:  return (const char *)&C_icon_dashboard_x;
+  default:                    return NULL;
   }
 }
 

@@ -40,18 +40,13 @@ static bool navigation_cb_wallet(__attribute__((unused))uint8_t page, nbgl_pageC
 
 static void ui_menu_about_wallet(void) {
   nbgl_useCaseSettings("Tezos wallet",
-                       0, 1, false, ui_initial_screen, navigation_cb_wallet, NULL);
+                       0, 1, false, ui_home_init, navigation_cb_wallet, NULL);
 }
 
 void tz_ui_home_redisplay(void) {
   FUNC_ENTER(("void"));
-  switch (global.home_screen) {
-  case SCREEN_CLEAR_SIGN:
-    nbgl_useCaseHome("Tezos", &C_tezos, NULL, false, ui_menu_about_wallet, exit_app);
-    break;
-  default:
-    break;
-  }
+  nbgl_useCaseHome("Tezos", &C_tezos, NULL, false, ui_menu_about_wallet,
+                   exit_app);
   FUNC_LEAVE();
 }
 

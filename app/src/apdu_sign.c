@@ -357,7 +357,7 @@ size_t handle_apdu_sign(__attribute__((unused)) bool return_hash) {
     if (global.step != ST_IDLE)
       THROW (EXC_UNEXPECTED_STATE);
 
-    switch (global.home_screen) {
+    switch (tz_ui_stream_get_type()) {
     case SCREEN_CLEAR_SIGN: global.step = ST_CLEAR_SIGN; break;
     case SCREEN_BLIND_SIGN: global.step = ST_BLIND_SIGN; break;
     default:
