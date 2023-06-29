@@ -38,6 +38,7 @@
 #include "ui_commons.h"
 #include "ui_stream.h"
 #include "ui_home.h"
+#include "ui_settings.h"
 
 // Zeros out all globals that can keep track of APDU instruction state.
 // Notably this does *not* include UI state.
@@ -94,6 +95,12 @@ typedef struct {
 } apdu_sign_state_t;
 
 typedef struct {
+  /* Settings */
+  struct {
+    bool blindsigning;
+  } settings;
+
+  /* State */
   main_step_t step;
   tz_ui_stream_t stream;
   bip32_path_with_curve_t path_with_curve;

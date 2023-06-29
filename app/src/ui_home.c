@@ -34,6 +34,9 @@ static void cb(tz_ui_cb_type_t type) {
   case SCREEN_BLIND_SIGN:
   case SCREEN_CLEAR_SIGN:
     break;
+  case SCREEN_SETTINGS:
+    ui_settings_init();
+    break;
   case SCREEN_QUIT:
     exit_app();
   }
@@ -48,8 +51,9 @@ void ui_home_init(void) {
   tz_ui_stream_init(cb);
   tz_ui_stream_push(SCREEN_CLEAR_SIGN, "Tezos Wallet",
                     "ready for\nsafe signing", TZ_UI_ICON_NONE);
-  tz_ui_stream_push(SCREEN_BLIND_SIGN, "Tezos Wallet",
-                    "ready for\nBLIND signing", TZ_UI_ICON_NONE);
+  if (global.settings.blindsigning)
+    tz_ui_stream_push(SCREEN_BLIND_SIGN, "Tezos Wallet",
+                      "ready for\nBLIND signing", TZ_UI_ICON_NONE);
   tz_ui_stream_push(SCREEN_SETTINGS, "Settings", "", TZ_UI_ICON_SETTINGS);
   tz_ui_stream_push(SCREEN_QUIT, "Quit?", "", TZ_UI_ICON_DASHBOARD);
   tz_ui_stream_close();

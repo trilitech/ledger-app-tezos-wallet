@@ -60,8 +60,8 @@ function attempts {
 }
 
 compare_strings() {
-    STR1="$(echo $1 | sed s/I/l/g)"
-    STR2="$(echo $2 | sed s/I/l/g)"
+    STR1="$(echo $1 | sed 's/I/l/g; s/S//g')"
+    STR2="$(echo $2 | sed 's/I/l/g; s/S//g')"
 
     [ "$STR1" = "$STR2" ]
 }

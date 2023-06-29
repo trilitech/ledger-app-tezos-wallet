@@ -2,6 +2,16 @@
 # full output: 12345678901234567890123456789012345678901234567890123456789012345678901234567890
 # signer: tz1dyX3B1CFYa2DfdFLyPtiJCfQRUgPVME6E
 press_button right
+expect_full_text 'Settings'
+press_button both
+expect_full_text 'Blind Signing' DISABLED
+press_button both
+expect_full_text 'Blind Signing' ENABLED
+press_button right
+expect_full_text Back
+press_button both
+expect_full_text 'Tezos Wallet' 'ready for' 'safe signing'
+press_button right
 expect_full_text 'Tezos Wallet' 'ready for' 'BLIND signing'
 send_async_apdus \
 	800f000011048000002c800006c18000000080000000 "expect_apdu_return 9000" \
