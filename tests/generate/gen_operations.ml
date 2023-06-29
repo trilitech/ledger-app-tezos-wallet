@@ -17,7 +17,7 @@ open Tezos_protocol_017_PtNairob
 
 let gen_lazy_expr =
   let open QCheck2.Gen in
-  let* expr = Gen_micheline.gen_code in
+  let* expr = Gen_micheline.gen_expr in
   return (Protocol.Alpha_context.Script.lazy_expr expr)
 
 let gen_script =
