@@ -67,11 +67,11 @@ unit_tests:	test/samples/micheline/nanos/samples.hex	\
 
 RUN_TEST_DOCKER = ./tests/integration/run_test_docker.sh
 
-integration_tests_basic_%:	app_%_dbg.tgz			\
+integration_tests_basic_%:	app_%.tgz			\
+				app_%_dbg.tgz			\
 				tests/integration/*.sh		\
 				tests/integration/%/*.sh
-	$(RUN_TEST_DOCKER) $* app_$*_dbg.tgz			\
-				tests/integration/$*		\
+	$(RUN_TEST_DOCKER) $* tests/integration/$*
 
 integration_tests_basic:	integration_tests_basic_nanos	\
 				integration_tests_basic_nanosp	\
@@ -81,9 +81,9 @@ integration_tests_%:	integration_tests_basic_%		\
 			test/samples/operations/%/samples.hex	\
 			test/samples/micheline/%/samples.hex	\
 			tests/integration/*.sh
-	$(RUN_TEST_DOCKER) $* app_$*_dbg.tgz		\
-				tests/samples/micheline/$*	\
-				tests/samples/operations/$*
+	$(RUN_TEST_DOCKER) $* 				\
+			tests/samples/micheline/$*	\
+			tests/samples/operations/$*
 
 integration_tests: 	tests/integration/*.sh			\
 			integration_tests_nanos 		\
