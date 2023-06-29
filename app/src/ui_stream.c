@@ -150,7 +150,16 @@ size_t tz_ui_stream_pushl(tz_ui_cb_type_t type, const char *title,
 
   return offset;
 }
+#endif // HAVE_BAGL
 
+tz_ui_cb_type_t tz_ui_stream_get_type(void) {
+  tz_ui_stream_t *s = &global.stream;
+  size_t bucket = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
+
+  return s->screens[bucket].type;
+}
+
+#ifdef HAVE_BAGL
 static void pred () {
   tz_ui_stream_t *s = &global.stream;
 
