@@ -30,7 +30,7 @@ let to_string
         t Kind.manager contents) =
     let aux ~kind operation_fields =
       let manager_fields =
-        [ kind; Format.asprintf "%a tz" Tez.pp fee; Z.to_string storage_limit ]
+        [ kind; Format.asprintf "%a" pp_tz fee; Z.to_string storage_limit ]
       in
       String.concat "" (manager_fields @ operation_fields)
     in
@@ -56,7 +56,7 @@ let to_string
         in
         aux ~kind:"Transaction"
           [
-            Format.asprintf "%a tz" Tez.pp amount;
+            Format.asprintf "%a" pp_tz amount;
             Format.asprintf "%a" Contract.pp destination;
             Format.asprintf "%a" Entrypoint.pp entrypoint;
             Test_micheline_c_parser.to_string parameters;

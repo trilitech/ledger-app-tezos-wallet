@@ -212,7 +212,7 @@ let operation_to_screens ppf
       let manager_screens =
         [
           make_screen ~title:operation_index "%s" kind;
-          make_screen ~title:"Fee" "%a tz" Tez.pp fee;
+          make_screen ~title:"Fee" "%a" pp_tz fee;
           make_screen ~title:"Storage limit" "%s" (Z.to_string storage_limit);
         ]
       in
@@ -246,7 +246,7 @@ let operation_to_screens ppf
         in
         aux ~kind:"Transaction"
           ([
-             make_screen ~title:"Amount" "%a tz" Tez.pp amount;
+             make_screen ~title:"Amount" "%a" pp_tz amount;
              make_screen ~title:"Destination" "%a" Contract.pp destination;
              make_screen ~title:"Entrypoint" "%a" Entrypoint.pp entrypoint;
            ]
