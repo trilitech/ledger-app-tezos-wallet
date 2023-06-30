@@ -126,7 +126,6 @@ const tz_operation_descriptor tz_operation_descriptors[] = {
   { 0, NULL, 0 }
 };
 
-static const char* parameter_name = "Parameter";
 static const char* expression_name = "Expression";
 static const char* unset_message = "Field unset";
 
@@ -477,7 +476,7 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state, tz_parser_regs
         tz_must (push_frame(state, TZ_OPERATION_STEP_READ_MICHELINE));
         state->operation.frame->step_read_micheline.inited = 0;
         state->operation.frame->step_read_micheline.skip = field->skip;
-        state->operation.frame->step_read_micheline.name = (char*) PIC(parameter_name);
+        state->operation.frame->step_read_micheline.name = name;
         tz_must (push_frame(state, TZ_OPERATION_STEP_SIZE));
         state->operation.frame->step_size.size = 0;
         state->operation.frame->step_size.size_len = 4;
