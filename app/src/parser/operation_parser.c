@@ -377,7 +377,7 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state, tz_parser_regs
     tz_must (tz_parser_read(state,regs,&b));
     state->buffers.capture[state->operation.frame->step_read_entrypoint.ofs] = b;
     state->operation.frame->step_read_entrypoint.ofs++;
-    if (state->operation.frame->step_read_entrypoint.ofs - 2 == (int) state->buffers.capture[1]) {
+    if (state->ofs == state->operation.frame->stop) {
       state->buffers.capture[state->operation.frame->step_read_entrypoint.ofs] = 0;
     print_entrypoint: {
         if (state->operation.frame->step_read_entrypoint.skip) {
@@ -385,7 +385,7 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state, tz_parser_regs
           tz_continue;
         }
         state->operation.frame->step = TZ_OPERATION_STEP_PRINT;
-        state->operation.frame->step_print.str = (char*) state->buffers.capture+2;
+        state->operation.frame->step_print.str = (char*) state->buffers.capture;
       }
     }
     break;
@@ -394,15 +394,18 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state, tz_parser_regs
     uint8_t b;
     tz_must (tz_parser_read(state,regs,&b));
     switch(b) {
-    case 0: strcpy((char*) state->buffers.capture+2, "default"); goto print_entrypoint;
-    case 1: strcpy((char*) state->buffers.capture+2, "root"); goto print_entrypoint;
-    case 2: strcpy((char*) state->buffers.capture+2, "do"); goto print_entrypoint;
-    case 3: strcpy((char*) state->buffers.capture+2, "set_delegate"); goto print_entrypoint;
-    case 4: strcpy((char*) state->buffers.capture+2, "remove_delegate"); goto print_entrypoint;
-    case 5: strcpy((char*) state->buffers.capture+2, "deposit"); goto print_entrypoint;
+    case 0: strcpy((char*) state->buffers.capture, "default"); goto print_entrypoint;
+    case 1: strcpy((char*) state->buffers.capture, "root"); goto print_entrypoint;
+    case 2: strcpy((char*) state->buffers.capture, "do"); goto print_entrypoint;
+    case 3: strcpy((char*) state->buffers.capture, "set_delegate"); goto print_entrypoint;
+    case 4: strcpy((char*) state->buffers.capture, "remove_delegate"); goto print_entrypoint;
+    case 5: strcpy((char*) state->buffers.capture, "deposit"); goto print_entrypoint;
     case 0xFF:
       state->operation.frame->step = TZ_OPERATION_STEP_READ_ENTRYPOINT;
-      state->operation.frame->step_read_entrypoint.ofs++;
+      state->operation.frame->step_read_entrypoint.ofs = 0;
+      tz_must (push_frame(state, TZ_OPERATION_STEP_SIZE));
+      state->operation.frame->step_size.size = 0;
+      state->operation.frame->step_size.size_len = 1;
       break;
     default: tz_raise (INVALID_TAG);
     }
