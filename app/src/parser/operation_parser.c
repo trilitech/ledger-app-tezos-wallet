@@ -40,6 +40,7 @@ const char *const tz_operation_parser_step_name[] = {
   "READ_PK",
   "READ_BYTES",
   "READ_ENTRYPOINT",
+  "READ_SMART_ENTRYPOINT",
   "READ_MICHELINE"
 };
 #endif
@@ -374,33 +375,36 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state, tz_parser_regs
   case TZ_OPERATION_STEP_READ_ENTRYPOINT: {
     uint8_t b;
     tz_must (tz_parser_read(state,regs,&b));
-    if (state->operation.frame->step_read_entrypoint.ofs == 0) {
-      switch(b) {
-      case 0: strcpy((char*) state->buffers.capture+2, "default"); goto print_entrypoint;
-      case 1: strcpy((char*) state->buffers.capture+2, "root"); goto print_entrypoint;
-      case 2: strcpy((char*) state->buffers.capture+2, "do"); goto print_entrypoint;
-      case 3: strcpy((char*) state->buffers.capture+2, "set_delegate"); goto print_entrypoint;
-      case 4: strcpy((char*) state->buffers.capture+2, "remove_delegate"); goto print_entrypoint;
-      case 5: strcpy((char*) state->buffers.capture+2, "deposit"); goto print_entrypoint;
-      case 0xFF:
-        state->operation.frame->step_read_entrypoint.ofs++;
-        break;
-      default: tz_raise (INVALID_TAG);
-      }
-    } else {
-      state->buffers.capture[state->operation.frame->step_read_entrypoint.ofs] = b;
-      state->operation.frame->step_read_entrypoint.ofs++;
-      if (state->operation.frame->step_read_entrypoint.ofs - 2 == (int) state->buffers.capture[1]) {
-        state->buffers.capture[state->operation.frame->step_read_entrypoint.ofs] = 0;
-      print_entrypoint: {
-          if (state->operation.frame->step_read_entrypoint.skip) {
-            tz_must (pop_frame (state));
-            tz_continue;
-          }
-          state->operation.frame->step = TZ_OPERATION_STEP_PRINT;
-          state->operation.frame->step_print.str = (char*) state->buffers.capture+2;
+    state->buffers.capture[state->operation.frame->step_read_entrypoint.ofs] = b;
+    state->operation.frame->step_read_entrypoint.ofs++;
+    if (state->operation.frame->step_read_entrypoint.ofs - 2 == (int) state->buffers.capture[1]) {
+      state->buffers.capture[state->operation.frame->step_read_entrypoint.ofs] = 0;
+    print_entrypoint: {
+        if (state->operation.frame->step_read_entrypoint.skip) {
+          tz_must (pop_frame (state));
+          tz_continue;
         }
+        state->operation.frame->step = TZ_OPERATION_STEP_PRINT;
+        state->operation.frame->step_print.str = (char*) state->buffers.capture+2;
       }
+    }
+    break;
+  }
+  case TZ_OPERATION_STEP_READ_SMART_ENTRYPOINT: {
+    uint8_t b;
+    tz_must (tz_parser_read(state,regs,&b));
+    switch(b) {
+    case 0: strcpy((char*) state->buffers.capture+2, "default"); goto print_entrypoint;
+    case 1: strcpy((char*) state->buffers.capture+2, "root"); goto print_entrypoint;
+    case 2: strcpy((char*) state->buffers.capture+2, "do"); goto print_entrypoint;
+    case 3: strcpy((char*) state->buffers.capture+2, "set_delegate"); goto print_entrypoint;
+    case 4: strcpy((char*) state->buffers.capture+2, "remove_delegate"); goto print_entrypoint;
+    case 5: strcpy((char*) state->buffers.capture+2, "deposit"); goto print_entrypoint;
+    case 0xFF:
+      state->operation.frame->step = TZ_OPERATION_STEP_READ_ENTRYPOINT;
+      state->operation.frame->step_read_entrypoint.ofs++;
+      break;
+    default: tz_raise (INVALID_TAG);
     }
     break;
   }
@@ -480,7 +484,7 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state, tz_parser_regs
         tz_must (push_frame(state, TZ_OPERATION_STEP_SIZE));
         state->operation.frame->step_size.size = 0;
         state->operation.frame->step_size.size_len = 4;
-        tz_must (push_frame(state, TZ_OPERATION_STEP_READ_ENTRYPOINT));
+        tz_must (push_frame(state, TZ_OPERATION_STEP_READ_SMART_ENTRYPOINT));
         strcpy(state->field_name, "Entrypoint");
         state->operation.frame->step_read_entrypoint.ofs = 0;
         state->operation.frame->step_read_entrypoint.skip = field->skip;
