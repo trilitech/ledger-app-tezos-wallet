@@ -259,6 +259,18 @@ let operation_to_screens
             make_screen ~title:"Entrypoint" "%a" Entrypoint.pp entrypoint;
             make_screen ~title:"Parameter" "%a" pp_lazy_expr parameters;
           ]
+    | Transfer_ticket
+        { contents; ty; ticketer; amount; destination; entrypoint } ->
+        aux ~kind:"Transfer ticket"
+          [
+            make_screen ~title:"Contents" "%a" pp_lazy_expr contents;
+            make_screen ~title:"Type" "%a" pp_lazy_expr ty;
+            make_screen ~title:"Ticketer" "%a" Contract.pp ticketer;
+            make_screen ~title:"Amount" "%s"
+              Protocol.Script_int.(to_string (amount :> n num));
+            make_screen ~title:"Destination" "%a" Contract.pp destination;
+            make_screen ~title:"Entrypoint" "%a" Entrypoint.pp entrypoint;
+          ]
     | Update_consensus_key public_key ->
         aux ~kind:"Set consensus key"
           [

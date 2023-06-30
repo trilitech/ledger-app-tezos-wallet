@@ -72,6 +72,18 @@ let to_string
             Format.asprintf "%a" Entrypoint.pp entrypoint;
             Format.asprintf "%a" pp_lazy_expr parameters;
           ]
+    | Transfer_ticket
+        { contents; ty; ticketer; amount; destination; entrypoint } ->
+        aux ~kind:"Transfer ticket"
+          [
+            Format.asprintf "%a" pp_lazy_expr contents;
+            Format.asprintf "%a" pp_lazy_expr ty;
+            Format.asprintf "%a" Contract.pp ticketer;
+            Format.asprintf "%s"
+              Protocol.Script_int.(to_string (amount :> n num));
+            Format.asprintf "%a" Contract.pp destination;
+            Format.asprintf "%a" Entrypoint.pp entrypoint;
+          ]
     | Update_consensus_key public_key ->
         aux ~kind:"Set consensus key"
           [

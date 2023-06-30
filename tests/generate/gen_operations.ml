@@ -120,6 +120,12 @@ let gen_gaz_bound =
   QCheck2.Gen.map Protocol.Alpha_context.Gas.Arith.integral_of_int_exn
     QCheck2.Gen.nat
 
+let gen_ticket_amount =
+  let open QCheck2.Gen in
+  let+ strict_nat = pint ~origin:1 in
+  let ticket_amount = Protocol.Ticket_amount.of_zint (Z.of_int strict_nat) in
+  Option.get ticket_amount
+
 let gen_origination_nonce =
   let open Protocol.Alpha_context in
   let open QCheck2.Gen in
@@ -212,6 +218,18 @@ let gen_transaction =
   let* parameters = gen_expr in
   return (Transaction { amount; destination; entrypoint; parameters })
 
+let gen_transfer_ticket =
+  let open Protocol.Alpha_context in
+  let open QCheck2.Gen in
+  let* contents = gen_expr in
+  let* ty = gen_expr in
+  let* ticketer = gen_contract in
+  let* amount = gen_ticket_amount in
+  let* destination = gen_contract in
+  let* entrypoint = gen_entrypoint in
+  return
+    (Transfer_ticket { contents; ty; ticketer; amount; destination; entrypoint })
+
 let gen_update_consensus_key =
   let open Protocol.Alpha_context in
   let open QCheck2.Gen in
@@ -249,6 +267,7 @@ let gen_hidden_manager_operation =
       aux gen_reveal;
       aux gen_set_deposits_limit;
       aux gen_transaction;
+      aux gen_transfer_ticket;
       aux gen_update_consensus_key;
     ]
 
