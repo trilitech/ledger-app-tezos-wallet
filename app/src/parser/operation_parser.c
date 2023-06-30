@@ -117,13 +117,30 @@ const tz_operation_field_descriptor origination_fields[] = {
 };
 
 
+const tz_operation_field_descriptor transfer_tck_fields[] = {
+  // Name,           Kind,                        Req,  Skip,  None
+  { "Source",        TZ_OPERATION_FIELD_SOURCE,      true, true,  false },
+  { "Fee",           TZ_OPERATION_FIELD_AMOUNT,      true, false, false },
+  { "Counter",       TZ_OPERATION_FIELD_NAT,         true, true,  false },
+  { "Gas",           TZ_OPERATION_FIELD_NAT,         true, true,  false },
+  { "Storage limit", TZ_OPERATION_FIELD_NAT,         true, false, false },
+  { "Contents",      TZ_OPERATION_FIELD_EXPR,        true, false, false },
+  { "Type",          TZ_OPERATION_FIELD_EXPR,        true, false, false },
+  { "Ticketer",      TZ_OPERATION_FIELD_DESTINATION, true, false, false },
+  { "Amount",        TZ_OPERATION_FIELD_NAT,         true, false, false },
+  { "Destination",   TZ_OPERATION_FIELD_DESTINATION, true, false, false },
+  { "Entrypoint",    TZ_OPERATION_FIELD_ENTRYPOINT,  true, false, false },
+  { NULL, 0, 0, 0, 0 }
+};
+
 const tz_operation_descriptor tz_operation_descriptors[] = {
-  { TZ_OPERATION_TAG_REVEAL,      "Reveal",            reveal_fields       },
-  { TZ_OPERATION_TAG_TRANSACTION, "Transaction",       transaction_fields  },
-  { TZ_OPERATION_TAG_ORIGINATION, "Origination",       origination_fields  },
-  { TZ_OPERATION_TAG_DELEGATION,  "Delegation",        delegation_fields   },
-  { TZ_OPERATION_TAG_SET_DEPOSIT, "Set deposit limit", set_deposit_fields  },
-  { TZ_OPERATION_TAG_UPDATE_CK,   "Set consensus key", update_ck_fields    },
+  { TZ_OPERATION_TAG_REVEAL,       "Reveal",            reveal_fields       },
+  { TZ_OPERATION_TAG_TRANSACTION,  "Transaction",       transaction_fields  },
+  { TZ_OPERATION_TAG_ORIGINATION,  "Origination",       origination_fields  },
+  { TZ_OPERATION_TAG_DELEGATION,   "Delegation",        delegation_fields   },
+  { TZ_OPERATION_TAG_SET_DEPOSIT,  "Set deposit limit", set_deposit_fields  },
+  { TZ_OPERATION_TAG_UPDATE_CK,    "Set consensus key", update_ck_fields    },
+  { TZ_OPERATION_TAG_TRANSFER_TCK, "Transfer ticket",   transfer_tck_fields },
   { 0, NULL, 0 }
 };
 
@@ -519,6 +536,15 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state, tz_parser_regs
         state->operation.frame->step_read_micheline.inited = 0;
         state->operation.frame->step_read_micheline.skip = field->skip;
         state->operation.frame->step_read_micheline.name = name;
+        tz_must (push_frame(state, TZ_OPERATION_STEP_SIZE));
+        state->operation.frame->step_size.size = 0;
+        state->operation.frame->step_size.size_len = 4;
+        break;
+      }
+      case TZ_OPERATION_FIELD_ENTRYPOINT: {
+        tz_must (push_frame(state, TZ_OPERATION_STEP_READ_ENTRYPOINT));
+        state->operation.frame->step_read_entrypoint.ofs = 0;
+        state->operation.frame->step_read_entrypoint.skip = field->skip;
         tz_must (push_frame(state, TZ_OPERATION_STEP_SIZE));
         state->operation.frame->step_size.size = 0;
         state->operation.frame->step_size.size_len = 4;
