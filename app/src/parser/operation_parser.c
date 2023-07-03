@@ -219,7 +219,8 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state, tz_parser_regs
     tz_must (tz_parser_read(state, regs,&b));
     if (state->operation.frame->step_size.size > 255) tz_raise (TOO_LARGE); // enforce 16-bit restriction
     state->operation.frame->step_size.size = state->operation.frame->step_size.size << 8 | b;
-    if (state->operation.frame->stop == state->ofs) {
+    state->operation.frame->step_size.size_len--;
+    if (state->operation.frame->step_size.size_len <= 0) {
       state->operation.frame[-1].stop = state->ofs + state->operation.frame->step_size.size;
       tz_must (pop_frame (state));
     }
@@ -400,7 +401,7 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state, tz_parser_regs
           state->operation.frame->step_read_micheline.name = (char*) PIC(parameter_name);
           tz_must (push_frame(state, TZ_OPERATION_STEP_SIZE));
           state->operation.frame->step_size.size = 0;
-          state->operation.frame->stop = state->ofs+4;
+          state->operation.frame->step_size.size_len = 4;
           if (!skip) {
             tz_must (push_frame(state, TZ_OPERATION_STEP_PRINT));
             strcpy(state->field_name, "Entrypoint");
@@ -492,7 +493,7 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state, tz_parser_regs
         state->operation.frame->step_read_micheline.name = name;
         tz_must (push_frame(state, TZ_OPERATION_STEP_SIZE));
         state->operation.frame->step_size.size = 0;
-        state->operation.frame->stop = state->ofs+4;
+        state->operation.frame->step_size.size_len = 4;
         break;
       }
       default: tz_raise (INVALID_STATE);

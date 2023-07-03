@@ -76,6 +76,7 @@ typedef struct {
   uint16_t stop;
   union {
     struct {
+      uint8_t size_len;
       uint16_t size;
     } step_size;
     struct {
