@@ -89,6 +89,8 @@ let to_string
           [
             Format.asprintf "%a" Tezos_crypto.Signature.Public_key.pp public_key;
           ]
+    | Sc_rollup_add_messages { messages } ->
+        aux ~kind:"SR: send messages" messages
     | _ -> assert false
   in
   let rec operations_to_string : type t. t contents_list -> string = function

@@ -277,6 +277,12 @@ let operation_to_screens
             make_screen ~title:"Public key" "%a"
               Tezos_crypto.Signature.Public_key.pp public_key;
           ]
+    | Sc_rollup_add_messages { messages } ->
+        let make_screen_message i message =
+          let title = Format.sprintf "Message (%d)" i in
+          make_screen ~title "%s" message
+        in
+        aux ~kind:"SR: send messages" @@ List.mapi make_screen_message messages
     | _ -> assert false
   in
   let rec screen_of_operations : type t. int -> t contents_list -> screen list =

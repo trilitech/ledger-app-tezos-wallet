@@ -126,6 +126,11 @@ let gen_ticket_amount =
   let ticket_amount = Protocol.Ticket_amount.of_zint (Z.of_int strict_nat) in
   Option.get ticket_amount
 
+let gen_hexa_string size =
+  let open QCheck2.Gen in
+  let+ bytes = bytes_size size in
+  Hex.(show (of_bytes bytes))
+
 let gen_origination_nonce =
   let open Protocol.Alpha_context in
   let open QCheck2.Gen in
@@ -236,6 +241,12 @@ let gen_update_consensus_key =
   let* public_key = gen_public_key in
   return (Update_consensus_key public_key)
 
+let gen_sc_rollup_add_messages =
+  let open Protocol.Alpha_context in
+  let open QCheck2.Gen in
+  let* messages = list_size small_nat (gen_hexa_string small_nat) in
+  return (Sc_rollup_add_messages { messages })
+
 let gen_manager_operation gen_operation =
   let open Protocol.Alpha_context in
   let open QCheck2.Gen in
@@ -269,6 +280,7 @@ let gen_hidden_manager_operation =
       aux gen_transaction;
       aux gen_transfer_ticket;
       aux gen_update_consensus_key;
+      aux gen_sc_rollup_add_messages;
     ]
 
 type hidden_manager_operation_list =
