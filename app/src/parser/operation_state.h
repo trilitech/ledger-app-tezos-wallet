@@ -41,7 +41,7 @@ typedef enum {
   TZ_OPERATION_STEP_READ_NUM,
   TZ_OPERATION_STEP_READ_PK,
   TZ_OPERATION_STEP_READ_BYTES,
-  TZ_OPERATION_STEP_READ_ENTRYPOINT,
+  TZ_OPERATION_STEP_READ_STRING,
   TZ_OPERATION_STEP_READ_SMART_ENTRYPOINT,
   TZ_OPERATION_STEP_READ_MICHELINE
 } tz_operation_parser_step_kind;
@@ -104,7 +104,7 @@ typedef struct {
     struct {
       uint16_t ofs;
       uint8_t skip : 1;
-    } step_read_entrypoint;
+    } step_read_string;
     struct {
       const char *name;
       uint8_t inited : 1;
