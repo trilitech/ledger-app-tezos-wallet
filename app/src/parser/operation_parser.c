@@ -41,7 +41,8 @@ const char *const tz_operation_parser_step_name[] = {
   "READ_BYTES",
   "READ_STRING",
   "READ_SMART_ENTRYPOINT",
-  "READ_MICHELINE"
+  "READ_MICHELINE",
+  "READ_SORU_MESSAGES"
 };
 #endif
 
@@ -133,6 +134,17 @@ const tz_operation_field_descriptor transfer_tck_fields[] = {
   { NULL, 0, 0, 0, 0 }
 };
 
+const tz_operation_field_descriptor soru_add_msg_fields[] = {
+  // Name,           Kind,                        Req,  Skip,  None
+  { "Source",        TZ_OPERATION_FIELD_SOURCE,        true, true,  false },
+  { "Fee",           TZ_OPERATION_FIELD_AMOUNT,        true, false, false },
+  { "Counter",       TZ_OPERATION_FIELD_NAT,           true, true,  false },
+  { "Gas",           TZ_OPERATION_FIELD_NAT,           true, true,  false },
+  { "Storage limit", TZ_OPERATION_FIELD_NAT,           true, false, false },
+  { "Message",       TZ_OPERATION_FIELD_SORU_MESSAGES, true, false, false },
+  { NULL, 0, 0, 0, 0 }
+};
+
 const tz_operation_descriptor tz_operation_descriptors[] = {
   { TZ_OPERATION_TAG_REVEAL,       "Reveal",            reveal_fields       },
   { TZ_OPERATION_TAG_TRANSACTION,  "Transaction",       transaction_fields  },
@@ -141,6 +153,7 @@ const tz_operation_descriptor tz_operation_descriptors[] = {
   { TZ_OPERATION_TAG_SET_DEPOSIT,  "Set deposit limit", set_deposit_fields  },
   { TZ_OPERATION_TAG_UPDATE_CK,    "Set consensus key", update_ck_fields    },
   { TZ_OPERATION_TAG_TRANSFER_TCK, "Transfer ticket",   transfer_tck_fields },
+  { TZ_OPERATION_TAG_SORU_ADD_MSG, "SR: send messages", soru_add_msg_fields },
   { 0, NULL, 0 }
 };
 
@@ -551,6 +564,16 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
         state->operation.frame->step_size.size_len = 4;
         break;
       }
+      case TZ_OPERATION_FIELD_SORU_MESSAGES: {
+        tz_must (push_frame(state, TZ_OPERATION_STEP_READ_SORU_MESSAGES));
+        state->operation.frame->step_read_list.name = name;
+        state->operation.frame->step_read_list.index = 0;
+        state->operation.frame->step_read_list.skip = field->skip;
+        tz_must (push_frame(state, TZ_OPERATION_STEP_SIZE));
+        state->operation.frame->step_size.size = 0;
+        state->operation.frame->step_size.size_len = 4;
+        break;
+      }
       default: tz_raise (INVALID_STATE);
       }
     }
@@ -578,6 +601,24 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
       tz_raise (INVALID_TAG);
     }
     state->operation.frame->step = TZ_OPERATION_STEP_READ_BYTES;
+    break;
+  }
+  case TZ_OPERATION_STEP_READ_SORU_MESSAGES: {
+    uint8_t skip = state->operation.frame->step_read_list.skip;
+    const char* name = state->operation.frame->step_read_list.name;
+    uint16_t index = state->operation.frame->step_read_list.index;
+    if (state->operation.frame->stop == state->ofs) {
+      tz_must (pop_frame (state));
+    } else {
+      state->operation.frame->step_read_list.index++;
+      tz_must (push_frame(state, TZ_OPERATION_STEP_READ_STRING));
+      snprintf (state->field_name, TZ_FIELD_NAME_SIZE, "%s (%d)", name, index);
+      state->operation.frame->step_read_string.ofs = 0;
+      state->operation.frame->step_read_string.skip = skip;
+      tz_must (push_frame(state, TZ_OPERATION_STEP_SIZE));
+      state->operation.frame->step_size.size = 0;
+      state->operation.frame->step_size.size_len = 4;
+    }
     break;
   }
   case TZ_OPERATION_STEP_PRINT: {

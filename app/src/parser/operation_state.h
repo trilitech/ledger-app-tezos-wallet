@@ -27,7 +27,8 @@ typedef enum {
   TZ_OPERATION_TAG_DELEGATION   = 110,
   TZ_OPERATION_TAG_SET_DEPOSIT  = 112,
   TZ_OPERATION_TAG_UPDATE_CK    = 114,
-  TZ_OPERATION_TAG_TRANSFER_TCK = 158
+  TZ_OPERATION_TAG_TRANSFER_TCK = 158,
+  TZ_OPERATION_TAG_SORU_ADD_MSG = 201
 } tz_operation_tag;
 
 typedef enum {
@@ -43,7 +44,8 @@ typedef enum {
   TZ_OPERATION_STEP_READ_BYTES,
   TZ_OPERATION_STEP_READ_STRING,
   TZ_OPERATION_STEP_READ_SMART_ENTRYPOINT,
-  TZ_OPERATION_STEP_READ_MICHELINE
+  TZ_OPERATION_STEP_READ_MICHELINE,
+  TZ_OPERATION_STEP_READ_SORU_MESSAGES
 } tz_operation_parser_step_kind;
 
 typedef enum {
@@ -59,7 +61,8 @@ typedef enum {
   TZ_OPERATION_FIELD_EXPR,
   TZ_OPERATION_FIELD_ENTRYPOINT,
   TZ_OPERATION_FIELD_OPH,
-  TZ_OPERATION_FIELD_BH
+  TZ_OPERATION_FIELD_BH,
+  TZ_OPERATION_FIELD_SORU_MESSAGES
 } tz_operation_field_kind;
 
 
@@ -110,6 +113,11 @@ typedef struct {
       uint8_t inited : 1;
       uint8_t skip : 1;
     } step_read_micheline;
+    struct {
+      const char *name;
+      uint16_t index;
+      uint8_t skip : 1;
+    } step_read_list;
   };
 } tz_operation_parser_frame;
 
