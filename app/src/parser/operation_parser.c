@@ -199,7 +199,8 @@ static tz_parser_result tz_print_entrypoint(tz_parser_state *state) {
   tz_continue;
 }
 
-tz_parser_result tz_operation_parser_step(tz_parser_state *state, tz_parser_regs *regs) {
+tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
+  tz_parser_regs *regs = &state->regs;
 
   // cannot restart after error
   if (TZ_IS_ERR(state->errno)) tz_reraise;

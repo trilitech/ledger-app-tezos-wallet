@@ -35,9 +35,6 @@ typedef struct {
   size_t oofs; // current offset
   size_t olen; // remaining bytes writable in output
 } tz_parser_regs;
-extern void tz_parser_regs_flush(tz_parser_regs *regs, char *obuf, size_t olen);
-extern void tz_parser_regs_refill(tz_parser_regs *regs, uint8_t *ibuf, size_t ilen);
-extern void tz_parser_regs_flush_up_to(tz_parser_regs*, char*, size_t, size_t);
 
 // Parser state
 
@@ -68,6 +65,8 @@ const char* tz_parser_result_name(tz_parser_result code);
 #endif
 
 typedef struct {
+  tz_parser_regs regs;
+
   // common fields to communicate with caller
   tz_parser_result errno;
   char field_name[TZ_FIELD_NAME_SIZE];
@@ -83,11 +82,14 @@ typedef struct {
 } tz_parser_state;
 
 void tz_parser_init(tz_parser_state *);
+void tz_parser_flush(tz_parser_state *, char *, size_t);
+void tz_parser_flush_up_to(tz_parser_state *, char*, size_t, size_t);
+void tz_parser_refill(tz_parser_state *, uint8_t *, size_t);
+void tz_parser_skip(tz_parser_state *, tz_parser_regs *);
 
 tz_parser_result tz_parser_put(tz_parser_state *, tz_parser_regs *, char);
 tz_parser_result tz_parser_read(tz_parser_state *, tz_parser_regs *, uint8_t *);
 tz_parser_result tz_parser_peek(tz_parser_state *, tz_parser_regs *, uint8_t *);
-void tz_parser_skip(tz_parser_state *, tz_parser_regs *);
 
 // error handling utils
 

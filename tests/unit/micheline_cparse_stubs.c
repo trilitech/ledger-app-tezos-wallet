@@ -56,14 +56,17 @@ CAMLprim value micheline_cparse_step(value mlstate, value input, value output) {
   // https://gitlab.com/nomadic-labs/tezos-ledger-app-revamp/-/merge_requests/58#note_1434368804
   tz_parser_state *state = *((tz_parser_state**) Data_abstract_val(mlstate));
 
-  tz_parser_regs regs = {Bytes_val(ibuf), iofs, ilen, (char*) Bytes_val(obuf), oofs, olen};
-  int ilen_init = ilen;
-  int olen_init = olen;
+  state->regs.ibuf = Bytes_val(ibuf);
+  state->regs.iofs = iofs;
+  state->regs.ilen = ilen;
+  state->regs.obuf = (char*) Bytes_val(obuf);
+  state->regs.oofs = oofs;
+  state->regs.olen = olen;
 
-  while(!TZ_IS_BLOCKED(tz_micheline_parser_step(state, &regs)));
+  while(!TZ_IS_BLOCKED(tz_micheline_parser_step(state, &state->regs)));
 
-  int read = ilen_init-regs.ilen;
-  int written = olen_init-regs.olen;
+  int read = ilen - state->regs.ilen;
+  int written = olen - state->regs.olen;
 
   r = caml_alloc_tuple(3);
   Store_field(r, 0, Val_int(read));
@@ -113,14 +116,17 @@ CAMLprim value operation_cparse_step(value mlstate, value input, value output) {
   // https://gitlab.com/nomadic-labs/tezos-ledger-app-revamp/-/merge_requests/58#note_1434368804
   tz_parser_state *state = *((tz_parser_state**) Data_abstract_val(mlstate));
 
-  tz_parser_regs regs = {Bytes_val(ibuf), iofs, ilen, (char*) Bytes_val(obuf), oofs, olen};
-  int ilen_init = ilen;
-  int olen_init = olen;
+  state->regs.ibuf = Bytes_val(ibuf);
+  state->regs.iofs = iofs;
+  state->regs.ilen = ilen;
+  state->regs.obuf = (char*) Bytes_val(obuf);
+  state->regs.oofs = oofs;
+  state->regs.olen = olen;
 
-  while(!TZ_IS_BLOCKED(tz_operation_parser_step(state, &regs)));
+  while(!TZ_IS_BLOCKED(tz_operation_parser_step(state)));
 
-  int read = ilen_init-regs.ilen;
-  int written = olen_init-regs.olen;
+  int read = ilen - state->regs.ilen;
+  int written = olen - state->regs.olen;
 
   r = caml_alloc_tuple(3);
   Store_field(r, 0, Val_int(read));

@@ -180,32 +180,31 @@ static void send_continue() {
 
 static void refill() {
   size_t wrote = 0;
-  tz_parser_regs *regs = &global.apdu.sign.parser_regs;
+  tz_parser_state *st = &global.apdu.sign.parser_state;
 
   FUNC_ENTER(("void"));
-  while(!TZ_IS_BLOCKED(tz_operation_parser_step(&global.apdu.sign.parser_state, regs))){};
-  PRINTF("[DEBUG] refill(errno: %s) \n", tz_parser_result_name(global.apdu.sign.parser_state.errno));
-  switch (global.apdu.sign.parser_state.errno) {
+  while (!TZ_IS_BLOCKED(tz_operation_parser_step(st)))
+    ;
+  PRINTF("[DEBUG] refill(errno: %s) \n", tz_parser_result_name(st->errno));
+  switch (st->errno) {
   case TZ_BLO_IM_FULL:
   last_screen:
-    wrote = tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB,
-                              global.apdu.sign.parser_state.field_name,
+    wrote = tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, st->field_name,
                               global.apdu.sign.line_buf, TZ_UI_ICON_NONE);
 
-    tz_parser_regs_flush_up_to(&global.apdu.sign.parser_regs,
-                               global.apdu.sign.line_buf,
-                               TZ_UI_STREAM_CONTENTS_SIZE,
-                               wrote);
+    tz_parser_flush_up_to(st, global.apdu.sign.line_buf,
+                          TZ_UI_STREAM_CONTENTS_SIZE, wrote);
     break;
   case TZ_BLO_FEED_ME:
     send_continue();
     break;
   case TZ_BLO_DONE:
     if (!(global.apdu.sign.received_last_msg) ||
-        (global.apdu.sign.parser_regs.ilen != 0)) {
+        (st->regs.ilen != 0)) {
       failwith ("parsing done but some data left");
     }
-    if(global.apdu.sign.parser_regs.oofs != 0) goto last_screen;
+    if (st->regs.oofs != 0)
+      goto last_screen;
     tz_ui_stream_push_accept_reject();
     tz_ui_stream_close ();
     break;
@@ -256,12 +255,11 @@ static size_t handle_first_apdu(packet_t *pkt) {
 }
 
 static void handle_first_apdu_clear(__attribute__((unused)) packet_t *pkt) {
-  tz_operation_parser_init(&global.apdu.sign.parser_state, TZ_UNKNOWN_SIZE,
-                           false);
-  tz_parser_regs_refill (&global.apdu.sign.parser_regs, NULL, 0);
-  tz_parser_regs_flush(&global.apdu.sign.parser_regs,
-                       global.apdu.sign.line_buf,
-                       TZ_UI_STREAM_CONTENTS_SIZE);
+  tz_parser_state *st = &global.apdu.sign.parser_state;
+
+  tz_operation_parser_init(st, TZ_UNKNOWN_SIZE, false);
+  tz_parser_refill(st, NULL, 0);
+  tz_parser_flush(st, global.apdu.sign.line_buf, TZ_UI_STREAM_CONTENTS_SIZE);
 }
 
 static void handle_first_apdu_blind(__attribute__((unused)) packet_t *pkt) {
@@ -294,15 +292,16 @@ static size_t handle_data_apdu(packet_t *pkt) {
 }
 
 static size_t handle_data_apdu_clear(packet_t *pkt) {
-  if (global.apdu.sign.parser_regs.ilen > 0)
+  tz_parser_state *st = &global.apdu.sign.parser_state;
+
+  if (st->regs.ilen > 0)
     // we asked for more input but did not consume what we already had
     THROW(EXC_UNEXPECTED_SIGN_STATE);
 
   // refill the parser's input
-  tz_parser_regs_refill (&global.apdu.sign.parser_regs, pkt->buff, pkt->buff_size);
-  if (pkt->is_last) {
-    tz_operation_parser_set_size(&global.apdu.sign.parser_state, global.apdu.sign.total_length);
-  }
+  tz_parser_refill(st, pkt->buff, pkt->buff_size);
+  if (pkt->is_last)
+    tz_operation_parser_set_size(st, global.apdu.sign.total_length);
 
   // resume the parser with the new data
   refill ();

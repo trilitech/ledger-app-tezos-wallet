@@ -42,11 +42,14 @@ void tz_parser_init(tz_parser_state *state) {
   state->field_name[0] = 0;
 }
 
-void tz_parser_regs_flush(tz_parser_regs *regs,char *obuf, size_t olen) {
-  tz_parser_regs_flush_up_to(regs, obuf, olen, olen);
+void tz_parser_flush(tz_parser_state *st, char *obuf, size_t olen) {
+  tz_parser_flush_up_to(st, obuf, olen, olen);
 }
 
-void tz_parser_regs_flush_up_to(tz_parser_regs *regs, char *obuf, size_t olen, size_t up_to) {
+void tz_parser_flush_up_to(tz_parser_state *st, char *obuf, size_t olen,
+                                size_t up_to) {
+  tz_parser_regs *regs = &st->regs;
+
   regs->obuf = obuf;
   regs->oofs = 0;
   regs->olen = olen;
@@ -59,7 +62,9 @@ void tz_parser_regs_flush_up_to(tz_parser_regs *regs, char *obuf, size_t olen, s
   memset(regs->obuf + regs->oofs, 0x0, regs->olen);
 }
 
-void tz_parser_regs_refill(tz_parser_regs *regs,uint8_t *ibuf, size_t ilen) {
+void tz_parser_refill(tz_parser_state *st, uint8_t *ibuf, size_t ilen) {
+  tz_parser_regs *regs = &st->regs;
+
   regs->ibuf = ibuf;
   regs->iofs = 0;
   regs->ilen = ilen;
