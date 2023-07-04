@@ -59,6 +59,8 @@ def get_screen(url):
     r.raise_for_status()
     lines = [e["text"] for e in r.json()["events"]]
 
+    assert len(lines) > 0, "Unexpected empty screen. Speculos killed?"
+
     screen = Screen(title=lines[0], text=lines[1:])
     print(f'- {screen} -')
     return screen
