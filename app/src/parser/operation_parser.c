@@ -414,13 +414,14 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
     break;
   }
   case TZ_OPERATION_STEP_READ_STRING: {
-    uint8_t b;
-    tz_must (tz_parser_read(state,regs,&b));
-    state->buffers.capture[state->operation.frame->step_read_string.ofs] = b;
-    state->operation.frame->step_read_string.ofs++;
     if (state->ofs == state->operation.frame->stop) {
       state->buffers.capture[state->operation.frame->step_read_string.ofs] = 0;
       tz_must (tz_print_string(state));
+    } else {
+      uint8_t b;
+      tz_must (tz_parser_read(state,regs,&b));
+      state->buffers.capture[state->operation.frame->step_read_string.ofs] = b;
+      state->operation.frame->step_read_string.ofs++;
     }
     break;
   }
