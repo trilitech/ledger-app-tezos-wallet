@@ -153,7 +153,7 @@ const tz_operation_field_descriptor transfer_tck_fields[] = {
   { "Ticketer",      TZ_OPERATION_FIELD_DESTINATION, true, false, false },
   { "Amount",        TZ_OPERATION_FIELD_NAT,         true, false, false },
   { "Destination",   TZ_OPERATION_FIELD_DESTINATION, true, false, false },
-  { "Entrypoint",    TZ_OPERATION_FIELD_ENTRYPOINT,  true, false, false },
+  { "Entrypoint",    TZ_OPERATION_FIELD_STRING,      true, false, false },
   { NULL, 0, 0, 0, 0 }
 };
 
@@ -606,7 +606,7 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
         state->operation.frame->step_size.size_len = 4;
         break;
       }
-      case TZ_OPERATION_FIELD_ENTRYPOINT: {
+      case TZ_OPERATION_FIELD_STRING: {
         tz_must(push_frame(state, TZ_OPERATION_STEP_READ_STRING));
         state->operation.frame->step_read_string.ofs = 0;
         state->operation.frame->step_read_string.skip = field->skip;
