@@ -168,17 +168,31 @@ const tz_operation_field_descriptor soru_add_msg_fields[] = {
   { NULL, 0, 0, 0, 0 }
 };
 
+const tz_operation_field_descriptor soru_exe_msg_fields[] = {
+  // Name,           Kind,                        Req,  Skip,  None
+  { "Source",        TZ_OPERATION_FIELD_SOURCE,      true, true,  false },
+  { "Fee",           TZ_OPERATION_FIELD_AMOUNT,      true, false, false },
+  { "Counter",       TZ_OPERATION_FIELD_NAT,         true, true,  false },
+  { "Gas",           TZ_OPERATION_FIELD_NAT,         true, true,  false },
+  { "Storage limit", TZ_OPERATION_FIELD_NAT,         true, false, false },
+  { "Rollup",        TZ_OPERATION_FIELD_SR,          true, false, false },
+  { "Commitment",    TZ_OPERATION_FIELD_SRC,         true, false, false },
+  { "Output proof",  TZ_OPERATION_FIELD_STRING,      true, true,  false },
+  { NULL, 0, 0, 0, 0 }
+};
+
 const tz_operation_descriptor tz_operation_descriptors[] = {
-  { TZ_OPERATION_TAG_REVEAL,       "Reveal",                   reveal_fields       },
-  { TZ_OPERATION_TAG_TRANSACTION,  "Transaction",              transaction_fields  },
-  { TZ_OPERATION_TAG_ORIGINATION,  "Origination",              origination_fields  },
-  { TZ_OPERATION_TAG_DELEGATION,   "Delegation",               delegation_fields   },
-  { TZ_OPERATION_TAG_REG_GLB_CST,  "Register global constant", reg_glb_cst_fields  },
-  { TZ_OPERATION_TAG_SET_DEPOSIT,  "Set deposit limit",        set_deposit_fields  },
-  { TZ_OPERATION_TAG_INC_PAID_STG, "Increase paid storage", inc_paid_stg_fields },
-  { TZ_OPERATION_TAG_UPDATE_CK,    "Set consensus key",        update_ck_fields    },
-  { TZ_OPERATION_TAG_TRANSFER_TCK, "Transfer ticket",          transfer_tck_fields },
-  { TZ_OPERATION_TAG_SORU_ADD_MSG, "SR: send messages",        soru_add_msg_fields },
+  { TZ_OPERATION_TAG_REVEAL,       "Reveal",                     reveal_fields       },
+  { TZ_OPERATION_TAG_TRANSACTION,  "Transaction",                transaction_fields  },
+  { TZ_OPERATION_TAG_ORIGINATION,  "Origination",                origination_fields  },
+  { TZ_OPERATION_TAG_DELEGATION,   "Delegation",                 delegation_fields   },
+  { TZ_OPERATION_TAG_REG_GLB_CST,  "Register global constant",   reg_glb_cst_fields  },
+  { TZ_OPERATION_TAG_SET_DEPOSIT,  "Set deposit limit",          set_deposit_fields  },
+  { TZ_OPERATION_TAG_INC_PAID_STG, "Increase paid storage",      inc_paid_stg_fields },
+  { TZ_OPERATION_TAG_UPDATE_CK,    "Set consensus key",          update_ck_fields    },
+  { TZ_OPERATION_TAG_TRANSFER_TCK, "Transfer ticket",            transfer_tck_fields },
+  { TZ_OPERATION_TAG_SORU_ADD_MSG, "SR: send messages",          soru_add_msg_fields },
+  { TZ_OPERATION_TAG_SORU_EXE_MSG, "SR: execute outbox message", soru_exe_msg_fields },
   { 0, NULL, 0 }
 };
 
