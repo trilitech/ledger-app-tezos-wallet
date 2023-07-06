@@ -231,6 +231,13 @@ let gen_delegation =
   let* public_key_hash_opt = option gen_public_key_hash in
   return (Delegation public_key_hash_opt)
 
+let gen_increase_paid_storage =
+  let open Protocol.Alpha_context in
+  let open QCheck2.Gen in
+  let* amount_in_bytes = gen_z_bound in
+  let* destination = gen_contract_hash in
+  return (Increase_paid_storage { amount_in_bytes; destination })
+
 let gen_origination =
   let open Protocol.Alpha_context in
   let open QCheck2.Gen in
@@ -317,6 +324,7 @@ let gen_hidden_manager_operation =
   QCheck2.Gen.oneof
     [
       aux gen_delegation;
+      aux gen_increase_paid_storage;
       aux gen_origination;
       aux gen_register_global_constant;
       aux gen_reveal;

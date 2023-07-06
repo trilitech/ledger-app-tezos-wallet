@@ -54,8 +54,8 @@ let operations_too_large_or_too_deep
     | Transfer_ticket { contents; ty; _ } ->
         lazy_expr_too_large_or_too_deep contents
         || lazy_expr_too_large_or_too_deep ty
-    | Delegation _ | Reveal _ | Set_deposits_limit _ | Update_consensus_key _
-    | Sc_rollup_add_messages _ ->
+    | Delegation _ | Increase_paid_storage _ | Reveal _ | Set_deposits_limit _
+    | Update_consensus_key _ | Sc_rollup_add_messages _ ->
         false
     | _ -> assert false
   in

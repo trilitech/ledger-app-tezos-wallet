@@ -46,6 +46,12 @@ let to_string
               (pp_opt_field Tezos_crypto.Signature.Public_key_hash.pp)
               public_key_hash_opt;
           ]
+    | Increase_paid_storage { amount_in_bytes; destination } ->
+        aux ~kind:"Increase paid storage"
+          [
+            Z.to_string amount_in_bytes;
+            Format.asprintf "%a" Protocol.Contract_hash.pp destination;
+          ]
     | Origination { delegate; script = { code; storage }; credit } ->
         aux ~kind:"Origination"
           [

@@ -230,6 +230,13 @@ let operation_to_screens
               (pp_opt_field Tezos_crypto.Signature.Public_key_hash.pp)
               public_key_hash_opt;
           ]
+    | Increase_paid_storage { amount_in_bytes; destination } ->
+        aux ~kind:"Increase paid storage"
+          [
+            make_screen ~title:"Amount" "%s" (Z.to_string amount_in_bytes);
+            make_screen ~title:"Destination" "%a" Protocol.Contract_hash.pp
+              destination;
+          ]
     | Origination { delegate; script = { code; storage }; credit } ->
         aux ~kind:"Origination"
           [
