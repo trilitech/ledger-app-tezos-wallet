@@ -62,7 +62,7 @@ let operations_too_large_or_too_deep
   in
   let traverse_operation (type t) (operation : t contents) =
     match operation with
-    | Ballot _ | Failing_noop _ -> false
+    | Proposals _ | Ballot _ | Failing_noop _ -> false
     | Manager_operation _ | _ -> assert false
   in
   let rec traverse_contents : type t. t contents_list -> bool = function

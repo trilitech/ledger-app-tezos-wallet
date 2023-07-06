@@ -364,6 +364,15 @@ let gen_sc_rollup_execute_outbox_message =
     (Sc_rollup_execute_outbox_message
        { rollup; cemented_commitment; output_proof })
 
+let gen_proposals =
+  let open Protocol.Alpha_context in
+  let open QCheck2.Gen in
+  let max_proposals = int_bound Constants.max_proposals_per_delegate in
+  let* source = gen_public_key_hash in
+  let* period = int32 in
+  let* proposals = list_size max_proposals gen_protocol_hash in
+  return (Proposals { source; period; proposals })
+
 let gen_ballot_op =
   let open Protocol.Alpha_context in
   let open QCheck2.Gen in
@@ -399,7 +408,7 @@ let gen_hidden_operation =
   let aux gen_operation =
     QCheck2.Gen.map (fun operation -> HO operation) gen_operation
   in
-  [ aux gen_ballot_op; aux gen_failing_noop ]
+  [ aux gen_proposals; aux gen_ballot_op; aux gen_failing_noop ]
 
 type hidden_manager_operation =
   | HMO :

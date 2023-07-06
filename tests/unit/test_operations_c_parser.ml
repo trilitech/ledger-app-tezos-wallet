@@ -124,6 +124,16 @@ let to_string
     | Failing_noop message ->
         aux ~kind:"Failing noop"
           [ Format.asprintf "%a" pp_string_binary message ]
+    | Proposals { source; period; proposals } ->
+        aux ~kind:"Proposals"
+          ([
+             Format.asprintf "%a" Tezos_crypto.Signature.Public_key_hash.pp
+               source;
+             Format.asprintf "%ld" period;
+           ]
+          @ List.map
+              (Format.asprintf "%a" Tezos_crypto.Hashed.Protocol_hash.pp)
+              proposals)
     | Ballot { source; period; proposal; ballot } ->
         aux ~kind:"Ballot"
           [

@@ -215,6 +215,13 @@ let operation_to_screens
       (Contents_list contents : Protocol.Alpha_context.packed_contents_list) ) =
   let open Protocol.Alpha_context in
   let make_screen ~title fmt = Format.kasprintf (make_screen ~title) fmt in
+  let make_screens ~title pp values =
+    let aux i value =
+      let title = Format.sprintf "%s (%d)" title i in
+      make_screen ~title "%a" pp value
+    in
+    List.mapi aux values
+  in
   let screen_of_manager n (type t)
       (Manager_operation { fee; operation; storage_limit; _ } :
         t Kind.manager contents) =
@@ -305,11 +312,8 @@ let operation_to_screens
               Tezos_crypto.Signature.Public_key.pp public_key;
           ]
     | Sc_rollup_add_messages { messages } ->
-        let make_screen_message i message =
-          let title = Format.sprintf "Message (%d)" i in
-          make_screen ~title "%a" pp_string_binary message
-        in
-        aux ~kind:"SR: send messages" @@ List.mapi make_screen_message messages
+        aux ~kind:"SR: send messages"
+        @@ make_screens ~title:"Message" pp_string_binary messages
     | Sc_rollup_execute_outbox_message
         { rollup; cemented_commitment; output_proof } ->
         aux ~kind:"SR: execute outbox message"
@@ -329,6 +333,15 @@ let operation_to_screens
     | Failing_noop message ->
         aux ~kind:"Failing noop"
           [ make_screen ~title:"Message" "%a" pp_string_binary message ]
+    | Proposals { source; period; proposals } ->
+        aux ~kind:"Proposals"
+          ([
+             make_screen ~title:"Source" "%a"
+               Tezos_crypto.Signature.Public_key_hash.pp source;
+             make_screen ~title:"Period" "%ld" period;
+           ]
+          @ make_screens ~title:"Proposal" Tezos_crypto.Hashed.Protocol_hash.pp
+              proposals)
     | Ballot { source; period; proposal; ballot } ->
         aux ~kind:"Ballot"
           [
