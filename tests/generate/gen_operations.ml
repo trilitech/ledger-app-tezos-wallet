@@ -166,6 +166,26 @@ let gen_sc_rollup_commiment_hash =
   let+ sc_ch = oneofl some_sc_rollup_commiment_hash in
   Protocol.Alpha_context.Sc_rollup.Commitment.Hash.of_b58check_exn sc_ch
 
+let some_protocol_hash =
+  [
+    "ProtoDemoNoopsDemoNoopsDemoNoopsDemoNoopsDemo6XBoYp";
+    "ProtoGenesisGenesisGenesisGenesisGenesisGenesk612im";
+    "PrihK96nBAFSxVL1GLJTVhu9YnzkMFiBeuJRPA8NwuZVZCE1L6i";
+    "PtKathmankSpLLDALzWw7CGD2j2MtyveTwboEYokqUCP4a1LxMg";
+    "PtLimaPtLMwfNinJi9rCfDPWea8dFgTZ1MeJ9f1m2SRic6ayiwW";
+    "PtMumbai2TmsJHNGRkD8v8YDbtao7BLUC3wjASn1inAKLFCjaH1";
+    "PtNairobiyssHuh87hEhfVBGCVrK3WnS8Z2FT4ymB5tAa4r1nQf";
+    "ProtoALphaALphaALphaALphaALphaALphaALphaALphaDdp3zK";
+    "ProtoALphaALphaALphaALphaALphaALphaALpha61322gcLUGH";
+    "ProtoALphaALphaALphaALphaALphaALphaALphabc2a7ebx6WB";
+  ]
+
+let gen_protocol_hash =
+  let open QCheck2.Gen in
+  let open Tezos_crypto.Hashed in
+  let+ ph = oneofl some_protocol_hash in
+  Protocol_hash.of_b58check_exn ph
+
 let gen_tez =
   QCheck2.Gen.map Protocol.Alpha_context.Tez.(mul_exn one_cent) QCheck2.Gen.nat
 
@@ -185,6 +205,9 @@ let gen_ticket_amount =
   let+ strict_nat = pint ~origin:1 in
   let ticket_amount = Protocol.Ticket_amount.of_zint (Z.of_int strict_nat) in
   Option.get ticket_amount
+
+let gen_ballot =
+  QCheck2.Gen.oneofl Protocol.Alpha_context.Vote.[ Yay; Nay; Pass ]
 
 let gen_origination_nonce =
   let open Protocol.Alpha_context in
@@ -341,6 +364,15 @@ let gen_sc_rollup_execute_outbox_message =
     (Sc_rollup_execute_outbox_message
        { rollup; cemented_commitment; output_proof })
 
+let gen_ballot_op =
+  let open Protocol.Alpha_context in
+  let open QCheck2.Gen in
+  let* source = gen_public_key_hash in
+  let* period = int32 in
+  let* proposal = gen_protocol_hash in
+  let* ballot = gen_ballot in
+  return (Ballot { source; period; proposal; ballot })
+
 let gen_failing_noop =
   let open Protocol.Alpha_context in
   let open QCheck2.Gen in
@@ -367,7 +399,7 @@ let gen_hidden_operation =
   let aux gen_operation =
     QCheck2.Gen.map (fun operation -> HO operation) gen_operation
   in
-  [ aux gen_failing_noop ]
+  [ aux gen_ballot_op; aux gen_failing_noop ]
 
 type hidden_manager_operation =
   | HMO :

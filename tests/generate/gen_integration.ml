@@ -329,6 +329,16 @@ let operation_to_screens
     | Failing_noop message ->
         aux ~kind:"Failing noop"
           [ make_screen ~title:"Message" "%a" pp_string_binary message ]
+    | Ballot { source; period; proposal; ballot } ->
+        aux ~kind:"Ballot"
+          [
+            make_screen ~title:"Source" "%a"
+              Tezos_crypto.Signature.Public_key_hash.pp source;
+            make_screen ~title:"Period" "%ld" period;
+            make_screen ~title:"Proposal" "%a"
+              Tezos_crypto.Hashed.Protocol_hash.pp proposal;
+            make_screen ~title:"Ballot" "%a" Vote.pp_ballot ballot;
+          ]
     | Manager_operation _ | _ -> assert false
   in
   let rec screen_of_operations : type t. int -> t contents_list -> screen list =

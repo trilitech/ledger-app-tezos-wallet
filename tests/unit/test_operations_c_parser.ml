@@ -124,6 +124,15 @@ let to_string
     | Failing_noop message ->
         aux ~kind:"Failing noop"
           [ Format.asprintf "%a" pp_string_binary message ]
+    | Ballot { source; period; proposal; ballot } ->
+        aux ~kind:"Ballot"
+          [
+            Format.asprintf "%a" Tezos_crypto.Signature.Public_key_hash.pp
+              source;
+            Format.asprintf "%ld" period;
+            Format.asprintf "%a" Tezos_crypto.Hashed.Protocol_hash.pp proposal;
+            Format.asprintf "%a" Vote.pp_ballot ballot;
+          ]
     | Manager_operation _ | _ -> assert false
   in
   let rec operations_to_string : type t. t contents_list -> string = function
