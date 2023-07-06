@@ -456,6 +456,10 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
         if (tz_format_base58check("src1", capture, 32, (char*) capture))
           tz_raise(INVALID_TAG);
         break;
+      case TZ_OPERATION_FIELD_PROTO:
+        if (tz_format_base58check("proto", capture, 32, (char*) capture))
+          tz_raise(INVALID_TAG);
+        break;
       case TZ_OPERATION_FIELD_DESTINATION:
         memcpy(state->operation.destination, capture, 22);
         if (tz_format_address(capture, 22, (char*) capture))
@@ -624,6 +628,14 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
         break;
       }
       case TZ_OPERATION_FIELD_SRC: {
+        tz_must(push_frame(state, TZ_OPERATION_STEP_READ_BYTES));
+        state->operation.frame->step_read_bytes.kind = field->kind;
+        state->operation.frame->step_read_bytes.skip = field->skip;
+        state->operation.frame->step_read_bytes.ofs = 0;
+        state->operation.frame->step_read_bytes.len = 32;
+        break;
+      }
+      case TZ_OPERATION_FIELD_PROTO: {
         tz_must(push_frame(state, TZ_OPERATION_STEP_READ_BYTES));
         state->operation.frame->step_read_bytes.kind = field->kind;
         state->operation.frame->step_read_bytes.skip = field->skip;

@@ -303,9 +303,10 @@ static int find_prefix(const char *s, const uint8_t **p, size_t *pl, size_t dl)
 
   /* For tz_format_hash */
 
-  B58_PREFIX("B",    "\x01\x34",         2, 32);
-  B58_PREFIX("o",    "\x05\x74",         2, 32);
-  B58_PREFIX("expr", "\x0d\x2c\x40\x1b", 4, 32);
+  B58_PREFIX("B",     "\x01\x34",         2, 32);
+  B58_PREFIX("o",     "\x05\x74",         2, 32);
+  B58_PREFIX("expr",  "\x0d\x2c\x40\x1b", 4, 32);
+  B58_PREFIX("proto", "\x02\xaa",         2, 32);
 
   /* Public key hashes */
 
