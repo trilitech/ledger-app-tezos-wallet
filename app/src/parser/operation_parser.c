@@ -48,6 +48,12 @@ const char *const tz_operation_parser_step_name[] = {
 };
 #endif
 
+const tz_operation_field_descriptor failing_noop_fields[] = {
+  // Name,           Kind,                        Req,  Skip,  None
+  { "Message",       TZ_OPERATION_FIELD_BINARY,      true, false, false },
+  { NULL, 0, 0, 0, 0 }
+};
+
 const tz_operation_field_descriptor transaction_fields[] = {
   // Name,           Kind,                        Req,  Skip,  None
   { "Source",        TZ_OPERATION_FIELD_SOURCE,      true, true,  false },
@@ -184,6 +190,7 @@ const tz_operation_field_descriptor soru_exe_msg_fields[] = {
 };
 
 const tz_operation_descriptor tz_operation_descriptors[] = {
+  { TZ_OPERATION_TAG_FAILING_NOOP, "Failing noop",               failing_noop_fields },
   { TZ_OPERATION_TAG_REVEAL,       "Reveal",                     reveal_fields       },
   { TZ_OPERATION_TAG_TRANSACTION,  "Transaction",                transaction_fields  },
   { TZ_OPERATION_TAG_ORIGINATION,  "Origination",                origination_fields  },
