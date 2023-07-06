@@ -608,6 +608,11 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
     uint8_t skip = state->operation.frame->step_read_list.skip;
     const char* name = state->operation.frame->step_read_list.name;
     uint16_t index = state->operation.frame->step_read_list.index;
+
+    // Remaining content from previous message - display this first.
+    if (regs->oofs > 0)
+      tz_stop (IM_FULL);
+
     if (state->operation.frame->stop == state->ofs) {
       tz_must (pop_frame (state));
     } else {
