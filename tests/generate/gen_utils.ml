@@ -61,7 +61,9 @@ let operations_too_large_or_too_deep
     | _ -> assert false
   in
   let traverse_operation (type t) (operation : t contents) =
-    match operation with Manager_operation _ | _ -> assert false
+    match operation with
+    | Failing_noop _ -> false
+    | Manager_operation _ | _ -> assert false
   in
   let rec traverse_contents : type t. t contents_list -> bool = function
     | Single (Manager_operation _ as m) -> traverse_manager m

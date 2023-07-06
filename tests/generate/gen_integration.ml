@@ -322,10 +322,14 @@ let operation_to_screens
     | _ -> assert false
   in
   let screen_of_operation (type t) (operation : t contents) =
-    let _aux ~kind operation_screens =
+    let aux ~kind operation_screens =
       make_screen ~title:"Operation (0)" "%s" kind :: operation_screens
     in
-    match operation with Manager_operation _ | _ -> assert false
+    match operation with
+    | Failing_noop message ->
+        aux ~kind:"Failing noop"
+          [ make_screen ~title:"Message" "%a" pp_string_binary message ]
+    | Manager_operation _ | _ -> assert false
   in
   let rec screen_of_operations : type t. int -> t contents_list -> screen list =
    fun n -> function

@@ -341,6 +341,12 @@ let gen_sc_rollup_execute_outbox_message =
     (Sc_rollup_execute_outbox_message
        { rollup; cemented_commitment; output_proof })
 
+let gen_failing_noop =
+  let open Protocol.Alpha_context in
+  let open QCheck2.Gen in
+  let* message = string_size nat in
+  return (Failing_noop message)
+
 let gen_manager_operation gen_operation =
   let open Protocol.Alpha_context in
   let open QCheck2.Gen in
@@ -358,10 +364,10 @@ type hidden_operation =
   | HO : _ Protocol.Alpha_context.contents -> hidden_operation
 
 let gen_hidden_operation =
-  let _aux gen_operation =
+  let aux gen_operation =
     QCheck2.Gen.map (fun operation -> HO operation) gen_operation
   in
-  []
+  [ aux gen_failing_noop ]
 
 type hidden_manager_operation =
   | HMO :

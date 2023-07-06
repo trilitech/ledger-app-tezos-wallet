@@ -117,10 +117,14 @@ let to_string
     | _ -> assert false
   in
   let operation_to_string (type t) (operation : t contents) =
-    let _aux ~kind operation_fields =
+    let aux ~kind operation_fields =
       String.concat "" (kind :: operation_fields)
     in
-    match operation with Manager_operation _ | _ -> assert false
+    match operation with
+    | Failing_noop message ->
+        aux ~kind:"Failing noop"
+          [ Format.asprintf "%a" pp_string_binary message ]
+    | Manager_operation _ | _ -> assert false
   in
   let rec operations_to_string : type t. t contents_list -> string = function
     | Single (Manager_operation _ as m) -> manager_to_string m
