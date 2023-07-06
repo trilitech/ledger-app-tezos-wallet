@@ -321,12 +321,18 @@ let operation_to_screens
           ]
     | _ -> assert false
   in
+  let screen_of_operation (type t) (operation : t contents) =
+    let _aux ~kind operation_screens =
+      make_screen ~title:"Operation (0)" "%s" kind :: operation_screens
+    in
+    match operation with Manager_operation _ | _ -> assert false
+  in
   let rec screen_of_operations : type t. int -> t contents_list -> screen list =
    fun n -> function
     | Single (Manager_operation _ as m) -> screen_of_manager n m
     | Cons ((Manager_operation _ as m), rest) ->
         screen_of_manager n m @ screen_of_operations (succ n) rest
-    | _ -> assert false
+    | Single op -> screen_of_operation op
   in
   screen_of_operations 0 contents
 

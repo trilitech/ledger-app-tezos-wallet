@@ -116,11 +116,17 @@ let to_string
           ]
     | _ -> assert false
   in
+  let operation_to_string (type t) (operation : t contents) =
+    let _aux ~kind operation_fields =
+      String.concat "" (kind :: operation_fields)
+    in
+    match operation with Manager_operation _ | _ -> assert false
+  in
   let rec operations_to_string : type t. t contents_list -> string = function
     | Single (Manager_operation _ as m) -> manager_to_string m
     | Cons ((Manager_operation _ as m), rest) ->
         manager_to_string m ^ operations_to_string rest
-    | _ -> assert false
+    | Single op -> operation_to_string op
   in
   operations_to_string contents
 

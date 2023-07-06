@@ -354,6 +354,15 @@ let gen_manager_operation gen_operation =
     (Manager_operation
        { source; fee; counter; operation; gas_limit; storage_limit })
 
+type hidden_operation =
+  | HO : _ Protocol.Alpha_context.contents -> hidden_operation
+
+let gen_hidden_operation =
+  let _aux gen_operation =
+    QCheck2.Gen.map (fun operation -> HO operation) gen_operation
+  in
+  []
+
 type hidden_manager_operation =
   | HMO :
       _ Protocol.Alpha_context.Kind.manager Protocol.Alpha_context.contents
@@ -365,20 +374,19 @@ let gen_hidden_manager_operation =
       (fun manager_operation -> HMO manager_operation)
       (gen_manager_operation gen_operation)
   in
-  QCheck2.Gen.oneof
-    [
-      aux gen_delegation;
-      aux gen_increase_paid_storage;
-      aux gen_origination;
-      aux gen_register_global_constant;
-      aux gen_reveal;
-      aux gen_set_deposits_limit;
-      aux gen_transaction;
-      aux gen_transfer_ticket;
-      aux gen_update_consensus_key;
-      aux gen_sc_rollup_add_messages;
-      aux gen_sc_rollup_execute_outbox_message;
-    ]
+  [
+    aux gen_delegation;
+    aux gen_increase_paid_storage;
+    aux gen_origination;
+    aux gen_register_global_constant;
+    aux gen_reveal;
+    aux gen_set_deposits_limit;
+    aux gen_transaction;
+    aux gen_transfer_ticket;
+    aux gen_update_consensus_key;
+    aux gen_sc_rollup_add_messages;
+    aux gen_sc_rollup_execute_outbox_message;
+  ]
 
 type hidden_manager_operation_list =
   | HMOL :
@@ -388,19 +396,31 @@ type hidden_manager_operation_list =
 let gen_packed_contents_list =
   let open Protocol.Alpha_context in
   let open QCheck2.Gen in
-  (* Do not make operation batches too large *)
-  let* size = int_range 1 3 in
-  let rec aux i =
-    if i <= 1 then
-      let* (HMO manager_operation) = gen_hidden_manager_operation in
-      return (HMOL (Single manager_operation))
-    else
-      let* (HMO manager_operation) = gen_hidden_manager_operation in
-      let* (HMOL contents_list) = aux (i - 1) in
-      return (HMOL (Cons (manager_operation, contents_list)))
+  let gen_packed_manager_operation_list =
+    (* Do not make operation batches too large *)
+    let* size = int_range 1 3 in
+    let rec aux i =
+      if i <= 1 then
+        let* (HMO manager_operation) = oneof gen_hidden_manager_operation in
+        return (HMOL (Single manager_operation))
+      else
+        let* (HMO manager_operation) = oneof gen_hidden_manager_operation in
+        let* (HMOL contents_list) = aux (i - 1) in
+        return (HMOL (Cons (manager_operation, contents_list)))
+    in
+    let* (HMOL contents_list) = aux size in
+    return (Contents_list contents_list)
   in
-  let* (HMOL contents_list) = aux size in
-  return (Contents_list contents_list)
+  let gen_single_operation =
+    let+ (HO operation) = oneof gen_hidden_operation in
+    Contents_list (Single operation)
+  in
+  frequency
+    [
+      ( List.length gen_hidden_manager_operation,
+        gen_packed_manager_operation_list );
+      (List.length gen_hidden_operation, gen_single_operation);
+    ]
 
 let gen () =
   let shell =

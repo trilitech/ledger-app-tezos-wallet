@@ -60,10 +60,13 @@ let operations_too_large_or_too_deep
         false
     | _ -> assert false
   in
+  let traverse_operation (type t) (operation : t contents) =
+    match operation with Manager_operation _ | _ -> assert false
+  in
   let rec traverse_contents : type t. t contents_list -> bool = function
     | Single (Manager_operation _ as m) -> traverse_manager m
     | Cons ((Manager_operation _ as m), rest) ->
         traverse_manager m || traverse_contents rest
-    | _ -> assert false
+    | Single op -> traverse_operation op
   in
   traverse_contents contents
