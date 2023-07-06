@@ -237,7 +237,17 @@ run_a_test() {
             set -x
         fi
         start_speculos_runner $DBG
-        ( set -e; . $CMD )
+        (
+            set -e;
+            case $CMD in
+                *.sh)
+                    . $CMD
+                    ;;
+                *.py)
+                    PORT=$PORT python3 $CMD
+                    ;;
+            esac
+        )
         RETCODE=$?
         kill_speculos_runner
         exit $RETCODE
@@ -286,7 +296,7 @@ test_a_path() {
     THE_PATH="$1"
 
     if [ -d "$THE_PATH" ]; then
-        set -- $THE_PATH/*.sh                # XXXrcd: maybe *.t?
+        set -- $THE_PATH/*
     else
         set -- $THE_PATH
     fi

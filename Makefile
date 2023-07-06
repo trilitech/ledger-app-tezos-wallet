@@ -69,8 +69,8 @@ RUN_TEST_DOCKER = ./tests/integration/run_test_docker.sh
 
 integration_tests_basic_%:	app_%.tgz			\
 				app_%_dbg.tgz			\
-				tests/integration/*.sh		\
-				tests/integration/%/*.sh
+				tests/integration/*		\
+				tests/integration/%/*
 	$(RUN_TEST_DOCKER) $* tests/integration/$*
 
 integration_tests_basic:	integration_tests_basic_nanos	\
