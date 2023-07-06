@@ -239,6 +239,12 @@ let gen_origination =
   let* credit = gen_tez in
   return (Origination { delegate; script; credit })
 
+let gen_register_global_constant =
+  let open Protocol.Alpha_context in
+  let open QCheck2.Gen in
+  let* value = gen_lazy_expr in
+  return (Register_global_constant { value })
+
 let gen_reveal =
   let open Protocol.Alpha_context in
   let open QCheck2.Gen in
@@ -312,6 +318,7 @@ let gen_hidden_manager_operation =
     [
       aux gen_delegation;
       aux gen_origination;
+      aux gen_register_global_constant;
       aux gen_reveal;
       aux gen_set_deposits_limit;
       aux gen_transaction;

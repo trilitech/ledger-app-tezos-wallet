@@ -47,6 +47,8 @@ let operations_too_large_or_too_deep
     | Origination { script = { code; storage }; _ } ->
         lazy_expr_too_large_or_too_deep code
         || lazy_expr_too_large_or_too_deep storage
+    | Register_global_constant { value } ->
+        lazy_expr_too_large_or_too_deep value
     | Transaction { parameters; _ } ->
         lazy_expr_too_large_or_too_deep parameters
     | Transfer_ticket { contents; ty; _ } ->

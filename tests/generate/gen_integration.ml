@@ -240,6 +240,9 @@ let operation_to_screens
             make_screen ~title:"Code" "%a" pp_lazy_expr code;
             make_screen ~title:"Storage" "%a" pp_lazy_expr storage;
           ]
+    | Register_global_constant { value } ->
+        aux ~kind:"Register global constant"
+          [ make_screen ~title:"Value" "%a" pp_lazy_expr value ]
     | Reveal public_key ->
         aux ~kind:"Reveal"
           [

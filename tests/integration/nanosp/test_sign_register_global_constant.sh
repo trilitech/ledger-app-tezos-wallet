@@ -1,0 +1,17 @@
+# full input: 00000000000000000000000000000000000000000000000000000000000000006f00ffdd6102321bc251e4a5190ad5b12b251069d9b4904e0203040000000a07070100000001310002
+# signer: tz1dyX3B1CFYa2DfdFLyPtiJCfQRUgPVME6E
+expect_full_text 'Tezos Wallet' 'ready for' 'safe signing'
+send_async_apdus \
+	800f000011048000002c800006c18000000080000000 "expect_apdu_return 9000" \
+	800f81004a0300000000000000000000000000000000000000000000000000000000000000006f00ffdd6102321bc251e4a5190ad5b12b251069d9b4904e0203040000000a07070100000001310002 "expect_apdu_return bb38ac8ad80f5280b3f4e006d5656a8c8f6192994c86dcd160e4f5977332ccb7528f3b3ff8b2ed2095f23add2c7409b05cbfdf1dae96ad7436083429bad30cd867912a42fe9f5eddc153cb847f13ffa4e7979ce78b833f8c7cbf3b83455918029000"
+expect_section_content nanosp 'Operation (0)' 'Register global constant'
+press_button right
+expect_section_content nanosp 'Fee' '0.01 tz'
+press_button right
+expect_section_content nanosp 'Storage limit' '4'
+press_button right
+expect_section_content nanosp 'Value' 'Pair "1" 2'
+press_button right
+expect_full_text 'Accept?' 'Press both buttons to accept.'
+press_button both
+expect_async_apdus_sent

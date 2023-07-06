@@ -56,6 +56,9 @@ let to_string
             Format.asprintf "%a" pp_lazy_expr code;
             Format.asprintf "%a" pp_lazy_expr storage;
           ]
+    | Register_global_constant { value } ->
+        aux ~kind:"Register global constant"
+          [ Format.asprintf "%a" pp_lazy_expr value ]
     | Reveal public_key ->
         aux ~kind:"Reveal"
           [
