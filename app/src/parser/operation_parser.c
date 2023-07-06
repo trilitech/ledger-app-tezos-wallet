@@ -46,9 +46,18 @@ const char *const tz_operation_parser_step_name[] = {
   "READ_SMART_ENTRYPOINT",
   "READ_MICHELINE",
   "READ_SORU_MESSAGES",
-  "READ_BALLOT"
+  "READ_BALLOT",
+  "READ_PROTOS"
 };
 #endif
+
+const tz_operation_field_descriptor proposals_fields[] = {
+  // Name,           Kind,                        Req,  Skip,  None
+  { "Source",        TZ_OPERATION_FIELD_PKH,         true, false, false },
+  { "Period",        TZ_OPERATION_FIELD_INT32,       true, false, false },
+  { "Proposal",      TZ_OPERATION_FIELD_PROTOS,      true, false, false },
+  { NULL, 0, 0, 0, 0 }
+};
 
 const tz_operation_field_descriptor ballot_fields[] = {
   // Name,           Kind,                        Req,  Skip,  None
@@ -201,6 +210,7 @@ const tz_operation_field_descriptor soru_exe_msg_fields[] = {
 };
 
 const tz_operation_descriptor tz_operation_descriptors[] = {
+  { TZ_OPERATION_TAG_PROPOSALS,    "Proposals",                  proposals_fields    },
   { TZ_OPERATION_TAG_BALLOT,       "Ballot",                     ballot_fields       },
   { TZ_OPERATION_TAG_FAILING_NOOP, "Failing noop",               failing_noop_fields },
   { TZ_OPERATION_TAG_REVEAL,       "Reveal",                     reveal_fields       },
@@ -268,7 +278,7 @@ void tz_operation_parser_init(tz_parser_state *state, uint16_t size,
 
 static tz_parser_result tz_print_string(tz_parser_state *state) {
   if (state->operation.frame->step_read_string.skip) {
-    tz_must(pop_frame (state));
+    tz_must(pop_frame(state));
     tz_continue;
   }
   state->operation.frame->step = TZ_OPERATION_STEP_PRINT;
@@ -666,6 +676,16 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
         state->operation.frame->step_read_bytes.len = 32;
         break;
       }
+      case TZ_OPERATION_FIELD_PROTOS: {
+        tz_must(push_frame(state, TZ_OPERATION_STEP_READ_PROTOS));
+        state->operation.frame->step_read_list.name = name;
+        state->operation.frame->step_read_list.index = 0;
+        state->operation.frame->step_read_list.skip = field->skip;
+        tz_must (push_frame(state, TZ_OPERATION_STEP_SIZE));
+        state->operation.frame->step_size.size = 0;
+        state->operation.frame->step_size.size_len = 4;
+        break;
+      }
       case TZ_OPERATION_FIELD_DESTINATION: {
         tz_must(push_frame(state, TZ_OPERATION_STEP_READ_BYTES));
         state->operation.frame->step_read_bytes.kind = field->kind;
@@ -785,7 +805,7 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
       tz_stop(IM_FULL);
 
     if (state->operation.frame->stop == state->ofs) {
-      tz_must(pop_frame (state));
+      tz_must(pop_frame(state));
     } else {
       state->operation.frame->step_read_list.index++;
       tz_must(push_frame(state, TZ_OPERATION_STEP_READ_BINARY));
@@ -814,6 +834,28 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
     default: tz_raise(INVALID_TAG);
     }
     tz_must(tz_print_string(state));
+    break;
+  }
+  case TZ_OPERATION_STEP_READ_PROTOS: {
+    uint8_t skip = state->operation.frame->step_read_list.skip;
+    const char* name = state->operation.frame->step_read_list.name;
+    uint16_t index = state->operation.frame->step_read_list.index;
+
+    // Remaining content from previous proto - display this first.
+    if (regs->oofs > 0)
+      tz_stop(IM_FULL);
+
+    if (state->operation.frame->stop == state->ofs) {
+      tz_must(pop_frame(state));
+    } else {
+      state->operation.frame->step_read_list.index++;
+      tz_must(push_frame(state, TZ_OPERATION_STEP_READ_BYTES));
+      snprintf(state->field_name, 30, "%s (%d)", name, index);
+      state->operation.frame->step_read_bytes.kind = TZ_OPERATION_FIELD_PROTO;
+      state->operation.frame->step_read_bytes.skip = skip;
+      state->operation.frame->step_read_bytes.ofs = 0;
+      state->operation.frame->step_read_bytes.len = 32;
+    }
     break;
   }
   case TZ_OPERATION_STEP_PRINT: {
