@@ -2,6 +2,7 @@
 
    Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
    Copyright 2023 Functori <contact@functori.com>
+   Copyright 2023 TriliTech <contact@trili.tech>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -179,11 +180,12 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state, tz_parser_regs
   // nothing else to do
   if (state->operation.frame == NULL) tz_stop (DONE);
 
-  PRINTF("[DEBUG] operation(frame: %d, offset:%d/%d, ilen: %d, step: %s, errno: %s)\n",
+  PRINTF("[DEBUG] operation(frame: %d, offset:%d/%d, ilen: %d, olen: %d, step: %s, errno: %s)\n",
          (int) (state->operation.frame - state->operation.stack),
          (int) state->ofs,
          (int) state->operation.stack[0].stop,
          (int) regs->ilen,
+         (int) regs->oofs,
          (const char*) PIC(tz_operation_parser_step_name[state->operation.frame->step]),
          tz_parser_result_name(state->errno));
 
@@ -415,6 +417,11 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state, tz_parser_regs
     const tz_operation_field_descriptor *field =
       PIC(&d->fields[state->operation.frame->step_operation.field]);
     const char *name = PIC(field->name);
+
+    // Remaining content from previous section - display this first.
+    if (regs->oofs > 0)
+      tz_stop (IM_FULL);
+
     if (name == NULL) {
       tz_must (pop_frame (state));
     } else {
