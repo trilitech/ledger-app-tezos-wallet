@@ -210,6 +210,20 @@ const tz_operation_field_descriptor soru_exe_msg_fields[] = {
   { NULL, 0, 0, 0, 0 }
 };
 
+const tz_operation_field_descriptor soru_origin_fields[] = {
+  // Name,           Kind,                        Req,  Skip,  None
+  { "Source",        TZ_OPERATION_FIELD_SOURCE,      true, true,  false },
+  { "Fee",           TZ_OPERATION_FIELD_AMOUNT,      true, false, false },
+  { "Counter",       TZ_OPERATION_FIELD_NAT,         true, true,  false },
+  { "Gas",           TZ_OPERATION_FIELD_NAT,         true, true,  false },
+  { "Storage limit", TZ_OPERATION_FIELD_NAT,         true, false, false },
+  { "Kind",          TZ_OPERATION_FIELD_SORU_KIND,   true, false, false },
+  { "Kernel",        TZ_OPERATION_FIELD_BINARY,      true, false, false },
+  { "Proof",         TZ_OPERATION_FIELD_BINARY,      true, false, false },
+  { "Parameters",    TZ_OPERATION_FIELD_EXPR,        true, false, false },
+  { NULL, 0, 0, 0, 0 }
+};
+
 const tz_operation_descriptor tz_operation_descriptors[] = {
   { TZ_OPERATION_TAG_PROPOSALS,    "Proposals",                  proposals_fields    },
   { TZ_OPERATION_TAG_BALLOT,       "Ballot",                     ballot_fields       },
@@ -225,6 +239,7 @@ const tz_operation_descriptor tz_operation_descriptors[] = {
   { TZ_OPERATION_TAG_TRANSFER_TCK, "Transfer ticket",            transfer_tck_fields },
   { TZ_OPERATION_TAG_SORU_ADD_MSG, "SR: send messages",          soru_add_msg_fields },
   { TZ_OPERATION_TAG_SORU_EXE_MSG, "SR: execute outbox message", soru_exe_msg_fields },
+  { TZ_OPERATION_TAG_SORU_ORIGIN,  "SR: originate",              soru_origin_fields  },
   { 0, NULL, 0 }
 };
 
