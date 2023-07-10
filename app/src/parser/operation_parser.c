@@ -39,6 +39,7 @@ const char *const tz_operation_parser_step_name[] = {
   "PRINT",
   "PARTIAL_PRINT",
   "READ_NUM",
+  "READ_INT32",
   "READ_PK",
   "READ_BYTES",
   "READ_STRING",
@@ -423,6 +424,17 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
     }
     break;
   }
+  case TZ_OPERATION_STEP_READ_INT32: {
+    uint32_t value = 0;
+    uint8_t b;
+    for (int ofs = 0; ofs < 4; ofs++) {
+      tz_must(tz_parser_read(state, &b));
+      value = value << 8 | b;
+    }
+    snprintf((char*) capture, 30, "%d", value);
+    tz_must(tz_print_string(state));
+    break;
+  }
   case TZ_OPERATION_STEP_READ_BYTES: {
     if (state->operation.frame->step_read_bytes.ofs <
         state->operation.frame->step_read_bytes.len) {
@@ -668,6 +680,11 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
         state->operation.frame->step_read_num.kind = field->kind;
         state->operation.frame->step_read_num.skip = field->skip;
         state->operation.frame->step_read_num.natural = 0;
+        break;
+      }
+      case TZ_OPERATION_FIELD_INT32: {
+        tz_must(push_frame(state, TZ_OPERATION_STEP_READ_INT32));
+        state->operation.frame->step_read_string.skip = field->skip;
         break;
       }
       case TZ_OPERATION_FIELD_PARAMETER: {

@@ -46,6 +46,7 @@ typedef enum {
   TZ_OPERATION_STEP_PRINT,
   TZ_OPERATION_STEP_PARTIAL_PRINT,
   TZ_OPERATION_STEP_READ_NUM,
+  TZ_OPERATION_STEP_READ_INT32,
   TZ_OPERATION_STEP_READ_PK,
   TZ_OPERATION_STEP_READ_BYTES,
   TZ_OPERATION_STEP_READ_STRING,
@@ -60,6 +61,7 @@ typedef enum {
   TZ_OPERATION_FIELD_INT,
   TZ_OPERATION_FIELD_NAT,
   TZ_OPERATION_FIELD_AMOUNT,
+  TZ_OPERATION_FIELD_INT32,
   TZ_OPERATION_FIELD_STRING,
   TZ_OPERATION_FIELD_SOURCE,
   TZ_OPERATION_FIELD_PKH,
@@ -89,7 +91,7 @@ typedef struct {
 } tz_operation_descriptor;
 
 typedef struct {
-  tz_operation_parser_step_kind step : 4;
+  tz_operation_parser_step_kind step : 5;
   uint16_t stop;
   union {
     struct {
