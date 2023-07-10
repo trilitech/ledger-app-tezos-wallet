@@ -46,6 +46,7 @@ const char *const tz_operation_parser_step_name[] = {
   "READ_SMART_ENTRYPOINT",
   "READ_MICHELINE",
   "READ_SORU_MESSAGES",
+  "READ_SORU_KIND",
   "READ_BALLOT",
   "READ_PROTOS"
 };
@@ -761,6 +762,11 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
         state->operation.frame->step_size.size_len = 4;
         break;
       }
+      case TZ_OPERATION_FIELD_SORU_KIND: {
+        tz_must(push_frame(state, TZ_OPERATION_STEP_READ_SORU_KIND));
+        state->operation.frame->step_read_string.skip = field->skip;
+        break;
+      }
       case TZ_OPERATION_FIELD_BALLOT: {
         tz_must(push_frame(state, TZ_OPERATION_STEP_READ_BALLOT));
         state->operation.frame->step_read_string.skip = field->skip;
@@ -816,6 +822,21 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
       state->operation.frame->step_size.size = 0;
       state->operation.frame->step_size.size_len = 4;
     }
+    break;
+  }
+  case TZ_OPERATION_STEP_READ_SORU_KIND: {
+    uint8_t b;
+    tz_must(tz_parser_read(state, &b));
+    switch(b) {
+    case 0:
+      strcpy((char*) capture, "arith");
+      break;
+    case 1:
+      strcpy((char*) capture, "wasm_2_0_0");
+      break;
+    default: tz_raise(INVALID_TAG);
+    }
+    tz_must(tz_print_string(state));
     break;
   }
   case TZ_OPERATION_STEP_READ_BALLOT: {
