@@ -106,7 +106,7 @@ function expect_full_text {
 function expect_section_content {
     echo -n " - expect_section_content $2"
 
-    $(dirname $0)/check_section_text.py -d $1 -u $SPECULOS_URL -t "$2" -e "$3"
+    $(dirname $0)/check_section_text.py --device=$1 --url=$SPECULOS_URL --title="$2" --expected-content="$3"
 
     res=$?
     set -e
