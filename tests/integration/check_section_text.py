@@ -75,6 +75,10 @@ def press_right(url):
     """Press the right button."""
     return press_button(url, 'right')
 
+def press_left(url):
+    """Press the left button."""
+    return press_button(url, 'left')
+
 def check_multi_screen(url, title, content, content_lines):
     """Assert that the screen contents across all screens with the given title match expected content."""
     while True:
@@ -92,6 +96,29 @@ def check_multi_screen(url, title, content, content_lines):
       press_right(url)
 
     print(f'- final screen {on_screen} -')
+
+def check_potential_remaining_screen(url, device, title, content):
+    """Ignore the next blank screen on nanosp/nanox to avoid missing a potential terminal 'S'."""
+    # OCR issue https://github.com/LedgerHQ/speculos/issues/204
+    if device in ["nanosp", "nanox"] and content.endswith('S'):
+
+      def check_screen(screen):
+        if screen.title == title:
+          assert all([l == "" for l in screen.text]), f"Expected blank screen (containing only 'S'), got {screen.text}"
+        return screen
+
+      while True:
+        press_right(url)
+        screen = with_retry(url, check_screen)
+        if screen.title != title:
+          break
+
+      def check_back(screen):
+        assert screen.title == title
+
+      press_left(url)
+      # wait until we are back on last page of content
+      with_retry(url, check_back)
 
 def device_content_lines(device: str) -> int:
   if device == "nanos":
@@ -124,3 +151,4 @@ if __name__ == "__main__":
     content = device_alter_content(args.device, args.expected_content)
 
     check_multi_screen(args.url, args.title, content, content_lines)
+    check_potential_remaining_screen(args.url, args.device, args.title, args.expected_content)
