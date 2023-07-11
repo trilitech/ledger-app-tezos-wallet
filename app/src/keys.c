@@ -66,7 +66,8 @@ struct bip32_path_wire {
     uint32_t components[0];
 } __attribute__((packed));
 
-size_t read_bip32_path(bip32_path_t *const out, uint8_t const *const in, size_t const in_size) {
+size_t read_bip32_path(bip32_path_t *const out, uint8_t const *const in,
+                       size_t in_size) {
     struct bip32_path_wire const *const buf_as_bip32 = (struct bip32_path_wire const *) in;
 
     FUNC_ENTER(("out=%p, in=%p, in_size=%u", out, in, in_size));
@@ -185,7 +186,7 @@ void public_key_hash(uint8_t *const hash_out,
                      size_t const hash_out_size,
                      cx_ecfp_public_key_t *compressed_out,
                      derivation_type_t const derivation_type,
-                     cx_ecfp_public_key_t const *const restrict public_key) {
+                     cx_ecfp_public_key_t const *const public_key) {
     FUNC_ENTER(("hash_out=%p, hash_out_size=%u, compressed_out=%p, "
                 "derivation_type=%d, public_key=%p",
                 hash_out, hash_out_size, compressed_out,
