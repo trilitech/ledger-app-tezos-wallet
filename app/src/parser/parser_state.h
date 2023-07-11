@@ -61,7 +61,7 @@ typedef enum {
 #define TZ_IS_ERR(code) (code >= 200)
 
 #ifdef TEZOS_DEBUG
-const char* tz_parser_result_name(tz_parser_result code);
+const char* tz_parser_result_name(tz_parser_result);
 #endif
 
 typedef struct {
