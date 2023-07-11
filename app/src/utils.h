@@ -23,9 +23,15 @@
 		PRINTF(") at %s:%u\n", __FILE__, __LINE__);		\
 		PRINTF("[DEBUG] stack = 0x%p (%s)\n", &_tmp, __func__);	\
 		if (app_stack_canary != 0xDEADBEEF)			\
-			PRINTF("[DEBUG] Stack has been smashed\n");	\
+		    PRINTF("[DEBUG] Stack (0x%p) has been smashed\n",	\
+		           &app_stack_canary);				\
 	} while (0)
-#define FUNC_LEAVE()	PRINTF("[DEBUG] leave %s\n", __func__)
+#define FUNC_LEAVE()	do {						\
+		if (app_stack_canary != 0xDEADBEEF)			\
+		    PRINTF("[DEBUG] Stack (0x%p) has been smashed "	\
+		           "(leaving function)\n", &app_stack_canary);	\
+		PRINTF("[DEBUG] leave %s\n", __func__);			\
+	} while (0)
 #else
 #define FUNC_ENTER(x)
 #define FUNC_LEAVE()
