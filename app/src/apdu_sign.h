@@ -23,4 +23,4 @@
 #include <unistd.h>
 #include <stdbool.h>
 
-size_t handle_apdu_sign(__attribute__((unused)) bool);
+size_t handle_apdu_sign(bool);
