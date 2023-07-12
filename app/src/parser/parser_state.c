@@ -70,7 +70,8 @@ void tz_parser_refill(tz_parser_state *st, uint8_t *ibuf, size_t ilen) {
   regs->ilen = ilen;
 }
 
-tz_parser_result tz_parser_set_errno(tz_parser_state *state, tz_parser_result code) {
+tz_parser_result tz_parser_set_errno(tz_parser_state *state,
+                                     tz_parser_result code) {
   state->errno = ((code == TZ_BREAK) ? TZ_CONTINUE : code);
   return code;
 }

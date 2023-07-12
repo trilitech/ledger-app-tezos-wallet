@@ -42,7 +42,8 @@ CAMLprim value micheline_cparse_init(value size) {
   CAMLreturn(r);
 }
 
-CAMLprim value micheline_cparse_step(value mlstate, value input, value output) {
+CAMLprim value micheline_cparse_step(value mlstate, value input,
+                                     value output) {
   CAMLparam3(mlstate, input, output);
   CAMLlocal3(ibuf, obuf, r);
   ibuf = Field(input, 0);
@@ -103,7 +104,8 @@ CAMLprim value micheline_cparse_step(value mlstate, value input, value output) {
   CAMLreturn(r);
 }
 
-CAMLprim value operation_cparse_step(value mlstate, value input, value output) {
+CAMLprim value operation_cparse_step(value mlstate, value input,
+                                     value output) {
   CAMLparam3(mlstate, input, output);
   CAMLlocal3(ibuf, obuf, r);
   ibuf = Field(input, 0);

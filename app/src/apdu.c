@@ -26,7 +26,13 @@
 #include "apdu_sign.h"
 #include "apdu_pubkey.h"
 
-const uint8_t version[4] = {0 /* wallet */, APPVERSION_M, APPVERSION_N, APPVERSION_P};
+const uint8_t version[4] = {
+  0 /* wallet */,
+  APPVERSION_M,
+  APPVERSION_N,
+  APPVERSION_P
+};
+
 
 size_t handle_apdu_version() {
     memcpy(G_io_apdu_buffer, &version, sizeof(version));

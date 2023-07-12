@@ -59,8 +59,10 @@ static void format_pkh(char* buffer) {
   uint8_t hash[21];
 
   FUNC_ENTER(("buffer=%p", buffer));
-  generate_public_key(&pubkey, global.path_with_curve.derivation_type, &global.path_with_curve.bip32_path);
-  public_key_hash(hash+1, 20, NULL, global.path_with_curve.derivation_type, &pubkey);
+  generate_public_key(&pubkey, global.path_with_curve.derivation_type,
+                      &global.path_with_curve.bip32_path);
+  public_key_hash(hash+1, 20, NULL, global.path_with_curve.derivation_type,
+                  &pubkey);
   switch (global.path_with_curve.derivation_type) {
   case DERIVATION_TYPE_SECP256K1: hash[0] = 1; break;
   case DERIVATION_TYPE_SECP256R1: hash[0] = 2; break;
@@ -105,10 +107,12 @@ size_t handle_apdu_get_public_key(bool prompt) {
   FUNC_ENTER(("prompt=%s", prompt ? "true" : "false"));
   if (G_io_apdu_buffer[OFFSET_P1] != 0) THROW(EXC_WRONG_PARAM);
 
-  // do not expose pks without prompt through U2F (permissionless legacy comm in browser)
+  // do not expose pks without prompt through U2F (permissionless legacy
+  // comm in browser)
   if (!prompt) require_permissioned_comm();
 
-  global.path_with_curve.derivation_type = parse_derivation_type(G_io_apdu_buffer[OFFSET_CURVE]);
+  global.path_with_curve.derivation_type =
+    parse_derivation_type(G_io_apdu_buffer[OFFSET_CURVE]);
 
   size_t const cdata_size = G_io_apdu_buffer[OFFSET_LC];
 

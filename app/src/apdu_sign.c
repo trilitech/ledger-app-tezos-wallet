@@ -87,7 +87,8 @@ static void init_packet(packet_t *pkt) {
   if (pkt->buff_size > MAX_APDU_SIZE) THROW(EXC_WRONG_LENGTH_FOR_INS);
 }
 
-static int write_signature(uint8_t *const out, uint8_t const *const data, size_t const data_length) {
+static int write_signature(uint8_t *const out, uint8_t const *const data,
+                           size_t const data_length) {
 
     FUNC_ENTER(("out=%p, data=%p, data_length=%u", out, data, data_length));
 
@@ -132,7 +133,8 @@ static int write_signature(uint8_t *const out, uint8_t const *const data, size_t
 
 static void sign_packet() {
   size_t tx = 0;
-  bool send_hash = true; // TODO change this when we handle more APDU instructions
+  bool send_hash = true; // TODO change this when we handle more
+                         // APDU instructions
 
   FUNC_ENTER(("void"));
   if (send_hash) {
@@ -147,8 +149,10 @@ static void sign_packet() {
                         sizeof(global.apdu.hash.final_hash));
   tx = finalize_successful_send(tx);
 
-  if (global.apdu.sign.step != SIGN_ST_WAIT_USER_INPUT) THROW(EXC_UNEXPECTED_SIGN_STATE);
-  if (!(global.apdu.sign.received_last_msg)) THROW(EXC_UNEXPECTED_SIGN_STATE);
+  if (global.apdu.sign.step != SIGN_ST_WAIT_USER_INPUT)
+    THROW(EXC_UNEXPECTED_SIGN_STATE);
+  if (!(global.apdu.sign.received_last_msg))
+    THROW(EXC_UNEXPECTED_SIGN_STATE);
 
   delayed_send(tx);
 
@@ -159,8 +163,10 @@ static void sign_packet() {
 
 static void send_reject() {
   FUNC_ENTER(("void"));
-  if (global.apdu.sign.step != SIGN_ST_WAIT_USER_INPUT) THROW(EXC_UNEXPECTED_SIGN_STATE);
-  if (!(global.apdu.sign.received_last_msg)) THROW(EXC_UNEXPECTED_SIGN_STATE);
+  if (global.apdu.sign.step != SIGN_ST_WAIT_USER_INPUT)
+    THROW(EXC_UNEXPECTED_SIGN_STATE);
+  if (!(global.apdu.sign.received_last_msg))
+    THROW(EXC_UNEXPECTED_SIGN_STATE);
   clear_data();
   delay_reject();
 
@@ -171,8 +177,10 @@ static void send_reject() {
 
 static void send_continue() {
   FUNC_ENTER(("void"));
-  if (global.apdu.sign.step != SIGN_ST_WAIT_USER_INPUT) THROW(EXC_UNEXPECTED_SIGN_STATE);
-  if (global.apdu.sign.received_last_msg) THROW(EXC_UNEXPECTED_SIGN_STATE);
+  if (global.apdu.sign.step != SIGN_ST_WAIT_USER_INPUT)
+    THROW(EXC_UNEXPECTED_SIGN_STATE);
+  if (global.apdu.sign.received_last_msg)
+    THROW(EXC_UNEXPECTED_SIGN_STATE);
   delayed_send(finalize_successful_send(0));
   global.apdu.sign.step = SIGN_ST_WAIT_DATA;
   FUNC_LEAVE();
@@ -234,11 +242,13 @@ static size_t handle_first_apdu(packet_t *pkt) {
   if (global.apdu.sign.step != SIGN_ST_IDLE) THROW(EXC_UNEXPECTED_SIGN_STATE);
 
   clear_data();
-  read_bip32_path(&global.path_with_curve.bip32_path, pkt->buff, pkt->buff_size);
+  read_bip32_path(&global.path_with_curve.bip32_path, pkt->buff,
+                  pkt->buff_size);
   global.path_with_curve.derivation_type = parse_derivation_type(pkt->p2);
 
   // init hash
-  CX_THROW(cx_blake2b_init_no_throw(&global.apdu.hash.state, SIGN_HASH_SIZE * 8));
+  CX_THROW(cx_blake2b_init_no_throw(&global.apdu.hash.state,
+                                    SIGN_HASH_SIZE * 8));
 
   tz_ui_stream_init(stream_cb);
 
@@ -283,7 +293,8 @@ static size_t handle_data_apdu(packet_t *pkt) {
   CX_THROW(cx_hash_no_throw((cx_hash_t *)&global.apdu.hash.state,
 			    pkt->is_last ? CX_LAST : 0,
 			    pkt->buff, pkt->buff_size,
-			    global.apdu.hash.final_hash, sizeof(global.apdu.hash.final_hash)));
+			    global.apdu.hash.final_hash,
+                            sizeof(global.apdu.hash.final_hash)));
 
   if (pkt->is_last)
     global.apdu.sign.received_last_msg = true;

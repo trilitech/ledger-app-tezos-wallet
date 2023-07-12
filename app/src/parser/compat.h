@@ -32,7 +32,7 @@
 #  include "os_io_seproxyhal.h"
 #  include "cx.h"
 #  if CX_APILEVEL < 8
-#    error "May only compile with API level 8 or higher; requires newer firmware"
+#    error "Only compiles with API level 8 or higher; requires newer firmware"
 #  endif
 #else
 #  include <stdio.h>

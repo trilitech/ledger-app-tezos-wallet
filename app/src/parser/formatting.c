@@ -207,7 +207,8 @@ void tz_format_base58(const uint8_t *n, size_t l, char *obuf) {
   while (zcount < l && !n[zcount]) ++zcount;
 
   for (i = zcount, high = obuf_len - 1; i < l; ++i, high = j) {
-    for (carry = n[i], j = obuf_len - 1; ((int) j >= 0) && ((j > high) || carry); --j) {
+    carry = n[i];
+    for (j = obuf_len - 1; ((int) j >= 0) && ((j > high) || carry); --j) {
       carry += 256 * obuf[j];
       obuf[j] = carry % 58;
       carry /= 58;
@@ -217,7 +218,8 @@ void tz_format_base58(const uint8_t *n, size_t l, char *obuf) {
   if (zcount) memset(obuf, '1', zcount);
 
   for (j = 0; !obuf[j]; ++j);
-  for (i = 0; j < obuf_len; ++i, ++j) obuf[i] = tz_b58digits_ordered[(unsigned)obuf[j]];
+  for (i = 0; j < obuf_len; ++i, ++j) obuf[i] =
+                              tz_b58digits_ordered[(unsigned)obuf[j]];
   obuf[i] = '\0';
 }
 
@@ -235,7 +237,8 @@ void tz_format_decimal(const uint8_t *n, size_t l, char *obuf) {
   }
 
   for (i = zcount, high = obuf_len - 1; i < l; ++i, high = j) {
-    for (carry = n[l-i-1], j = obuf_len - 1; ((int) j >= 0) && ((j > high) || carry); --j) {
+    carry = n[l - i - 1];
+    for (j = obuf_len - 1; ((int) j >= 0) && ((j > high) || carry); --j) {
       carry += 256 * obuf[j];
       obuf[j] = carry % 10;
       carry /= 10;
@@ -253,10 +256,11 @@ void tz_format_decimal(const uint8_t *n, size_t l, char *obuf) {
 // we are forced to piggy import the external definitions in order to
 // access them.
 struct sha256_ctx { uint64_t sz; uint8_t  buf[128]; uint32_t h[8];};
-extern void digestif_sha256_init(struct sha256_ctx *ctx);
-extern void digestif_sha256_update(struct sha256_ctx *ctx, uint8_t *data, uint32_t len);
-extern void digestif_sha256_finalize(struct sha256_ctx *ctx, uint8_t *out);
-static void cx_hash_sha256(uint8_t *data, size_t size, uint8_t *out, size_t size_out) {
+extern void digestif_sha256_init(struct sha256_ctx *);
+extern void digestif_sha256_update(struct sha256_ctx *, uint8_t *, uint32_t);
+extern void digestif_sha256_finalize(struct sha256_ctx *, uint8_t *);
+static void cx_hash_sha256(uint8_t *data, size_t size, uint8_t *out,
+                           size_t size_out) {
   struct sha256_ctx ctx;
   uint8_t res[32];
   digestif_sha256_init(&ctx);

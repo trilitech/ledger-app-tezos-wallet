@@ -29,7 +29,8 @@
 #include "apdu.h"
 #include "globals.h"
 
-static cx_curve_t derivation_type_to_cx_curve(derivation_type_t const derivation_type) {
+static cx_curve_t derivation_type_to_cx_curve(derivation_type_t const
+                                              derivation_type) {
   switch (derivation_type) {
   case DERIVATION_TYPE_ED25519:
   case DERIVATION_TYPE_BIP32_ED25519:
@@ -65,18 +66,21 @@ struct bip32_path_wire {
 
 size_t read_bip32_path(bip32_path_t *const out, uint8_t const *const in,
                        size_t in_size) {
-    struct bip32_path_wire const *const buf_as_bip32 = (struct bip32_path_wire const *) in;
+    struct bip32_path_wire const *const buf_as_bip32 =
+      (struct bip32_path_wire const *) in;
 
     FUNC_ENTER(("out=%p, in=%p, in_size=%u", out, in, in_size));
 
-    if (in_size < sizeof(buf_as_bip32->length)) THROW(EXC_WRONG_LENGTH_FOR_INS);
+    if (in_size < sizeof(buf_as_bip32->length))
+      THROW(EXC_WRONG_LENGTH_FOR_INS);
 
     size_t ix = 0;
     out->length = CONSUME_UNALIGNED_BE(ix, uint8_t, &buf_as_bip32->length);
 
     if (in_size - ix < out->length * sizeof(*buf_as_bip32->components))
         THROW(EXC_WRONG_LENGTH_FOR_INS);
-    if (out->length == 0 || out->length > MAX_BIP32_LEN) THROW(EXC_WRONG_VALUES);
+    if (out->length == 0 || out->length > MAX_BIP32_LEN)
+        THROW(EXC_WRONG_VALUES);
 
     for (size_t i = 0; i < out->length; i++) {
         out->components[i] =
@@ -135,11 +139,13 @@ int crypto_init_public_key(derivation_type_t const derivation_type,
         derivation_type_to_cx_curve(derivation_type);
 
     // generate corresponding public key
-    CX_THROW(cx_ecfp_generate_pair_no_throw(cx_curve, public_key, private_key, 1));
+    CX_THROW(cx_ecfp_generate_pair_no_throw(cx_curve, public_key,
+                                            private_key, 1));
 
     // If we're using the old curve, make sure to adjust accordingly.
     if (cx_curve == CX_CURVE_Ed25519) {
-         cx_edwards_compress_point_no_throw(CX_CURVE_Ed25519, public_key->W, public_key->W_len);
+         cx_edwards_compress_point_no_throw(CX_CURVE_Ed25519, public_key->W,
+                                            public_key->W_len);
         public_key->W_len = 33;
     }
 
@@ -156,7 +162,8 @@ int generate_public_key(cx_ecfp_public_key_t *public_key,
     FUNC_ENTER(("public_key=%p, derivation_type=%d, bip32_path=%p",
                 public_key, derivation_type, bip32_path));
 
-    error = crypto_derive_private_key(&private_key, derivation_type, bip32_path);
+    error = crypto_derive_private_key(&private_key, derivation_type,
+                                      bip32_path);
     if (error) {
         return error;
     }
@@ -200,7 +207,8 @@ void public_key_hash(uint8_t *const hash_out,
     }
 
     cx_blake2b_t hash_state;
-    CX_THROW(cx_blake2b_init_no_throw(&hash_state, HASH_SIZE * 8));  // cx_blake2b_init_no_throw takes size in bits.
+    // cx_blake2b_init_no_throw takes size in bits.
+    CX_THROW(cx_blake2b_init_no_throw(&hash_state, HASH_SIZE * 8));
     CX_THROW(cx_hash_no_throw((cx_hash_t *) &hash_state,
 			      CX_LAST,
 			      compressed.W,
@@ -248,7 +256,8 @@ size_t sign(uint8_t *const out,
 	    size_t sig_len = SIG_SIZE;
             CX_THROW(cx_ecdsa_sign_no_throw(priv,
 					    CX_LAST | CX_RND_RFC6979,
-					    CX_SHA256,  // historical reasons...semantically CX_NONE
+					    CX_SHA256, // historical reasons...
+                                                       // semantically CX_NONE
 					    (uint8_t const *) PIC(in),
 					    in_size,
 					    out,

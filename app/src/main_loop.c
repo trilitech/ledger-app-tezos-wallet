@@ -130,9 +130,10 @@ __attribute__((noreturn)) void main_loop() {
                     THROW(EXC_CLASS);
                 }
 
-                // The amount of bytes we get in our APDU must match what the APDU declares
-                // its own content length is. All these values are unsigned, so this implies
-                // that if rx < OFFSET_CDATA it also throws.
+                // The amount of bytes we get in our APDU must match what
+                // the APDU declares its own content length is. All these
+                // values are unsigned, so this implies that
+                // if rx < OFFSET_CDATA it also throws.
                 if (rx != G_io_apdu_buffer[OFFSET_LC] + OFFSET_CDATA) {
                     THROW(EXC_WRONG_LENGTH);
                 }
@@ -149,8 +150,8 @@ __attribute__((noreturn)) void main_loop() {
                 THROW(EXCEPTION_IO_RESET);
             }
             CATCH_OTHER(e) {
-                clear_apdu_globals();  // IMPORTANT: Application state must not persist through
-                                       // errors
+                clear_apdu_globals();  // IMPORTANT: Application state must
+                                       // not persist through errors
                 global.step = ST_IDLE;
 
                 uint16_t sw = e;
@@ -184,7 +185,8 @@ unsigned short io_exchange_al(unsigned char channel, unsigned short tx_len) {
         case CHANNEL_KEYBOARD:
             break;
 
-        // multiplexed io exchange over a SPI channel and TLV encapsulated protocol
+        // multiplexed io exchange over a SPI channel and TLV encapsulated
+        // protocol
         case CHANNEL_SPI:
             if (tx_len) {
                 io_seproxyhal_spi_send(G_io_apdu_buffer, tx_len);
@@ -192,10 +194,11 @@ unsigned short io_exchange_al(unsigned char channel, unsigned short tx_len) {
                 if (channel & IO_RESET_AFTER_REPLIED) {
                     reset();
                 }
-                return 0;  // nothing received from the master so far (it's a tx
-                           // transaction)
+                return 0;  // nothing received from the master so far
+                           // (it's a tx transaction)
             } else {
-                return io_seproxyhal_spi_recv(G_io_apdu_buffer, sizeof(G_io_apdu_buffer), 0);
+                return io_seproxyhal_spi_recv(G_io_apdu_buffer,
+                                              sizeof(G_io_apdu_buffer), 0);
             }
 
         default:

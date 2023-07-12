@@ -79,15 +79,19 @@ typedef struct {
     struct {
       uint8_t first : 1;
     } step_annot; // TZ_MICHELINE_STEP_ANNOT
-    tz_num_parser_regs step_int; // TZ_MICHELINE_STEP_INT, TZ_MICHELINE_STEP_PRINT_INT
+    tz_num_parser_regs step_int; // TZ_MICHELINE_STEP_INT,
+                                 // TZ_MICHELINE_STEP_PRINT_INT
     struct {
       uint8_t op;
       uint8_t ofs;
       uint8_t nargs : 2, wrap : 1, spc : 1, annot : 1, first : 1;
-    } step_prim; // TZ_MICHELINE_STEP_PRIM_OP, TZ_MICHELINE_STEP_PRIM_NAME, TZ_MICHELINE_STEP_PRIM
+    } step_prim; // TZ_MICHELINE_STEP_PRIM_OP,
+                 // TZ_MICHELINE_STEP_PRIM_NAME,
+                 // TZ_MICHELINE_STEP_PRIM
     struct {
       int ofs;
-    } step_capture; // TZ_MICHELINE_STEP_CAPTURE_BYTES, TZ_MICHELINE_STEP_PRINT_CAPTURE
+    } step_capture; // TZ_MICHELINE_STEP_CAPTURE_BYTES,
+                    // TZ_MICHELINE_STEP_PRINT_CAPTURE
     tz_micheline_capture_kind step_capturing; // TZ_MICHELINE_STEP_CAPTURING
   };
 } tz_micheline_parser_frame;

@@ -45,7 +45,8 @@
 #define EXC_UNEXPECTED_SIGN_STATE     0x9002
 #define EXC_UNKNOWN                   0x90FF
 
-// Crashes can be harder to debug than exceptions and latency isn't a big concern
+// Crashes can be harder to debug than exceptions and
+// latency isn't a big concern
 static inline void check_null(void volatile const *const ptr) {
     if (ptr == NULL) {
         THROW(EXC_MEMORY_ERROR);
@@ -58,7 +59,8 @@ static inline __attribute((noreturn)) void failwith(const char* message) {
   THROW(EXC_UNEXPECTED_STATE);
 }
 #else
-static inline __attribute((noreturn)) void failwith(__attribute((unused)) const char* message) {
+static inline __attribute((noreturn)) void failwith(__attribute((unused))
+                                                    const char* message) {
   THROW(EXC_UNEXPECTED_STATE);
 }
 #endif

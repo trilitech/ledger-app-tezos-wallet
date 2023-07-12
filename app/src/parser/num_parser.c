@@ -16,14 +16,16 @@
 
 #include "num_parser.h"
 
-void tz_parse_num_state_init(tz_num_parser_buffer *buffers, tz_num_parser_regs *regs) {
+void tz_parse_num_state_init(tz_num_parser_buffer *buffers,
+                             tz_num_parser_regs *regs) {
   buffers->bytes[0] = 0;
   regs->size = 0;
   regs->sign = 0;
   regs->stop = 0;
 }
 
-tz_parser_result tz_parse_num_step(tz_num_parser_buffer *buffers, tz_num_parser_regs *regs,
+tz_parser_result tz_parse_num_step(tz_num_parser_buffer *buffers,
+                                   tz_num_parser_regs *regs,
                                    uint8_t b, bool natural) {
   uint8_t v, cont, s;
   cont = b >> 7;
@@ -55,12 +57,12 @@ tz_parser_result tz_parse_num_step(tz_num_parser_buffer *buffers, tz_num_parser_
   return TZ_CONTINUE;
 }
 
-tz_parser_result tz_parse_int_step(tz_num_parser_buffer *buffers, tz_num_parser_regs *regs,
-                                   uint8_t b) {
+tz_parser_result tz_parse_int_step(tz_num_parser_buffer *buffers,
+                                   tz_num_parser_regs *regs, uint8_t b) {
   return tz_parse_num_step(buffers, regs, b, 0);
 }
 
-tz_parser_result tz_parse_nat_step(tz_num_parser_buffer *buffers, tz_num_parser_regs *regs,
-                                   uint8_t b) {
+tz_parser_result tz_parse_nat_step(tz_num_parser_buffer *buffers,
+                                   tz_num_parser_regs *regs, uint8_t b) {
   return tz_parse_num_step(buffers, regs, b, 1);
 }

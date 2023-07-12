@@ -25,9 +25,11 @@
 #include "nbgl_use_case.h"
 
 static const char* const infoTypes[] = {"Version", "Developer", "Copyright"};
-static const char* const infoContents[] = {VERSION, "Tezos", "(c) 2023 <Tezos>"};
+static const char* const infoContents[] =
+                                      {VERSION, "Tezos", "(c) 2023 <Tezos>"};
 
-static bool navigation_cb_wallet(__attribute__((unused))uint8_t page, nbgl_pageContent_t* content) {
+static bool navigation_cb_wallet(__attribute__((unused))uint8_t page,
+                                 nbgl_pageContent_t* content) {
     if (page == 0) {
         content->type = INFOS_LIST;
         content->infosList.nbInfos = 3;

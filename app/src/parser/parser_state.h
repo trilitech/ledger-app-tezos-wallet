@@ -25,12 +25,14 @@
 
 typedef struct {
   // update `ibuf`, `iofs` and `ilen` at once with `parser_regs_refill`
-  // invariant between two refills: `iofs + ilen` = (constant) number of readable bytes in `ibuf`
+  // invariant between two refills:
+  //   `iofs + ilen` = (constant) number of readable bytes in `ibuf`
   uint8_t* ibuf; // input buffer
   size_t iofs; // current offset
   size_t ilen; // remaining bytes readable in input
   // update `obuf`, `oofs` and `olen` at once with `parser_regs_flush`
-  // invariant between two refills: `oofs + olen` = (constant) number of readable bytes in `obuf`
+  // invariant between two refills:
+  //   `oofs + olen` = (constant) number of readable bytes in `obuf`
   char* obuf; // output buffer
   size_t oofs; // current offset
   size_t olen; // remaining bytes writable in output

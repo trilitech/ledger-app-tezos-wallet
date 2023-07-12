@@ -213,7 +213,9 @@ tz_ui_stream_screen_kind tz_ui_stream_current_screen_kind() {
 // View
 
 #ifdef HAVE_BAGL
-static unsigned int cb(unsigned int button_mask, __attribute__((unused)) unsigned int button_mask_counter) {
+static unsigned int cb(unsigned int button_mask,
+                       __attribute__((unused))
+                       unsigned int button_mask_counter) {
   tz_ui_stream_t *s = &global.stream;
   size_t bucket = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
   uint8_t type = s->screens[bucket].type;
@@ -254,21 +256,34 @@ static const char *find_icon(tz_ui_icon_t icon) {
 
 static void redisplay() {
   bagl_element_t init[] = {
-    //  {type, userid, x, y, width, height, stroke, radius, fill, fgcolor, bgcolor, font_id, icon_id}, text/icon
-    {{ BAGL_RECTANGLE, 0x00, 0, 0, 128, BAGL_HEIGHT, 0, 0, BAGL_FILL, 0x000000, 0xFFFFFF, 0, 0 }, NULL },
-    {{ BAGL_ICON, 0x00, 1, 1, 7, 7, 0, 0, 0, 0xFFFFFF, 0x000000, 0, BAGL_GLYPH_NOGLYPH }, (const char*) &C_icon_rien },
-    {{ BAGL_ICON, 0x00, 120, 1, 7, 7, 0, 0, 0, 0xFFFFFF, 0x000000, 0, BAGL_GLYPH_NOGLYPH }, (const char*) &C_icon_rien },
-    {{ BAGL_LABELINE, 0x02, 8, 8, 112, 11, 0, 0, 0, 0xFFFFFF, 0x000000, BOLD, 0 }, global.ux.lines[0] },
+    //  {type, userid, x, y, width, height, stroke, radius,
+    //   fill, fgcolor, bgcolor, font_id, icon_id}, text/icon
+    {{ BAGL_RECTANGLE, 0x00, 0, 0, 128, BAGL_HEIGHT, 0, 0,
+       BAGL_FILL, 0x000000, 0xFFFFFF, 0, 0 }, NULL },
+    {{ BAGL_ICON, 0x00, 1, 1, 7, 7, 0, 0, 0, 0xFFFFFF, 0x000000, 0,
+       BAGL_GLYPH_NOGLYPH }, (const char*) &C_icon_rien },
+    {{ BAGL_ICON, 0x00, 120, 1, 7, 7, 0, 0, 0, 0xFFFFFF, 0x000000, 0,
+       BAGL_GLYPH_NOGLYPH }, (const char*) &C_icon_rien },
+    {{ BAGL_LABELINE, 0x02, 8, 8, 112, 11, 0, 0, 0, 0xFFFFFF, 0x000000,
+       BOLD, 0 }, global.ux.lines[0] },
 #ifdef TARGET_NANOS
-    {{ BAGL_LABELINE, 0x02, 0, 19, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000, REGULAR, 0 }, global.ux.lines[1] },
-    {{ BAGL_LABELINE, 0x02, 0, 30, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000, REGULAR, 0 }, global.ux.lines[2] },
-    {{ BAGL_ICON, 0x00, 56, 14, 16, 16, 0, 0, 0, 0xFFFFFF, 0x000000, 0, BAGL_GLYPH_NOGLYPH }, (const char*) &C_icon_rien },
+    {{ BAGL_LABELINE, 0x02, 0, 19, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000,
+       REGULAR, 0 }, global.ux.lines[1] },
+    {{ BAGL_LABELINE, 0x02, 0, 30, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000,
+       REGULAR, 0 }, global.ux.lines[2] },
+    {{ BAGL_ICON, 0x00, 56, 14, 16, 16, 0, 0, 0, 0xFFFFFF, 0x000000, 0,
+       BAGL_GLYPH_NOGLYPH }, (const char*) &C_icon_rien },
 #else
-    {{ BAGL_LABELINE, 0x02, 0, 21, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000, REGULAR, 0 }, global.ux.lines[1] },
-    {{ BAGL_LABELINE, 0x02, 0, 34, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000, REGULAR, 0 }, global.ux.lines[2] },
-    {{ BAGL_LABELINE, 0x02, 0, 47, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000, REGULAR, 0 }, global.ux.lines[3] },
-    {{ BAGL_LABELINE, 0x02, 0, 60, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000, REGULAR, 0 }, global.ux.lines[4] },
-    {{ BAGL_ICON, 0x00, 56, 47, 16, 16, 0, 0, 0, 0xFFFFFF, 0x000000, 0, BAGL_GLYPH_NOGLYPH }, (const char*) &C_icon_rien },
+    {{ BAGL_LABELINE, 0x02, 0, 21, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000,
+       REGULAR, 0 }, global.ux.lines[1] },
+    {{ BAGL_LABELINE, 0x02, 0, 34, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000,
+       REGULAR, 0 }, global.ux.lines[2] },
+    {{ BAGL_LABELINE, 0x02, 0, 47, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000,
+       REGULAR, 0 }, global.ux.lines[3] },
+    {{ BAGL_LABELINE, 0x02, 0, 60, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000,
+       REGULAR, 0 }, global.ux.lines[4] },
+    {{ BAGL_ICON, 0x00, 56, 47, 16, 16, 0, 0, 0, 0xFFFFFF, 0x000000, 0,
+       BAGL_GLYPH_NOGLYPH }, (const char*) &C_icon_rien },
 #endif
   };
 

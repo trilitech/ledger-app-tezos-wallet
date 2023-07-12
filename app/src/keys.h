@@ -63,7 +63,7 @@ void public_key_hash(uint8_t *, size_t, cx_ecfp_public_key_t *,
 size_t sign(uint8_t *, size_t, derivation_type_t, const cx_ecfp_private_key_t *,
             const uint8_t *, size_t);
 
-static inline derivation_type_t parse_derivation_type(uint8_t const curve_code) {
+static inline derivation_type_t parse_derivation_type(uint8_t curve_code) {
     switch (curve_code) {
         case 0:
             return DERIVATION_TYPE_ED25519;
