@@ -27,18 +27,18 @@ class Screen:
 
   def matches(self, content: str, content_lines: int) -> bool:
     for l in self.text:
+      content = content.lstrip('\n')
       if not content.startswith(l):
         return False
       content = content.removeprefix(l)
-
-    if len(self.text) < content_lines:
-      return content == ""
 
     return True
 
   def strip(self, content: str) -> str:
     for l in self.text:
+      content = content.lstrip('\n')
       content = content.removeprefix(l)
+    content = content.lstrip('\n')
     return content
 
 def with_retry(url, f, attempts=MAX_ATTEMPTS):
