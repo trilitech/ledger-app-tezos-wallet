@@ -258,7 +258,7 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
   switch (state->operation.frame->step) {
   case TZ_OPERATION_STEP_MAGIC: {
     uint8_t b;
-    tz_must (tz_parser_read(state, regs,&b));
+    tz_must (tz_parser_read(state, &b));
     switch (b) {
     case 3: // manager/anonymous operation
       strcpy(state->field_name, "Branch");
@@ -282,7 +282,7 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
   }
   case TZ_OPERATION_STEP_SIZE: {
     uint8_t b;
-    tz_must (tz_parser_read(state, regs,&b));
+    tz_must (tz_parser_read(state, &b));
     if (state->operation.frame->step_size.size > 255) tz_raise (TOO_LARGE); // enforce 16-bit restriction
     state->operation.frame->step_size.size = state->operation.frame->step_size.size << 8 | b;
     state->operation.frame->step_size.size_len--;
@@ -295,7 +295,7 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
   case TZ_OPERATION_STEP_TAG: {
     const tz_operation_descriptor* d;
     uint8_t t;
-    tz_must (tz_parser_read(state,regs,&t));
+    tz_must (tz_parser_read(state, &t));
     for (d = tz_operation_descriptors; d->tag != TZ_OPERATION_TAG_END; d++) {
       if (d->tag == t) {
         state->operation.frame->step = TZ_OPERATION_STEP_OPERATION;
@@ -316,7 +316,7 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
       strcpy(state->field_name, state->operation.frame->step_read_micheline.name);
       tz_micheline_parser_init(state);
     }
-    tz_micheline_parser_step(state, regs);
+    tz_micheline_parser_step(state);
     if (state->errno == TZ_BLO_DONE) {
       if (state->operation.frame->stop != 0 && state->ofs != state->operation.frame->stop)
         tz_raise (TOO_LARGE);
@@ -330,7 +330,7 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
   }
   case TZ_OPERATION_STEP_READ_NUM: {
     uint8_t b;
-    tz_must (tz_parser_read(state, regs,&b));
+    tz_must (tz_parser_read(state, &b));
     tz_must (tz_parse_num_step (&state->buffers.num, &state->operation.frame->step_read_num.state, b, state->operation.frame->step_read_num.natural));
     if (state->operation.frame->step_read_num.state.stop) {
       if (state->operation.frame->step_read_num.skip) {
@@ -388,7 +388,7 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
   case TZ_OPERATION_STEP_READ_BYTES: {
     if (state->operation.frame->step_read_bytes.ofs < state->operation.frame->step_read_bytes.len) {
       uint8_t *c = &state->buffers.capture[state->operation.frame->step_read_bytes.ofs];
-      tz_must (tz_parser_read(state,regs,c));
+      tz_must (tz_parser_read(state, c));
       state->operation.frame->step_read_bytes.ofs++;
     } else {
       if (state->operation.frame->step_read_num.skip) {
@@ -444,7 +444,7 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
       tz_must (tz_print_string(state));
     } else {
       uint8_t b;
-      tz_must (tz_parser_read(state,regs,&b));
+      tz_must (tz_parser_read(state, &b));
       state->buffers.capture[state->operation.frame->step_read_string.ofs] = b;
       state->operation.frame->step_read_string.ofs++;
     }
@@ -452,7 +452,7 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
   }
   case TZ_OPERATION_STEP_READ_SMART_ENTRYPOINT: {
     uint8_t b;
-    tz_must (tz_parser_read(state,regs,&b));
+    tz_must (tz_parser_read(state, &b));
     switch(b) {
     case 0:
       strcpy((char*) state->buffers.capture, "default");
@@ -505,7 +505,7 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
     } else {
       uint8_t present = 1;
       if (!field->required)
-        tz_must (tz_parser_read(state,regs,&present));
+        tz_must (tz_parser_read(state, &present));
       if (!field->skip)
         strcpy(state->field_name, name);
       state->operation.frame->step_operation.field++;
@@ -607,7 +607,7 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
   }
   case TZ_OPERATION_STEP_READ_PK: {
     uint8_t b;
-    tz_must (tz_parser_peek(state,regs,&b));
+    tz_must (tz_parser_peek(state, &b));
     state->operation.frame->step_read_bytes.kind = TZ_OPERATION_FIELD_PK;
     state->operation.frame->step_read_bytes.ofs = 0;
     switch (b){
@@ -655,7 +655,7 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
   case TZ_OPERATION_STEP_PRINT: {
     const char* str = PIC(state->operation.frame->step_print.str);
     if (*str) {
-      tz_must (tz_parser_put(state, regs, *str));
+      tz_must (tz_parser_put(state, *str));
       state->operation.frame->step_print.str++;
     } else {
       tz_must (pop_frame (state));

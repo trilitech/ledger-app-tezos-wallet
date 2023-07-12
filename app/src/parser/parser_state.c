@@ -75,7 +75,9 @@ tz_parser_result tz_parser_set_errno (tz_parser_state *state, tz_parser_result c
   return code;
 }
 
-tz_parser_result tz_parser_put(tz_parser_state *state, tz_parser_regs *regs, char c) {
+tz_parser_result tz_parser_put(tz_parser_state *state, char c) {
+  tz_parser_regs *regs = &state->regs;
+
   if (regs->olen<1) tz_stop (IM_FULL);
   regs->obuf[regs->oofs] = c;
   regs->oofs++;
@@ -83,7 +85,9 @@ tz_parser_result tz_parser_put(tz_parser_state *state, tz_parser_regs *regs, cha
   tz_continue;
 }
 
-tz_parser_result tz_parser_read(tz_parser_state *state, tz_parser_regs *regs, uint8_t *r) {
+tz_parser_result tz_parser_read(tz_parser_state *state, uint8_t *r) {
+  tz_parser_regs *regs = &state->regs;
+
   if (regs->ilen<1) tz_stop (FEED_ME);
   state->ofs++;
   regs->ilen--;
@@ -91,13 +95,17 @@ tz_parser_result tz_parser_read(tz_parser_state *state, tz_parser_regs *regs, ui
   tz_continue;
 }
 
-tz_parser_result tz_parser_peek(tz_parser_state *state, tz_parser_regs *regs,uint8_t *r) {
+tz_parser_result tz_parser_peek(tz_parser_state *state, uint8_t *r) {
+  tz_parser_regs *regs = &state->regs;
+
   if (regs->ilen<1) tz_stop (FEED_ME);
   *r = regs->ibuf[regs->iofs];
   tz_continue;
 }
 
-void tz_parser_skip(tz_parser_state *state, tz_parser_regs *regs) {
+void tz_parser_skip(tz_parser_state *state) {
+  tz_parser_regs *regs = &state->regs;
+
   regs->iofs++;
   regs->ilen--;
   state->ofs++;

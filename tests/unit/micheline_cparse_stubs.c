@@ -63,7 +63,7 @@ CAMLprim value micheline_cparse_step(value mlstate, value input, value output) {
   state->regs.oofs = oofs;
   state->regs.olen = olen;
 
-  while(!TZ_IS_BLOCKED(tz_micheline_parser_step(state, &state->regs)));
+  while(!TZ_IS_BLOCKED(tz_micheline_parser_step(state)));
 
   int read = ilen - state->regs.ilen;
   int written = olen - state->regs.olen;

@@ -85,11 +85,11 @@ void tz_parser_init(tz_parser_state *);
 void tz_parser_flush(tz_parser_state *, char *, size_t);
 void tz_parser_flush_up_to(tz_parser_state *, char*, size_t, size_t);
 void tz_parser_refill(tz_parser_state *, uint8_t *, size_t);
-void tz_parser_skip(tz_parser_state *, tz_parser_regs *);
+void tz_parser_skip(tz_parser_state *);
 
-tz_parser_result tz_parser_put(tz_parser_state *, tz_parser_regs *, char);
-tz_parser_result tz_parser_read(tz_parser_state *, tz_parser_regs *, uint8_t *);
-tz_parser_result tz_parser_peek(tz_parser_state *, tz_parser_regs *, uint8_t *);
+tz_parser_result tz_parser_put(tz_parser_state *, char);
+tz_parser_result tz_parser_read(tz_parser_state *, uint8_t *);
+tz_parser_result tz_parser_peek(tz_parser_state *, uint8_t *);
 
 // error handling utils
 
