@@ -158,11 +158,11 @@ int generate_public_key(cx_ecfp_public_key_t *public_key,
 
     error = crypto_derive_private_key(&private_key, derivation_type, bip32_path);
     if (error) {
-        return (error);
+        return error;
     }
     error = crypto_init_public_key(derivation_type, &private_key, public_key);
     FUNC_LEAVE();
-    return (error);
+    return error;
 }
 
 #define HASH_SIZE 20

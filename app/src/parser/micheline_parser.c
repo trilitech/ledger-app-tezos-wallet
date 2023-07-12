@@ -114,7 +114,7 @@ static tz_parser_result print_escaped(tz_parser_state *state, uint8_t b) {
 
 static tz_parser_result parser_put(tz_parser_state *state, char c) {
   PRINTF("[DEBUG] put(char: '%c',int: %d)\n", c, (int) c);
-  return (tz_parser_put(state, c));
+  return tz_parser_put(state, c);
 }
 
 static tz_parser_result tag_selection(tz_parser_state *state, uint8_t t) {
