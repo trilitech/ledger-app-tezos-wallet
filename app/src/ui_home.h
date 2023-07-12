@@ -20,8 +20,4 @@
 
 #pragma once
 
-/* This implements a two-page screen (`waiting for commands` and `quit`).
-
-   TODO: add blind signing and settings pages. */
-
 void ui_home_init(void);
