@@ -239,6 +239,7 @@ static tz_parser_result tz_print_string(tz_parser_state *state) {
 
 tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
   tz_parser_regs *regs = &state->regs;
+  uint8_t *capture = state->buffers.capture;
 
   // cannot restart after error
   if (TZ_IS_ERR(state->errno)) tz_reraise;
@@ -397,28 +398,34 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
       }
       switch (state->operation.frame->step_read_bytes.kind) {
       case TZ_OPERATION_FIELD_SOURCE:
-        memcpy(state->operation.source, state->buffers.capture, 22);
+        memcpy(state->operation.source, capture, 22);
         __attribute__((fallthrough));
       case TZ_OPERATION_FIELD_PKH:
-        if (tz_format_pkh(state->buffers.capture, 21, (char*) state->buffers.capture)) tz_raise(INVALID_TAG);
+        if (tz_format_pkh(capture, 21, (char*) capture))
+          tz_raise(INVALID_TAG);
         break;
       case TZ_OPERATION_FIELD_PK:
-        if (tz_format_pk(state->buffers.capture, state->operation.frame->step_read_bytes.len, (char*) state->buffers.capture)) tz_raise(INVALID_TAG);
+        if (tz_format_pk(capture, state->operation.frame->step_read_bytes.len,
+                         (char*) capture))
+          tz_raise(INVALID_TAG);
         break;
       case TZ_OPERATION_FIELD_DESTINATION:
-        memcpy(state->operation.destination, state->buffers.capture, 22);
-        if (tz_format_address(state->buffers.capture, 22, (char*) state->buffers.capture)) tz_raise(INVALID_TAG);
+        memcpy(state->operation.destination, capture, 22);
+        if (tz_format_address(capture, 22, (char*) capture))
+          tz_raise(INVALID_TAG);
         break;
       case TZ_OPERATION_FIELD_OPH:
-        if (tz_format_oph(state->buffers.capture, 32, (char*) state->buffers.capture)) tz_raise(INVALID_TAG);
+        if (tz_format_oph(capture, 32, (char*) capture))
+          tz_raise(INVALID_TAG);
         break;
       case TZ_OPERATION_FIELD_BH:
-        if (tz_format_bh(state->buffers.capture, 32, (char*) state->buffers.capture)) tz_raise(INVALID_TAG);
+        if (tz_format_bh(capture, 32, (char*) capture))
+          tz_raise(INVALID_TAG);
         break;
       default: tz_raise(INVALID_STATE);
       }
       state->operation.frame->step = TZ_OPERATION_STEP_PRINT;
-      state->operation.frame->step_print.str = (char*) state->buffers.capture;
+      state->operation.frame->step_print.str = (char*) capture;
     }
     break;
   }
@@ -440,12 +447,12 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
   }
   case TZ_OPERATION_STEP_READ_STRING: {
     if (state->ofs == state->operation.frame->stop) {
-      state->buffers.capture[state->operation.frame->step_read_string.ofs] = 0;
+      capture[state->operation.frame->step_read_string.ofs] = 0;
       tz_must(tz_print_string(state));
     } else {
       uint8_t b;
       tz_must(tz_parser_read(state, &b));
-      state->buffers.capture[state->operation.frame->step_read_string.ofs] = b;
+      capture[state->operation.frame->step_read_string.ofs] = b;
       state->operation.frame->step_read_string.ofs++;
     }
     break;
@@ -455,27 +462,27 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
     tz_must(tz_parser_read(state, &b));
     switch (b) {
     case 0:
-      strcpy((char*) state->buffers.capture, "default");
+      strcpy((char*) capture, "default");
       tz_must(tz_print_string(state));
       break;
     case 1:
-      strcpy((char*) state->buffers.capture, "root");
+      strcpy((char*) capture, "root");
       tz_must(tz_print_string(state));
       break;
     case 2:
-      strcpy((char*) state->buffers.capture, "do");
+      strcpy((char*) capture, "do");
       tz_must(tz_print_string(state));
       break;
     case 3:
-      strcpy((char*) state->buffers.capture, "set_delegate");
+      strcpy((char*) capture, "set_delegate");
       tz_must(tz_print_string(state));
       break;
     case 4:
-      strcpy((char*) state->buffers.capture, "remove_delegate");
+      strcpy((char*) capture, "remove_delegate");
       tz_must(tz_print_string(state));
       break;
     case 5:
-      strcpy((char*) state->buffers.capture, "deposit");
+      strcpy((char*) capture, "deposit");
       tz_must(tz_print_string(state));
       break;
     case 0xFF:
