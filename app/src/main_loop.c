@@ -49,16 +49,16 @@ static uint8_t dispatch(uint8_t instruction) {
   case INS_SIGN_WITH_HASH:
       return handle_apdu_sign(instruction == INS_SIGN_WITH_HASH);
   case INS_VERSION: {
-    if (!(global.step == ST_IDLE)) THROW (EXC_UNEXPECTED_STATE);
+    if (!(global.step == ST_IDLE)) THROW(EXC_UNEXPECTED_STATE);
     return handle_apdu_version();
   }
   case INS_PROMPT_PUBLIC_KEY:
   case INS_GET_PUBLIC_KEY: {
-    if (!(global.step == ST_IDLE)) THROW (EXC_UNEXPECTED_STATE);
+    if (!(global.step == ST_IDLE)) THROW(EXC_UNEXPECTED_STATE);
     return handle_apdu_get_public_key(instruction == INS_PROMPT_PUBLIC_KEY);
   }
   case INS_GIT: {
-    if (!(global.step == ST_IDLE)) THROW (EXC_UNEXPECTED_STATE);
+    if (!(global.step == ST_IDLE)) THROW(EXC_UNEXPECTED_STATE);
     return handle_apdu_git();
   }
   case INS_AUTHORIZE_BAKING:

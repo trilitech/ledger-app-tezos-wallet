@@ -180,7 +180,7 @@ const char* const tz_michelson_op_names_ordered[TZ_LAST_MICHELSON_OPCODE+1] = {
   "TICKET"                          // 154
 };
 
-const char* tz_michelson_op_name (uint8_t op_code) {
+const char* tz_michelson_op_name(uint8_t op_code) {
   if (op_code > TZ_LAST_MICHELSON_OPCODE) return NULL;
   return PIC(tz_michelson_op_names_ordered[op_code]);
 }
@@ -221,7 +221,7 @@ void tz_format_base58(const uint8_t *n, size_t l, char *obuf) {
   obuf[i] = '\0';
 }
 
-void tz_format_decimal (const uint8_t *n, size_t l, char *obuf) {
+void tz_format_decimal(const uint8_t *n, size_t l, char *obuf) {
   int carry;
   size_t i, j, high, zcount = 0, obuf_len = TZ_DECIMAL_BUFFER_SIZE(l);
 

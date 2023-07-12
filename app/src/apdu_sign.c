@@ -201,12 +201,12 @@ static void refill() {
   case TZ_BLO_DONE:
     if (!(global.apdu.sign.received_last_msg) ||
         (st->regs.ilen != 0)) {
-      failwith ("parsing done but some data left");
+      failwith("parsing done but some data left");
     }
     if (st->regs.oofs != 0)
       goto last_screen;
     tz_ui_stream_push_accept_reject();
-    tz_ui_stream_close ();
+    tz_ui_stream_close();
     break;
   default:
     failwith("parsing error");
@@ -246,7 +246,7 @@ static size_t handle_first_apdu(packet_t *pkt) {
   case ST_CLEAR_SIGN: handle_first_apdu_clear(pkt); break;
   case ST_BLIND_SIGN: handle_first_apdu_blind(pkt); break;
   default:
-    THROW (EXC_UNEXPECTED_STATE);
+    THROW(EXC_UNEXPECTED_STATE);
   }
 
   global.apdu.sign.step = SIGN_ST_WAIT_DATA;
@@ -292,7 +292,7 @@ static size_t handle_data_apdu(packet_t *pkt) {
   case ST_CLEAR_SIGN: return handle_data_apdu_clear(pkt); break;
   case ST_BLIND_SIGN: return handle_data_apdu_blind(pkt); break;
   default:
-    THROW (EXC_UNEXPECTED_STATE);
+    THROW(EXC_UNEXPECTED_STATE);
   }
 }
 
@@ -311,7 +311,7 @@ static size_t handle_data_apdu_clear(packet_t *pkt) {
     tz_operation_parser_set_size(st, global.apdu.sign.u.clear.total_length);
 
   // resume the parser with the new data
-  refill ();
+  refill();
 
   // loop getting and parsing packets until we have a first screen
   if (tz_ui_stream_current_screen_kind() == TZ_UI_STREAM_DISPLAY_INIT) {
@@ -321,7 +321,7 @@ static size_t handle_data_apdu_clear(packet_t *pkt) {
 
   // launch parsing and UI (once we have a first screen)
   global.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
-  tz_ui_stream ();
+  tz_ui_stream();
   FUNC_LEAVE();
 }
 
@@ -378,20 +378,20 @@ size_t handle_apdu_sign(__attribute__((unused)) bool return_hash) {
 
   if (pkt.is_first) {
     if (global.step != ST_IDLE)
-      THROW (EXC_UNEXPECTED_STATE);
+      THROW(EXC_UNEXPECTED_STATE);
 
     switch (tz_ui_stream_get_type()) {
     case SCREEN_CLEAR_SIGN: global.step = ST_CLEAR_SIGN; break;
     case SCREEN_BLIND_SIGN: global.step = ST_BLIND_SIGN; break;
     default:
       /* XXXrcd: WRONG */
-      THROW (EXC_UNEXPECTED_STATE);
+      THROW(EXC_UNEXPECTED_STATE);
     }
 
     ret = handle_first_apdu(&pkt);
   } else {
     if (global.step != ST_BLIND_SIGN && global.step != ST_CLEAR_SIGN)
-      THROW (EXC_UNEXPECTED_STATE);
+      THROW(EXC_UNEXPECTED_STATE);
 
     ret = handle_data_apdu(&pkt);
   }

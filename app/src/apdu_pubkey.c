@@ -86,7 +86,7 @@ static void stream_cb(tz_ui_cb_type_t type) {
   }
 }
 
-__attribute__((noreturn)) static void prompt_address () {
+__attribute__((noreturn)) static void prompt_address() {
   char buf[TZ_UI_STREAM_CONTENTS_SIZE + 1];
 
   FUNC_ENTER(("void"));

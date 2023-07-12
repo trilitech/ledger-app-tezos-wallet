@@ -185,18 +185,18 @@ const tz_operation_descriptor tz_operation_descriptors[] = {
 static const char* expression_name = "Expression";
 static const char* unset_message = "Field unset";
 
-static tz_parser_result push_frame (tz_parser_state *state, tz_operation_parser_step_kind step) {
+static tz_parser_result push_frame(tz_parser_state *state, tz_operation_parser_step_kind step) {
   if (state->operation.frame >= &state->operation.stack[TZ_OPERATION_STACK_DEPTH - 1])
-    tz_raise (TOO_DEEP);
+    tz_raise(TOO_DEEP);
   state->operation.frame++ ;
   state->operation.frame->step = step;
   tz_continue;
 }
 
-static tz_parser_result pop_frame (tz_parser_state *state) {
+static tz_parser_result pop_frame(tz_parser_state *state) {
   if (state->operation.frame == state->operation.stack) {
     state->operation.frame = NULL;
-    tz_stop (DONE);
+    tz_stop(DONE);
   }
   state->operation.frame--;
   tz_continue;
@@ -229,7 +229,7 @@ void tz_operation_parser_init(tz_parser_state *state, uint16_t size, bool skip_m
 
 static tz_parser_result tz_print_string(tz_parser_state *state) {
   if (state->operation.frame->step_read_string.skip) {
-    tz_must (pop_frame (state));
+    tz_must(pop_frame (state));
     tz_continue;
   }
   state->operation.frame->step = TZ_OPERATION_STEP_PRINT;
@@ -244,7 +244,7 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
   if (TZ_IS_ERR(state->errno)) tz_reraise;
 
   // nothing else to do
-  if (state->operation.frame == NULL) tz_stop (DONE);
+  if (state->operation.frame == NULL) tz_stop(DONE);
 
   PRINTF("[DEBUG] operation(frame: %d, offset:%d/%d, ilen: %d, olen: %d, step: %s, errno: %s)\n",
          (int) (state->operation.frame - state->operation.stack),
@@ -258,7 +258,7 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
   switch (state->operation.frame->step) {
   case TZ_OPERATION_STEP_MAGIC: {
     uint8_t b;
-    tz_must (tz_parser_read(state, &b));
+    tz_must(tz_parser_read(state, &b));
     switch (b) {
     case 3: // manager/anonymous operation
       strcpy(state->field_name, "Branch");
@@ -276,38 +276,38 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
       state->operation.frame->step_read_micheline.name = (char*) PIC(expression_name);
       state->operation.frame->stop = 0;
       break;
-    default: tz_raise (INVALID_TAG);
+    default: tz_raise(INVALID_TAG);
     }
     break;
   }
   case TZ_OPERATION_STEP_SIZE: {
     uint8_t b;
-    tz_must (tz_parser_read(state, &b));
-    if (state->operation.frame->step_size.size > 255) tz_raise (TOO_LARGE); // enforce 16-bit restriction
+    tz_must(tz_parser_read(state, &b));
+    if (state->operation.frame->step_size.size > 255) tz_raise(TOO_LARGE); // enforce 16-bit restriction
     state->operation.frame->step_size.size = state->operation.frame->step_size.size << 8 | b;
     state->operation.frame->step_size.size_len--;
     if (state->operation.frame->step_size.size_len <= 0) {
       state->operation.frame[-1].stop = state->ofs + state->operation.frame->step_size.size;
-      tz_must (pop_frame (state));
+      tz_must(pop_frame(state));
     }
     break;
   }
   case TZ_OPERATION_STEP_TAG: {
     const tz_operation_descriptor* d;
     uint8_t t;
-    tz_must (tz_parser_read(state, &t));
+    tz_must(tz_parser_read(state, &t));
     for (d = tz_operation_descriptors; d->tag != TZ_OPERATION_TAG_END; d++) {
       if (d->tag == t) {
         state->operation.frame->step = TZ_OPERATION_STEP_OPERATION;
         state->operation.frame->step_operation.descriptor = d;
         state->operation.frame->step_operation.field = 0;
-        tz_must (push_frame(state, TZ_OPERATION_STEP_PRINT));
-        snprintf (state->field_name, 30, "Operation (%d)", state->operation.batch_index);
+        tz_must(push_frame(state, TZ_OPERATION_STEP_PRINT));
+        snprintf(state->field_name, 30, "Operation (%d)", state->operation.batch_index);
         state->operation.frame->step_print.str = d->name;
         tz_continue;
       }
     }
-    tz_raise (INVALID_TAG);
+    tz_raise(INVALID_TAG);
     break;
   }
   case TZ_OPERATION_STEP_READ_MICHELINE: {
@@ -319,10 +319,10 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
     tz_micheline_parser_step(state);
     if (state->errno == TZ_BLO_DONE) {
       if (state->operation.frame->stop != 0 && state->ofs != state->operation.frame->stop)
-        tz_raise (TOO_LARGE);
-      tz_must (pop_frame(state));
+        tz_raise(TOO_LARGE);
+      tz_must(pop_frame(state));
       if (regs->oofs > 0)
-        tz_stop (IM_FULL);
+        tz_stop(IM_FULL);
       else tz_continue;
     }
     tz_reraise;
@@ -330,11 +330,11 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
   }
   case TZ_OPERATION_STEP_READ_NUM: {
     uint8_t b;
-    tz_must (tz_parser_read(state, &b));
-    tz_must (tz_parse_num_step (&state->buffers.num, &state->operation.frame->step_read_num.state, b, state->operation.frame->step_read_num.natural));
+    tz_must(tz_parser_read(state, &b));
+    tz_must(tz_parse_num_step(&state->buffers.num, &state->operation.frame->step_read_num.state, b, state->operation.frame->step_read_num.natural));
     if (state->operation.frame->step_read_num.state.stop) {
       if (state->operation.frame->step_read_num.skip) {
-        tz_must (pop_frame (state));
+        tz_must(pop_frame(state));
         tz_continue;
       }
       char *str = state->buffers.num.decimal;
@@ -352,8 +352,8 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
           // less than one tez, pad left up to the '0.'
           int j;
           int pad = 7 - len;
-          for(j=len;j>=0;j--) str[j+pad] = str[j];
-          for(j=0;j<pad;j++) str[j] = '0';
+          for (j=len;j>=0;j--) str[j+pad] = str[j];
+          for (j=0;j<pad;j++) str[j] = '0';
           len = 7;
         }
         int no_decimals = 1;
@@ -369,7 +369,7 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
           len++;
           str[len] = 0;
           // drop trailing non significant zeroes
-          while(str[len-1] == '0') { len--; str[len] = 0; }
+          while (str[len-1] == '0') { len--; str[len] = 0; }
         }
         add_currency:
         str[len] = ' ';
@@ -379,7 +379,7 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
         str[len] = 0;
         break;
       }
-      default: tz_raise (INVALID_STATE);
+      default: tz_raise(INVALID_STATE);
       }
       state->operation.frame->step_print.str = str;
     }
@@ -388,11 +388,11 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
   case TZ_OPERATION_STEP_READ_BYTES: {
     if (state->operation.frame->step_read_bytes.ofs < state->operation.frame->step_read_bytes.len) {
       uint8_t *c = &state->buffers.capture[state->operation.frame->step_read_bytes.ofs];
-      tz_must (tz_parser_read(state, c));
+      tz_must(tz_parser_read(state, c));
       state->operation.frame->step_read_bytes.ofs++;
     } else {
       if (state->operation.frame->step_read_num.skip) {
-        tz_must (pop_frame (state));
+        tz_must(pop_frame(state));
         tz_continue;
       }
       switch (state->operation.frame->step_read_bytes.kind) {
@@ -400,22 +400,22 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
         memcpy(state->operation.source, state->buffers.capture, 22);
         __attribute__((fallthrough));
       case TZ_OPERATION_FIELD_PKH:
-        if (tz_format_pkh (state->buffers.capture, 21, (char*) state->buffers.capture)) tz_raise (INVALID_TAG);
+        if (tz_format_pkh(state->buffers.capture, 21, (char*) state->buffers.capture)) tz_raise(INVALID_TAG);
         break;
       case TZ_OPERATION_FIELD_PK:
-        if (tz_format_pk (state->buffers.capture, state->operation.frame->step_read_bytes.len, (char*) state->buffers.capture)) tz_raise (INVALID_TAG);
+        if (tz_format_pk(state->buffers.capture, state->operation.frame->step_read_bytes.len, (char*) state->buffers.capture)) tz_raise(INVALID_TAG);
         break;
       case TZ_OPERATION_FIELD_DESTINATION:
         memcpy(state->operation.destination, state->buffers.capture, 22);
-        if (tz_format_address (state->buffers.capture, 22, (char*) state->buffers.capture)) tz_raise (INVALID_TAG);
+        if (tz_format_address(state->buffers.capture, 22, (char*) state->buffers.capture)) tz_raise(INVALID_TAG);
         break;
       case TZ_OPERATION_FIELD_OPH:
-        if (tz_format_oph (state->buffers.capture, 32, (char*) state->buffers.capture)) tz_raise (INVALID_TAG);
+        if (tz_format_oph(state->buffers.capture, 32, (char*) state->buffers.capture)) tz_raise(INVALID_TAG);
         break;
       case TZ_OPERATION_FIELD_BH:
-        if (tz_format_bh (state->buffers.capture, 32, (char*) state->buffers.capture)) tz_raise (INVALID_TAG);
+        if (tz_format_bh(state->buffers.capture, 32, (char*) state->buffers.capture)) tz_raise(INVALID_TAG);
         break;
-      default: tz_raise (INVALID_STATE);
+      default: tz_raise(INVALID_STATE);
       }
       state->operation.frame->step = TZ_OPERATION_STEP_PRINT;
       state->operation.frame->step_print.str = (char*) state->buffers.capture;
@@ -424,27 +424,27 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
   }
   case TZ_OPERATION_STEP_BRANCH: {
     state->operation.frame->step = TZ_OPERATION_STEP_BATCH;
-    tz_must (push_frame (state, TZ_OPERATION_STEP_TAG));
+    tz_must(push_frame(state, TZ_OPERATION_STEP_TAG));
     break;
   }
   case TZ_OPERATION_STEP_BATCH: {
     state->operation.batch_index++;
     if (state->ofs == state->operation.frame->stop) {
-      tz_must (pop_frame (state));
+      tz_must(pop_frame(state));
     } else if (state->ofs > state->operation.frame->stop) {
-      tz_raise (TOO_LARGE);
+      tz_raise(TOO_LARGE);
     } else {
-      tz_must (push_frame (state, TZ_OPERATION_STEP_TAG));
+      tz_must(push_frame(state, TZ_OPERATION_STEP_TAG));
     }
     break;
   }
   case TZ_OPERATION_STEP_READ_STRING: {
     if (state->ofs == state->operation.frame->stop) {
       state->buffers.capture[state->operation.frame->step_read_string.ofs] = 0;
-      tz_must (tz_print_string(state));
+      tz_must(tz_print_string(state));
     } else {
       uint8_t b;
-      tz_must (tz_parser_read(state, &b));
+      tz_must(tz_parser_read(state, &b));
       state->buffers.capture[state->operation.frame->step_read_string.ofs] = b;
       state->operation.frame->step_read_string.ofs++;
     }
@@ -452,40 +452,40 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
   }
   case TZ_OPERATION_STEP_READ_SMART_ENTRYPOINT: {
     uint8_t b;
-    tz_must (tz_parser_read(state, &b));
-    switch(b) {
+    tz_must(tz_parser_read(state, &b));
+    switch (b) {
     case 0:
       strcpy((char*) state->buffers.capture, "default");
-      tz_must (tz_print_string(state));
+      tz_must(tz_print_string(state));
       break;
     case 1:
       strcpy((char*) state->buffers.capture, "root");
-      tz_must (tz_print_string(state));
+      tz_must(tz_print_string(state));
       break;
     case 2:
       strcpy((char*) state->buffers.capture, "do");
-      tz_must (tz_print_string(state));
+      tz_must(tz_print_string(state));
       break;
     case 3:
       strcpy((char*) state->buffers.capture, "set_delegate");
-      tz_must (tz_print_string(state));
+      tz_must(tz_print_string(state));
       break;
     case 4:
       strcpy((char*) state->buffers.capture, "remove_delegate");
-      tz_must (tz_print_string(state));
+      tz_must(tz_print_string(state));
       break;
     case 5:
       strcpy((char*) state->buffers.capture, "deposit");
-      tz_must (tz_print_string(state));
+      tz_must(tz_print_string(state));
       break;
     case 0xFF:
       state->operation.frame->step = TZ_OPERATION_STEP_READ_STRING;
       state->operation.frame->step_read_string.ofs = 0;
-      tz_must (push_frame(state, TZ_OPERATION_STEP_SIZE));
+      tz_must(push_frame(state, TZ_OPERATION_STEP_SIZE));
       state->operation.frame->step_size.size = 0;
       state->operation.frame->step_size.size_len = 1;
       break;
-    default: tz_raise (INVALID_TAG);
+    default: tz_raise(INVALID_TAG);
     }
     break;
   }
@@ -498,21 +498,21 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
 
     // Remaining content from previous section - display this first.
     if (regs->oofs > 0)
-      tz_stop (IM_FULL);
+      tz_stop(IM_FULL);
 
     if (name == NULL) {
-      tz_must (pop_frame (state));
+      tz_must(pop_frame(state));
     } else {
       uint8_t present = 1;
       if (!field->required)
-        tz_must (tz_parser_read(state, &present));
+        tz_must(tz_parser_read(state, &present));
       if (!field->skip)
         strcpy(state->field_name, name);
       state->operation.frame->step_operation.field++;
       if (!present) {
         if (field->display_none) {
-          if (field->skip) tz_raise (INVALID_STATE);
-          tz_must (push_frame(state, TZ_OPERATION_STEP_PRINT));
+          if (field->skip) tz_raise(INVALID_STATE);
+          tz_must(push_frame(state, TZ_OPERATION_STEP_PRINT));
           state->operation.frame->step_print.str = (char*) unset_message;
         }
         tz_continue;
@@ -520,7 +520,7 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
       switch (field->kind) {
       case TZ_OPERATION_FIELD_SOURCE:
       case TZ_OPERATION_FIELD_PKH: {
-        tz_must (push_frame(state, TZ_OPERATION_STEP_READ_BYTES));
+        tz_must(push_frame(state, TZ_OPERATION_STEP_READ_BYTES));
         state->operation.frame->step_read_bytes.kind = field->kind;
         state->operation.frame->step_read_bytes.skip = field->skip;
         state->operation.frame->step_read_bytes.ofs = 0;
@@ -528,12 +528,12 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
         break;
       }
       case TZ_OPERATION_FIELD_PK: {
-        tz_must (push_frame(state, TZ_OPERATION_STEP_READ_PK));
+        tz_must(push_frame(state, TZ_OPERATION_STEP_READ_PK));
         state->operation.frame->step_read_bytes.skip = field->skip;
         break;
       }
       case TZ_OPERATION_FIELD_DESTINATION: {
-        tz_must (push_frame(state, TZ_OPERATION_STEP_READ_BYTES));
+        tz_must(push_frame(state, TZ_OPERATION_STEP_READ_BYTES));
         state->operation.frame->step_read_bytes.kind = field->kind;
         state->operation.frame->step_read_bytes.skip = field->skip;
         state->operation.frame->step_read_bytes.ofs = 0;
@@ -542,7 +542,7 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
       }
       case TZ_OPERATION_FIELD_NAT:
       case TZ_OPERATION_FIELD_AMOUNT: {
-        tz_must (push_frame(state, TZ_OPERATION_STEP_READ_NUM));
+        tz_must(push_frame(state, TZ_OPERATION_STEP_READ_NUM));
         tz_parse_num_state_init(&state->buffers.num, &state->operation.frame->step_read_num.state);
         state->operation.frame->step_read_num.kind = field->kind;
         state->operation.frame->step_read_num.skip = field->skip;
@@ -550,7 +550,7 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
         break;
       }
       case TZ_OPERATION_FIELD_INT: {
-        tz_must (push_frame(state, TZ_OPERATION_STEP_READ_NUM));
+        tz_must(push_frame(state, TZ_OPERATION_STEP_READ_NUM));
         tz_parse_num_state_init(&state->buffers.num, &state->operation.frame->step_read_num.state);
         state->operation.frame->step_read_num.kind = field->kind;
         state->operation.frame->step_read_num.skip = field->skip;
@@ -558,56 +558,56 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
         break;
       }
       case TZ_OPERATION_FIELD_PARAMETER: {
-        tz_must (push_frame(state, TZ_OPERATION_STEP_READ_MICHELINE));
+        tz_must(push_frame(state, TZ_OPERATION_STEP_READ_MICHELINE));
         state->operation.frame->step_read_micheline.inited = 0;
         state->operation.frame->step_read_micheline.skip = field->skip;
         state->operation.frame->step_read_micheline.name = name;
-        tz_must (push_frame(state, TZ_OPERATION_STEP_SIZE));
+        tz_must(push_frame(state, TZ_OPERATION_STEP_SIZE));
         state->operation.frame->step_size.size = 0;
         state->operation.frame->step_size.size_len = 4;
-        tz_must (push_frame(state, TZ_OPERATION_STEP_READ_SMART_ENTRYPOINT));
+        tz_must(push_frame(state, TZ_OPERATION_STEP_READ_SMART_ENTRYPOINT));
         strcpy(state->field_name, "Entrypoint");
         state->operation.frame->step_read_string.ofs = 0;
         state->operation.frame->step_read_string.skip = field->skip;
         break;
       }
       case TZ_OPERATION_FIELD_EXPR: {
-        tz_must (push_frame(state, TZ_OPERATION_STEP_READ_MICHELINE));
+        tz_must(push_frame(state, TZ_OPERATION_STEP_READ_MICHELINE));
         state->operation.frame->step_read_micheline.inited = 0;
         state->operation.frame->step_read_micheline.skip = field->skip;
         state->operation.frame->step_read_micheline.name = name;
-        tz_must (push_frame(state, TZ_OPERATION_STEP_SIZE));
+        tz_must(push_frame(state, TZ_OPERATION_STEP_SIZE));
         state->operation.frame->step_size.size = 0;
         state->operation.frame->step_size.size_len = 4;
         break;
       }
       case TZ_OPERATION_FIELD_ENTRYPOINT: {
-        tz_must (push_frame(state, TZ_OPERATION_STEP_READ_STRING));
+        tz_must(push_frame(state, TZ_OPERATION_STEP_READ_STRING));
         state->operation.frame->step_read_string.ofs = 0;
         state->operation.frame->step_read_string.skip = field->skip;
-        tz_must (push_frame(state, TZ_OPERATION_STEP_SIZE));
+        tz_must(push_frame(state, TZ_OPERATION_STEP_SIZE));
         state->operation.frame->step_size.size = 0;
         state->operation.frame->step_size.size_len = 4;
         break;
       }
       case TZ_OPERATION_FIELD_SORU_MESSAGES: {
-        tz_must (push_frame(state, TZ_OPERATION_STEP_READ_SORU_MESSAGES));
+        tz_must(push_frame(state, TZ_OPERATION_STEP_READ_SORU_MESSAGES));
         state->operation.frame->step_read_list.name = name;
         state->operation.frame->step_read_list.index = 0;
         state->operation.frame->step_read_list.skip = field->skip;
-        tz_must (push_frame(state, TZ_OPERATION_STEP_SIZE));
+        tz_must(push_frame(state, TZ_OPERATION_STEP_SIZE));
         state->operation.frame->step_size.size = 0;
         state->operation.frame->step_size.size_len = 4;
         break;
       }
-      default: tz_raise (INVALID_STATE);
+      default: tz_raise(INVALID_STATE);
       }
     }
     break;
   }
   case TZ_OPERATION_STEP_READ_PK: {
     uint8_t b;
-    tz_must (tz_parser_peek(state, &b));
+    tz_must(tz_parser_peek(state, &b));
     state->operation.frame->step_read_bytes.kind = TZ_OPERATION_FIELD_PK;
     state->operation.frame->step_read_bytes.ofs = 0;
     switch (b){
@@ -624,7 +624,7 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
       state->operation.frame->step_read_bytes.len = 49;
       break;
     default:
-      tz_raise (INVALID_TAG);
+      tz_raise(INVALID_TAG);
     }
     state->operation.frame->step = TZ_OPERATION_STEP_READ_BYTES;
     break;
@@ -655,15 +655,15 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
   case TZ_OPERATION_STEP_PRINT: {
     const char* str = PIC(state->operation.frame->step_print.str);
     if (*str) {
-      tz_must (tz_parser_put(state, *str));
+      tz_must(tz_parser_put(state, *str));
       state->operation.frame->step_print.str++;
     } else {
-      tz_must (pop_frame (state));
-      tz_stop (IM_FULL);
+      tz_must(pop_frame(state));
+      tz_stop(IM_FULL);
     }
     break;
   }
-  default: tz_raise (INVALID_STATE);
+  default: tz_raise(INVALID_STATE);
   }
   tz_continue;
 }

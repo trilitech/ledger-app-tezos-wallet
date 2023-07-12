@@ -19,7 +19,7 @@
 
 #ifdef TEZOS_DEBUG
 const char* tz_parser_result_name(tz_parser_result code) {
-  switch(code) {
+  switch (code) {
   case TZ_CONTINUE: return "CONTINUE";
   case TZ_BREAK: return "BREAK";
   case TZ_BLO_DONE: return "DONE";
@@ -70,7 +70,7 @@ void tz_parser_refill(tz_parser_state *st, uint8_t *ibuf, size_t ilen) {
   regs->ilen = ilen;
 }
 
-tz_parser_result tz_parser_set_errno (tz_parser_state *state, tz_parser_result code) {
+tz_parser_result tz_parser_set_errno(tz_parser_state *state, tz_parser_result code) {
   state->errno = ((code == TZ_BREAK) ? TZ_CONTINUE : code);
   return code;
 }
@@ -78,7 +78,7 @@ tz_parser_result tz_parser_set_errno (tz_parser_state *state, tz_parser_result c
 tz_parser_result tz_parser_put(tz_parser_state *state, char c) {
   tz_parser_regs *regs = &state->regs;
 
-  if (regs->olen<1) tz_stop (IM_FULL);
+  if (regs->olen<1) tz_stop(IM_FULL);
   regs->obuf[regs->oofs] = c;
   regs->oofs++;
   regs->olen--;
@@ -88,7 +88,7 @@ tz_parser_result tz_parser_put(tz_parser_state *state, char c) {
 tz_parser_result tz_parser_read(tz_parser_state *state, uint8_t *r) {
   tz_parser_regs *regs = &state->regs;
 
-  if (regs->ilen<1) tz_stop (FEED_ME);
+  if (regs->ilen<1) tz_stop(FEED_ME);
   state->ofs++;
   regs->ilen--;
   *r = regs->ibuf[regs->iofs++];
@@ -98,7 +98,7 @@ tz_parser_result tz_parser_read(tz_parser_state *state, uint8_t *r) {
 tz_parser_result tz_parser_peek(tz_parser_state *state, uint8_t *r) {
   tz_parser_regs *regs = &state->regs;
 
-  if (regs->ilen<1) tz_stop (FEED_ME);
+  if (regs->ilen<1) tz_stop(FEED_ME);
   *r = regs->ibuf[regs->iofs];
   tz_continue;
 }

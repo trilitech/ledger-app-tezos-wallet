@@ -31,7 +31,7 @@ static void redisplay(void);
 
 // Model
 
-void tz_ui_stream_init (void (*cb)(uint8_t)) {
+void tz_ui_stream_init(void (*cb)(uint8_t)) {
   tz_ui_stream_t *s = &global.stream;
 
   FUNC_ENTER(("cb=%p", cb));
@@ -52,7 +52,7 @@ void tz_ui_stream_push_accept_reject(void) {
   FUNC_LEAVE();
 }
 
-void tz_ui_stream_close () {
+void tz_ui_stream_close() {
   tz_ui_stream_t *s = &global.stream;
 
   FUNC_ENTER(("void"));
@@ -170,7 +170,7 @@ tz_ui_cb_type_t tz_ui_stream_get_type(void) {
 }
 
 #ifdef HAVE_BAGL
-static void pred () {
+static void pred() {
   tz_ui_stream_t *s = &global.stream;
 
   FUNC_ENTER(("void"));
@@ -181,7 +181,7 @@ static void pred () {
   FUNC_LEAVE();
 }
 
-static void succ () {
+static void succ() {
   tz_ui_stream_t *s = &global.stream;
 
   FUNC_ENTER(("void"));
@@ -193,7 +193,7 @@ static void succ () {
 }
 #endif // HAVE_BAGL
 
-tz_ui_stream_screen_kind tz_ui_stream_current_screen_kind () {
+tz_ui_stream_screen_kind tz_ui_stream_current_screen_kind() {
   tz_ui_stream_t *s = &global.stream;
 
   FUNC_ENTER(("void"));
@@ -252,7 +252,7 @@ static const char *find_icon(tz_ui_icon_t icon) {
   }
 }
 
-static void redisplay () {
+static void redisplay() {
   bagl_element_t init[] = {
     //  {type, userid, x, y, width, height, stroke, radius, fill, fgcolor, bgcolor, font_id, icon_id}, text/icon
     {{ BAGL_RECTANGLE, 0x00, 0, 0, 128, BAGL_HEIGHT, 0, 0, BAGL_FILL, 0x000000, 0xFFFFFF, 0, 0 }, NULL },
@@ -296,7 +296,7 @@ static void redisplay () {
     init[sizeof(init)/sizeof(bagl_element_t)-1].text = find_icon(icon);
   }
 
-  switch (tz_ui_stream_current_screen_kind ()) {
+  switch (tz_ui_stream_current_screen_kind()) {
   case TZ_UI_STREAM_DISPLAY_INIT:
   case TZ_UI_STREAM_DISPLAY_FIRST:
     init[2].text = (const char*) &C_icon_go_right;
@@ -319,7 +319,7 @@ static void redisplay () {
 
 static void change_screen_left() {
   FUNC_ENTER(("void"));
-  pred ();
+  pred();
   redisplay();
   FUNC_LEAVE();
 }
@@ -334,7 +334,7 @@ static void change_screen_right() {
       s->cb(TZ_UI_STREAM_CB_REFILL);
   }
   // go back to the data screen
-  succ ();
+  succ();
   redisplay();
   FUNC_LEAVE();
 }

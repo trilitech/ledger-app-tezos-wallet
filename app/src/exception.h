@@ -55,10 +55,10 @@ static inline void check_null(void volatile const *const ptr) {
 #ifdef TEZOS_DEBUG
 static inline __attribute((noreturn)) void failwith(const char* message) {
   PRINTF("[ERROR] %s\n", message);
-  THROW (EXC_UNEXPECTED_STATE);
+  THROW(EXC_UNEXPECTED_STATE);
 }
 #else
-static inline __attribute((noreturn)) void failwith( __attribute((unused)) const char* message) {
-  THROW (EXC_UNEXPECTED_STATE);
+static inline __attribute((noreturn)) void failwith(__attribute((unused)) const char* message) {
+  THROW(EXC_UNEXPECTED_STATE);
 }
 #endif

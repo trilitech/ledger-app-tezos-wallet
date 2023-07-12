@@ -40,7 +40,7 @@
 #  ifdef TEZOS_DEBUG
 #    define PRINTF printf
 #  else
-#    define PRINTF(...) do {} while(0)
+#    define PRINTF(...) do {} while (0)
 #  endif
 #endif
 
