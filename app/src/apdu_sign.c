@@ -50,7 +50,7 @@ typedef struct {
 
 static inline void clear_data(void);
 static void init_packet(packet_t *);
-static int write_signature(uint8_t *const, uint8_t const *const, size_t const);
+static int write_signature(uint8_t *, const uint8_t *, size_t);
 static void sign_packet(void);
 static void send_reject(void);
 static void send_continue(void);
