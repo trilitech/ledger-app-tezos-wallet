@@ -47,7 +47,7 @@
 seed="zebra`for i in $(seq 1 23) ; do echo -n ' zebra' ; done`"
 OUTPUT_BARS=$(for i in $(seq 1 $((COLUMNS-18))); do echo -n =; done)
 
-function attempts {
+attempts() {
     nb=2000
     while (( nb > 0 )); do
         if "$@" ; then
@@ -66,12 +66,12 @@ compare_strings() {
     [ "$STR1" = "$STR2" ]
 }
 
-function get_screen_text {
+get_screen_text() {
    got="$(curl -s $SPECULOS_URL/events?currentscreenonly=true)"
    echo $got | jq -r '[.events[].text] | add'
 }
 
-function expect_full_text {
+expect_full_text() {
     echo -n " - expect_full_text" ; for s in "$@" ; do echo -n " \"$s\"" ; done
     IFS= exp="$*"
     nb=200
@@ -103,7 +103,7 @@ function expect_full_text {
 
 # One section of data can spill across multiple screens.
 # Collect all pages with the given title, and then compare at the end.
-function expect_section_content {
+expect_section_content() {
     echo -n " - expect_section_content $2"
 
     $(dirname $0)/check_section_text.py --device=$1 --url=$SPECULOS_URL --title="$2" --expected-content="$3"
@@ -121,7 +121,7 @@ function expect_section_content {
 # in press_button, the ledger can return an empty reply which curl flags
 # as an error (52).  This is not "no reply" and it is valid.
 
-function press_button {
+press_button() {
     echo " - press_button $1"
     set +e
     curl -s $SPECULOS_URL/button/$1 -d '{"action":"press-and-release"}' \
@@ -134,7 +134,7 @@ function press_button {
     fi
 }
 
-function send_apdu {
+send_apdu() {
     echo " - apdu $1"
     APDU=$DATA_DIR/apdu-$PORT
 
@@ -152,7 +152,7 @@ function send_apdu {
     mv $APDU.tmp $APDU ) &
 }
 
-function expect_apdu_return {
+expect_apdu_return() {
     echo -n " - expect_apdu_return $1"
     APDU=$DATA_DIR/apdu-$PORT
     if ! attempts [ -f $APDU ]; then
@@ -170,7 +170,7 @@ function expect_apdu_return {
     APDU_OUTSTANDING=0
 }
 
-function send_async_apdus {
+send_async_apdus() {
     APDU=$DATA_DIR/apdu-$PORT
     async_apdus="$(mktemp $DATA_DIR/async_apdus-XXXXXX)"
     echo " - will send $(($#/2)) apdus"
@@ -188,7 +188,7 @@ function send_async_apdus {
      done ; rm $async_apdus) &
 }
 
-function expect_async_apdus_sent {
+expect_async_apdus_sent() {
     if ! attempts test ! -f $async_apdus; then
         echo "FAILURE(expect_async_apdus_sent)" >&2
         exit 1
@@ -196,7 +196,7 @@ function expect_async_apdus_sent {
     echo " - all apdus received"
 }
 
-function check_tlv_signature_from_sent_apdu {
+check_tlv_signature_from_sent_apdu() {
     echo -n " - check_tlv_signature_from_apdus_sent $@"
     APDU=$DATA_DIR/apdu-$PORT
     if ! attempts [ -f $APDU ]; then
@@ -366,7 +366,7 @@ test_a_path() {
     fi
 }
 
-function cleanup {
+cleanup() {
     retcode=$?
 
     if [ -z "$FINISHED_TESTING" -a "$retcode" != 0 ]; then
@@ -384,7 +384,7 @@ function cleanup {
     fi
 }
 
-function expect_exited {
+expect_exited() {
     echo -n " - expect_exited"
     attempts exited
     echo
@@ -394,7 +394,7 @@ function expect_exited {
     fi
 }
 
-function usage {
+usage() {
     echo "$@"                                                            >&2
     echo -n "Usage: $0 [-F] [-l lim] [-m arch] [-t tgz] [-d tgz] "       >&2
     echo               "path [path...]"                                  >&2
@@ -407,7 +407,7 @@ function usage {
     exit 1
 }
 
-function main {
+main() {
 
     # Defaults:
     TARGET=nanos

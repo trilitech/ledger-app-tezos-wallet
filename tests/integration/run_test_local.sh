@@ -19,7 +19,7 @@ set -e
 
 . "`dirname $0`/test_runtime.sh"
 
-function start_speculos_runner {
+start_speculos_runner() {
     echo "Starting speculos (debug=$1) on port $PORT..."
 
     if [ "$1" = "DEBUG" ]; then
@@ -38,7 +38,7 @@ function start_speculos_runner {
     attempts [ "`curl -s $SPECULOS_URL/events 2> /dev/null`" != "{}" ]
 }
 
-function kill_speculos_runner {
+kill_speculos_runner() {
     echo "Stopping speculos..."
     kill -9 $speculos_pid > /dev/null 2>&1 || true
     wait $speculos_pid 2> /dev/null || true
@@ -46,7 +46,7 @@ function kill_speculos_runner {
 }
 
 
-function exited {
+exited() {
     if ps $speculos_pid > /dev/null 2>&1 ; then
         return 1
     else
