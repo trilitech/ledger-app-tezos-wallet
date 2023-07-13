@@ -201,12 +201,15 @@ void tz_format_decimal(const uint8_t *, size_t, char *);
 void tz_format_base58(const uint8_t *, size_t, char *);
 #define TZ_BASE58_BUFFER_SIZE(l) (l * 138 / 100 + 1)
 
-// Adds the provided prefix, appends the four first bytes of a
-// double-sha256 of this concatenation, and calls `format_base58`.The
+// Looks up the prefix from the provided string (arg1), e.g. "B",
+// "o", "expr", "tz2", etc.  This indexes into a table which finds
+// the appropriate binary prefix and the data length which is required.
+// Will return an error if the lengths do not match.  Then it will
+// add the provided prefix, append the four first bytes of a
+// double-sha256 of this concatenation, and call `format_base58`. The
 // output buffer `obuf` must be at least `BASE58CHECK_BUFFER_SIZE(l,
 // prefix_len)` (caller responsibility).
-void tz_format_base58check(const uint8_t *, size_t, const uint8_t *,
-			   size_t, char *);
+int tz_format_base58check(const char *, const uint8_t *, size_t, char *);
 #define TZ_BASE58CHECK_BUFFER_SIZE(l, p) TZ_BASE58_BUFFER_SIZE(p + l + 4)
 
 // Some Tezos-specific base58check formatters. These functions

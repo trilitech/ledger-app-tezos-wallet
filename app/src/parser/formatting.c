@@ -266,7 +266,75 @@ static void cx_hash_sha256(uint8_t *data, size_t size, uint8_t *out, size_t size
 }
 #endif
 
-void tz_format_base58check (const uint8_t *prefix, size_t prefix_len, const uint8_t *data, size_t size, char *obuf) {
+/*
+ * find_prefix() is passed in:
+ *     s:  the prefix we are looking for
+ *     p:  an out parameter which is the binary prefix we matched
+ *     pl: another out parameter: the length of the returned binary prefix
+ *     dl: the data length which we got
+ *
+ * To save lines and make things easier to read and modify, we implement
+ * find_prefix() as a series of invocations of the macro B58_PREFIX().
+ * This macro takes 4 arguments: which correspond the the arguments of
+ * our function directly.  It matches the textual prefixes and if they
+ * do match, it sets the output parameters and validates that the length
+ * is correct.
+ *
+ * find_prefix() returns successfully if it finds a definition and the
+ * length is correct.
+ */
+
+#define B58_PREFIX(_s, _p, _pl, _dl) do {       \
+            if (!strcmp((_s), s)) {             \
+                if ((_dl) != dl)                \
+                    return 1;                   \
+                (*p)  = (const uint8_t *)(_p);  \
+                (*pl) = (_pl);                  \
+                return 0;                       \
+            }                                   \
+        } while (0)
+
+static int find_prefix(const char *s, const uint8_t **p, size_t *pl, size_t dl)
+{
+
+  /* For tz_format_hash */
+
+  B58_PREFIX("B",    "\x01\x34",         2, 32);
+  B58_PREFIX("o",    "\x05\x74",         2, 32);
+  B58_PREFIX("expr", "\x0d\x2c\x40\x1b", 4, 32);
+
+  /* Public key hashes */
+
+  B58_PREFIX("tz1",  "\x06\xa1\x9f",     3, 20);
+  B58_PREFIX("tz2",  "\x06\xa1\xa1",     3, 20);
+  B58_PREFIX("tz3",  "\x06\xa1\xa4",     3, 20);
+  B58_PREFIX("tz4",  "\x06\xa1\xa6",     3, 20);
+
+  /* Public keys */
+
+  B58_PREFIX("edpk", "\x0d\x0f\x25\xd9", 4, 32);
+  B58_PREFIX("sppk", "\x03\xfe\xe2\x56", 4, 33);
+  B58_PREFIX("p2pk", "\x03\xb2\x8b\x7f", 4, 33);
+  B58_PREFIX("BLpk", "\x06\x95\x87\xcc", 4, 48);
+
+  /* For tz_format_address */
+
+  B58_PREFIX("KT1",  "\x02\x5a\x79",     3, 20);
+  B58_PREFIX("txr1", "\x01\x80\x78\x1f", 4, 20);
+  B58_PREFIX("scr1", "\x01\x76\x84\xd9", 4, 20);
+  B58_PREFIX("zkr1", "\x01\xab\x54\xfb", 4, 20);
+
+  return 1;
+};
+
+int tz_format_base58check(const char *sprefix, const uint8_t *data,
+                          size_t size, char *obuf) {
+  const uint8_t *prefix = NULL;
+  size_t prefix_len;
+
+  if (find_prefix(sprefix, &prefix, &prefix_len, size))
+    return 1;
+
   uint8_t prepared[prefix_len+size+4];
   memcpy(prepared, prefix, prefix_len);
   memcpy(prepared+prefix_len, data, size);
@@ -275,66 +343,65 @@ void tz_format_base58check (const uint8_t *prefix, size_t prefix_len, const uint
   cx_hash_sha256(tmp, 32, tmp, 32);
   memcpy(prepared+size+prefix_len, tmp, 4);
   tz_format_base58(prepared, prefix_len+size+4, obuf);
+  return 0;
 }
 
 int tz_format_pkh(const uint8_t *data, size_t size, char *obuf) {
-  if (size != 21) return 1;
+  const char *prefix;
+
+  if (size < 1)
+    return 1;
   switch (data[0]) {
-  case 0: tz_format_base58check((uint8_t*)"\x06\xa1\x9f", 3, data+1, 20, obuf); break; // tz1
-  case 1: tz_format_base58check((uint8_t*)"\x06\xa1\xa1", 3, data+1, 20, obuf); break; // tz2
-  case 2: tz_format_base58check((uint8_t*)"\x06\xa1\xa4", 3, data+1, 20, obuf); break; // tz3
-  case 3: tz_format_base58check((uint8_t*)"\x06\xa1\xa6", 3, data+1, 20, obuf); break; // tz4
+  case 0:  prefix = "tz1"; break;
+  case 1:  prefix = "tz2"; break;
+  case 2:  prefix = "tz3"; break;
+  case 3:  prefix = "tz4"; break;
   default: return 1;
   }
-  return 0;
+
+  return tz_format_base58check(prefix, data+1, size-1, obuf);
 }
 
 int tz_format_pk(const uint8_t *data, size_t size, char *obuf) {
-  if (size < 1) return 1;
+  const char *prefix;
+
+  if (size < 1)
+    return 1;
   switch (data[0]) {
-  case 0:
-    if (size != 33) return 1;
-    tz_format_base58check((uint8_t*)"\x0d\x0f\x25\xd9", 4, data+1, 32, obuf); break; // edpk
-  case 1:
-    if (size != 34) return 1;
-    tz_format_base58check((uint8_t*)"\x03\xfe\xe2\x56", 4, data+1, 33, obuf); break; // sppk
-  case 2:
-    if (size != 34) return 1;
-    tz_format_base58check((uint8_t*)"\x03\xb2\x8b\x7f", 4, data+1, 33, obuf); break; // p2pk
-  case 3:
-    if (size != 49) return 1;
-    tz_format_base58check((uint8_t*)"\x06\x95\x87\xcc", 4, data+1, 48, obuf); break; // BLpk
+  case 0:  prefix = "edpk"; break;
+  case 1:  prefix = "sppk"; break;
+  case 2:  prefix = "p2pk"; break;
+  case 3:  prefix = "BLpk"; break;
   default: return 1;
   }
-  return 0;
+
+  return tz_format_base58check(prefix, data+1, size-1, obuf);
 }
 
+/* Deprecated, use tz_format_base58check("o", ...) instead */
 int tz_format_oph(const uint8_t *data, size_t size, char *obuf) {
-  if (size != 32) return 1;
-  tz_format_base58check((uint8_t*)"\x05\x74", 2, data, 32, obuf); // op
-  return 0;
+  return tz_format_base58check("o", data, size, obuf);
 }
 
+/* Deprecated, use tz_format_base58check("B", ...) instead */
 int tz_format_bh(const uint8_t *data, size_t size, char *obuf) {
-  if (size != 32) return 1;
-  tz_format_base58check((uint8_t*)"\x01\x34", 2, data, 32, obuf); // Bl
-  return 0;
+  return tz_format_base58check("B",  data, size, obuf);
 }
 
 int tz_format_address(const uint8_t *data, size_t size, char *obuf) {
-  if (size != 22) return 1;
+  const char *prefix;
+
+  if (size < 1)
+    return 1;
   switch (data[0]) {
-  case 0:
-    return tz_format_pkh (data+1, 21, obuf);
-  case 1:
-    tz_format_base58check((uint8_t*)"\x02\x5a\x79", 3, data+1, 20, obuf); break; // KT1
-  case 2:
-    tz_format_base58check((uint8_t*)"\x01\x80\x78\x1f", 4, data+1, 20, obuf); break; // txr1
-  case 3:
-    tz_format_base58check((uint8_t*)"\x01\x76\x84\xd9", 4, data+1, 20, obuf); break; // scr1
-  case 4:
-    tz_format_base58check((uint8_t*)"\x01\xab\x54\xfb", 4, data+1, 20, obuf); break; // zkr1
+  case 1:  prefix = "KT1";  break;
+  case 2:  prefix = "txr1"; break;
+  case 3:  prefix = "scr1"; break;
+  case 4:  prefix = "zkr1"; break;
+
+  case 0:  return tz_format_pkh (data+1, size-1, obuf);
   default: return 1;
   }
-  return 0;
+
+  return tz_format_base58check(prefix, data+1, size-2, obuf);
 }
