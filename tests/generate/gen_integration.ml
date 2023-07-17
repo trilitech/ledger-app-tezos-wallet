@@ -319,28 +319,80 @@ let operation_to_screens
   in
   screen_of_operations 0 contents
 
-(* Keys for mnemonic zebra (x24), path m/44'/1729'/0'/0' *)
+let mnemonic_of_string s =
+  Option.get @@ Tezos_client_base.Bip39.of_words @@ String.split_on_char ' ' s
 
 let zebra =
-  Option.get @@ Tezos_client_base.Bip39.of_words
-  @@ String.split_on_char ' '
-       "zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra \
-        zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra \
-        zebra zebra"
+  mnemonic_of_string
+    "zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra \
+     zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra"
+
+let seed12 =
+  mnemonic_of_string
+    "spread husband dish drop file swap dog foil verb nut orient chicken"
+
+let seed15 =
+  mnemonic_of_string
+    "tonight jump steak foil time sudden detect text rifle liberty volcano \
+     riot person guess unaware"
+
+let seed21 =
+  mnemonic_of_string
+    "around dignity equal spread between young lawsuit interest climb wide \
+     that panther rather mom snake scene ecology reunion ice illegal brush"
+
+let seed24 =
+  mnemonic_of_string
+    "small cool word clock copy badge jungle pole cool horror woman miracle \
+     silver library foster cinnamon spring discover gauge faint hammer test \
+     air cream"
 
 let default_path = [ 44; 1729; 0; 0 ]
+let path_0 = [ 0 ]
+let path_2_11_5 = [ 2; 11; 5 ]
+let path_17_8_6_9 = [ 17; 8; 6; 9 ]
+let path_9_12_13_8_78 = [ 9; 12; 13; 8; 78 ]
 
-let tz1_signer =
-  (* tz1dyX3B1CFYa2DfdFLyPtiJCfQRUgPVME6E *)
-  Apdu.Signer.make ~mnemonic:zebra ~path:default_path
-    ~sk:"edsk2tUyhVvGj9B1S956ZzmaU4bC9J7t8xVBH52fkAoZL25MHEwacd"
+let tz1_signers =
+  [
+    (* tz1dyX3B1CFYa2DfdFLyPtiJCfQRUgPVME6E *)
+    Apdu.Signer.make ~mnemonic:zebra ~path:default_path
+      ~sk:"edsk2tUyhVvGj9B1S956ZzmaU4bC9J7t8xVBH52fkAoZL25MHEwacd";
+    (* tz1NxVR43U25oudr9QPCjXycDNaH1arZZ5fL *)
+    Apdu.Signer.make ~mnemonic:seed12 ~path:path_0
+      ~sk:"edsk3xdyqj4YH64DKQ3ihVktjs2x5DagcoP3yNbdqPg3FAibHM1EU2";
+    (* tz1PVqTSCw2JKxXcwSLgd5Zad18djpvcvPMF *)
+    Apdu.Signer.make ~mnemonic:seed15 ~path:path_2_11_5
+      ~sk:"edsk3qtimAD78T5PBdkAXwjPHYa1tEXJ3jmMcVgNSXuXs9wjsnWnrX";
+    (* tz1aex9GimxigprKi8MQK3j6sSisDpbtRBXw *)
+    Apdu.Signer.make ~mnemonic:seed21 ~path:path_17_8_6_9
+      ~sk:"edsk3xW7FFGdpFTUzqd2dbRVDGt6vK2XrRfQU5VjXKFABdN3mbmRkH";
+    (* tz1ZAxU3Q39BSJWoHzEcPmt8U36iHmdCcZ2K *)
+    Apdu.Signer.make ~mnemonic:seed24 ~path:path_9_12_13_8_78
+      ~sk:"edsk2vPx2hnTsef6EeuD846PoHTja7dM96YtZ26S3Xz4KP36a2m6k1";
+    (* tz1NKmt8bGYc5guuJyXPTkEbvBHXHBHVALhc *)
+    Apdu.Signer.make ~mnemonic:seed12 ~path:default_path
+      ~sk:"edsk3q2GyniEU2jGxw7uLFPys4AfALs96VE64d7kr7NXhtN4w8RUue";
+    (* tz1aKnxJdtJQ89Hp5HeXMxgJnnyNHjyAUmSb *)
+    Apdu.Signer.make ~mnemonic:seed15 ~path:path_0
+      ~sk:"edsk35nft3nYCBpzdXqKCL1VPpVTa3NFTDGj7QqSxc1auzkjz2znTW";
+    (* tz1VeeXEdqU9TjfAvPNKpUopB1jXJAZh9egp *)
+    Apdu.Signer.make ~mnemonic:seed21 ~path:path_2_11_5
+      ~sk:"edsk3VTt2ikBiYrt1LKM9juE71Tfg6YmjdUGR4PzT2wuV5uEJ9vTDM";
+    (* tz1dHwBzesqaqdNdsMGDu2xjAPvirzmx4BTL *)
+    Apdu.Signer.make ~mnemonic:seed24 ~path:path_17_8_6_9
+      ~sk:"edsk3mfq95CqPnQgcj38KpAz8taNjQY5tQYvNRKojXLKKjhZC72z2H";
+    (* tz1ez9eEyAxuDZACjHdCXym43UQDdMNa3LEL *)
+    Apdu.Signer.make ~mnemonic:zebra ~path:path_9_12_13_8_78
+      ~sk:"edsk3eZBgFAf1VtdibfxoCcihxXje9S3th7jdEgVA2kHG82EKYNKNm";
+  ]
 
 let tz2_signer =
   (* tz2GB5YHqF4UzQ8GP5yUqdhY9oVWRXCY2hPU *)
   Apdu.Signer.make ~mnemonic:zebra ~path:default_path
     ~sk:"spsk2Pfx9chqXVbz2tW7ze4gGU4RfaiK3nSva77bp69zHhFho2zTze"
 
-let gen_signer = QCheck2.Gen.oneofl [ tz1_signer ]
+let gen_signer = QCheck2.Gen.oneofl tz1_signers
 
 let gen_expect_test_sign ppf ~device ~watermark bin screens =
   Format.fprintf ppf "# full input: %a@." pp_hex_bytes bin;

@@ -1,6 +1,7 @@
 # full input: 0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316
 # full output: CAR
 # signer: tz1dyX3B1CFYa2DfdFLyPtiJCfQRUgPVME6E
+# path: m/44'/1729'/0'/0'
 start_speculos "$seed"
 expect_full_text 'Tezos Wallet' 'ready for' 'safe signing'
 send_async_apdus \
