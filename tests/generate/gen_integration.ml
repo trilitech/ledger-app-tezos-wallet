@@ -26,7 +26,9 @@ let pp_hex_bytes ppf bytes = Format.fprintf ppf "%a" Hex.pp (Hex.of_bytes bytes)
 
 (** General *)
 
-let start_speculos ppf () = Format.fprintf ppf "start_speculos \"$seed\"@."
+let start_speculos ppf mnemonic =
+  Format.fprintf ppf "start_speculos \"%a\"@." Tezos_client_base.Bip39.pp
+    mnemonic
 
 module Device = struct
   type t = Nanos | Nanosp | Nanox
@@ -319,14 +321,23 @@ let operation_to_screens
 
 (* Keys for mnemonic zebra (x24), path m/44'/1729'/0'/0' *)
 
+let zebra =
+  Option.get @@ Tezos_client_base.Bip39.of_words
+  @@ String.split_on_char ' '
+       "zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra \
+        zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra \
+        zebra zebra"
+
+let default_path = [ 44; 1729; 0; 0 ]
+
 let tz1_signer =
   (* tz1dyX3B1CFYa2DfdFLyPtiJCfQRUgPVME6E *)
-  Apdu.Signer.make ~path:[ 44; 1729; 0; 0 ]
+  Apdu.Signer.make ~mnemonic:zebra ~path:default_path
     ~sk:"edsk2tUyhVvGj9B1S956ZzmaU4bC9J7t8xVBH52fkAoZL25MHEwacd"
 
 let tz2_signer =
   (* tz2GB5YHqF4UzQ8GP5yUqdhY9oVWRXCY2hPU *)
-  Apdu.Signer.make ~path:[ 44; 1729; 0; 0 ]
+  Apdu.Signer.make ~mnemonic:zebra ~path:default_path
     ~sk:"spsk2Pfx9chqXVbz2tW7ze4gGU4RfaiK3nSva77bp69zHhFho2zTze"
 
 let gen_signer = QCheck2.Gen.oneofl [ tz1_signer ]
@@ -336,7 +347,8 @@ let gen_expect_test_sign ppf ~device ~watermark bin screens =
   let signer = QCheck2.Gen.generate1 ~rand:Gen_utils.random_state gen_signer in
   Format.fprintf ppf "# signer: %a@." Tezos_crypto.Signature.Public_key_hash.pp
     signer.pkh;
-  start_speculos ppf ();
+  Format.fprintf ppf "# path: %a@." Apdu.Path.pp signer.path;
+  start_speculos ppf signer.mnemonic;
   home ppf ();
   sign ppf ~signer ~watermark bin;
   go_through_screens ppf ~device screens;

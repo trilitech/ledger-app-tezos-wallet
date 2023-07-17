@@ -120,6 +120,11 @@ let make_packets ?(idx = 0) ~cla ~ins ~curve content =
 module Path = struct
   type t = int list
 
+  let pp ppf (path : t) =
+    let pp_sep ppf () = Format.fprintf ppf "/" in
+    let pp_node ppf node = Format.fprintf ppf "%i'" node in
+    Format.fprintf ppf "m/%a" (Format.pp_print_list ~pp_sep pp_node) path
+
   let to_bytes path =
     (* hardened is defined by the "'" *)
     let hardened idx = idx lor 0x80_00_00_00 in
@@ -135,18 +140,19 @@ end
 
 module Signer = struct
   type t = {
+    mnemonic : Tezos_client_base.Bip39.t;
     path : Path.t;
     pkh : Tezos_crypto.Signature.public_key_hash;
     pk : Tezos_crypto.Signature.public_key;
     sk : Tezos_crypto.Signature.secret_key;
   }
 
-  let make ~path ~sk =
+  let make ~mnemonic ~path ~sk =
     let open Tezos_crypto.Signature in
     let sk = Secret_key.of_b58check_exn sk in
     let pk = Secret_key.to_public_key sk in
     let pkh = Public_key.hash pk in
-    { path; pkh; pk; sk }
+    { path; pkh; pk; sk; mnemonic }
 end
 
 let sign ~signer:Signer.{ path; sk; _ } bin =
