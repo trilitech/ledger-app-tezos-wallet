@@ -1,6 +1,7 @@
 # full input: 0092abf8e3d9e5f8cfd9ae8a9fe5f28ea1d5b5abf1af82dae8a4b68df3d1889eb6f988f5e8d31a
 # full output: 12345678901234567890123456789012345678901234567890123456789012345678901234567890
 # signer: tz1dyX3B1CFYa2DfdFLyPtiJCfQRUgPVME6E
+start_speculos "$seed"
 press_button right
 expect_full_text 'Settings'
 press_button both

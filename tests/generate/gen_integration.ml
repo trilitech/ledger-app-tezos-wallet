@@ -25,6 +25,9 @@ let shell_escape ppf s =
 let pp_hex_bytes ppf bytes = Format.fprintf ppf "%a" Hex.pp (Hex.of_bytes bytes)
 
 (** General *)
+
+let start_speculos ppf () = Format.fprintf ppf "start_speculos \"$seed\"@."
+
 module Device = struct
   type t = Nanos | Nanosp | Nanox
 
@@ -333,6 +336,7 @@ let gen_expect_test_sign ppf ~device ~watermark bin screens =
   let signer = QCheck2.Gen.generate1 ~rand:Gen_utils.random_state gen_signer in
   Format.fprintf ppf "# signer: %a@." Tezos_crypto.Signature.Public_key_hash.pp
     signer.pkh;
+  start_speculos ppf ();
   home ppf ();
   sign ppf ~signer ~watermark bin;
   go_through_screens ppf ~device screens;

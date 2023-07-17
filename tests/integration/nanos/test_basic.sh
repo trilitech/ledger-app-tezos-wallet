@@ -1,3 +1,4 @@
+start_speculos "$seed"
 sleep 0.2
 expect_full_text "Tezos Wallet" "ready for" "safe signing"
 press_button right

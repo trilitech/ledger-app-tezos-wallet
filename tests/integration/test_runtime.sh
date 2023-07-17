@@ -29,7 +29,7 @@
 #
 #      start_speculos_runner
 #              This function will start a speculos runner on
-#              the port $PORT.  seed (defined below) should be
+#              the port $PORT.  The seed passed in argument should be
 #              passed to --seed on invocation to ensure that the
 #              PRNG is reproducible.  Obviously headless because
 #              we are testing.  And the TARGET is in an env var
@@ -214,6 +214,12 @@ check_tlv_signature_from_sent_apdu() {
     fi
 }
 
+start_speculos() {
+    start_speculos_runner $DBG "$1"
+    set -e
+    trap kill_speculos_runner EXIT
+}
+
 run_a_test() {
     DBG=$1
     PORT=$2
@@ -236,21 +242,17 @@ run_a_test() {
         if [ $TEST_TRACE = 1 ]; then
             set -x
         fi
-        start_speculos_runner $DBG
         (
-            set -e;
             case $CMD in
                 *.sh)
                     . $CMD
                     ;;
                 *.py)
+                    start_speculos "$seed"
                     PORT=$PORT python3 $CMD
                     ;;
             esac
         )
-        RETCODE=$?
-        kill_speculos_runner
-        exit $RETCODE
      ) > $OUTF 2> $ERRF
      RETCODE=$?
      set -e

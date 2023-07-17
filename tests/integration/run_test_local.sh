@@ -28,6 +28,8 @@ start_speculos_runner() {
         tgz=$TGZ
     fi
 
+    seed=$2
+
     app_dir="$(mktemp -d $DATA_DIR/appdir-XXXXXX)"
     tar xfz "$tgz" -C $app_dir
     $SPECULOS --display headless --apdu-port 0 --api-port $PORT          \

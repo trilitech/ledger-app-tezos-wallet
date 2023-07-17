@@ -1,3 +1,4 @@
+start_speculos "$seed"
 sleep 0.2
 expect_full_text "Tezos Wallet" "ready for" "safe signing"
 send_apdu 800f000011048000002c800006c18000000080000000

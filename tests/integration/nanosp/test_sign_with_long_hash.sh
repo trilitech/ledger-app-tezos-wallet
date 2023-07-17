@@ -1,6 +1,7 @@
 # full output: 0
 # full input: 00000000000000000000000000000000000000000000000000000000000000006c00ffdd6102321bc251e4a5190ad5b12b251069d9b4904e020304000156dcfb211fa76c525fd7c4566c09a5e3e4d5b81000ff01000000020000
 # signer: tz1dyX3B1CFYa2DfdFLyPtiJCfQRUgPVME6E
+start_speculos "$seed"
 expect_full_text 'Tezos Wallet' 'ready for' 'safe signing'
 send_async_apdus \
         800f000011048000002c800006c18000000080000000 "expect_apdu_return 9000" \
