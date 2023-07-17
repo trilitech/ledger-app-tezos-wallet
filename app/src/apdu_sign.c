@@ -180,7 +180,7 @@ static void send_continue() {
 
 static void refill() {
   size_t wrote = 0;
-  tz_parser_state *st = &global.apdu.sign.parser_state;
+  tz_parser_state *st = &global.apdu.sign.u.clear.parser_state;
 
   FUNC_ENTER(("void"));
   while (!TZ_IS_BLOCKED(tz_operation_parser_step(st)))
@@ -255,7 +255,7 @@ static size_t handle_first_apdu(packet_t *pkt) {
 }
 
 static void handle_first_apdu_clear(__attribute__((unused)) packet_t *pkt) {
-  tz_parser_state *st = &global.apdu.sign.parser_state;
+  tz_parser_state *st = &global.apdu.sign.u.clear.parser_state;
 
   tz_operation_parser_init(st, TZ_UNKNOWN_SIZE, false);
   tz_parser_refill(st, NULL, 0);
@@ -263,6 +263,13 @@ static void handle_first_apdu_clear(__attribute__((unused)) packet_t *pkt) {
 }
 
 static void handle_first_apdu_blind(__attribute__((unused)) packet_t *pkt) {
+
+  /*
+   * We set the tag to zero here which indicates that it is unset.
+   * The first data packet will set it to the first byte.
+   */
+
+  global.apdu.sign.u.blind.tag = 0;
 }
 
 static size_t handle_data_apdu(packet_t *pkt) {
@@ -278,8 +285,6 @@ static size_t handle_data_apdu(packet_t *pkt) {
 			    pkt->buff, pkt->buff_size,
 			    global.apdu.hash.final_hash, sizeof(global.apdu.hash.final_hash)));
 
-  global.apdu.sign.total_length += pkt->buff_size;
-
   if (pkt->is_last)
     global.apdu.sign.received_last_msg = true;
 
@@ -292,16 +297,18 @@ static size_t handle_data_apdu(packet_t *pkt) {
 }
 
 static size_t handle_data_apdu_clear(packet_t *pkt) {
-  tz_parser_state *st = &global.apdu.sign.parser_state;
+  tz_parser_state *st = &global.apdu.sign.u.clear.parser_state;
 
   if (st->regs.ilen > 0)
     // we asked for more input but did not consume what we already had
     THROW(EXC_UNEXPECTED_SIGN_STATE);
 
+  global.apdu.sign.u.clear.total_length += pkt->buff_size;
+
   // refill the parser's input
   tz_parser_refill(st, pkt->buff, pkt->buff_size);
   if (pkt->is_last)
-    tz_operation_parser_set_size(st, global.apdu.sign.total_length);
+    tz_operation_parser_set_size(st, global.apdu.sign.u.clear.total_length);
 
   // resume the parser with the new data
   refill ();
@@ -318,22 +325,38 @@ static size_t handle_data_apdu_clear(packet_t *pkt) {
   FUNC_LEAVE();
 }
 
+#define FINAL_HASH global.apdu.hash.final_hash
 static size_t handle_data_apdu_blind(packet_t *pkt) {
+  if (!global.apdu.sign.u.blind.tag)
+    global.apdu.sign.u.blind.tag = pkt->buff[0];
   if (pkt->is_last) {
-    char obuf[45];
+    size_t i = 0;
+    char obuf[TZ_BASE58_BUFFER_SIZE(sizeof(FINAL_HASH))];
+    const char *type = "unknown type";
 
     global.apdu.sign.received_last_msg = true;
     global.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
-    tz_format_base58(global.apdu.hash.final_hash,
-                     sizeof(global.apdu.hash.final_hash), obuf);
-    obuf[44] = '\0';
 
-    tz_ui_stream_pushl(TZ_UI_STREAM_CB_NOCB, "Sign Hash (1/3)",
-                       obuf, 19, TZ_UI_ICON_NONE);
-    tz_ui_stream_pushl(TZ_UI_STREAM_CB_NOCB, "Sign Hash (2/3)",
-                       obuf + 18, 17, TZ_UI_ICON_NONE);
-    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Sign Hash (3/3)",
-                      obuf + 18 + 16, TZ_UI_ICON_NONE);
+    tz_format_base58(FINAL_HASH, sizeof(FINAL_HASH), obuf);
+
+    switch(global.apdu.sign.u.blind.tag) {
+    case 0x01: case 0x11: type = "Block\nproposal";         break;
+    case 0x03:            type = "Manager\noperation";      break;
+    case 0x02:
+    case 0x12: case 0x13: type = "Consensus\noperation";    break;
+    case 0x05:            type = "Micheline\nexpression";   break;
+    default:                                                break;
+    }
+
+    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Sign Hash", type,
+                      TZ_UI_ICON_NONE);
+
+    size_t obuflen = strlen(obuf);
+    do {
+      i += tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Sign Hash", obuf + i,
+                             TZ_UI_ICON_NONE);
+    } while (i < obuflen);
+
     tz_ui_stream_push_accept_reject();
     tz_ui_stream_close();
     tz_ui_stream();
@@ -343,6 +366,7 @@ static size_t handle_data_apdu_blind(packet_t *pkt) {
 
   return 0;
 }
+#undef FINAL_HASH
 
 size_t handle_apdu_sign(__attribute__((unused)) bool return_hash) {
   packet_t pkt;

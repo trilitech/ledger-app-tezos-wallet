@@ -86,9 +86,15 @@ typedef struct {
   sign_step_t step;
   bool received_last_msg;
 
-  size_t total_length;
-
-  tz_parser_state parser_state;
+  union {
+    struct {
+      size_t total_length;
+      tz_parser_state parser_state;
+    } clear;
+    struct {
+      uint8_t tag;
+    } blind;
+  } u; 
 
   char line_buf[TZ_UI_STREAM_CONTENTS_SIZE + 1];
 } apdu_sign_state_t;
