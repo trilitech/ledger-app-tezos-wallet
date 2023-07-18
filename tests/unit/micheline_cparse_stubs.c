@@ -96,7 +96,8 @@ CAMLprim value micheline_cparse_step(value mlstate, value input, value output) {
     caml_failwith("micheline_cparse_step: invalid state");
   default:
     char err[100];
-    snprintf(err, 99, "micheline_cparse_step: unknown error code %d", state->errno);
+    snprintf(err, sizeof(err), "micheline_cparse_step: unknown error code %d",
+             state->errno);
     caml_failwith(err);
   }
   CAMLreturn(r);
@@ -156,7 +157,8 @@ CAMLprim value operation_cparse_step(value mlstate, value input, value output) {
     caml_failwith("operation_cparse_step: invalid state");
   default:
     char err[100];
-    snprintf(err, 99, "operation_cparse_step: unknown error code %d", state->errno);
+    snprintf(err, sizeof(err), "operation_cparse_step: unknown error code %d",
+             state->errno);
     caml_failwith(err);
   }
   CAMLreturn(r);
