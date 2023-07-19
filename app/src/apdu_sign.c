@@ -300,8 +300,8 @@ static size_t handle_data_apdu(packet_t *pkt) {
     global.apdu.sign.received_last_msg = true;
 
   switch (global.step) {
-  case ST_CLEAR_SIGN: return handle_data_apdu_clear(pkt); break;
-  case ST_BLIND_SIGN: return handle_data_apdu_blind(pkt); break;
+  case ST_CLEAR_SIGN: return handle_data_apdu_clear(pkt);
+  case ST_BLIND_SIGN: return handle_data_apdu_blind(pkt);
   default:
     THROW(EXC_UNEXPECTED_STATE);
   }
@@ -375,7 +375,7 @@ static size_t handle_data_apdu_blind(packet_t *pkt) {
     return finalize_successful_send(0);
   }
 
-  return 0;
+  // return 0;
 }
 #undef FINAL_HASH
 

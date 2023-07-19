@@ -321,7 +321,6 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
       }
     }
     tz_raise(INVALID_TAG);
-    break;
   }
   case TZ_OPERATION_STEP_READ_MICHELINE: {
     if (!state->operation.frame->step_read_micheline.inited) {
@@ -341,7 +340,6 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
       else tz_continue;
     }
     tz_reraise;
-    break;
   }
   case TZ_OPERATION_STEP_READ_NUM: {
     uint8_t b;

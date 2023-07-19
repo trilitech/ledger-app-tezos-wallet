@@ -39,7 +39,6 @@ static uint8_t dispatch(uint8_t instruction) {
   case SCREEN_QUIT:
     PRINTF("[ERROR] received instruction whilst on Quit screen\n");
     THROW(EXC_UNEXPECTED_STATE);
-    break;
   default:
     break;
   }
