@@ -29,36 +29,29 @@
 
 /* Prototypes */
 
-static size_t provide_pubkey(uint8_t *const, cx_ecfp_public_key_t const *const);
-static void ok_cb(void);
+static size_t provide_pubkey(uint8_t *);
 static void format_pkh(char *);
 static void stream_cb(tz_ui_cb_type_t);
 
 
-static size_t provide_pubkey(uint8_t *const io_buffer, cx_ecfp_public_key_t const *const pubkey) {
-  FUNC_ENTER(("io_buffer=%p, pubkey=%p", io_buffer, pubkey));
-  check_null(io_buffer);
-  check_null(pubkey);
+static size_t provide_pubkey(uint8_t *const io_buffer) {
+  cx_ecfp_public_key_t pubkey;
   size_t tx = 0;
+
+  FUNC_ENTER(("io_buffer=%p", io_buffer));
+  check_null(io_buffer);
   // Application could be PIN-locked, and pubkey->W_len would then be 0,
   // so throwing an error rather than returning an empty key
   if (os_global_pin_is_validated() != BOLOS_UX_OK) {
     THROW(EXC_SECURITY);
   }
-  io_buffer[tx++] = pubkey->W_len;
-  memmove(io_buffer + tx, pubkey->W, pubkey->W_len);
-  tx += pubkey->W_len;
+  generate_public_key(&pubkey, global.path_with_curve.derivation_type,
+                      &global.path_with_curve.bip32_path);
+  io_buffer[tx++] = pubkey.W_len;
+  memmove(io_buffer + tx, pubkey.W, pubkey.W_len);
+  tx += pubkey.W_len;
   FUNC_LEAVE();
   return finalize_successful_send(tx);
-}
-
-static void ok_cb() {
-  cx_ecfp_public_key_t public_key = {0};
-  generate_public_key(&public_key,
-                      global.path_with_curve.derivation_type,
-                      &global.path_with_curve.bip32_path);
-  delayed_send(provide_pubkey(G_io_apdu_buffer, &public_key));
-  global.step = ST_IDLE;
 }
 
 static void format_pkh(char* buffer) {
@@ -82,7 +75,8 @@ static void format_pkh(char* buffer) {
 static void stream_cb(tz_ui_cb_type_t type) {
   switch (type) {
   case TZ_UI_STREAM_CB_ACCEPT:
-    ok_cb();
+    delayed_send(provide_pubkey(G_io_apdu_buffer));
+    global.step = ST_IDLE;
     break;
   case TZ_UI_STREAM_CB_REFILL:
     break;
@@ -120,13 +114,8 @@ size_t handle_apdu_get_public_key(bool prompt) {
 
   read_bip32_path(&global.path_with_curve.bip32_path, dataBuffer, cdata_size);
 
-  cx_ecfp_public_key_t public_key = {0};
-  generate_public_key(&public_key,
-                      global.path_with_curve.derivation_type,
-                      &global.path_with_curve.bip32_path);
-
   if (!prompt) {
-    return provide_pubkey(G_io_apdu_buffer, &public_key);
+    return provide_pubkey(G_io_apdu_buffer);
   } else {
     global.step = ST_PROMPT;
     prompt_address();
