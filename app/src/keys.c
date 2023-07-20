@@ -43,23 +43,20 @@ static cx_curve_t derivation_type_to_cx_curve(derivation_type_t const derivation
   }
 }
 
-#define READ_UNALIGNED_BIG_ENDIAN(type, in) \
-    ({ \
-        uint8_t const *_bytes = (uint8_t const *)in; \
-        uint8_t _out_bytes[sizeof(type)]; \
-        type _res; \
-\
-        for (size_t _i = 0; _i < sizeof(type); _i++) { \
-            _out_bytes[_i] = _bytes[sizeof(type) - _i - 1]; \
-        } \
-        memcpy(&_res, _out_bytes, sizeof(type)); \
-\
-        _res; \
+#define READ_UNALIGNED_BE(type, in) ({                  \
+        uint8_t const *_bytes = (uint8_t const *)in;    \
+        type _res;                                      \
+                                                        \
+        for (size_t _i = 0; _i < sizeof(type); _i++)    \
+            _res = ((_res) << 8) | _bytes[_i];          \
+                                                        \
+        _res;                                           \
     })
 
-// Same as READ_UNALIGNED_BIG_ENDIAN but helps keep track of how many bytes
-// have been read by adding sizeof(type) to the given counter.
-#define CONSUME_UNALIGNED_BIG_ENDIAN(counter, type, addr) ({ counter += sizeof(type); READ_UNALIGNED_BIG_ENDIAN(type, addr); })
+#define CONSUME_UNALIGNED_BE(counter, type, addr) ({    \
+        counter += sizeof(type);                        \
+        READ_UNALIGNED_BE(type, addr);                  \
+    })
 
 struct bip32_path_wire {
     uint8_t length;
@@ -75,7 +72,7 @@ size_t read_bip32_path(bip32_path_t *const out, uint8_t const *const in,
     if (in_size < sizeof(buf_as_bip32->length)) THROW(EXC_WRONG_LENGTH_FOR_INS);
 
     size_t ix = 0;
-    out->length = CONSUME_UNALIGNED_BIG_ENDIAN(ix, uint8_t, &buf_as_bip32->length);
+    out->length = CONSUME_UNALIGNED_BE(ix, uint8_t, &buf_as_bip32->length);
 
     if (in_size - ix < out->length * sizeof(*buf_as_bip32->components))
         THROW(EXC_WRONG_LENGTH_FOR_INS);
@@ -83,7 +80,7 @@ size_t read_bip32_path(bip32_path_t *const out, uint8_t const *const in,
 
     for (size_t i = 0; i < out->length; i++) {
         out->components[i] =
-            CONSUME_UNALIGNED_BIG_ENDIAN(ix, uint32_t, &buf_as_bip32->components[i]);
+            CONSUME_UNALIGNED_BE(ix, uint32_t, &buf_as_bip32->components[i]);
     }
 
     FUNC_LEAVE();
