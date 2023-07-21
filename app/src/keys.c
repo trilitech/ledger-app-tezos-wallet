@@ -93,7 +93,7 @@ int crypto_derive_private_key(cx_ecfp_private_key_t *private_key,
                               bip32_path_t const *const bip32_path) {
     check_null(bip32_path);
     uint8_t raw_private_key[PRIVATE_KEY_DATA_SIZE] = {0};
-    int err = 0;
+    cx_err_t err;
 
     FUNC_ENTER(("private_key=%p, derivation_type=%d, bip32_path=%p",
                 private_key, derivation_type, bip32_path));
@@ -101,41 +101,29 @@ int crypto_derive_private_key(cx_ecfp_private_key_t *private_key,
     cx_curve_t const cx_curve =
         derivation_type_to_cx_curve(derivation_type);
 
-    BEGIN_TRY {
-        TRY {
-            if (derivation_type == DERIVATION_TYPE_ED25519) {
-                // Old, non BIP32_Ed25519 way...
-                CX_THROW(os_derive_bip32_with_seed_no_throw(HDW_ED25519_SLIP10,
-							    CX_CURVE_Ed25519,
-							    bip32_path->components,
-							    bip32_path->length,
-							    raw_private_key,
-							    NULL,
-							    NULL,
-							    0));
-            } else {
-                // derive the seed with bip32_path
-                CX_THROW(os_derive_bip32_no_throw(cx_curve,
-						  bip32_path->components,
-						  bip32_path->length,
-						  raw_private_key,
-						  NULL));
-            }
-
-            // new private_key from raw
-            CX_THROW(cx_ecfp_init_private_key_no_throw(cx_curve, raw_private_key, 32, private_key));
-        }
-        CATCH_OTHER(e) {
-            err = 1;
-        }
-        FINALLY {
-            explicit_bzero(raw_private_key, sizeof(raw_private_key));
-        }
+    if (derivation_type == DERIVATION_TYPE_ED25519) {
+	// Old, non BIP32_Ed25519 way...
+	err = os_derive_bip32_with_seed_no_throw(HDW_ED25519_SLIP10,
+						 CX_CURVE_Ed25519,
+						 bip32_path->components,
+						 bip32_path->length,
+						 raw_private_key,
+						 NULL, NULL, 0);
+    } else {
+	// derive the seed with bip32_path
+	err = os_derive_bip32_no_throw(cx_curve, bip32_path->components,
+				       bip32_path->length, raw_private_key,
+				       NULL);
     }
-    END_TRY;
+
+    if (!err)
+        err = cx_ecfp_init_private_key_no_throw(cx_curve, raw_private_key,
+                                                32, private_key);
+
+    explicit_bzero(raw_private_key, sizeof(raw_private_key));
 
     FUNC_LEAVE();
-    return err;
+    return err ? 1 : 0;
 }
 
 int crypto_init_public_key(derivation_type_t const derivation_type,
