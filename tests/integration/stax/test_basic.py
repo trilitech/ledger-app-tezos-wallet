@@ -23,7 +23,7 @@ if __name__ == "__main__":
     app.welcome.info()
     app.assert_screen(SCREEN_INFO_PAGE)
 
-    app.info.single_page_exit()
+    app.info.multi_page_exit()
     app.assert_screen(SCREEN_HOME_DEFAULT)
 
     app.welcome.quit()

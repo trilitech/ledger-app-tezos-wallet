@@ -35,6 +35,10 @@
 #include <string.h>
 #include <stdbool.h>
 
+#ifdef HAVE_NBGL
+#include "nbgl_use_case.h"
+#endif
+
 typedef struct {
   uint8_t cla;
   uint8_t ins;
@@ -279,6 +283,9 @@ static void handle_first_apdu_blind(__attribute__((unused)) packet_t *pkt) {
    * We set the tag to zero here which indicates that it is unset.
    * The first data packet will set it to the first byte.
    */
+#ifdef HAVE_NBGL
+  nbgl_useCaseSpinner("Loading operation");
+#endif
 
   global.apdu.sign.u.blind.tag = 0;
 }
@@ -342,6 +349,78 @@ static size_t handle_data_apdu_clear(packet_t *pkt) {
   FUNC_LEAVE();
 }
 
+#ifdef HAVE_NBGL
+static nbgl_layoutTagValueList_t useCaseTagValueList;
+static nbgl_pageInfoLongPress_t infoLongPress;
+
+void reject_blindsign_cb(void) {
+  FUNC_ENTER(("void"));
+
+  stream_cb(TZ_UI_STREAM_CB_REJECT);
+  ui_home_init();
+
+  FUNC_LEAVE();
+}
+
+void accept_blindsign_cb(void) {
+  FUNC_ENTER(("void"));
+
+  stream_cb(TZ_UI_STREAM_CB_ACCEPT);
+  ui_home_init();
+
+  FUNC_LEAVE();
+}
+
+static void reviewChoice(bool confirm) {
+  FUNC_ENTER(("confirm=%d", confirm));
+
+  if (confirm) {
+    nbgl_useCaseStatus("SIGNING\nSUCCESSFUL", true, accept_blindsign_cb);
+  } else {
+    nbgl_useCaseStatus("Rejected", false, reject_blindsign_cb);
+  }
+
+  FUNC_LEAVE();
+}
+
+static const char* transaction_type;
+static char hash[TZ_BASE58_BUFFER_SIZE(sizeof(global.apdu.hash.final_hash))];
+static nbgl_layoutTagValue_t pair;
+static nbgl_layoutTagValue_t* getTagValuePair(uint8_t pairIndex) {
+  switch (pairIndex) {
+    case 0:
+        pair.item = "Type";
+        pair.value = transaction_type;
+        break;
+    case 1:
+      pair.item = "Hash";
+      pair.value = hash;
+      break;
+    default:
+      return NULL;
+  }
+  return &pair;
+}
+
+void continue_blindsign_cb(void) {
+  FUNC_ENTER(("void"));
+
+  useCaseTagValueList.pairs = NULL;
+  useCaseTagValueList.callback = getTagValuePair;
+  useCaseTagValueList.startIndex = 0;
+  useCaseTagValueList.nbPairs = 2;
+  useCaseTagValueList.smallCaseForValue = false;
+  useCaseTagValueList.wrapping = false;
+  infoLongPress.icon = &C_tezos;
+  infoLongPress.text = "Approve";
+  infoLongPress.longPressText = "Sign";
+  nbgl_useCaseStaticReview(&useCaseTagValueList, &infoLongPress, "Reject", reviewChoice);
+
+  FUNC_LEAVE();
+}
+
+#endif
+
 #define FINAL_HASH global.apdu.hash.final_hash
 static size_t handle_data_apdu_blind(packet_t *pkt) {
   if (!global.apdu.sign.u.blind.tag)
@@ -364,6 +443,7 @@ static size_t handle_data_apdu_blind(packet_t *pkt) {
     default:                                                break;
     }
 
+#ifdef HAVE_BAGL
     tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Sign Hash", type,
                           TZ_UI_ICON_NONE);
 
@@ -371,6 +451,25 @@ static size_t handle_data_apdu_blind(packet_t *pkt) {
                           TZ_UI_ICON_NONE);
 
     tz_ui_stream_push_accept_reject();
+#endif
+
+#ifdef HAVE_NBGL
+    char request[80];
+    snprintf(request, sizeof(request), "Review request to blind\nsign %s", type);
+    global.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
+
+    transaction_type = type;
+    strcpy(hash, obuf);
+
+    nbgl_useCaseReviewStart(&C_tezos,
+                            request,
+                            NULL,
+                            "Reject request",
+                            continue_blindsign_cb,
+                            reject_blindsign_cb
+                            );
+#endif
+
     tz_ui_stream_close();
     tz_ui_stream();
   } else {
@@ -393,7 +492,11 @@ size_t handle_apdu_sign(__attribute__((unused)) bool return_hash) {
     if (global.step != ST_IDLE)
       THROW(EXC_UNEXPECTED_STATE);
 
+    #ifdef HAVE_BAGL
     switch (tz_ui_stream_get_type()) {
+    #elif HAVE_NBGL
+    switch (global.home_screen) {
+    #endif
     case SCREEN_CLEAR_SIGN: global.step = ST_CLEAR_SIGN; break;
     case SCREEN_BLIND_SIGN: global.step = ST_BLIND_SIGN; break;
     default:

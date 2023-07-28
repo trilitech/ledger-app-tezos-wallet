@@ -1,6 +1,7 @@
 /* Tezos Ledger application - Global application state
 
    Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
+   Copyright 2023 Trilitech <contact@trili.tech>
 
    With code excerpts from:
     - Legacy Tezos app, Copyright 2019 Obsidian Systems
@@ -58,7 +59,7 @@ void init_globals(void);
 #define MAX_SIGNATURE_SIZE 100
 
 typedef enum {
-  SCREEN_CLEAR_SIGN,
+  SCREEN_CLEAR_SIGN = 0,
   SCREEN_BLIND_SIGN,
   SCREEN_SETTINGS,
   SCREEN_QUIT,
@@ -120,6 +121,9 @@ typedef struct {
     bagl_element_t bagls[5 + TZ_SCREEN_LINES_11PX];
     char lines[TZ_SCREEN_LINES_11PX][TZ_SCREEN_WITDH_FULL_REGULAR_11PX + 1];
   } ux;
+# endif
+# ifdef HAVE_NBGL
+  screen_t home_screen;
 # endif
 } globals_t;
 
