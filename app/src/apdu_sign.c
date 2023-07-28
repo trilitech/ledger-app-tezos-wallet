@@ -262,12 +262,19 @@ static void handle_first_apdu_clear(__attribute__((unused)) packet_t *pkt) {
   tz_parser_flush(st, global.apdu.sign.line_buf, TZ_UI_STREAM_CONTENTS_SIZE);
 }
 
+#ifdef HAVE_NBGL
+#include "nbgl_use_case.h"
+#endif
+
 static void handle_first_apdu_blind(__attribute__((unused)) packet_t *pkt) {
 
   /*
    * We set the tag to zero here which indicates that it is unset.
    * The first data packet will set it to the first byte.
    */
+#ifdef HAVE_NBGL
+  nbgl_useCaseSpinner("Loading operation");
+#endif
 
   global.apdu.sign.u.blind.tag = 0;
 }
@@ -325,12 +332,19 @@ static size_t handle_data_apdu_clear(packet_t *pkt) {
   FUNC_LEAVE();
 }
 
+void continue_blindsign_cb(void) {
+}
+
+void reject_blindsign_cb(void) {
+  stream_cb(TZ_UI_STREAM_CB_REJECT);
+  ui_home_init();
+}
+
 #define FINAL_HASH global.apdu.hash.final_hash
 static size_t handle_data_apdu_blind(packet_t *pkt) {
   if (!global.apdu.sign.u.blind.tag)
     global.apdu.sign.u.blind.tag = pkt->buff[0];
   if (pkt->is_last) {
-    size_t i = 0;
     char obuf[TZ_BASE58_BUFFER_SIZE(sizeof(FINAL_HASH))];
     const char *type = "unknown type";
 
@@ -348,6 +362,8 @@ static size_t handle_data_apdu_blind(packet_t *pkt) {
     default:                                                break;
     }
 
+#ifdef HAVE_BAGL
+    size_t i = 0;
     tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Sign Hash", type,
                       TZ_UI_ICON_NONE);
 
@@ -358,8 +374,23 @@ static size_t handle_data_apdu_blind(packet_t *pkt) {
     } while (i < obuflen);
 
     tz_ui_stream_push_accept_reject();
+#endif
+
+#ifdef HAVE_NBGL
+    char request[80];
+    snprintf(request, 80, "Review request to blind\nsign: %s", type);
+    global.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
+    nbgl_useCaseReviewStart(&C_tezos,
+                            request,
+                            NULL,
+                            "Reject request",
+                            continue_blindsign_cb,
+                            reject_blindsign_cb
+                            );
+#endif
     tz_ui_stream_close();
     tz_ui_stream();
+
   } else {
     return finalize_successful_send(0);
   }
