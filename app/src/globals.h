@@ -94,7 +94,7 @@ typedef struct {
     struct {
       uint8_t tag;
     } blind;
-  } u; 
+  } u;
 
   char line_buf[TZ_UI_STREAM_CONTENTS_SIZE + 1];
 } apdu_sign_state_t;
@@ -118,6 +118,9 @@ typedef struct {
     bagl_element_t bagls[5 + TZ_SCREEN_LINES_11PX];
     char lines[TZ_SCREEN_LINES_11PX][TZ_SCREEN_WITDH_FULL_REGULAR_11PX + 1];
   } ux;
+# endif
+# ifdef HAVE_NBGL
+  screen_t home_screen;
 # endif
 } globals_t;
 

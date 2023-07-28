@@ -281,9 +281,9 @@ static size_t handle_data_apdu(packet_t *pkt) {
 
   // do the incremental hashing
   CX_THROW(cx_hash_no_throw((cx_hash_t *)&global.apdu.hash.state,
-			    pkt->is_last ? CX_LAST : 0,
-			    pkt->buff, pkt->buff_size,
-			    global.apdu.hash.final_hash, sizeof(global.apdu.hash.final_hash)));
+                            pkt->is_last ? CX_LAST : 0,
+                            pkt->buff, pkt->buff_size,
+                            global.apdu.hash.final_hash, sizeof(global.apdu.hash.final_hash)));
 
   if (pkt->is_last)
     global.apdu.sign.received_last_msg = true;
@@ -380,7 +380,11 @@ size_t handle_apdu_sign(__attribute__((unused)) bool return_hash) {
     if (global.step != ST_IDLE)
       THROW (EXC_UNEXPECTED_STATE);
 
+    #ifdef HAVE_BAGL
     switch (tz_ui_stream_get_type()) {
+    #elif HAVE_NBGL
+    switch (global.home_screen) {
+    #endif
     case SCREEN_CLEAR_SIGN: global.step = ST_CLEAR_SIGN; break;
     case SCREEN_BLIND_SIGN: global.step = ST_BLIND_SIGN; break;
     default:
