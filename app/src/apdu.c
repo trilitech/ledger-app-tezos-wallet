@@ -3,6 +3,7 @@
    TODO: split this file (apdu primitives and apdu handlers)
 
    Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
+   Copyright 2023 Trilitech <contact@trili.tech>
 
    With code excerpts from:
     - Legacy Tezos app, Copyright 2019 Obsidian Systems
@@ -28,11 +29,10 @@
 
 const uint8_t version[4] = {
   0 /* wallet */,
-  APPVERSION_M,
-  APPVERSION_N,
-  APPVERSION_P
+  MAJOR_VERSION,
+  MINOR_VERSION,
+  PATCH_VERSION
 };
-
 
 size_t handle_apdu_version() {
     memcpy(G_io_apdu_buffer, &version, sizeof(version));

@@ -1,8 +1,29 @@
+# ****************************************************************************
+#    Ledger App Boilerplate
+#    (c) 2023 Ledger SAS.
+#    (c) 2023 Nomadic Labs <contact@nomadic.labs>
+#    (c) 2023 Trilitech <contact@trili.tech>
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+# ****************************************************************************
+
 ifeq ($(BOLOS_SDK),)
 $(error Environment variable BOLOS_SDK is not set)
 endif
+
 include $(BOLOS_SDK)/Makefile.defines
 
+# Clean up on target switches, to allow rebuilding to other devices more easily
 ifeq ($(file <.target),)
 $(file >.target,$(TARGET_NAME)$(DEBUG))
 else
@@ -13,36 +34,22 @@ IGNORE_OUTPUT:=$(shell make clean DEBUG=$(DEBUG))
 endif
 endif
 
+########################################
+#        Mandatory configuration       #
+########################################
+# Application name
 APPNAME = "Tezos Wallet"
 
-ifeq ($(TARGET_NAME), TARGET_NANOS)
-APP_LOAD_FLAGS=0x800  # APPLICATION_FLAG_LIBRARY
-TARGET_ID=0x31100004
-ICONNAME=icons/nano-s-tezos.gif
-endif
-ifeq ($(TARGET_NAME), TARGET_NANOS2)
-APP_LOAD_FLAGS=0x800  # APPLICATION_FLAG_LIBRARY
-TARGET_ID=0x33100004
-ICONNAME=icons/nano-x-tezos.gif
-endif
-ifeq ($(TARGET_NAME), TARGET_NANOX)
-APP_LOAD_FLAGS=0xa40  # APPLICATION_FLAG_LIBRARY + APPLICATION_FLAG_BOLOS_SETTINGS + BLE SUPPORT
-TARGET_ID=0x33000004
-ICONNAME=icons/nano-x-tezos.gif
-endif
-ifeq ($(TARGET_NAME), TARGET_STAX)
-APP_LOAD_FLAGS=0xa40  # APPLICATION_FLAG_LIBRARY + APPLICATION_FLAG_BOLOS_SETTINGS + BLE SUPPORT
-ICONNAME=icons/stax_tezos.gif
-endif
-APP_LOAD_PARAMS=--appFlags $(APP_LOAD_FLAGS) --curve ed25519 --curve secp256k1 --curve secp256r1 --path "44'/1729'" $(COMMON_LOAD_PARAMS)
-
-GIT_DESCRIBE ?= $(shell git describe --tags --abbrev=8 --always --long --dirty 2>/dev/null)
-
-VERSION_TAG ?= $(shell echo "$(GIT_DESCRIBE)" | cut -f1 -d-)
+# Application version
 APPVERSION_M=2
 APPVERSION_N=3
 APPVERSION_P=2
 APPVERSION=$(APPVERSION_M).$(APPVERSION_N).$(APPVERSION_P)
+
+# COMMIT
+GIT_DESCRIBE ?= $(shell git describe --tags --abbrev=8 --always --long --dirty 2>/dev/null)
+
+VERSION_TAG ?= $(shell echo "$(GIT_DESCRIBE)" | cut -f1 -d-)
 
 # Only warn about version tags if specified/inferred
 ifeq ($(VERSION_TAG),)
@@ -59,88 +66,52 @@ ifeq ($(COMMIT),)
 else
   $(info COMMIT=$(COMMIT))
 endif
+DEFINES += COMMIT=\"$(COMMIT)\"
 
-################
-# Default rule #
-################
-all: default bin/app.toml
+# Application source files
+APP_SOURCE_PATH += src src/parser
 
-############
-# Platform #
-############
+# Application icons following guidelines:
+# https://developers.ledger.com/docs/embedded-app/design-requirements/#device-icon
+ICON_NANOS = icons/nano-s-tezos.gif
+ICON_NANOX = icons/nano-x-tezos.gif
+ICON_NANOSP = icons/nano-x-tezos.gif
+ICON_STAX = icons/stax_tezos.gif
 
-DEFINES   += OS_IO_SEPROXYHAL
-DEFINES   += HAVE_SPRINTF
-DEFINES   += HAVE_IO_USB HAVE_L4_USBLIB IO_USB_MAX_ENDPOINTS=6 IO_HID_EP_LENGTH=64 HAVE_USB_APDU
-DEFINES   += HAVE_LEGACY_PID
-DEFINES   += VERSION=\"$(APPVERSION)\" APPVERSION_M=$(APPVERSION_M)
-DEFINES   += COMMIT=\"$(COMMIT)\" APPVERSION_N=$(APPVERSION_N) APPVERSION_P=$(APPVERSION_P)
-# DEFINES   += _Static_assert\(...\)=
+# Application allowed derivation curves.
+# Possibles curves are: secp256k1, secp256r1, ed25519 and bls12381g1
+# If your app needs it, you can specify multiple curves by using:
+# `CURVE_APP_LOAD_PARAMS = <curve1> <curve2>`
+CURVE_APP_LOAD_PARAMS = ed25519 secp256k1 secp256r1
 
-ifeq ($(TARGET_NAME),$(filter $(TARGET_NAME),TARGET_NANOX TARGET_STAX))
-DEFINES   += HAVE_BLE BLE_COMMAND_TIMEOUT_MS=2000
-DEFINES   += HAVE_BLE_APDU # basic ledger apdu transport over BLE
+# Application allowed derivation paths.
+# You should request a specific path for your app.
+# This serve as an isolation mechanism.
+# Most application will have to request a path according to the BIP-0044
+# and SLIP-0044 standards.
+# If your app needs it, you can specify multiple path by using:
+# `PATH_APP_LOAD_PARAMS = "44'/1'" "45'/1'"`
+PATH_APP_LOAD_PARAMS = "44'/1729'"
 
-SDK_SOURCE_PATH  += lib_blewbxx lib_blewbxx_impl
+# Setting to allow building variant applications
+# - <VARIANT_PARAM> is the name of the parameter which should be set
+#   to specify the variant that should be build.
+# - <VARIANT_VALUES> a list of variant that can be build using this app code.
+#   * It must at least contains one value.
+#   * Values can be the app ticker or anything else but should be unique.
+VARIANT_PARAM = APP_TYPE
+VARIANT_VALUES = WALLET
+
+# Enabling DEBUG flag will enable PRINTF and disable optimizations
+#DEBUG = 1
+ifneq ($(DEBUG), 0)
+  DEFINES += TEZOS_DEBUG
 endif
 
-ifeq ($(TARGET_NAME),TARGET_NANOS)
-DEFINES   += IO_SEPROXYHAL_BUFFER_SIZE_B=128
-else
-DEFINES   += IO_SEPROXYHAL_BUFFER_SIZE_B=300
-endif
-
-ifeq ($(TARGET_NAME),TARGET_STAX)
-	DEFINES += NBGL_QRCODE
-else
-	DEFINES += HAVE_BAGL HAVE_UX_FLOW
-	ifneq ($(TARGET_NAME),TARGET_NANOS)
-		DEFINES   += HAVE_GLO096
-		DEFINES   += HAVE_BAGL BAGL_WIDTH=128 BAGL_HEIGHT=64
-		DEFINES   += HAVE_BAGL_FONT_OPEN_SANS_REGULAR_11PX
-		DEFINES   += HAVE_BAGL_FONT_OPEN_SANS_EXTRABOLD_11PX
-		DEFINES   += HAVE_BAGL_FONT_OPEN_SANS_LIGHT_16PX
-	endif
-endif
-
-# Enabling debug PRINTF
-DEBUG ?= 0
-ifneq ($(DEBUG),0)
-
-        DEFINES += TEZOS_DEBUG
-
-        ifeq ($(TARGET_NAME),TARGET_NANOS)
-                DEFINES   += HAVE_PRINTF PRINTF=screen_printf
-        else
-                DEFINES   += HAVE_PRINTF PRINTF=mcu_usb_printf
-        endif
-else
-        DEFINES   += PRINTF\(...\)=
-endif
-
-
-
-##############
-# Compiler #
-##############
-ifneq ($(BOLOS_ENV),)
-$(info BOLOS_ENV=$(BOLOS_ENV))
-CLANGPATH := $(BOLOS_ENV)/clang-arm-fropi/bin/
-GCCPATH := $(BOLOS_ENV)/gcc-arm-none-eabi-5_3-2016q1/bin/
-CFLAGS += -idirafter $(BOLOS_ENV)/gcc-arm-none-eabi-5_3-2016q1/arm-none-eabi/include
-else
-$(info BOLOS_ENV is not set: falling back to CLANGPATH and GCCPATH)
-endif
-ifeq ($(CLANGPATH),)
-$(info CLANGPATH is not set: clang will be used from PATH)
-endif
-ifeq ($(GCCPATH),)
-$(info GCCPATH is not set: arm-none-eabi-* will be used from PATH)
-endif
-
-CC       := $(CLANGPATH)clang
-
+# CFLAGS
+ENABLE_SDK_WERROR=1
 CFLAGS   += -O3 -Os -Wall -Wextra
+CFLAGS   += -Wno-vla
 CFLAGS   += -Wassign-enum
 #CFLAGS   += -Wbad-function-cast
 #CFLAGS   += -Wcast-align
@@ -159,61 +130,44 @@ CFLAGS   += -Wstring-conversion
 CFLAGS   += -Wuninitialized
 #CFLAGS   += -Wunreachable-code-aggressive
 CFLAGS   += -Wwrite-strings
-CFLAGS   += -Wno-vla
-CFLAGS   += -Werror
 
-AS     := $(GCCPATH)arm-none-eabi-gcc
+########################################
+#     Application custom permissions   #
+########################################
+# See SDK `include/appflags.h` for the purpose of each permission
+#HAVE_APPLICATION_FLAG_DERIVE_MASTER = 1
+#HAVE_APPLICATION_FLAG_GLOBAL_PIN = 1
+#HAVE_APPLICATION_FLAG_BOLOS_SETTINGS = 1
+#HAVE_APPLICATION_FLAG_LIBRARY = 1
 
-LD       := $(GCCPATH)arm-none-eabi-gcc
-LDFLAGS  += -O3 -Os
-LDLIBS   += -lm -lgcc -lc
+########################################
+# Application communication interfaces #
+########################################
+ENABLE_BLUETOOTH = 1
+#ENABLE_NFC = 1
 
-# import rules to compile glyphs(/pone)
-include $(BOLOS_SDK)/Makefile.glyphs
+########################################
+#         NBGL custom features         #
+########################################
+ENABLE_NBGL_QRCODE = 1
+#ENABLE_NBGL_KEYBOARD = 1
+#ENABLE_NBGL_KEYPAD = 1
 
-### computed variables
-APP_SOURCE_PATH  += src
-SDK_SOURCE_PATH  += lib_stusb lib_stusb_impl
+########################################
+#          Features disablers          #
+########################################
+# These advanced settings allow to disable some feature that are by
+# default enabled in the SDK `Makefile.standard_app`.
+#DISABLE_STANDARD_APP_FILES = 1
+#DISABLE_DEFAULT_IO_SEPROXY_BUFFER_SIZE = 1 # To allow custom size declaration
+#DISABLE_STANDARD_APP_DEFINES = 1 # Will set all the following disablers
+#DISABLE_STANDARD_SNPRINTF = 1
+#DISABLE_STANDARD_USB = 1
+#DISABLE_STANDARD_WEBUSB = 1
+#DISABLE_STANDARD_BAGL_UX_FLOW = 1
 
-ifneq ($(TARGET_NAME),TARGET_STAX)
-SDK_SOURCE_PATH += lib_ux
-endif
-
-### U2F support
-SDK_SOURCE_PATH  += lib_u2f lib_stusb_impl
-
-DEFINES   += USB_SEGMENT_SIZE=64
-
-DEFINES   += U2F_PROXY_MAGIC=\"XTZ\"
-DEFINES   += HAVE_IO_U2F HAVE_U2F
-
-bin/app.toml: bin/app.elf
-	cp ${ICONNAME} bin/app.gif
-	echo "name = \"Tezos Wallet\"" > $@
-	echo "version = \"${APPVERSION}\"" >> $@
-	echo "[${TARGET_ID}]" >> $@
-	echo "binary = \"app.hex\"" >> $@
-	echo "icon = \"app.gif\"" >> $@
-	echo "flags = \"${APP_LOAD_FLAGS}\"" >> $@
-	echo "dataSize = 0" >> $@
-	echo "derivationPath = {curves = [\"ed25519\", \"secp256k1\", \"secp256r1\"]}" >> $@
-	echo "paths = [\"44'/1729'\"]" >> $@
-	echo "apiLevel = \"1\"" >> $@
-
-# import generic rules from the sdk
-include $(BOLOS_SDK)/Makefile.rules
-
-#add dependency on custom makefile filename
-dep/%.d: src/%.c Makefile
-
-listvariants:
-	@echo VARIANTS APP tezos_wallet
-
-src/parser/generated_patterns.h:
-	@echo "Built-in patterns not generated, please `make built-in-patterns` at toplevel"
-src/parser/patten_registry.c: src/parser/generated_patterns.h
+include $(BOLOS_SDK)/Makefile.standard_app
 
 .PHONY: mrproper
-
 mrproper: clean
 	rm -f .target
