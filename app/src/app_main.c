@@ -19,10 +19,11 @@
    See the License for the specific language governing permissions and
    limitations under the License. */
 
-#include "main_loop.h"
+#include "app_main.h"
 
 #include "os.h"
 #include "cx.h"
+#include "io.h"
 
 #include "globals.h"
 
@@ -30,7 +31,6 @@
 
 #include "apdu_sign.h"
 #include "apdu_pubkey.h"
-
 
 static uint8_t dispatch(uint8_t instruction) {
   FUNC_ENTER(("%u", instruction));
@@ -79,10 +79,13 @@ static uint8_t dispatch(uint8_t instruction) {
 
 #define CLA 0x80
 
-__attribute__((noreturn)) void main_loop() {
-
+void app_main() {
     FUNC_ENTER(("void"));
     app_stack_canary = 0xDEADBEEF;
+
+    io_init();
+    init_globals();
+
     PRINTF("[PTR]    stack canary: 0x%x\n", &app_stack_canary);
     PRINTF("[PTR]    G_io_apdu_buffer: 0x%p\n", G_io_apdu_buffer);
     PRINTF("[PTR]    global: 0x%p\n", &global);

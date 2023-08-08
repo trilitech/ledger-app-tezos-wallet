@@ -1,6 +1,7 @@
 /* Tezos Ledger application - Application main loop
 
    Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
+   Copyright 2023 Trilitech <contact@trili.tech>
 
    With code excerpts from:
     - Legacy Tezos app, Copyright 2019 Obsidian Systems
@@ -20,4 +21,4 @@
 
 #pragma once
 
-__attribute__((noreturn)) void main_loop(void);
+void app_main(void);
