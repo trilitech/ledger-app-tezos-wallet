@@ -1,0 +1,47 @@
+# Regression: second transaction Entrypoint/Parameter not displayed
+
+# full input: 00000000000000000000000000000000000000000000000000000000000000009e01774d99da021b92d8c3dfc2e814c7658440319be2c0de1f07ba0337000000350707050802000000070200000002030b0505020000001e050505080505070700b289f2eba9d39ef439050800afa2c2a9d98e8d867c0000004305050505050505050509020000003407040505030605050306070405050509050905080a0000001500a9bafdb99258b593787601fd3b9ec297170668f205080505030b01cf9b990e29de757ccb9ceafcac85776ae8fc2c4c00c5cab3b1d4e3f9863b016b75c672d518f9f6246a5b0e69fae39f9da6859d000000000f72656d6f76655f64656c65676174656c023fd6757e1dce8503fce2aaab9260bba85e3fbfedc0b8021e009d04b0ea0101e8cbb40f2057b45f4e3419188ee7c7f670f2130b0000
+# signer: tz1dyX3B1CFYa2DfdFLyPtiJCfQRUgPVME6E
+expect_full_text 'Tezos Wallet' 'ready for' 'safe signing'
+send_async_apdus \
+        800f000011048000002c800006c18000000080000000 "expect_apdu_return 9000
+"\
+        800f0100eb0300000000000000000000000000000000000000000000000000000000000000009e01774d99da021b92d8c3dfc2e814c7658440319be2c0de1f07ba0337000000350707050802000000070200000002030b0505020000001e050505080505070700b289f2eba9d39ef439050800afa2c2a9d98e8d867c0000004305050505050505050509020000003407040505030605050306070405050509050905080a0000001500a9bafdb99258b593787601fd3b9ec297170668f205080505030b01cf9b990e29de757ccb9ceafcac85776ae8fc2c4c00c5cab3b1d4e3f9863b016b75c672d518f9f6246a5b0e69 "expect_apdu_return 9000
+"\
+        800f820052fae39f9da6859d000000000f72656d6f76655f64656c65676174656c023fd6757e1dce8503fce2aaab9260bba85e3fbfedc0b8021e009d04b0ea0101e8cbb40f2057b45f4e3419188ee7c7f670f2130b0000 "expect_apdu_return b90a92484e2ff5b06766bd83c01c45a441c5940e30c7b272b659fd4e1d3b7061c8514f72e7f65e338dd2090db53fb5add41e082207601ee93a848444958e4eb8376778dad27b098a3c4b9bd86616fb548abb38d362283e6348266e5ba51708009000
+"
+expect_section_content nanos 'Operation (0)' 'Transfer ticket'
+press_button right
+expect_section_content nanos 'Fee' '0.52 tz'
+press_button right
+expect_section_content nanos 'Storage limit' '55'
+press_button right
+expect_section_content nanos 'Contents' 'Pair (Right {{Unit}}) (Left {Left (Right (Left (Pair 2086359929622250098 (Right 4469288520021199023))))})'
+press_button right
+expect_section_content nanos 'Type' 'Left (Left (Left (Left (Some {Elt (Left None) (Left None);Elt (Left (Some (Some (Right 0x00A9BAFDB99258B593787601FD3B9EC297170668F2)))) (Right (Left Unit))}))))'
+press_button right
+expect_section_content nanos 'Ticketer' 'KT1TWVqbz8bY8j8zpDzJrd6uSAPrLFnwXewo'
+press_button right
+expect_section_content nanos 'Amount' '4255311335852401989'
+press_button right
+expect_section_content nanos 'Destination' 'KT1JNxxTLYSqheVmL182Y94NwD94Qzs1tXTU'
+press_button right
+expect_section_content nanos 'Entrypoint' 'remove_delegate'
+press_button right
+expect_section_content nanos 'Operation (1)' 'Transaction'
+press_button right
+expect_section_content nanos 'Fee' '0.04 tz'
+press_button right
+expect_section_content nanos 'Storage limit' '541'
+press_button right
+expect_section_content nanos 'Amount' '0.03 tz'
+press_button right
+expect_section_content nanos 'Destination' 'KT1VogMpwUD8xJR7pJMwhbCnTkJGM92WD2NL'
+press_button right
+expect_section_content nanos 'Entrypoint' 'default'
+press_button right
+expect_section_content nanos 'Parameter' 'Unit'
+press_button right
+expect_full_text 'Accept?'
+press_button both
+expect_async_apdus_sent
