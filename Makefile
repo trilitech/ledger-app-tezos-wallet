@@ -49,7 +49,7 @@ app_%.tgz:	app/src/*.[ch]		\
 
 app_%_dbg.tgz: app/src/*.[ch] app/src/parser/*.[ch] app/Makefile
 	$(DOCKER_RUN_APP_BUILDER) bash -c \
-          'BOLOS_SDK=$$$(shell echo $(patsubst app_%_dbg.tgz,%,$@) | tr '[:lower:]' '[:upper:]')_SDK make -C app DEBUG=true'
+          'BOLOS_SDK=$$$(shell echo $(patsubst app_%_dbg.tgz,%,$@) | tr '[:lower:]' '[:upper:]')_SDK make -C app DEBUG=1'
 	$(DOCKER_RUN_APP_BUILDER) bash -c "cd app/bin/ && tar cz ." > $@
 
 clean:
