@@ -24,6 +24,8 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include "buffer.h"
+
 #include "keys.h"
 
 #include "apdu.h"
@@ -44,51 +46,19 @@ static cx_curve_t derivation_type_to_cx_curve(derivation_type_t const
   }
 }
 
-#define READ_UNALIGNED_BE(type, in) ({                  \
-        uint8_t const *_bytes = (uint8_t const *)in;    \
-        type _res;                                      \
-                                                        \
-        for (size_t _i = 0; _i < sizeof(type); _i++)    \
-            _res = ((_res) << 8) | _bytes[_i];          \
-                                                        \
-        _res;                                           \
-    })
-
-#define CONSUME_UNALIGNED_BE(counter, type, addr) ({    \
-        counter += sizeof(type);                        \
-        READ_UNALIGNED_BE(type, addr);                  \
-    })
-
-struct bip32_path_wire {
-    uint8_t length;
-    uint32_t components[0];
-} __attribute__((packed));
-
 size_t read_bip32_path(bip32_path_t *const out, uint8_t const *const in,
                        size_t in_size) {
-    struct bip32_path_wire const *const buf_as_bip32 =
-      (struct bip32_path_wire const *) in;
-
     FUNC_ENTER(("out=%p, in=%p, in_size=%u", out, in, in_size));
 
-    if (in_size < sizeof(buf_as_bip32->length))
+    buffer_t cdata = {in, in_size, 0};
+
+    if(!buffer_read_u8(&cdata, &out->length) ||
+       !buffer_read_bip32_path(&cdata, (uint32_t*) &out->components, out->length)) {
       THROW(EXC_WRONG_LENGTH_FOR_INS);
-
-    size_t ix = 0;
-    out->length = CONSUME_UNALIGNED_BE(ix, uint8_t, &buf_as_bip32->length);
-
-    if (in_size - ix < out->length * sizeof(*buf_as_bip32->components))
-        THROW(EXC_WRONG_LENGTH_FOR_INS);
-    if (out->length == 0 || out->length > MAX_BIP32_LEN)
-        THROW(EXC_WRONG_VALUES);
-
-    for (size_t i = 0; i < out->length; i++) {
-        out->components[i] =
-            CONSUME_UNALIGNED_BE(ix, uint32_t, &buf_as_bip32->components[i]);
     }
 
     FUNC_LEAVE();
-    return ix;
+    return out->length * sizeof(out->components[0]);
 }
 
 
