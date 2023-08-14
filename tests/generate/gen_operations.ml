@@ -186,11 +186,6 @@ let gen_ticket_amount =
   let ticket_amount = Protocol.Ticket_amount.of_zint (Z.of_int strict_nat) in
   Option.get ticket_amount
 
-let gen_hexa_string size =
-  let open QCheck2.Gen in
-  let+ bytes = bytes_size size in
-  Hex.(show (of_bytes bytes))
-
 let gen_origination_nonce =
   let open Protocol.Alpha_context in
   let open QCheck2.Gen in
@@ -341,7 +336,7 @@ let gen_sc_rollup_execute_outbox_message =
   let open QCheck2.Gen in
   let* rollup = gen_sc_rollup_hash in
   let* cemented_commitment = gen_sc_rollup_commiment_hash in
-  let* output_proof = gen_hexa_string small_nat in
+  let* output_proof = string_size nat in
   return
     (Sc_rollup_execute_outbox_message
        { rollup; cemented_commitment; output_proof })

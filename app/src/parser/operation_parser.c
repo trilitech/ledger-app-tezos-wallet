@@ -178,7 +178,7 @@ const tz_operation_field_descriptor soru_exe_msg_fields[] = {
   { "Storage limit", TZ_OPERATION_FIELD_NAT,         true, false, false },
   { "Rollup",        TZ_OPERATION_FIELD_SR,          true, false, false },
   { "Commitment",    TZ_OPERATION_FIELD_SRC,         true, false, false },
-  { "Output proof",  TZ_OPERATION_FIELD_STRING,      true, true,  false },
+  { "Output proof",  TZ_OPERATION_FIELD_BINARY,      true, false, false },
   { NULL, 0, 0, 0, 0 }
 };
 
@@ -584,6 +584,15 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
         tz_continue;
       }
       switch (field->kind) {
+      case TZ_OPERATION_FIELD_BINARY: {
+        tz_must(push_frame(state, TZ_OPERATION_STEP_READ_BINARY));
+        state->operation.frame->step_read_string.ofs = 0;
+        state->operation.frame->step_read_string.skip = field->skip;
+        tz_must(push_frame(state, TZ_OPERATION_STEP_SIZE));
+        state->operation.frame->step_size.size = 0;
+        state->operation.frame->step_size.size_len = 4;
+        break;
+      }
       case TZ_OPERATION_FIELD_SOURCE:
       case TZ_OPERATION_FIELD_PKH: {
         tz_must(push_frame(state, TZ_OPERATION_STEP_READ_BYTES));

@@ -106,12 +106,13 @@ let to_string
         in
         aux ~kind:"SR: send messages" @@ List.map message_to_string messages
     | Sc_rollup_execute_outbox_message
-        { rollup; cemented_commitment; output_proof = _ } ->
+        { rollup; cemented_commitment; output_proof } ->
         aux ~kind:"SR: execute outbox message"
           [
             Format.asprintf "%a" Sc_rollup_repr.Address.pp rollup;
             Format.asprintf "%a" Sc_rollup.Commitment.Hash.pp
               cemented_commitment;
+            Format.asprintf "%a" pp_string_binary output_proof;
           ]
     | _ -> assert false
   in

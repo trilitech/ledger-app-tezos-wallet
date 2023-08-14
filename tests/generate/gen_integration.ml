@@ -311,12 +311,13 @@ let operation_to_screens
         in
         aux ~kind:"SR: send messages" @@ List.mapi make_screen_message messages
     | Sc_rollup_execute_outbox_message
-        { rollup; cemented_commitment; output_proof = _ } ->
+        { rollup; cemented_commitment; output_proof } ->
         aux ~kind:"SR: execute outbox message"
           [
             make_screen ~title:"Rollup" "%a" Sc_rollup_repr.Address.pp rollup;
             make_screen ~title:"Commitment" "%a" Sc_rollup.Commitment.Hash.pp
               cemented_commitment;
+            make_screen ~title:"Output proof" "%a" pp_string_binary output_proof;
           ]
     | _ -> assert false
   in
