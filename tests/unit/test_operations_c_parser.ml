@@ -25,6 +25,8 @@ let pp_lazy_expr ppf lazy_expr =
   let expr = Result.get_ok @@ Protocol.Script_repr.force_decode lazy_expr in
   Format.fprintf ppf "%s" @@ Test_micheline_c_parser.to_string expr
 
+let pp_string_binary ppf s = Format.fprintf ppf "%a" Hex.pp (Hex.of_string s)
+
 let to_string
     ( (_shell : Tezos_base.Operation.shell_header),
       (Contents_list contents : Protocol.Alpha_context.packed_contents_list) ) =
@@ -99,7 +101,10 @@ let to_string
             Format.asprintf "%a" Tezos_crypto.Signature.Public_key.pp public_key;
           ]
     | Sc_rollup_add_messages { messages } ->
-        aux ~kind:"SR: send messages" messages
+        let message_to_string message =
+          Format.asprintf "%a" pp_string_binary message
+        in
+        aux ~kind:"SR: send messages" @@ List.map message_to_string messages
     | Sc_rollup_execute_outbox_message
         { rollup; cemented_commitment; output_proof = _ } ->
         aux ~kind:"SR: execute outbox message"

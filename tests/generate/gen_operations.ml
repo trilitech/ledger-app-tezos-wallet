@@ -333,7 +333,7 @@ let gen_update_consensus_key =
 let gen_sc_rollup_add_messages =
   let open Protocol.Alpha_context in
   let open QCheck2.Gen in
-  let* messages = list_size small_nat (gen_hexa_string small_nat) in
+  let* messages = list_size small_nat (string_size small_nat) in
   return (Sc_rollup_add_messages { messages })
 
 let gen_sc_rollup_execute_outbox_message =

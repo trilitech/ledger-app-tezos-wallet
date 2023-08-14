@@ -36,6 +36,7 @@ typedef enum {
 
 typedef enum {
   TZ_OPERATION_STEP_MAGIC,
+  TZ_OPERATION_STEP_READ_BINARY,
   TZ_OPERATION_STEP_BRANCH,
   TZ_OPERATION_STEP_BATCH,
   TZ_OPERATION_STEP_TAG,
@@ -53,6 +54,7 @@ typedef enum {
 
 typedef enum {
   TZ_OPERATION_FIELD_SKIP, // not for use in field descriptors
+  TZ_OPERATION_FIELD_BINARY,
   TZ_OPERATION_FIELD_INT,
   TZ_OPERATION_FIELD_NAT,
   TZ_OPERATION_FIELD_AMOUNT,
@@ -73,7 +75,7 @@ typedef enum {
 
 typedef struct {
   const char *name;
-  tz_operation_field_kind kind : 4;
+  tz_operation_field_kind kind : 5;
   uint8_t required : 1, skip : 1, display_none : 1;
 } tz_operation_field_descriptor;
 
@@ -101,12 +103,12 @@ typedef struct {
     struct {
       uint16_t ofs;
       uint16_t len;
-      tz_operation_field_kind kind : 4;
+      tz_operation_field_kind kind : 5;
       uint8_t skip : 1;
     } step_read_bytes;
     struct {
       tz_num_parser_regs state;
-      tz_operation_field_kind kind : 4;
+      tz_operation_field_kind kind : 5;
       uint8_t skip : 1, natural : 1;
     } step_read_num;
     struct {

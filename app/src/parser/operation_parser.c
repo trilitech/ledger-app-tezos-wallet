@@ -30,6 +30,7 @@ static tz_parser_result pop_frame(tz_parser_state *);
 #ifdef TEZOS_DEBUG
 const char *const tz_operation_parser_step_name[] = {
   "MAGIC",
+  "READ_BINARY",
   "BRANCH",
   "BATCH",
   "TAG",
@@ -495,6 +496,26 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
     }
     break;
   }
+  case TZ_OPERATION_STEP_READ_BINARY: {
+    if (state->ofs == state->operation.frame->stop) {
+      capture[state->operation.frame->step_read_string.ofs] = 0;
+      tz_must(tz_print_string(state));
+    } else if (state->operation.frame->step_read_string.ofs + 2 >= TZ_CAPTURE_BUFFER_SIZE) {
+      capture[state->operation.frame->step_read_string.ofs] = 0;
+      state->operation.frame->step_read_string.ofs = 0;
+      if (!state->operation.frame->step_read_string.skip) {
+        tz_must(push_frame(state, TZ_OPERATION_STEP_PRINT));
+        state->operation.frame->step_print.str = (char*) capture;
+      }
+    } else {
+      uint8_t b;
+      tz_must(tz_parser_read(state, &b));
+      char* buf = (char*) capture + state->operation.frame->step_read_string.ofs;
+      snprintf(buf, 4, "%02x", b);
+      state->operation.frame->step_read_string.ofs += 2;
+    }
+    break;
+  }
   case TZ_OPERATION_STEP_READ_SMART_ENTRYPOINT: {
     uint8_t b;
     tz_must(tz_parser_read(state, &b));
@@ -699,17 +720,17 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
 
     // Remaining content from previous message - display this first.
     if (regs->oofs > 0)
-      tz_stop (IM_FULL);
+      tz_stop(IM_FULL);
 
     if (state->operation.frame->stop == state->ofs) {
-      tz_must (pop_frame (state));
+      tz_must(pop_frame (state));
     } else {
       state->operation.frame->step_read_list.index++;
-      tz_must (push_frame(state, TZ_OPERATION_STEP_READ_STRING));
-      snprintf (state->field_name, TZ_FIELD_NAME_SIZE, "%s (%d)", name, index);
+      tz_must(push_frame(state, TZ_OPERATION_STEP_READ_BINARY));
+      snprintf(state->field_name, TZ_FIELD_NAME_SIZE, "%s (%d)", name, index);
       state->operation.frame->step_read_string.ofs = 0;
       state->operation.frame->step_read_string.skip = skip;
-      tz_must (push_frame(state, TZ_OPERATION_STEP_SIZE));
+      tz_must(push_frame(state, TZ_OPERATION_STEP_SIZE));
       state->operation.frame->step_size.size = 0;
       state->operation.frame->step_size.size_len = 4;
     }
