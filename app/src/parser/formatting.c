@@ -325,8 +325,15 @@ static int find_prefix(const char *s, const uint8_t **p, size_t *pl, size_t dl)
 
   B58_PREFIX("KT1",  "\x02\x5a\x79",     3, 20);
   B58_PREFIX("txr1", "\x01\x80\x78\x1f", 4, 20);
-  B58_PREFIX("scr1", "\x01\x76\x84\xd9", 4, 20);
   B58_PREFIX("zkr1", "\x01\xab\x54\xfb", 4, 20);
+
+  /* Smart rollup hashes */
+
+  B58_PREFIX("sr1",  "\x06\x7c\x75",     3, 20);
+
+  /* Smart rollup commitment hashes */
+
+  B58_PREFIX("src1", "\x11\xa5\x86\x8a", 4, 32);
 
   return 1;
 };
