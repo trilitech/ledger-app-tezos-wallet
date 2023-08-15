@@ -198,7 +198,7 @@ void tz_format_decimal(const uint8_t *, size_t, char *);
 // Formats a data `n` of size `l` in base58 using Tezos' alphabet
 // order (same as Bitcoin). The output buffer `obuf` must be at least
 // `BASE58_BUFFER_SIZE(l)` (caller responsibility).
-void tz_format_base58(const uint8_t *, size_t, char *);
+void tz_format_base58(const uint8_t *, size_t, char *, size_t);
 #define TZ_BASE58_BUFFER_SIZE(l) (l * 138 / 100 + 1)
 
 // Looks up the prefix from the provided string (arg1), e.g. "B",

@@ -1,6 +1,7 @@
 /* Tezos Embedded C parser for Ledger - Human printing of Tezos formats
 
    Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
+   Copyright 2023 Trilitech <contact@trili.tech>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -15,6 +16,7 @@
    limitations under the License. */
 
 #include "formatting.h"
+#include "base58.h"
 
 // Should be kept in sync with the last protocol update, including
 // order, currently defined in the `michelson_v1_primitives.ml` file
@@ -186,7 +188,7 @@ const char* tz_michelson_op_name(uint8_t op_code) {
 }
 
 /*
- * The following `format_base58` and `format_decimal` are adaptaed
+ * The following `format_decimal` is adaptaed
  * from `https://github.com/luke-jr/libbase58/blob/master/base58.c`,
  * mostly for working with less stack and a preallocated output
  * buffer. Copyright 2012-2014 Luke Dashjr
@@ -195,32 +197,10 @@ const char* tz_michelson_op_name(uint8_t op_code) {
  * under the terms of the standard MIT license.
  */
 
-static const char tz_b58digits_ordered[] =
-    "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-
-void tz_format_base58(const uint8_t *n, size_t l, char *obuf) {
-  int carry;
-  size_t i, j, high, zcount = 0, obuf_len = TZ_BASE58_BUFFER_SIZE(l);
-
+void tz_format_base58(const uint8_t *n, size_t l, char *obuf, size_t obuf_len) {
   memset(obuf, 0, obuf_len);
 
-  while (zcount < l && !n[zcount]) ++zcount;
-
-  for (i = zcount, high = obuf_len - 1; i < l; ++i, high = j) {
-    carry = n[i];
-    for (j = obuf_len - 1; ((int) j >= 0) && ((j > high) || carry); --j) {
-      carry += 256 * obuf[j];
-      obuf[j] = carry % 58;
-      carry /= 58;
-    }
-  }
-
-  if (zcount) memset(obuf, '1', zcount);
-
-  for (j = 0; !obuf[j]; ++j);
-  for (i = 0; j < obuf_len; ++i, ++j) obuf[i] =
-                              tz_b58digits_ordered[(unsigned)obuf[j]];
-  obuf[i] = '\0';
+  base58_encode(n, l, obuf, obuf_len);
 }
 
 void tz_format_decimal(const uint8_t *n, size_t l, char *obuf) {
@@ -346,7 +326,11 @@ int tz_format_base58check(const char *sprefix, const uint8_t *data,
   cx_hash_sha256(prepared, size+prefix_len, tmp, 32);
   cx_hash_sha256(tmp, 32, tmp, 32);
   memcpy(prepared+size+prefix_len, tmp, 4);
-  tz_format_base58(prepared, prefix_len+size+4, obuf);
+
+  size_t len = prefix_len + size + 4;
+  size_t obuf_len = TZ_BASE58_BUFFER_SIZE(len);
+
+  tz_format_base58(prepared, len, obuf, obuf_len);
   return 0;
 }
 
