@@ -412,14 +412,16 @@ main() {
     # Defaults:
     TARGET=nanos
     TEST_TRACE=0
+    NUM_SPECULOS=32
 
-    while getopts FT:l:m:t:x o; do
+    while getopts FT:l:m:n:t:x o; do
        case $o in
        F)  ONLY_FAILURES=YES                ;;
        T)  ONLY_TESTS="$ONLY_TESTS $OPTARG" ;;
        d)  DTGZ="$OPTARG"                   ;;
        l)  TESTS_LEFT=$OPTARG               ;;
        m)  TARGET="$OPTARG"                 ;;
+       n)  NUM_SPECULOS="$OPTARG"           ;;
        t)  TGZ="$OPTARG"                    ;;
        x)  TEST_TRACE=1                     ;;
        \?) usage "Unknown option."          ;;
@@ -447,7 +449,6 @@ main() {
     FINISHED_TESTING=
     trap cleanup EXIT
 
-    NUM_SPECULOS=32
     DATA_DIR=$(mktemp -d /tmp/foo-XXXXXX)
 
     printf "$TEST_BANNER_HEAD" "Running tests"
