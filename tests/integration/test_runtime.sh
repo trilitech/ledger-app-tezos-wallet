@@ -435,11 +435,11 @@ main() {
        usage "Target \"$TARGET\" must be nanos, nanosp, nanox or stax."
     fi
 
-    if [ -z "$TGZ" ]; then    
+    if [ -z "$TGZ" ]; then
         TGZ="app_${TARGET}.tgz"
     fi
 
-    if [ -z "$DTGZ" ]; then    
+    if [ -z "$DTGZ" ]; then
         DTGZ="app_${TARGET}_dbg.tgz"
     fi
 

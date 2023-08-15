@@ -96,7 +96,7 @@ typedef struct {
     struct {
       uint8_t tag;
     } blind;
-  } u; 
+  } u;
 
   char line_buf[TZ_UI_STREAM_CONTENTS_SIZE + 1];
 } apdu_sign_state_t;

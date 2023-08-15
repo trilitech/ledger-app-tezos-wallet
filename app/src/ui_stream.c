@@ -141,7 +141,7 @@ size_t tz_ui_stream_pushl(tz_ui_cb_type_t type, const char *title,
            "offset: %d)\n", &value[offset], will_fit, line, offset);
 
     strlcpy(s->screens[bucket].body[line], &value[offset], will_fit + 1);
-    
+
     offset += will_fit;
 
     line++;
