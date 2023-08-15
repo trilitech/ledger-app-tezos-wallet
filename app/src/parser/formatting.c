@@ -185,8 +185,16 @@ const char* tz_michelson_op_name(uint8_t op_code) {
   return PIC(tz_michelson_op_names_ordered[op_code]);
 }
 
+void tz_format_base58(const uint8_t *n, size_t l, char *obuf) {
+  size_t obuf_len = TZ_BASE58_BUFFER_SIZE(l);
+
+  memset(obuf, 0, obuf_len);
+
+  base58_encode(n, l, obuf, obuf_len);
+}
+
 /*
- * The following `format_base58` and `format_decimal` are adaptaed
+ * The following `format_decimal` is adaptaed
  * from `https://github.com/luke-jr/libbase58/blob/master/base58.c`,
  * mostly for working with less stack and a preallocated output
  * buffer. Copyright 2012-2014 Luke Dashjr
@@ -194,34 +202,6 @@ const char* tz_michelson_op_name(uint8_t op_code) {
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the standard MIT license.
  */
-
-static const char tz_b58digits_ordered[] =
-    "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-
-void tz_format_base58(const uint8_t *n, size_t l, char *obuf) {
-  int carry;
-  size_t i, j, high, zcount = 0, obuf_len = TZ_BASE58_BUFFER_SIZE(l);
-
-  memset(obuf, 0, obuf_len);
-
-  while (zcount < l && !n[zcount]) ++zcount;
-
-  for (i = zcount, high = obuf_len - 1; i < l; ++i, high = j) {
-    carry = n[i];
-    for (j = obuf_len - 1; ((int) j >= 0) && ((j > high) || carry); --j) {
-      carry += 256 * obuf[j];
-      obuf[j] = carry % 58;
-      carry /= 58;
-    }
-  }
-
-  if (zcount) memset(obuf, '1', zcount);
-
-  for (j = 0; !obuf[j]; ++j);
-  for (i = 0; j < obuf_len; ++i, ++j) obuf[i] =
-                              tz_b58digits_ordered[(unsigned)obuf[j]];
-  obuf[i] = '\0';
-}
 
 void tz_format_decimal(const uint8_t *n, size_t l, char *obuf) {
   int carry;
