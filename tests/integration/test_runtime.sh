@@ -344,6 +344,7 @@ test_a_path() {
                 DOT=0
                 (( DID_DOT += 1 )) || :
             fi
+            (( TESTS_RUN += 1 )) || :
             (( DOT += 1 )) || :
             PIDS="${PIDS/ $DIE / }"
             eval slot=\$PIDS$DIE
@@ -447,6 +448,7 @@ main() {
     [ ! -f "$DTGZ" ] && usage "Debug Tarball \"$DTGZ\" does not exist."
 
     FINISHED_TESTING=
+    TESTS_RUN=0
     trap cleanup EXIT
 
     DATA_DIR=$(mktemp -d /tmp/foo-XXXXXX)
@@ -465,7 +467,7 @@ main() {
            def fails: map(select(.retcode != "0"));
 
              "Tests took " + ('$END'-'$START'|tostring) + " seconds."
-           + "\nTotal Number of Tests: " + (.|num_tests)
+           + "\nTotal Number of Tests: " + ('$TESTS_RUN'|tostring)
            + "\nNumber of Failures:    " + (fails|num_tests)
            + if ((fails|length) > 0) then
                  "\nFailed cases:          "
