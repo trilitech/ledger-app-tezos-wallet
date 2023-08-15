@@ -9,9 +9,10 @@
   variables:
     DEVICE: ""
     TESTDIR: ""
+    NUM_SPECULOS: "32"
   script:
     - COLUMNS=80
-      ./tests/integration/run_test_local.sh -F -m ${DEVICE}
+      ./tests/integration/run_test_local.sh -F -n ${NUM_SPECULOS} -m ${DEVICE}
       ${TESTDIR}
   artifacts:
     when: always
