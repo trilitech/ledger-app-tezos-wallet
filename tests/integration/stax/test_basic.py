@@ -13,59 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import time
-
-from ragger.backend import SpeculosBackend
-from ragger.firmware import Firmware
-from ragger.firmware.stax.screen import MetaScreen
-from ragger.firmware.stax.use_cases import UseCaseHome, UseCaseSettings
-
-MAX_ATTEMPTS = 100
-# tezos logo is read as '5' by OCR
-TEZOS_LOGO = "5"
-
-expected_home_text = [TEZOS_LOGO, "Tezos", "This app enables signing", "transactions on the Tezos", "network.", "Quit app"]
-expected_info_text = ['Tezos wallet', 'Version', '2.3.2', 'Developer', 'Tezos', 'Copyright', '(c) 2023 <Tezos>']
-
-def with_retry(f, attempts=MAX_ATTEMPTS):
-    while True:
-        try:
-            return f()
-        except AssertionError as e:
-            if attempts <= 0:
-                print("- with_retry: attempts exhausted -")
-                raise e
-        attempts -= 1
-        time.sleep(0.1)
-
-class TezosAppScreen(metaclass=MetaScreen):
-    use_case_welcome = UseCaseHome
-    use_case_info = UseCaseSettings
-    __backend = None
-
-    def __init__(self, backend, firmware):
-        self.__backend = backend
-
-    def assert_screen(self, expected_content, attempts=MAX_ATTEMPTS):
-        def check():
-            content = [e["text"] for e in self.__backend.get_current_screen_content()["events"]]
-            assert content == expected_content, f"Unexpected screen: {content}"
-
-        with_retry(check, attempts)
+from utils import *
 
 if __name__ == "__main__":
-    port = os.environ["PORT"]
-    backend = SpeculosBackend("__unused__", Firmware.STAX, port = port)
+    app = stax_app()
 
-    app = TezosAppScreen(backend, Firmware.STAX)
-
-    app.assert_screen(expected_home_text)
+    app.assert_screen(HOME_TEXT)
 
     app.welcome.info()
-    app.assert_screen(expected_info_text)
+    app.assert_screen(INFO_TEXT)
 
     app.info.single_page_exit()
-    app.assert_screen(expected_home_text)
+    app.assert_screen(HOME_TEXT)
 
     app.welcome.quit()
