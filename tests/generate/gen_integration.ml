@@ -262,13 +262,23 @@ let operation_to_screens
             make_screen ~title:"Staking limit" "%a" (pp_opt_field pp_tz) tez_opt;
           ]
     | Transaction { amount; entrypoint; destination; parameters } ->
+        let parameter =
+          if
+            Protocol.Script_repr.is_unit_parameter parameters
+            && Protocol.Entrypoint_repr.is_default entrypoint
+          then []
+          else
+            [
+              make_screen ~title:"Entrypoint" "%a" Entrypoint.pp entrypoint;
+              make_screen ~title:"Parameter" "%a" pp_lazy_expr parameters;
+            ]
+        in
         aux ~kind:"Transaction"
-          [
-            make_screen ~title:"Amount" "%a" pp_tz amount;
-            make_screen ~title:"Destination" "%a" Contract.pp destination;
-            make_screen ~title:"Entrypoint" "%a" Entrypoint.pp entrypoint;
-            make_screen ~title:"Parameter" "%a" pp_lazy_expr parameters;
-          ]
+          ([
+             make_screen ~title:"Amount" "%a" pp_tz amount;
+             make_screen ~title:"Destination" "%a" Contract.pp destination;
+           ]
+          @ parameter)
     | Transfer_ticket
         { contents; ty; ticketer; amount; destination; entrypoint } ->
         aux ~kind:"Transfer ticket"

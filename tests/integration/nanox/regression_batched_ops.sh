@@ -34,10 +34,6 @@ expect_section_content nanox 'Amount' '0.06 tz'
 press_button right
 expect_section_content nanox 'Destination' 'KT1CYT8oACUcCSNTu2qfgB4fj5bD7szYrpti'
 press_button right
-expect_section_content nanox 'Entrypoint' 'default'
-press_button right
-expect_section_content nanox 'Parameter' 'Unit'
-press_button right
 expect_full_text 'Accept?' 'Press both buttons to accept.'
 press_button both
 expect_async_apdus_sent

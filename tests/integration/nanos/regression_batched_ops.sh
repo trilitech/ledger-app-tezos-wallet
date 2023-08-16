@@ -38,10 +38,6 @@ expect_section_content nanos 'Amount' '0.03 tz'
 press_button right
 expect_section_content nanos 'Destination' 'KT1VogMpwUD8xJR7pJMwhbCnTkJGM92WD2NL'
 press_button right
-expect_section_content nanos 'Entrypoint' 'default'
-press_button right
-expect_section_content nanos 'Parameter' 'Unit'
-press_button right
 expect_full_text 'Accept?'
 press_button both
 expect_async_apdus_sent
