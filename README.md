@@ -120,3 +120,55 @@ Both of these commands take the following arguments:
 
 -x
 : executes the tests with shell tracing (-x)
+
+## Testing
+
+### STAX
+
+The stax tests rely on gold-images, rather than OCR. They are stored under [snapshots](./tests/integration/stax/snapshots).
+
+To generate/reset the snapshots, you can do so for individual tests.
+
+#### Preparation
+
+First, start a container for running individual tests:
+
+```sh
+docker run --rm -it --entrypoint /bin/bash -v $(pwd)/tests/integration:/tests --network host \
+  ledger-app-tezos-integration-tests
+
+cd /tests/integration/stax
+export PORT=5000
+```
+
+Before running the test, start the app in a separate container (as each test will quit the app):
+
+```sh
+make app_stax_dbg.tgz
+seed="zebra`for i in $(seq 1 23) ; do echo -n ' zebra' ; done`"
+docker run --rm -it -v $(pwd)/app/bin:/speculos/apps -v $(pwd)/tests/integration:/tests --network host \
+   ledger-app-tezos-integration-tests --display=headless --vnc-port 41000 --seed "$seed" -m stax apps/app.elf
+```
+
+You can view/interact with the app using a vnc client on port `41000`.
+
+#### Running
+
+You can run an individual test from the test container. You should see the app progress on the vnc viewer.
+
+```sh
+./<test_name>.py
+```
+
+#### Setting goldimages
+
+You can reset/set goldimages using the following:
+
+```sh
+GOLDEN=1 ./<test_name>.py
+```
+
+You will be requested to press enter to take each snapshot in term. 
+**NB** make sure that the screen has updated to the screen you want to snapshot each time. It's also a good idea to
+re-run the test normally afterwards, to ensure the snapshots have been set correctly.
+

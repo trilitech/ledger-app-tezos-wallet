@@ -18,18 +18,18 @@ from utils import *
 if __name__ == "__main__":
     app = stax_app()
 
-    app.assert_screen(HOME_TEXT)
+    app.assert_screen(SCREEN_HOME_DEFAULT)
 
     app.send_apdu("8003000011048000002c800006c18000000080000000")
-    app.assert_screen([TEZOS_LOGO, "Verify Tezos", "address"])
+    app.assert_screen("screen_verify_address")
 
     app.provide_pk.tap()
-    app.assert_screen(["Address", "tz1dyX3B1CFYa2DfdFL", "yPtiJCfQRUgPVME6E", "Show as QR"])
+    app.assert_screen("screen_show_address_tz1_zebra")
 
     app.provide_pk.cancel()
-    app.assert_screen([ICON_CROSS, "Address rejected"])
+    app.assert_screen("address_rejected")
 
     app.provide_pk.tap()
-    app.assert_screen(HOME_TEXT)
+    app.assert_screen(SCREEN_HOME_DEFAULT)
 
     app.welcome.quit()

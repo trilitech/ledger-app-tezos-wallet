@@ -21,19 +21,15 @@ from ragger.firmware.stax.screen import MetaScreen
 from ragger.firmware.stax.use_cases import UseCaseHome, UseCaseSettings, UseCaseAddressConfirmation
 
 MAX_ATTEMPTS = 100
-# tezos logo is read as '5' by OCR
-TEZOS_LOGO = "5"
-# X in circle is read as 'cS'
-ICON_CROSS = "cS"
 
-HOME_TEXT = [TEZOS_LOGO, "Tezos", "This app enables signing", "transactions on the Tezos", "network.", "Quit app"]
-INFO_TEXT = ['Tezos wallet', 'Version', '2.3.2', 'Developer', 'Tezos', 'Copyright', '(c) 2023 <Tezos>']
+SCREEN_HOME_DEFAULT = "home"
+SCREEN_INFO_PAGE = "info"
 
 def with_retry(f, attempts=MAX_ATTEMPTS):
     while True:
         try:
             return f()
-        except AssertionError as e:
+        except Exception as e:
             if attempts <= 0:
                 print("- with_retry: attempts exhausted -")
                 raise e
@@ -41,30 +37,20 @@ def with_retry(f, attempts=MAX_ATTEMPTS):
         # Give plenty of time for speculos to update - can take a long time on CI machines
         time.sleep(0.5)
 
-def ocr_convert(text):
-    return text.replace('6', 'G')
-
 class TezosAppScreen(metaclass=MetaScreen):
     use_case_welcome = UseCaseHome
     use_case_info = UseCaseSettings
     use_case_provide_pk = UseCaseAddressConfirmation
 
     __backend = None
+    __golden = False
+    __stax = None
+    __snapshotted = []
 
     def __init__(self, backend, firmware):
         self.__backend = backend
-
-    def assert_screen(self, expected_content, attempts=MAX_ATTEMPTS):
-        def check():
-            content = [e["text"] for e in self.__backend.get_current_screen_content()["events"]]
-            print(f'- Found {content}, expected {expected_content} -')
-            assert len(content) >= len(expected_content), f"screen {content} shorter than {expected_content}"
-
-            for (expected, actual) in zip(expected_content, content):
-                expected = ocr_convert(expected)
-                assert expected in actual, f"Expected '{expected}' found '{actual}'"
-
-        with_retry(check, attempts)
+        realpath = os.path.realpath(__file__)
+        self.__stax = os.path.dirname(realpath)
 
     def send_apdu(self, data):
         """Send hex-encoded bytes to the apdu"""
@@ -76,7 +62,29 @@ class TezosAppScreen(metaclass=MetaScreen):
         expected = bytes.fromhex(expected)
         assert response == expected, f"Expected {expected}, received {response}"
 
+    def assert_screen(self, screen):
+        golden = self.__golden and screen not in self.__snapshotted
+        if golden:
+            self.__snapshotted = self.__snapshotted + [screen]
+            input(f"Press ENTER to snapshot {screen}")
+
+        path = f'{self.__stax}/snapshots/{screen}.png'
+        def check():
+            print(f"- Expecting {screen} -")
+            assert self.__backend.compare_screen_with_snapshot(path, golden_run = golden)
+
+        with_retry(check)
+
+    def make_golden(self):
+        self.__golden = True
+
 def stax_app() -> TezosAppScreen:
     port = os.environ["PORT"]
+    golden = os.getenv("GOLDEN") != None
     backend = SpeculosBackend("__unused__", Firmware.STAX, port = port)
-    return TezosAppScreen(backend, Firmware.STAX)
+    app = TezosAppScreen(backend, Firmware.STAX)
+
+    if golden:
+        app.make_golden()
+
+    return app
