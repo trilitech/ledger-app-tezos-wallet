@@ -177,7 +177,8 @@ static void send_reject() {
 
 static void send_continue() {
   FUNC_ENTER(("void"));
-  if (global.apdu.sign.step != SIGN_ST_WAIT_USER_INPUT)
+  if (global.apdu.sign.step != SIGN_ST_WAIT_USER_INPUT &&
+      global.apdu.sign.step != SIGN_ST_WAIT_DATA)
     THROW(EXC_UNEXPECTED_SIGN_STATE);
   if (global.apdu.sign.received_last_msg)
     THROW(EXC_UNEXPECTED_SIGN_STATE);
@@ -321,6 +322,8 @@ static size_t handle_data_apdu_clear(packet_t *pkt) {
   if (pkt->is_last)
     tz_operation_parser_set_size(st, global.apdu.sign.u.clear.total_length);
 
+  int16_t total_screen = global.stream.total;
+
   // resume the parser with the new data
   refill();
 
@@ -330,8 +333,11 @@ static size_t handle_data_apdu_clear(packet_t *pkt) {
     return finalize_successful_send(0);
   }
 
+  // expect user input only if there is a new screen
+  if (total_screen != global.stream.total)
+    global.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
+
   // launch parsing and UI (once we have a first screen)
-  global.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
   tz_ui_stream();
   FUNC_LEAVE();
 }
