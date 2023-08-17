@@ -100,6 +100,14 @@ let to_string
           ]
     | Sc_rollup_add_messages { messages } ->
         aux ~kind:"SR: send messages" messages
+    | Sc_rollup_execute_outbox_message
+        { rollup; cemented_commitment; output_proof = _ } ->
+        aux ~kind:"SR: execute outbox message"
+          [
+            Format.asprintf "%a" Sc_rollup_repr.Address.pp rollup;
+            Format.asprintf "%a" Sc_rollup.Commitment.Hash.pp
+              cemented_commitment;
+          ]
     | _ -> assert false
   in
   let rec operations_to_string : type t. t contents_list -> string = function

@@ -308,6 +308,14 @@ let operation_to_screens
           make_screen ~title "%s" message
         in
         aux ~kind:"SR: send messages" @@ List.mapi make_screen_message messages
+    | Sc_rollup_execute_outbox_message
+        { rollup; cemented_commitment; output_proof = _ } ->
+        aux ~kind:"SR: execute outbox message"
+          [
+            make_screen ~title:"Rollup" "%a" Sc_rollup_repr.Address.pp rollup;
+            make_screen ~title:"Commitment" "%a" Sc_rollup.Commitment.Hash.pp
+              cemented_commitment;
+          ]
     | _ -> assert false
   in
   let rec screen_of_operations : type t. int -> t contents_list -> screen list =

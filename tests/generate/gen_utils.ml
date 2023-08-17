@@ -55,7 +55,8 @@ let operations_too_large_or_too_deep
         lazy_expr_too_large_or_too_deep contents
         || lazy_expr_too_large_or_too_deep ty
     | Delegation _ | Increase_paid_storage _ | Reveal _ | Set_deposits_limit _
-    | Update_consensus_key _ | Sc_rollup_add_messages _ ->
+    | Update_consensus_key _ | Sc_rollup_add_messages _
+    | Sc_rollup_execute_outbox_message _ ->
         false
     | _ -> assert false
   in

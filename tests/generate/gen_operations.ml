@@ -127,6 +127,45 @@ let gen_public_key_hash =
   in
   oneof [ pick; gen ]
 
+let some_sc_rollup_hash =
+  [
+    "sr18hRM2ke5FCVvjhqkDAhGPMzbPCrzJ8wrU";
+    "sr1KCJxqn1tZAXqHXVszTtf6F3QnffhjQqCh";
+    "sr1EonJTemPhrmLNCFC6XT8gx5fNsXSvKQ2F";
+    "sr1B7oLgQietkTsrfwDVicYv8G7cQ3L6scZa";
+    "sr1Lcs3wS4mDi3UsFV9ULnhofE81FN2JmPvB";
+    "sr1MyCwR83hZphCSqaYSQApPxPMeyksJWWnh";
+    "sr1Sg4yX2RfUoBqGjc8aFwB5cG5Lt5t7Guws";
+    "sr1TPCJhiXQJ2VhCZEbCG1kdzqPEPTsfEEdr";
+    "sr1HMSLDEvsoq8LZb3cD7f3ayhi7JVVvWfpZ";
+    "sr1FSK2QXZjfsp8S9U3EhWmn8Bxp2SdE7Khf";
+  ]
+
+let gen_sc_rollup_hash =
+  let open QCheck2.Gen in
+  let+ sc_h = oneofl some_sc_rollup_hash in
+  Protocol.Alpha_context.Sc_rollup_repr.Address.of_b58check_exn sc_h
+
+let some_sc_rollup_commiment_hash =
+  [
+    "src12UJzB8mg7yU6nWPzicH7ofJbFjyJEbHvwtZdfRXi8DQHNp1LY8";
+    "src149FtYiXSAwm1PBBavezYQ2UEg1YbuBzt5KwVE54hx2tbnPtzH2";
+    "src14Cw34Jvg6v9efy46QaYBqfVxBruvCYSHBu8fVyVTx4P5f4b3o6";
+    "src12cn216Y5KX2dxLRq4Hsmb1QQ9zVZUN4yd1yzPY5oJjS8kHUnNJ";
+    "src13cokfHxjwy31qfKwWk1KE6zbpLA7vG6T1wMwLVQMuVaYyBkijH";
+    "src143oifrHPmYvdBYHyZDEnUJMZJzLxWhkxC8vAoxM4qdyTsADhbc";
+    "src12iKxUYgPaHzFPwTNasYNLsd5k6atiLBWgsec3aBNRL8WttwuXP";
+    "src13nsaWXcAhKPJ1UftmHk1xhp6YTpLJh7Wuf2mPFxgAbBLMAyE7H";
+    "src13N7L61eHYEW116jhA1U7yJpeaAuMQQx18f6LfdY6DG2k347HV3";
+    "src13Bexybvi9ps398rBiKgaJy3nRY6xyE111eZx5vZ2epNZcdxLtX";
+    "src13J76oinSMSPoabJJ9DXArwPaZfhDn9AYzBQMUDd3NynyDSuN1r";
+  ]
+
+let gen_sc_rollup_commiment_hash =
+  let open QCheck2.Gen in
+  let+ sc_ch = oneofl some_sc_rollup_commiment_hash in
+  Protocol.Alpha_context.Sc_rollup.Commitment.Hash.of_b58check_exn sc_ch
+
 let gen_tez =
   QCheck2.Gen.map Protocol.Alpha_context.Tez.(mul_exn one_cent) QCheck2.Gen.nat
 
@@ -297,6 +336,16 @@ let gen_sc_rollup_add_messages =
   let* messages = list_size small_nat (gen_hexa_string small_nat) in
   return (Sc_rollup_add_messages { messages })
 
+let gen_sc_rollup_execute_outbox_message =
+  let open Protocol.Alpha_context in
+  let open QCheck2.Gen in
+  let* rollup = gen_sc_rollup_hash in
+  let* cemented_commitment = gen_sc_rollup_commiment_hash in
+  let* output_proof = gen_hexa_string small_nat in
+  return
+    (Sc_rollup_execute_outbox_message
+       { rollup; cemented_commitment; output_proof })
+
 let gen_manager_operation gen_operation =
   let open Protocol.Alpha_context in
   let open QCheck2.Gen in
@@ -333,6 +382,7 @@ let gen_hidden_manager_operation =
       aux gen_transfer_ticket;
       aux gen_update_consensus_key;
       aux gen_sc_rollup_add_messages;
+      aux gen_sc_rollup_execute_outbox_message;
     ]
 
 type hidden_manager_operation_list =
