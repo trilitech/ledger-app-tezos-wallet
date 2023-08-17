@@ -37,6 +37,7 @@ const char *const tz_operation_parser_step_name[] = {
   "SIZE",
   "OPERATION",
   "PRINT",
+  "PARTIAL_PRINT",
   "READ_NUM",
   "READ_PK",
   "READ_BYTES",
@@ -504,7 +505,7 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
       capture[state->operation.frame->step_read_string.ofs] = 0;
       state->operation.frame->step_read_string.ofs = 0;
       if (!state->operation.frame->step_read_string.skip) {
-        tz_must(push_frame(state, TZ_OPERATION_STEP_PRINT));
+        tz_must(push_frame(state, TZ_OPERATION_STEP_PARTIAL_PRINT));
         state->operation.frame->step_print.str = (char*) capture;
       }
     } else {
@@ -753,6 +754,16 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
     } else {
       tz_must(pop_frame(state));
       tz_stop(IM_FULL);
+    }
+    break;
+  }
+  case TZ_OPERATION_STEP_PARTIAL_PRINT: {
+    const char* str = PIC(state->operation.frame->step_print.str);
+    if (*str) {
+      tz_must(tz_parser_put(state, *str));
+      state->operation.frame->step_print.str++;
+    } else {
+      tz_must(pop_frame(state));
     }
     break;
   }
