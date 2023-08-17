@@ -86,6 +86,7 @@ integration_stax_basic:
   variables:
     DEVICE: stax
     TESTDIR: tests/integration/stax
+    # Use single instance at a time to reduce load, as speculos is much heavier computationally.
     NUM_SPECULOS: 1
 
 integration_nanos_micheline_samples:

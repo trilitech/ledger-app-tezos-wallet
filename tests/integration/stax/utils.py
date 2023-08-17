@@ -38,6 +38,7 @@ def with_retry(f, attempts=MAX_ATTEMPTS):
                 print("- with_retry: attempts exhausted -")
                 raise e
         attempts -= 1
+        # Give plenty of time for speculos to update - can take a long time on CI machines
         time.sleep(0.5)
 
 def ocr_convert(text):
