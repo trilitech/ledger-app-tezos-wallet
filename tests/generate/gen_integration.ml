@@ -210,6 +210,16 @@ let pp_lazy_expr ppf lazy_expr =
 
 let pp_string_binary ppf s = Format.fprintf ppf "%a" Hex.pp (Hex.of_string s)
 
+let pp_serialized_proof ppf proof =
+  let proof =
+    Data_encoding.(
+      proof
+      |> Binary.to_bytes_exn
+           Protocol.Alpha_context.Sc_rollup.Proof.serialized_encoding
+      |> Binary.of_bytes_exn (string' Hex))
+  in
+  pp_string_binary ppf proof
+
 let operation_to_screens
     ( (_shell : Tezos_base.Operation.shell_header),
       (Contents_list contents : Protocol.Alpha_context.packed_contents_list) ) =
@@ -322,6 +332,16 @@ let operation_to_screens
             make_screen ~title:"Commitment" "%a" Sc_rollup.Commitment.Hash.pp
               cemented_commitment;
             make_screen ~title:"Output proof" "%a" pp_string_binary output_proof;
+          ]
+    | Sc_rollup_originate
+        { kind; boot_sector; origination_proof; parameters_ty } ->
+        aux ~kind:"SR: originate"
+          [
+            make_screen ~title:"Kind" "%a" Sc_rollup.Kind.pp kind;
+            make_screen ~title:"Kernel" "%a" pp_string_binary boot_sector;
+            make_screen ~title:"Proof" "%a" pp_serialized_proof
+              origination_proof;
+            make_screen ~title:"Parameters" "%a" pp_lazy_expr parameters_ty;
           ]
     | _ -> assert false
   in

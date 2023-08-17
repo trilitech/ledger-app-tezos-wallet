@@ -364,6 +364,22 @@ let gen_sc_rollup_execute_outbox_message =
     (Sc_rollup_execute_outbox_message
        { rollup; cemented_commitment; output_proof })
 
+let gen_sc_rollup_originate =
+  let open Protocol.Alpha_context in
+  let open QCheck2.Gen in
+  let* kind = oneofl Sc_rollup.Kind.[ Example_arith; Wasm_2_0_0 ] in
+  let* boot_sector = string_size nat in
+  let* origination_proof = string_size nat in
+  let origination_proof =
+    Data_encoding.(
+      origination_proof
+      |> Binary.to_bytes_exn (string' Hex)
+      |> Binary.of_bytes_exn Sc_rollup.Proof.serialized_encoding)
+  in
+  let* parameters_ty = gen_lazy_expr in
+  return
+    (Sc_rollup_originate { kind; boot_sector; origination_proof; parameters_ty })
+
 let gen_proposals =
   let open Protocol.Alpha_context in
   let open QCheck2.Gen in
@@ -433,6 +449,7 @@ let gen_hidden_manager_operation =
     aux gen_update_consensus_key;
     aux gen_sc_rollup_add_messages;
     aux gen_sc_rollup_execute_outbox_message;
+    aux gen_sc_rollup_originate;
   ]
 
 type hidden_manager_operation_list =
