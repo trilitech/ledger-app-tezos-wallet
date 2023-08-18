@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include "buffer.h"
+#include "crypto_helpers.h"
 
 #include "keys.h"
 
@@ -100,46 +101,43 @@ int crypto_derive_private_key(cx_ecfp_private_key_t *private_key,
     return err ? 1 : 0;
 }
 
-int crypto_init_public_key(derivation_type_t const derivation_type,
-                           cx_ecfp_private_key_t *private_key,
-                           cx_ecfp_public_key_t *public_key) {
-    FUNC_ENTER(("derivation_type=%d, private_key=%p, public_key=%p",
-                derivation_type, private_key, public_key));
-    cx_curve_t const cx_curve =
-        derivation_type_to_cx_curve(derivation_type);
+int generate_public_key(cx_ecfp_public_key_t *public_key,
+                        derivation_type_t const derivation_type,
+                        bip32_path_t const *const bip32_path) {
+    FUNC_ENTER(("public_key=%p, derivation_type=%d, bip32_path=%p",
+                public_key, derivation_type, bip32_path));
 
-    // generate corresponding public key
-    CX_THROW(cx_ecfp_generate_pair_no_throw(cx_curve, public_key,
-                                            private_key, 1));
+    public_key->W_len = 65;
+    public_key->curve = derivation_type_to_cx_curve(derivation_type);
 
-    // If we're using the old curve, make sure to adjust accordingly.
-    if (cx_curve == CX_CURVE_Ed25519) {
-         cx_edwards_compress_point_no_throw(CX_CURVE_Ed25519, public_key->W,
-                                            public_key->W_len);
+    int derivation_mode = HDW_NORMAL;
+    if (derivation_type == DERIVATION_TYPE_ED25519)
+      derivation_mode = HDW_ED25519_SLIP10;
+
+    cx_err_t error =
+      bip32_derive_with_seed_get_pubkey_256(derivation_mode,
+                                            public_key->curve,
+                                            bip32_path->components,
+                                            bip32_path->length,
+                                            public_key->W,
+                                            NULL,
+                                            CX_SHA512,
+                                            NULL,
+                                            0);
+
+    if (error) {
+      return error ? 1 : 0;
+    }
+
+    if (public_key->curve == CX_CURVE_Ed25519) {
+          cx_edwards_compress_point_no_throw(CX_CURVE_Ed25519,
+                                             public_key->W,
+                                             public_key->W_len);
         public_key->W_len = 33;
     }
 
     FUNC_LEAVE();
-    return 0;
-}
-
-int generate_public_key(cx_ecfp_public_key_t *public_key,
-                        derivation_type_t const derivation_type,
-                        bip32_path_t const *const bip32_path) {
-    cx_ecfp_private_key_t private_key = {0};
-    int error;
-
-    FUNC_ENTER(("public_key=%p, derivation_type=%d, bip32_path=%p",
-                public_key, derivation_type, bip32_path));
-
-    error = crypto_derive_private_key(&private_key, derivation_type,
-                                      bip32_path);
-    if (error) {
-        return error;
-    }
-    error = crypto_init_public_key(derivation_type, &private_key, public_key);
-    FUNC_LEAVE();
-    return error;
+    return error ? 1 : 0;
 }
 
 #define HASH_SIZE 20
