@@ -1,10 +1,10 @@
 start_speculos "$seed"
 sleep 0.2
-expect_full_text "Tezos Wallet" "ready for" "safe signing"
+expect_full_text "ready for" "safe signing"
 send_apdu 800f000011048000002c800006c18000000080000000
 expect_apdu_return 9000
 send_apdu 800f81002305020000001d0100000004434143410100000004504f504f0100000006424f5544494e
-expect_full_text 'Expression' '{"CACA";"POPO";"BOUDIN"}'
+expect_section_content nanos 'Expression' '{"CACA";"POPO";"BOUDIN"}'
 press_button right
 expect_full_text "Accept?"
 press_button both

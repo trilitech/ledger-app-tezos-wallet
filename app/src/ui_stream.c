@@ -282,8 +282,6 @@ static void redisplay() {
 #ifdef TARGET_NANOS
     {{ BAGL_LABELINE, 0x02, 0, 19, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000,
        REGULAR, 0 }, global.ux.lines[1] },
-    {{ BAGL_LABELINE, 0x02, 0, 30, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000,
-       REGULAR, 0 }, global.ux.lines[2] },
     {{ BAGL_ICON, 0x00, 56, 14, 16, 16, 0, 0, 0, 0xFFFFFF, 0x000000, 0,
        BAGL_GLYPH_NOGLYPH }, (const char*) &C_icon_rien },
 #else
@@ -319,7 +317,6 @@ static void redisplay() {
   if (icon) {
 #ifdef TARGET_NANOS
     global.ux.lines[1][0] = 0;
-    global.ux.lines[2][0] = 0;
 #endif
     init[sizeof(init)/sizeof(bagl_element_t)-1].text = find_icon(icon);
   }

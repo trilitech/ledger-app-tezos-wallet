@@ -30,7 +30,7 @@
 #define TZ_SCREEN_WITDH_FULL_REGULAR_11PX       19
 #define TZ_SCREEN_WITDH_BETWEEN_ICONS_BOLD_11PX 16
 #ifdef TARGET_NANOS
-#  define TZ_SCREEN_LINES_11PX                    3
+#  define TZ_SCREEN_LINES_11PX                    2
 #else
 #  define TZ_SCREEN_LINES_11PX                    5
 #endif

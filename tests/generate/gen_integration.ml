@@ -95,8 +95,10 @@ let check_tlv_signature_from_sent_apdu ppf ~prefix ~suffix pk message =
 
 (** Specific *)
 
-let home ppf () =
-  expect_full_text ppf [ "Tezos Wallet"; "ready for"; "safe signing" ]
+let home ppf = function
+  | Device.Nanos -> expect_full_text ppf [ "ready for"; "safe signing" ]
+  | Device.Nanosp | Device.Nanox ->
+      expect_full_text ppf [ "Tezos Wallet"; "ready for"; "safe signing" ]
 
 let expect_accept ppf = function
   | Device.Nanos -> expect_full_text ppf [ "Accept?" ]
@@ -465,7 +467,7 @@ let gen_expect_test_sign ppf ~device ~watermark bin screens =
     signer.pkh;
   Format.fprintf ppf "# path: %a@." Apdu.Path.pp signer.path;
   start_speculos ppf signer.mnemonic;
-  home ppf ();
+  home ppf device;
   sign ppf ~signer ~watermark bin;
   go_through_screens ppf ~device screens;
   accept ppf device;

@@ -3,7 +3,7 @@
 # signer: tz1dyX3B1CFYa2DfdFLyPtiJCfQRUgPVME6E
 # path: m/44'/1729'/0'/0'
 start_speculos "$seed"
-expect_full_text 'Tezos Wallet' 'ready for' 'safe signing'
+expect_full_text 'ready for' 'safe signing'
 send_async_apdus \
 	800f000011048000002c800006c18000000080000000 "expect_apdu_return 9000
 "\
@@ -17,7 +17,7 @@ expect_full_text 'Storage limit' '45'
 press_button right
 expect_full_text 'Amount' '0.24 tz'
 press_button right
-expect_full_text 'Destination' 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT'
+expect_section_content nanos 'Destination' 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT'
 press_button right
 expect_full_text 'Entrypoint' 'do'
 press_button right
