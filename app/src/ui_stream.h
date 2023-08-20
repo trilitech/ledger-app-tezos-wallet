@@ -113,6 +113,8 @@ size_t tz_ui_stream_push(tz_ui_cb_type_t, const char *, const char *,
                          tz_ui_icon_t);
 size_t tz_ui_stream_pushl(tz_ui_cb_type_t, const char *, const char *,
                           ssize_t, tz_ui_icon_t);
+size_t tz_ui_stream_push_all(tz_ui_cb_type_t, const char *, const char *,
+                             tz_ui_icon_t);
 void tz_ui_stream_push_accept_reject(void);
 void tz_ui_stream_close(void);
 tz_ui_stream_screen_kind tz_ui_stream_current_screen_kind(void);

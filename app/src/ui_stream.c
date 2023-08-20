@@ -92,6 +92,19 @@ uint8_t tz_ui_max_line_chars(const char* value, int length) {
   return will_fit;
 }
 
+size_t tz_ui_stream_push_all(tz_ui_cb_type_t type, const char *title,
+                             const char *value, tz_ui_icon_t icon) {
+  size_t obuflen;
+  size_t i = 0;
+
+  obuflen = strlen(value);
+  do {
+    i += tz_ui_stream_push(type, title, value + i, icon);
+  } while (i < obuflen);
+
+  return i;
+}
+
 size_t tz_ui_stream_push(tz_ui_cb_type_t type, const char *title,
                          const char *value, tz_ui_icon_t icon) {
   return tz_ui_stream_pushl(type, title, value, -1, icon);

@@ -347,7 +347,6 @@ static size_t handle_data_apdu_blind(packet_t *pkt) {
   if (!global.apdu.sign.u.blind.tag)
     global.apdu.sign.u.blind.tag = pkt->buff[0];
   if (pkt->is_last) {
-    size_t i = 0;
     char obuf[TZ_BASE58_BUFFER_SIZE(sizeof(FINAL_HASH))];
     const char *type = "unknown type";
 
@@ -365,14 +364,11 @@ static size_t handle_data_apdu_blind(packet_t *pkt) {
     default:                                                break;
     }
 
-    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Sign Hash", type,
-                      TZ_UI_ICON_NONE);
+    tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Sign Hash", type,
+                          TZ_UI_ICON_NONE);
 
-    size_t obuflen = strlen(obuf);
-    do {
-      i += tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Sign Hash", obuf + i,
-                             TZ_UI_ICON_NONE);
-    } while (i < obuflen);
+    tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Sign Hash", obuf,
+                          TZ_UI_ICON_NONE);
 
     tz_ui_stream_push_accept_reject();
     tz_ui_stream_close();
