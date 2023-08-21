@@ -99,8 +99,8 @@ PATH_APP_LOAD_PARAMS = "44'/1729'"
 # - <VARIANT_VALUES> a list of variant that can be build using this app code.
 #   * It must at least contains one value.
 #   * Values can be the app ticker or anything else but should be unique.
-VARIANT_PARAM = APP_TYPE
-VARIANT_VALUES = WALLET
+VARIANT_PARAM = APP
+VARIANT_VALUES = tezos_wallet_next
 
 # Enabling DEBUG flag will enable PRINTF and disable optimizations
 #DEBUG = 1

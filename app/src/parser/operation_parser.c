@@ -281,7 +281,7 @@ void tz_operation_parser_init(tz_parser_state *state, uint16_t size,
   if (!skip_magic) {
     state->operation.stack[0].step = TZ_OPERATION_STEP_MAGIC;
   } else {
-    strcpy(state->field_name, "Branch");
+    STRLCPY(state->field_name, "Branch");
     state->operation.stack[0].step = TZ_OPERATION_STEP_BRANCH;
     push_frame(state, TZ_OPERATION_STEP_READ_BYTES); // ignore result,
                                                      // assume success
@@ -329,7 +329,7 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
     tz_must(tz_parser_read(state, &b));
     switch (b) {
     case 3: // manager/anonymous operation
-      strcpy(state->field_name, "Branch");
+      STRLCPY(state->field_name, "Branch");
       state->operation.stack[0].step = TZ_OPERATION_STEP_BRANCH;
       push_frame(state, TZ_OPERATION_STEP_READ_BYTES); // ignore result,
                                                        //  assume success
@@ -386,7 +386,7 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
   case TZ_OPERATION_STEP_READ_MICHELINE: {
     if (!state->operation.frame->step_read_micheline.inited) {
       state->operation.frame->step_read_micheline.inited = 1;
-      strcpy(state->field_name,
+      STRLCPY(state->field_name,
              state->operation.frame->step_read_micheline.name);
       tz_micheline_parser_init(state);
     }
@@ -582,27 +582,27 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
     tz_must(tz_parser_read(state, &b));
     switch (b) {
     case 0:
-      strcpy((char*) capture, "default");
+      STRLCPY((char*) capture, "default");
       tz_must(tz_print_string(state));
       break;
     case 1:
-      strcpy((char*) capture, "root");
+      STRLCPY((char*) capture, "root");
       tz_must(tz_print_string(state));
       break;
     case 2:
-      strcpy((char*) capture, "do");
+      STRLCPY((char*) capture, "do");
       tz_must(tz_print_string(state));
       break;
     case 3:
-      strcpy((char*) capture, "set_delegate");
+      STRLCPY((char*) capture, "set_delegate");
       tz_must(tz_print_string(state));
       break;
     case 4:
-      strcpy((char*) capture, "remove_delegate");
+      STRLCPY((char*) capture, "remove_delegate");
       tz_must(tz_print_string(state));
       break;
     case 5:
-      strcpy((char*) capture, "deposit");
+      STRLCPY((char*) capture, "deposit");
       tz_must(tz_print_string(state));
       break;
     case 0xFF:
@@ -634,7 +634,7 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
       if (!field->required)
         tz_must(tz_parser_read(state, &present));
       if (!field->skip)
-        strcpy(state->field_name, name);
+        STRLCPY(state->field_name, name);
       state->operation.frame->step_operation.field++;
       if (!present) {
         if (field->display_none) {
@@ -743,7 +743,7 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
         state->operation.frame->step_size.size = 0;
         state->operation.frame->step_size.size_len = 4;
         tz_must(push_frame(state, TZ_OPERATION_STEP_READ_SMART_ENTRYPOINT));
-        strcpy(state->field_name, "Entrypoint");
+        STRLCPY(state->field_name, "Entrypoint");
         state->operation.frame->step_read_string.ofs = 0;
         state->operation.frame->step_read_string.skip = field->skip;
         break;
@@ -844,10 +844,10 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
     tz_must(tz_parser_read(state, &b));
     switch(b) {
     case 0:
-      strcpy((char*) capture, "arith");
+      STRLCPY((char*) capture, "arith");
       break;
     case 1:
-      strcpy((char*) capture, "wasm_2_0_0");
+      STRLCPY((char*) capture, "wasm_2_0_0");
       break;
     default: tz_raise(INVALID_TAG);
     }
@@ -859,13 +859,13 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
     tz_must(tz_parser_read(state, &b));
     switch(b) {
     case 0:
-      strcpy((char*) capture, "yay");
+      STRLCPY((char*) capture, "yay");
       break;
     case 1:
-      strcpy((char*) capture, "nay");
+      STRLCPY((char*) capture, "nay");
       break;
     case 2:
-      strcpy((char*) capture, "pass");
+      STRLCPY((char*) capture, "pass");
       break;
     default: tz_raise(INVALID_TAG);
     }

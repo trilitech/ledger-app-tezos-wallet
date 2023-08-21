@@ -1,6 +1,7 @@
 /* Tezos Embedded C parser for Ledger - Platform compatibility layer
 
    Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
+   Copyright 2023 TriliTech <contact@trili.tech>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -15,6 +16,8 @@
    limitations under the License. */
 
 #pragma once
+
+#define STRLCPY(x, y)	strlcpy((x), (y), sizeof(x))
 
 // Some "good enough" heuristics to know if we are actually compiling
 // for BOLOS or running in the Tezos client/testing.
