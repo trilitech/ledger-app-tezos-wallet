@@ -121,8 +121,6 @@ Both of these commands take the following arguments:
 -x
 : executes the tests with shell tracing (-x)
 
-## Testing
-
 ### STAX
 
 The stax tests rely on gold-images, rather than OCR. They are stored under [snapshots](./tests/integration/stax/snapshots).
@@ -137,7 +135,7 @@ First, start a container for running individual tests:
 docker run --rm -it --entrypoint /bin/bash -v $(pwd)/tests/integration:/tests --network host \
   ledger-app-tezos-integration-tests
 
-cd /tests/integration/stax
+cd /tests/stax
 export PORT=5000
 ```
 
