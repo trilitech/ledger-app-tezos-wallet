@@ -111,7 +111,6 @@ endif
 # CFLAGS
 ENABLE_SDK_WERROR=1
 CFLAGS   += -O3 -Os -Wall -Wextra
-CFLAGS   += -Wno-vla
 CFLAGS   += -Wassign-enum
 #CFLAGS   += -Wbad-function-cast
 #CFLAGS   += -Wcast-align

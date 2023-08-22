@@ -347,7 +347,11 @@ int tz_format_base58check(const char *sprefix, const uint8_t *data,
   if (find_prefix(sprefix, &prefix, &prefix_len, size))
     return 1;
 
-  uint8_t prepared[prefix_len+size+4];
+  /* In order to avoid vla, we have a maximum buffer size of 64 */
+  uint8_t prepared[64];
+  if (prefix_len + size + 4 > 64)
+    return 1;
+
   memcpy(prepared, prefix, prefix_len);
   memcpy(prepared+prefix_len, data, size);
   uint8_t tmp[32];
