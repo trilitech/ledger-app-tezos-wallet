@@ -359,7 +359,7 @@ let gen_sc_rollup_execute_outbox_message =
   let open QCheck2.Gen in
   let* rollup = gen_sc_rollup_hash in
   let* cemented_commitment = gen_sc_rollup_commiment_hash in
-  let* output_proof = string_size nat in
+  let* output_proof = string_size small_nat in
   return
     (Sc_rollup_execute_outbox_message
        { rollup; cemented_commitment; output_proof })
@@ -368,8 +368,8 @@ let gen_sc_rollup_originate =
   let open Protocol.Alpha_context in
   let open QCheck2.Gen in
   let* kind = oneofl Sc_rollup.Kind.[ Example_arith; Wasm_2_0_0 ] in
-  let* boot_sector = string_size nat in
-  let* origination_proof = string_size nat in
+  let* boot_sector = string_size small_nat in
+  let* origination_proof = string_size small_nat in
   let origination_proof =
     Data_encoding.(
       origination_proof
@@ -401,7 +401,7 @@ let gen_ballot_op =
 let gen_failing_noop =
   let open Protocol.Alpha_context in
   let open QCheck2.Gen in
-  let* message = string_size nat in
+  let* message = string_size small_nat in
   return (Failing_noop message)
 
 let gen_manager_operation gen_operation =
