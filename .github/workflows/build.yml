@@ -32,3 +32,36 @@ jobs:
       relative_app_directory: "./app"
       upload_app_binaries_artifact: "compiled_app_binaries_dbg"
       flags: "DEBUG=1"
+
+  integration_tests_basic:
+    needs: [build_application, build_application_dbg]
+    strategy:
+      fail-fast: false
+      matrix:
+        device: [nanos, nanosp, nanox, stax]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Download app binaries
+        uses: actions/download-artifact@v3
+        with:
+          name: compiled_app_binaries
+          path: ./build
+
+      - name: Download app binaries (dbg)
+        uses: actions/download-artifact@v3
+        with:
+          name: compiled_app_binaries_dbg
+          path: ./build_dbg
+
+      - name: Install tests dependencies
+        run: |
+          sudo apt-get update && sudo apt-get install -y qemu-user-static tesseract-ocr libtesseract-dev
+          pip install --extra-index-url https://test.pypi.org/simple -r ./tests/requirements.txt
+
+      - name: Run test
+        run: ./tests/integration/run_test_local.sh -F -m ${{ matrix.device }} ./tests/integration/${{ matrix.device }}
+
