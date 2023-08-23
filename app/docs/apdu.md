@@ -80,19 +80,234 @@ This parses as:
 
 - B = Baking app, W = Wallet app
 
-## Signing operations
+## Instructions
 
-There are 3 APDUs that deal with signing things. They use the Ledger’s
-private key to sign messages sent. They are:
+### `INS_VERSION`
 
-| Instruction          | Code | Parsing | Send hash |
-|----------------------|------|---------|-----------|
-| `INS_SIGN`           | 0x04 | Yes     | No        |
-| `INS_SIGN_WITH_HASH` | 0x0f | Yes     | Yes       |
+| *CLA* | *INS* |
+|-------|-------|
+| 0x80  | 0x00  |
 
-The difference between `INS_SIGN` and `INS_SIGN_WITH_HASH` is that the
-latter returns both the signature *AND* the hash of the data (while
-the former only returns the signature).
+Get version information for the ledger.
+
+#### Input data
+
+No input data.
+
+#### Output data
+
+| Length | Description              |
+|--------|--------------------------|
+| `1`    | Should be 0 for `wallet` |
+| `1`    | The major version        |
+| `1`    | The minor version        |
+| `1`    | The patch version        |
+| `2`    | Should be 0x9000         |
+
+### `INS_AUTHORIZE_BAKING`
+
+| *CLA* | *INS* |
+|-------|-------|
+| 0x80  | 0x01  |
+
+Authorize baking.
+
+Instruction not supported.
+
+### `INS_GET_PUBLIC_KEY` / `INS_PROMPT_PUBLIC_KEY`
+
+|                         | *CLA* | *INS* |
+|-------------------------|-------|-------|
+| `INS_GET_PUBLIC_KEY`    | 0x80  | 0x02  |
+| `INS_PROMPT_PUBLIC_KEY` | 0x80  | 0x03  |
+
+Get the ledger’s internal public key according to the `path`.
+
+`INS_PROMPT_PUBLIC_KEY` will request confirmation before sending.
+
+#### Input data
+
+| Length       | Name   | Description       |
+|--------------|--------|-------------------|
+| `<variable>` | `path` | The mnemonic path |
+
+#### Output data
+
+| Length     | Description             |
+|------------|-------------------------|
+| `1`        | The public key `length` |
+| `<length>` | The public key          |
+| `2`        | Should be 0x9000        |
+
+### `INS_SIGN_UNSAFE`
+
+| *CLA* | *INS* |
+|-------|-------|
+| 0x80  | 0x05  |
+
+Sign a message with the ledger’s key (no hash).
+
+Instruction not supported.
+
+### `INS_RESET`
+
+| *CLA* | *INS* |
+|-------|-------|
+| 0x80  | 0x06  |
+
+Reset high water mark block level.
+
+Instruction not supported.
+
+### `INS_QUERY_AUTH_KEY`
+
+| *CLA* | *INS* |
+|-------|-------|
+| 0x80  | 0x07  |
+
+Get auth key.
+
+Instruction not supported.
+
+### `INS_QUERY_MAIN_HWM`
+
+| *CLA* | *INS* |
+|-------|-------|
+| 0x80  | 0x08  |
+
+Get current high water mark.
+
+Instruction not supported.
+
+### `INS_SIGN` / `INS_SIGN_WITH_HASH`
+
+|                      | *CLA* | *INS* |
+|----------------------|-------|-------|
+| `INS_SIGN`           | 0x80  | 0x04  |
+| `INS_SIGN_WITH_HASH` | 0x80  | 0x0f  |
+
+After accepting the request, it will sign the `message` with the key
+corresponding to the `path`.
+
+If blind signing is disabled, only the hash of the `message` will be
+displayed. Otherwise, the message will be parsed and displayed (see
+section [Parsing](#parsing)).
+
+These instructions will require several APDUs.
+
+#### First APDU
+
+This APDU corresponds to the mnemonic `path` which, together with the
+mnemonic, will define the public key with which the `message` will be
+signed.
+
+##### Input data
+
+| Length       | Name   | Description       |
+|--------------|--------|-------------------|
+| `<variable>` | `path` | The mnemonic path |
+
+##### Output data
+
+| Length | Description      |
+|--------|------------------|
+| `2`    | Should be 0x9000 |
+
+#### Other APDU
+
+These APDUs correspond to the `message` that needs to be signed.
+
+##### Input data
+
+| Length       | Name      | Description         |
+|--------------|-----------|---------------------|
+| `<variable>` | `message` | The message to sign |
+
+##### Output data
+
+All these APDUs should respond with a success RAPDU as follows:
+
+| Length | Description      |
+|--------|------------------|
+| `2`    | Should be 0x9000 |
+
+Except for the last one, which will reply, after confirmation, with
+the `message` signed in a RAPDU as follows:
+
+| Length       | Description                                              |
+|--------------|----------------------------------------------------------|
+| `32`         | The hash (Only with the instuction `INS_SIGN_WITH_HASH`) |
+| `<variable>` | The signed hash                                          |
+| `2`          | Should be 0x9000                                         |
+
+### `INS_GIT`
+
+| *CLA* | *INS* |
+|-------|-------|
+| 0x80  | 0x09  |
+
+Get the commit hash.
+
+#### Input data
+
+No input data.
+
+#### Output data
+
+| Length       | Description      |
+|--------------|------------------|
+| `<variable>` | The commit       |
+| `2`          | Should be 0x9000 |
+
+### `INS_SETUP`
+
+| *CLA* | *INS* |
+|-------|-------|
+| 0x80  | 0x0a  |
+
+Setup a baking address.
+
+Instruction not supported.
+
+### `INS_QUERY_ALL_HWM`
+
+| *CLA* | *INS* |
+|-------|-------|
+| 0x80  | 0x0b  |
+
+Get all high water mark information.
+
+Instruction not supported.
+
+### `INS_DEAUTHORIZE`
+
+| *CLA* | *INS* |
+|-------|-------|
+| 0x80  | 0x0c  |
+
+Deauthorize baking.
+
+Instruction not supported.
+
+### `INS_QUERY_AUTH_KEY_WITH_CURVE`
+
+| *CLA* | *INS* |
+|-------|-------|
+| 0x80  | 0x0d  |
+
+Get auth key and curve.
+
+Instruction not supported.
+
+### `INS_HMAC`
+
+| *CLA* | *INS* |
+|-------|-------|
+| 0x80  | 0x0e  |
+
+Get the HMAC of a message.
+
+Instruction not supported.
 
 ## Parsing
 
