@@ -37,6 +37,26 @@ This parses as:
 | *LC*    | 0x11 (17)                            |
 | *CDATA* | 0x038000002c800006c18000000080000000 |
 
+## Exception
+
+| Exception                       | Code   | Short description                                        |
+|---------------------------------|--------|----------------------------------------------------------|
+| `EXC_WRONG_PARAM`               | 0x6B00 | Wrong parameter(s) *P1*-*P2*                             |
+| `EXC_WRONG_LENGTH`              | 0x6C00 | Incorrect length.                                        |
+| `EXC_INVALID_INS`               | 0x6D00 | Instruction code not supported or invalid.               |
+| `EXC_WRONG_LENGTH_FOR_INS`      | 0x917E | Length of command string invalid.                        |
+| `EXC_REJECT`                    | 0x6985 | Conditions of use not satisfied.                         |
+| `EXC_PARSE_ERROR`               | 0x9405 | Problems in the data field.                              |
+| `EXC_REFERENCED_DATA_NOT_FOUND` | 0x6A88 | Referenced data not found.                               |
+| `EXC_WRONG_VALUES`              | 0x6A80 | The parameters in the data field are incorrect.          |
+| `EXC_SECURITY`                  | 0x6982 | Security condition not satisfied.                        |
+| `EXC_HID_REQUIRED`              | 0x6983 | Authentication method blocked.                           |
+| `EXC_CLASS`                     | 0x6E00 | Class not supported.                                     |
+| `EXC_MEMORY_ERROR`              | 0x9200 | Memory error.                                            |
+| `EXC_UNEXPECTED_STATE`          | 0x9001 | The state of the application is unexpected.              |
+| `EXC_UNEXPECTED_SIGN_STATE`     | 0x9002 | The state of the application at signature is unexpected. |
+| `EXC_UNKNOWN`                   | 0x90FF | Unkown exception.                                        |
+
 ## APDU instructions in use by Tezos Ledger apps
 
 | Instruction                     | Code | App | Prompt | Short description                                |
