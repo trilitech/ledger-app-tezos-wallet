@@ -76,4 +76,69 @@ the former only returns the signature).
 
 ## Parsing
 
-Todo
+The current version of the application is compatible with the protocol
+Nairobi.
+
+There are 2 kind of data that can be parsed when blind signing is
+disable:
+ - Michelson
+ - Operations
+
+If the data is invalid or too large, the analysis may fail with an
+`EXC_UNEXPECTED_STATE` exception or an `EXC_PARSE_ERROR` exception.
+
+### Michelson
+
+Currently, all valid Michelson can be parsed up to the Nairobi
+protocol (See the
+[API](https://tezos.gitlab.io/nairobi/michelson.html)).
+
+
+### Operations
+
+There are currently fifteen operations supported in the Ledger, they
+need to be valid to be parsed (See the
+[API](https://tezos.gitlab.io/shell/p2p_api.html)):
+- The `Proposal` operation enables delegates to submit (also known as
+  to “inject”) protocol amendment proposals, or to up-vote previously
+  submitted proposals, during the Proposal period.
+- The `Ballot` operation enables delegates to participate in the
+  Exploration and Promotion periods. Delegates use this operation to
+  vote for (Yea), against (Nay), or to side with the majority (Pass),
+  when examining a protocol amendment proposal.
+- The `Reveal` operation reveals the public key of the sending
+  manager. Knowing this public key is indeed necessary to check the
+  signature of future operations signed by this manager.
+- The `Transaction` operation allows users to either transfer tez
+  between accounts and/or to invoke a smart contract.
+- The `Delegation` operation allows users to delegate their stake to a
+  delegate (a baker), or to register themselves as delegates.
+- The `Update_consensus_key` operation allows users to delegate the
+  responsibility of signing blocks and consensus-related operations to
+  another account. Note that consensus keys cannot be BLS public keys.
+- The `Origination` operation is used to originate, that is to deploy,
+  smart contracts in the Tezos blockchain.
+- The `Set_deposits_limit` operation enables delegates to adjust the
+  amount of stake a delegate has locked in bonds.
+- The `Increase_paid_storage` operation allows a sender to increase
+  the paid storage of some previously deployed contract.
+- The `Register_global_constant` operation for registering global
+  constants.
+- The `Smart_rollup_originate` operation is used to originate, that
+  is, to deploy smart rollups in the Tezos blockchain.
+- The `Smart_rollup_add_messages` operation is used to add messages to
+  the inbox shared by all the smart rollups originated in the Tezos
+  blockchain. These messages are interpreted by the smart rollups
+  according to their specific semantics.
+- The `Smart_rollup_execute_outbox_message` operation is used to enact
+  a transaction from a smart rollup to a smart contract, as authorized
+  by a cemented commitment. The targeted smart contract can determine
+  if it is called by a smart rollup using the SENDER Michelson
+  instruction.
+- The `Transfer_ticket` operation allows implicit accounts to transfer
+  existing tickets from their wallets to other implicit accounts or
+  smart contracts.
+- The `Failing_noop` operation implements a No-op, which always fails
+  at application time, and should never appear in applied blocks. This
+  operation allows end-users to sign arbitrary messages which have no
+  computational semantics.
