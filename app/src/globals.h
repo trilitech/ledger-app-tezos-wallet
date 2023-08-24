@@ -87,6 +87,7 @@ typedef struct {
   uint8_t packet_index;
 
   sign_step_t step;
+  bool return_hash;
   bool received_last_msg;
 
   union {

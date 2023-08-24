@@ -60,7 +60,7 @@ static void send_reject(void);
 static void send_continue(void);
 static void refill(void);
 static void stream_cb(tz_ui_cb_type_t);
-static size_t handle_first_apdu(packet_t *);
+static size_t handle_first_apdu(packet_t *, bool);
 static void   handle_first_apdu_clear(packet_t *);
 static void   handle_first_apdu_blind(packet_t *);
 static size_t handle_data_apdu(packet_t *);
@@ -137,11 +137,9 @@ static int write_signature(uint8_t *const out, uint8_t const *const data,
 
 static void sign_packet() {
   size_t tx = 0;
-  bool send_hash = true; // TODO change this when we handle more
-                         // APDU instructions
 
   FUNC_ENTER(("void"));
-  if (send_hash) {
+  if (global.apdu.sign.return_hash) {
     memcpy(&G_io_apdu_buffer[tx],
            global.apdu.hash.final_hash,
            sizeof(global.apdu.hash.final_hash));
@@ -242,12 +240,14 @@ static void stream_cb(tz_ui_cb_type_t type) {
   }
 }
 
-static size_t handle_first_apdu(packet_t *pkt) {
+static size_t handle_first_apdu(packet_t *pkt, bool return_hash) {
 
   FUNC_ENTER(("pkt=%p", pkt));
   if (global.apdu.sign.step != SIGN_ST_IDLE) THROW(EXC_UNEXPECTED_SIGN_STATE);
 
   clear_data();
+  global.apdu.sign.return_hash = return_hash;
+
   read_bip32_path(&global.path_with_curve.bip32_path, pkt->buff,
                   pkt->buff_size);
   global.path_with_curve.derivation_type = parse_derivation_type(pkt->p2);
@@ -464,7 +464,7 @@ static size_t handle_data_apdu_blind(packet_t *pkt) {
 }
 #undef FINAL_HASH
 
-size_t handle_apdu_sign(__attribute__((unused)) bool return_hash) {
+size_t handle_apdu_sign(bool return_hash) {
   packet_t pkt;
   size_t ret;
 
@@ -488,10 +488,12 @@ size_t handle_apdu_sign(__attribute__((unused)) bool return_hash) {
       THROW(EXC_UNEXPECTED_STATE);
     }
 
-    ret = handle_first_apdu(&pkt);
+    ret = handle_first_apdu(&pkt, return_hash);
   } else {
     if (global.step != ST_BLIND_SIGN && global.step != ST_CLEAR_SIGN)
       THROW(EXC_UNEXPECTED_STATE);
+    if (return_hash != global.apdu.sign.return_hash)
+      THROW(EXC_INVALID_INS);
 
     ret = handle_data_apdu(&pkt);
   }
