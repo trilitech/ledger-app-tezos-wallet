@@ -335,7 +335,7 @@ static size_t handle_data_apdu_clear(packet_t *pkt) {
   refill();
 
   // loop getting and parsing packets until we have a first screen
-  if (tz_ui_stream_current_screen_kind() == TZ_UI_STREAM_DISPLAY_INIT) {
+  if (global.stream.current < 0) {
     global.apdu.sign.step = SIGN_ST_WAIT_DATA;
     return finalize_successful_send(0);
   }

@@ -95,14 +95,6 @@ typedef struct {
   bool pressed_right;
 } tz_ui_stream_t;
 
-typedef enum {
-  TZ_UI_STREAM_DISPLAY_INIT,
-  TZ_UI_STREAM_DISPLAY_FIRST,
-  TZ_UI_STREAM_DISPLAY_CANNOT_GO_BACK,
-  TZ_UI_STREAM_DISPLAY_CONT,
-  TZ_UI_STREAM_DISPLAY_LAST,
-} tz_ui_stream_screen_kind;
-
 void tz_ui_stream_init(void (*)(tz_ui_cb_type_t));
 /* Push title & content to screen
  *
@@ -117,7 +109,6 @@ size_t tz_ui_stream_push_all(tz_ui_cb_type_t, const char *, const char *,
                              tz_ui_icon_t);
 void tz_ui_stream_push_accept_reject(void);
 void tz_ui_stream_close(void);
-tz_ui_stream_screen_kind tz_ui_stream_current_screen_kind(void);
 __attribute__((noreturn)) void tz_ui_stream(void);
 void tz_ui_stream_start(void);
 tz_ui_cb_type_t tz_ui_stream_get_type(void);

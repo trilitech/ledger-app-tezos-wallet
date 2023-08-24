@@ -206,23 +206,6 @@ static void succ() {
 }
 #endif // HAVE_BAGL
 
-tz_ui_stream_screen_kind tz_ui_stream_current_screen_kind() {
-  tz_ui_stream_t *s = &global.stream;
-
-  FUNC_ENTER(("void"));
-  if (s->current < 0)
-    return TZ_UI_STREAM_DISPLAY_INIT;
-  else if (s->current == 0)
-    return TZ_UI_STREAM_DISPLAY_FIRST;
-  else if (s->current == s->total - TZ_UI_STREAM_HISTORY_SCREENS + 1)
-    return TZ_UI_STREAM_DISPLAY_CANNOT_GO_BACK;
-  else if (s->full && s->current == s->total)
-    return TZ_UI_STREAM_DISPLAY_LAST;
-  else
-    return TZ_UI_STREAM_DISPLAY_CONT;
-  FUNC_LEAVE();
-}
-
 // View
 
 #ifdef HAVE_BAGL
@@ -321,23 +304,18 @@ static void redisplay() {
     init[sizeof(init)/sizeof(bagl_element_t)-1].text = find_icon(icon);
   }
 
-  switch (tz_ui_stream_current_screen_kind()) {
-  case TZ_UI_STREAM_DISPLAY_INIT:
-  case TZ_UI_STREAM_DISPLAY_FIRST:
-    init[2].text = (const char*) &C_icon_go_right;
-    break;
-  case TZ_UI_STREAM_DISPLAY_CANNOT_GO_BACK:
+  /* If we aren't on the first screen, we can go back */
+  if (s->current > 0)
+    init[1].text = (const char*) &C_icon_go_left;
+
+  /* Unless we can't... */
+  if (s->current == s->total - TZ_UI_STREAM_HISTORY_SCREENS + 1)
     init[1].text = (const char*) &C_icon_go_forbid;
+
+  /* If we aren't full or aren't on the last page, we can go right */
+  if (!s->full || s->current < s->total)
     init[2].text = (const char*) &C_icon_go_right;
-    break;
-  case TZ_UI_STREAM_DISPLAY_CONT:
-    init[1].text = (const char*) &C_icon_go_left;
-    init[2].text = (const char*) &C_icon_go_right;
-    break;
-  case TZ_UI_STREAM_DISPLAY_LAST:
-    init[1].text = (const char*) &C_icon_go_left;
-    break;
-  }
+    
   DISPLAY(init, cb);
   FUNC_LEAVE();
 }
