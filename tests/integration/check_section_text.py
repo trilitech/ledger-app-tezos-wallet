@@ -26,8 +26,9 @@ class Screen:
   title: str
   text: list[str]
 
-  def matches(self, content: str, content_lines: int) -> bool:
+  def matches(self, content: str, content_lines: int, device) -> bool:
     for l in self.text:
+      l = device_alter_content(device, l)
       content = content.lstrip('\n')
       if not content.startswith(l):
         return False
@@ -81,12 +82,12 @@ def press_left(url):
     """Press the left button."""
     return press_button(url, 'left')
 
-def check_multi_screen(url, title, content, content_lines):
+def check_multi_screen(url, title, content, content_lines, device):
     """Assert that the screen contents across all screens with the given title match expected content."""
     while True:
       def check_screen(screen):
         assert screen.title == title, f"expected section '{title}' but on '{screen.title}'"
-        assert screen.matches(content, content_lines), f"{screen} did not match {content}"
+        assert screen.matches(content, content_lines, device), f"{screen} did not match {content}"
         return screen
 
       on_screen = with_retry(url, check_screen)
@@ -152,5 +153,5 @@ if __name__ == "__main__":
     content_lines = device_content_lines(args.device)
     content = device_alter_content(args.device, args.expected_content)
 
-    check_multi_screen(args.url, args.title, content, content_lines)
+    check_multi_screen(args.url, args.title, content, content_lines, args.device)
     check_potential_remaining_screen(args.url, args.device, args.title, args.expected_content)

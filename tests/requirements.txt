@@ -1,0 +1,3 @@
+pytezos
+base58
+ragger[speculos]==1.11.1
