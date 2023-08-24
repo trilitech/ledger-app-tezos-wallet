@@ -88,10 +88,10 @@ let expect_async_apdus_sent ppf () =
 
 let expect_exited ppf () = Format.fprintf ppf "expect_exited@."
 
-let check_tlv_signature_from_sent_apdu ppf ~prefix ~suffix pk message =
-  Format.fprintf ppf "check_tlv_signature_from_sent_apdu %a %a %a %a@."
-    pp_hex_bytes prefix pp_hex_bytes suffix Tezos_crypto.Signature.Public_key.pp
-    pk pp_hex_bytes message
+let check_tlv_signature ppf ~prefix ~suffix pk message =
+  Format.fprintf ppf "check_tlv_signature %a %a %a %a@." pp_hex_bytes prefix
+    pp_hex_bytes suffix Tezos_crypto.Signature.Public_key.pp pk pp_hex_bytes
+    message
 
 (** Specific *)
 
@@ -150,9 +150,7 @@ let sign ppf ~signer:Apdu.Signer.({ sk; pk; _ } as signer) ~watermark bin =
       in
       expect_apdu_return ppf
         (Bytes.concat Bytes.empty [ bin_hash; sign; Apdu.success ])
-    else
-      check_tlv_signature_from_sent_apdu ppf ~prefix:bin_hash
-        ~suffix:Apdu.success pk bin
+    else check_tlv_signature ppf ~prefix:bin_hash ~suffix:Apdu.success pk bin
   in
   let last_index = List.length packets - 1 in
   let async_apdus =
@@ -453,12 +451,41 @@ let tz1_signers =
       ~sk:"edsk3eZBgFAf1VtdibfxoCcihxXje9S3th7jdEgVA2kHG82EKYNKNm";
   ]
 
-let tz2_signer =
-  (* tz2GB5YHqF4UzQ8GP5yUqdhY9oVWRXCY2hPU *)
-  Apdu.Signer.make ~mnemonic:zebra ~path:default_path
-    ~sk:"spsk2Pfx9chqXVbz2tW7ze4gGU4RfaiK3nSva77bp69zHhFho2zTze"
+let tz2_signers =
+  [
+    (* tz2GB5YHqF4UzQ8GP5yUqdhY9oVWRXCY2hPU *)
+    Apdu.Signer.make ~mnemonic:zebra ~path:default_path
+      ~sk:"spsk2Pfx9chqXVbz2tW7ze4gGU4RfaiK3nSva77bp69zHhFho2zTze";
+    (* tz2ABzm53J2rYC2JH9tHcKdHHupHvmzbpKBs *)
+    Apdu.Signer.make ~mnemonic:seed12 ~path:path_0
+      ~sk:"spsk3AexEMWMxpMTuYCu9X4CXuksjhbzg1CDGSromY8Vi4tWJp2cyX";
+    (* tz2E5kDU7kYqDVm3tDYWE5Hn1NadMbGgjGP1 *)
+    Apdu.Signer.make ~mnemonic:seed15 ~path:path_2_11_5
+      ~sk:"spsk1nQZNy2MmgEN1RJ2TYvWHb217wep34hKLHXmRWZ8acnydhVz1u";
+    (* tz2SDC3uomE2dYkWrjywGttCXqbgRPnKiTbc *)
+    Apdu.Signer.make ~mnemonic:seed21 ~path:path_17_8_6_9
+      ~sk:"spsk1i8iYLWU3hJqXrQ15PNnTi3jHkQePDPatWyCpViC1hqfVRcn4t";
+    (* tz2JmCpSXB3UfcvJ81MvfKE5wnnrwiDthkoK *)
+    Apdu.Signer.make ~mnemonic:seed24 ~path:path_9_12_13_8_78
+      ~sk:"spsk2Z8YhgcbTRy9DTFqjjgzjKF9GZja6L66nL7rZzN5z4THMXC1Ma";
+    (* tz2Ps3rRYoE9NQALtq3GP3q2xa4PGCyyEeYc *)
+    Apdu.Signer.make ~mnemonic:seed12 ~path:default_path
+      ~sk:"spsk1cWQyarGSriaDPeoFYMh4N5V2MVxZiM5cxUzWMW5FfqCCvyy4z";
+    (* tz2BuPTGejxZFTiHmqxZn2iY38W1Qt9FA73o *)
+    Apdu.Signer.make ~mnemonic:seed15 ~path:path_0
+      ~sk:"spsk2RCfKCD8Wq9P37LTotWD1F1oCvFFSzUgMSm5aEyaWndyy7gDys";
+    (* tz2RABsKSVgw5fgAJobpvZV1QLrtwBFBZzfb *)
+    Apdu.Signer.make ~mnemonic:seed21 ~path:path_2_11_5
+      ~sk:"spsk2DMEFbbzny6LjSXoqjJMgu1QQmHjPjb3QQcyYyY4AWjUDEvV5p";
+    (* tz2HTV4fDogX6gqrdv64y6iRQb16gxqdQetR *)
+    Apdu.Signer.make ~mnemonic:seed24 ~path:path_17_8_6_9
+      ~sk:"spsk2nkrtUc4aYtErsvfoZcuj96HCV2KXtKfk6dbJLRZG6MQQnUEjp";
+    (* tz2XUkdzf3jbAxsDFd4N2iWS5BtB5UfAZf73 *)
+    Apdu.Signer.make ~mnemonic:zebra ~path:path_9_12_13_8_78
+      ~sk:"spsk2TDhUqfr8HV5643ubsEod5B8iWH7dAEE46mimatSQPs9uJaUsW";
+  ]
 
-let gen_signer = QCheck2.Gen.oneofl tz1_signers
+let gen_signer = QCheck2.Gen.oneofl (tz1_signers @ tz2_signers)
 
 let gen_expect_test_sign ppf ~device ~watermark bin screens =
   Format.fprintf ppf "# full input: %a@." pp_hex_bytes bin;
