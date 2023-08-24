@@ -485,7 +485,41 @@ let tz2_signers =
       ~sk:"spsk2TDhUqfr8HV5643ubsEod5B8iWH7dAEE46mimatSQPs9uJaUsW";
   ]
 
-let gen_signer = QCheck2.Gen.oneofl (tz1_signers @ tz2_signers)
+let tz3_signers =
+  [
+    (* tz3UMNyvQeMj6mQSftW2aV2XaWd3afTAM1d5 *)
+    Apdu.Signer.make ~mnemonic:zebra ~path:default_path
+      ~sk:"p2sk2zPCmKo6zTSjPbDHnLiHtPAqVRFrExN3oTvKGbu3C99Jyeyura";
+    (* tz3UCiS9hCP5Z4H4NY1Sh8MQFKGAR2dBwt8X *)
+    Apdu.Signer.make ~mnemonic:seed12 ~path:path_0
+      ~sk:"p2sk33tVU1LvLBLaPcvT35fedM5p2cqncRMntkjggXBNbzW78zd119";
+    (* tz3dXAtT2DC9uxJz3Kzd73aAf5u8Duk1U2L4 *)
+    Apdu.Signer.make ~mnemonic:seed15 ~path:path_2_11_5
+      ~sk:"p2sk2eUahqgSwd7Dd7NgnRgDSpZjbBNkUZF16vNuDGTQvYvznWiWkB";
+    (* tz3Mo3LbcwtMZcNELoVcqMQcE6Lkt2wh1N6a *)
+    Apdu.Signer.make ~mnemonic:seed21 ~path:path_17_8_6_9
+      ~sk:"p2sk47tCEh6jyBwzXbunTVik9cr1rBHQ1bK6tFUztdyY8UNM1sFMuU";
+    (* tz3NU86vCJ9hYLVRnrQybCFrGpAxJeFgKNSb *)
+    Apdu.Signer.make ~mnemonic:seed24 ~path:path_9_12_13_8_78
+      ~sk:"p2sk4AwmdZy89ZGb4qfrSZeDxfTP75b7q8gsWBBuYMQf7XqtxS7V6H";
+    (* tz3YHnyWXEePpJSN4Wo9zTGrujVVJFvhSMoW *)
+    Apdu.Signer.make ~mnemonic:seed12 ~path:default_path
+      ~sk:"p2sk4ASENf9NtKzvNV9psrM5sLCb3SduXpgF4Gw92pX3EeKWNszcQ9";
+    (* tz3RGUhYMGXgguVwNVV6mjhyuAx8z1ZwbKLw *)
+    Apdu.Signer.make ~mnemonic:seed15 ~path:path_0
+      ~sk:"p2sk2uQBEEebh9Y1PGJASM1qauCeTMDLZxuLmYzK7qVwRAHUiZNyet";
+    (* tz3MLzYAp97KJAyBnDqfQmB5YE9VX1HbcX5v *)
+    Apdu.Signer.make ~mnemonic:seed21 ~path:path_2_11_5
+      ~sk:"p2sk3a2kULUSRZuBhDJwNW4uzQxNm9BmuTYPd72CNrEPkhiXtM8eVn";
+    (* tz3eddqo9pvgVGirAoahe8swa9tJL5GQeAix *)
+    Apdu.Signer.make ~mnemonic:seed24 ~path:path_17_8_6_9
+      ~sk:"p2sk4ByXhrxeFLPkgusLA1VSu19WhQqbuAd23Ynq7k8bb7TqyezRrS";
+    (* tz3XZs3igEN9SQcEXKcroC9GgA6JR4SAR1FK *)
+    Apdu.Signer.make ~mnemonic:zebra ~path:path_9_12_13_8_78
+      ~sk:"p2sk37UGsn84Lkbamg5JsKfmNXjkAcqt8Qic6eFTkGoVccP6KRPzse";
+  ]
+
+let gen_signer = QCheck2.Gen.oneofl (tz1_signers @ tz2_signers @ tz3_signers)
 
 let gen_expect_test_sign ppf ~device ~watermark bin screens =
   Format.fprintf ppf "# full input: %a@." pp_hex_bytes bin;
