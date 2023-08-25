@@ -202,6 +202,7 @@ static void refill() {
   switch (st->errno) {
   case TZ_BLO_IM_FULL:
   last_screen:
+    global.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
     wrote = tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, st->field_name,
                               global.apdu.sign.line_buf, TZ_UI_ICON_NONE);
 
@@ -324,27 +325,10 @@ static size_t handle_data_apdu_clear(packet_t *pkt) {
 
   global.apdu.sign.u.clear.total_length += pkt->buff_size;
 
-  // refill the parser's input
   tz_parser_refill(st, pkt->buff, pkt->buff_size);
   if (pkt->is_last)
     tz_operation_parser_set_size(st, global.apdu.sign.u.clear.total_length);
-
-  int16_t total_screen = global.stream.total;
-
-  // resume the parser with the new data
   refill();
-
-  // loop getting and parsing packets until we have a first screen
-  if (global.stream.current < 0) {
-    global.apdu.sign.step = SIGN_ST_WAIT_DATA;
-    return finalize_successful_send(0);
-  }
-
-  // expect user input only if there is a new screen
-  if (total_screen != global.stream.total)
-    global.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
-
-  // launch parsing and UI (once we have a first screen)
   tz_ui_stream();
   FUNC_LEAVE();
 }
