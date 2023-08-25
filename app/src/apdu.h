@@ -56,6 +56,7 @@
 size_t finalize_successful_send(size_t);
 void delayed_send(size_t);
 void delay_reject(void);
+void delay_exc(int);
 void require_permissioned_comm(void);
 
 size_t handle_apdu_version(void);

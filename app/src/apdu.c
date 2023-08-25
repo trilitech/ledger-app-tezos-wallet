@@ -60,14 +60,18 @@ void delayed_send(size_t tx) {
   FUNC_LEAVE();
 }
 
-void delay_reject(void) {
+void delay_exc(int exc) {
   size_t tx = 0;
-  FUNC_ENTER(("void"));
-  G_io_apdu_buffer[tx++] = EXC_REJECT >> 8;
-  G_io_apdu_buffer[tx++] = EXC_REJECT & 0xFF;
+  FUNC_ENTER(("exc=%d", exc));
+  G_io_apdu_buffer[tx++] = exc >> 8;
+  G_io_apdu_buffer[tx++] = exc & 0xFF;
   delayed_send(tx);
   global.step = ST_IDLE;
   FUNC_LEAVE();
+}
+
+void delay_reject(void) {
+  delay_exc(EXC_REJECT);
 }
 
 void require_permissioned_comm(void) {
