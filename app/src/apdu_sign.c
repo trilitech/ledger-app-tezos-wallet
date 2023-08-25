@@ -73,6 +73,8 @@ static size_t handle_data_apdu_blind(packet_t *);
 #define P1_HASH_ONLY_NEXT 0x03  // You only need it once
 #define P1_LAST_MARKER    0x80
 
+#define TZ_UI_STREAM_CB_CANCEL 0xf0
+
 
 static inline void clear_data(void) {
     memset(&global.apdu.hash, 0, sizeof(global.apdu.hash));
@@ -220,9 +222,51 @@ static void refill() {
     tz_ui_stream_push_accept_reject();
     tz_ui_stream_close();
     break;
+  case TZ_ERR_INVALID_STATE:
+    tz_ui_stream_push(TZ_UI_STREAM_CB_CANCEL,
+                      "Unknown error",
+                      "",
+                      TZ_UI_ICON_CROSS);
+    tz_ui_stream_close();
+    break;
+  case TZ_ERR_INVALID_TAG:
+  case TZ_ERR_INVALID_OP:
+  case TZ_ERR_UNSUPPORTED:
+  case TZ_ERR_TOO_LARGE:
+  case TZ_ERR_TOO_DEEP:
+    tz_ui_stream_push(TZ_UI_STREAM_CB_CANCEL,
+                      "Parsing error",
+                      tz_parser_result_name(st->errno),
+                      TZ_UI_ICON_CROSS);
+    tz_ui_stream_close();
+    break;
   default:
-    failwith("parsing error");
+    THROW(EXC_UNEXPECTED_STATE);
   }
+  FUNC_LEAVE();
+}
+
+static void send_cancel() {
+  tz_parser_state *st = &global.apdu.sign.u.clear.parser_state;
+
+  FUNC_ENTER(("void"));
+  switch (st->errno) {
+  case TZ_ERR_INVALID_STATE:
+    delay_exc(EXC_UNEXPECTED_STATE);
+    break;
+  case TZ_ERR_INVALID_TAG:
+  case TZ_ERR_INVALID_OP:
+  case TZ_ERR_UNSUPPORTED:
+  case TZ_ERR_TOO_LARGE:
+  case TZ_ERR_TOO_DEEP:
+    delay_exc(EXC_PARSE_ERROR);
+    break;
+  default:
+    THROW(EXC_UNEXPECTED_STATE);
+  }
+  clear_data();
+  global.step = ST_IDLE;
+  global.apdu.sign.step = SIGN_ST_IDLE;
   FUNC_LEAVE();
 }
 
@@ -236,6 +280,9 @@ static void stream_cb(tz_ui_cb_type_t type) {
     break;
   case TZ_UI_STREAM_CB_REJECT:
     send_reject();
+    break;
+  case TZ_UI_STREAM_CB_CANCEL:
+    send_cancel();
     break;
   }
 }
