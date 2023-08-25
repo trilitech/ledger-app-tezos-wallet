@@ -17,7 +17,6 @@
 
 #include "parser_state.h"
 
-#ifdef TEZOS_DEBUG
 const char* tz_parser_result_name(tz_parser_result code) {
   switch (code) {
   case TZ_CONTINUE: return "CONTINUE";
@@ -34,7 +33,6 @@ const char* tz_parser_result_name(tz_parser_result code) {
   default: return "???";
   }
 }
-#endif
 
 void tz_parser_init(tz_parser_state *state) {
   state->errno = TZ_CONTINUE;
