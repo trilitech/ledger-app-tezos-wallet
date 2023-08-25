@@ -59,26 +59,14 @@ This parses as:
 
 ## APDU instructions in use by Tezos Ledger apps
 
-| Instruction                     | Code | App | Prompt | Short description                                |
-|---------------------------------|------|-----|--------|--------------------------------------------------|
-| `INS_VERSION`                   | 0x00 | WB  | No     | Get version information for the ledger           |
-| `INS_AUTHORIZE_BAKING`          | 0x01 | B   | Yes    | Authorize baking                                 |
-| `INS_GET_PUBLIC_KEY`            | 0x02 | WB  | No     | Get the ledger’s internal public key             |
-| `INS_PROMPT_PUBLIC_KEY`         | 0x03 | WB  | Yes    | Prompt for the ledger’s internal public key      |
-| `INS_SIGN`                      | 0x04 | WB  | Yes    | Sign a message with the ledger’s key             |
-| `INS_SIGN_UNSAFE`               | 0x05 | W   | Yes    | Sign a message with the ledger’s key (no hash)   |
-| `INS_RESET`                     | 0x06 | B   | Yes    | Reset high water mark block level                |
-| `INS_QUERY_AUTH_KEY`            | 0x07 | B   | No     | Get auth key                                     |
-| `INS_QUERY_MAIN_HWM`            | 0x08 | B   | No     | Get current high water mark                      |
-| `INS_GIT`                       | 0x09 | WB  | No     | Get the commit hash                              |
-| `INS_SETUP`                     | 0x0a | B   | Yes    | Setup a baking address                           |
-| `INS_QUERY_ALL_HWM`             | 0x0b | B   | No     | Get all high water mark information              |
-| `INS_DEAUTHORIZE`               | 0x0c | B   | No     | Deauthorize baking                               |
-| `INS_QUERY_AUTH_KEY_WITH_CURVE` | 0x0d | B   | No     | Get auth key and curve                           |
-| `INS_HMAC`                      | 0x0e | B   | No     | Get the HMAC of a message                        |
-| `INS_SIGN_WITH_HASH`            | 0x0f | WB  | Yes    | Sign a message with the ledger’s key (with hash) |
-
-- B = Baking app, W = Wallet app
+| Instruction                     | Code | Prompt | Short description                                |
+|---------------------------------|------|--------|--------------------------------------------------|
+| `INS_VERSION`                   | 0x00 | No     | Get version information for the ledger           |
+| `INS_GET_PUBLIC_KEY`            | 0x02 | No     | Get the ledger’s internal public key             |
+| `INS_PROMPT_PUBLIC_KEY`         | 0x03 | Yes    | Prompt for the ledger’s internal public key      |
+| `INS_SIGN`                      | 0x04 | Yes    | Sign a message with the ledger’s key             |
+| `INS_GIT`                       | 0x09 | No     | Get the commit hash                              |
+| `INS_SIGN_WITH_HASH`            | 0x0f | Yes    | Sign a message with the ledger’s key (with hash) |
 
 ## Instructions
 
@@ -104,16 +92,6 @@ No input data.
 | `1`    | The patch version        |
 | `2`    | Should be 0x9000         |
 
-### `INS_AUTHORIZE_BAKING`
-
-| *CLA* | *INS* |
-|-------|-------|
-| 0x80  | 0x01  |
-
-Authorize baking.
-
-Instruction not supported.
-
 ### `INS_GET_PUBLIC_KEY` / `INS_PROMPT_PUBLIC_KEY`
 
 |                         | *CLA* | *INS* |
@@ -138,46 +116,6 @@ Get the ledger’s internal public key according to the `path`.
 | `1`        | The public key `length` |
 | `<length>` | The public key          |
 | `2`        | Should be 0x9000        |
-
-### `INS_SIGN_UNSAFE`
-
-| *CLA* | *INS* |
-|-------|-------|
-| 0x80  | 0x05  |
-
-Sign a message with the ledger’s key (no hash).
-
-Instruction not supported.
-
-### `INS_RESET`
-
-| *CLA* | *INS* |
-|-------|-------|
-| 0x80  | 0x06  |
-
-Reset high water mark block level.
-
-Instruction not supported.
-
-### `INS_QUERY_AUTH_KEY`
-
-| *CLA* | *INS* |
-|-------|-------|
-| 0x80  | 0x07  |
-
-Get auth key.
-
-Instruction not supported.
-
-### `INS_QUERY_MAIN_HWM`
-
-| *CLA* | *INS* |
-|-------|-------|
-| 0x80  | 0x08  |
-
-Get current high water mark.
-
-Instruction not supported.
 
 ### `INS_SIGN` / `INS_SIGN_WITH_HASH`
 
@@ -258,56 +196,6 @@ No input data.
 |--------------|------------------|
 | `<variable>` | The commit       |
 | `2`          | Should be 0x9000 |
-
-### `INS_SETUP`
-
-| *CLA* | *INS* |
-|-------|-------|
-| 0x80  | 0x0a  |
-
-Setup a baking address.
-
-Instruction not supported.
-
-### `INS_QUERY_ALL_HWM`
-
-| *CLA* | *INS* |
-|-------|-------|
-| 0x80  | 0x0b  |
-
-Get all high water mark information.
-
-Instruction not supported.
-
-### `INS_DEAUTHORIZE`
-
-| *CLA* | *INS* |
-|-------|-------|
-| 0x80  | 0x0c  |
-
-Deauthorize baking.
-
-Instruction not supported.
-
-### `INS_QUERY_AUTH_KEY_WITH_CURVE`
-
-| *CLA* | *INS* |
-|-------|-------|
-| 0x80  | 0x0d  |
-
-Get auth key and curve.
-
-Instruction not supported.
-
-### `INS_HMAC`
-
-| *CLA* | *INS* |
-|-------|-------|
-| 0x80  | 0x0e  |
-
-Get the HMAC of a message.
-
-Instruction not supported.
 
 ## Parsing
 
