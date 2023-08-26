@@ -169,8 +169,11 @@ static void send_reject() {
   FUNC_ENTER(("void"));
   if (global.apdu.sign.step != SIGN_ST_WAIT_USER_INPUT)
     THROW(EXC_UNEXPECTED_SIGN_STATE);
+#ifdef HAVE_BAGL
+  // Stax can reject at any point...
   if (!(global.apdu.sign.received_last_msg))
     THROW(EXC_UNEXPECTED_SIGN_STATE);
+#endif
   clear_data();
   delay_reject();
 
@@ -192,6 +195,7 @@ static void send_continue() {
 }
 
 static void refill() {
+ entry:
   size_t wrote = 0;
   tz_parser_state *st = &global.apdu.sign.u.clear.parser_state;
 
@@ -207,6 +211,9 @@ static void refill() {
 
     tz_parser_flush_up_to(st, global.apdu.sign.line_buf,
                           TZ_UI_STREAM_CONTENTS_SIZE, wrote);
+    if (global.apdu.sign.u.clear.skip_to_sign) {
+      goto entry;
+    }
     break;
   case TZ_BLO_FEED_ME:
     send_continue();
@@ -299,9 +306,9 @@ static size_t handle_data_apdu(packet_t *pkt) {
 
   // do the incremental hashing
   CX_THROW(cx_hash_no_throw((cx_hash_t *)&global.apdu.hash.state,
-			    pkt->is_last ? CX_LAST : 0,
-			    pkt->buff, pkt->buff_size,
-			    global.apdu.hash.final_hash,
+                            pkt->is_last ? CX_LAST : 0,
+                            pkt->buff, pkt->buff_size,
+                            global.apdu.hash.final_hash,
                             sizeof(global.apdu.hash.final_hash)));
 
   if (pkt->is_last)
@@ -335,7 +342,9 @@ static size_t handle_data_apdu_clear(packet_t *pkt) {
   refill();
 
   // loop getting and parsing packets until we have a first screen
-  if (tz_ui_stream_current_screen_kind() == TZ_UI_STREAM_DISPLAY_INIT) {
+  if (tz_ui_stream_current_screen_kind() == TZ_UI_STREAM_DISPLAY_INIT
+      || global.apdu.sign.u.clear.skip_to_sign) {
+    PRINTF("Handle data apdu clear, skip to sign (return)\n");
     global.apdu.sign.step = SIGN_ST_WAIT_DATA;
     return finalize_successful_send(0);
   }
