@@ -62,45 +62,6 @@ size_t read_bip32_path(bip32_path_t *const out, uint8_t const *const in,
     return out->length * sizeof(out->components[0]);
 }
 
-
-int crypto_derive_private_key(cx_ecfp_private_key_t *private_key,
-                              derivation_type_t const derivation_type,
-                              bip32_path_t const *const bip32_path) {
-    check_null(bip32_path);
-    uint8_t raw_private_key[PRIVATE_KEY_DATA_SIZE] = {0};
-    cx_err_t err;
-
-    FUNC_ENTER(("private_key=%p, derivation_type=%d, bip32_path=%p",
-                private_key, derivation_type, bip32_path));
-
-    cx_curve_t const cx_curve =
-        derivation_type_to_cx_curve(derivation_type);
-
-    if (derivation_type == DERIVATION_TYPE_ED25519) {
-	// Old, non BIP32_Ed25519 way...
-	err = os_derive_bip32_with_seed_no_throw(HDW_ED25519_SLIP10,
-						 CX_CURVE_Ed25519,
-						 bip32_path->components,
-						 bip32_path->length,
-						 raw_private_key,
-						 NULL, NULL, 0);
-    } else {
-	// derive the seed with bip32_path
-	err = os_derive_bip32_no_throw(cx_curve, bip32_path->components,
-				       bip32_path->length, raw_private_key,
-				       NULL);
-    }
-
-    if (!err)
-        err = cx_ecfp_init_private_key_no_throw(cx_curve, raw_private_key,
-                                                32, private_key);
-
-    explicit_bzero(raw_private_key, sizeof(raw_private_key));
-
-    FUNC_LEAVE();
-    return err ? 1 : 0;
-}
-
 int generate_public_key(cx_ecfp_public_key_t *public_key,
                         derivation_type_t const derivation_type,
                         bip32_path_t const *const bip32_path) {
@@ -189,57 +150,53 @@ void public_key_hash(uint8_t *const hash_out,
     FUNC_LEAVE();
 }
 
-size_t sign(uint8_t *const out,
-            size_t const out_size,
-            derivation_type_t const derivation_type,
-            cx_ecfp_private_key_t const *priv,
-            uint8_t const *const in,
-            size_t const in_size) {
-    FUNC_ENTER(("out=%p, out_size=%u, derivation_type=%d, "
-                "pair=%p, in=%p, in_size=%u",
-                out, out_size, derivation_type, priv, in, in_size));
-    check_null(out);
-    check_null(priv);
-    check_null(in);
+cx_err_t sign(derivation_type_t derivation_type,
+              const bip32_path_t *path,
+              const uint8_t *hash, size_t hashlen,
+              uint8_t *sig, size_t *siglen) {
+    unsigned derivation_mode;
+    uint32_t info;
+    cx_curve_t curve = derivation_type_to_cx_curve(derivation_type);
+    cx_err_t err = EXC_WRONG_PARAM;
 
-    size_t tx = 0;
+    check_null(hash);
+    check_null(path);
+    check_null(sig);
+    check_null(siglen);
+    FUNC_ENTER(("sig=%p, siglen=%u, derivation_type=%d, "
+                "path=%p, hash=%p, hashlen=%u",
+                sig, *siglen, derivation_type, path, hash, hashlen));
+
     switch (derivation_type) {
-        case DERIVATION_TYPE_BIP32_ED25519:
-        case DERIVATION_TYPE_ED25519: {
-            static size_t const SIG_SIZE = 64;
-            if (out_size < SIG_SIZE) THROW(EXC_WRONG_LENGTH);
-            CX_THROW(cx_eddsa_sign_no_throw(priv,
-					    CX_SHA512,
-					    (uint8_t const *) PIC(in),
-					    in_size,
-					    out,
-					    SIG_SIZE));
-	    tx += SIG_SIZE;
-        } break;
-        case DERIVATION_TYPE_SECP256K1:
-        case DERIVATION_TYPE_SECP256R1: {
-            static size_t const SIG_SIZE = 100;
-            if (out_size < SIG_SIZE) THROW(EXC_WRONG_LENGTH);
-            uint32_t info;
-	    size_t sig_len = SIG_SIZE;
-            CX_THROW(cx_ecdsa_sign_no_throw(priv,
-					    CX_LAST | CX_RND_RFC6979,
-					    CX_SHA256, // historical reasons...
-                                                       // semantically CX_NONE
-					    (uint8_t const *) PIC(in),
-					    in_size,
-					    out,
-					    &sig_len,
-					    &info));
-	    tx += sig_len;
-            if (info & CX_ECCINFO_PARITY_ODD) {
-                out[0] |= 0x01;
-            }
-        } break;
-        default:
-            THROW(EXC_WRONG_PARAM);  // This should not be able to happen.
+    case DERIVATION_TYPE_BIP32_ED25519:
+    case DERIVATION_TYPE_ED25519:
+        derivation_mode = HDW_NORMAL;
+        if (derivation_type == DERIVATION_TYPE_ED25519)
+            derivation_mode = HDW_ED25519_SLIP10;
+        err = bip32_derive_with_seed_eddsa_sign_hash_256(derivation_mode,
+                                                         curve,
+                                                         path->components,
+                                                         path->length,
+                                                         CX_SHA512,
+                                                         hash, hashlen,
+                                                         sig, siglen,
+                                                         NULL, 0);
+        break;
+    case DERIVATION_TYPE_SECP256K1:
+    case DERIVATION_TYPE_SECP256R1:
+        err = bip32_derive_ecdsa_sign_hash_256(curve,
+                                               path->components, path->length,
+                                               CX_RND_RFC6979 | CX_LAST,
+                                               CX_SHA256,
+                                               hash, hashlen,
+                                               sig, siglen, &info);
+        if (info & CX_ECCINFO_PARITY_ODD)
+            sig[0] |= 0x01;
+        break;
+    default:
+        break;
     }
 
     FUNC_LEAVE();
-    return tx;
+    return err;
 }

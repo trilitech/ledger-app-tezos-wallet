@@ -53,15 +53,12 @@ typedef struct {
 // throws
 size_t read_bip32_path(bip32_path_t *, const uint8_t *, size_t);
 
-int crypto_derive_private_key(cx_ecfp_private_key_t *, derivation_type_t,
-                              const bip32_path_t *);
-
 // Non-reentrant
 void public_key_hash(uint8_t *, size_t, cx_ecfp_public_key_t *,
                      derivation_type_t, const cx_ecfp_public_key_t *);
 
-size_t sign(uint8_t *, size_t, derivation_type_t, const cx_ecfp_private_key_t *,
-            const uint8_t *, size_t);
+cx_err_t sign(derivation_type_t, const bip32_path_t *, const uint8_t *, size_t,
+              uint8_t *, size_t *);
 
 static inline derivation_type_t parse_derivation_type(uint8_t curve_code) {
     switch (curve_code) {

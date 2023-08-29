@@ -54,7 +54,6 @@ typedef struct {
 
 static inline void clear_data(void);
 static void init_packet(packet_t *);
-static int write_signature(uint8_t *, const uint8_t *, size_t);
 static void sign_packet(void);
 static void send_reject(void);
 static void send_continue(void);
@@ -93,52 +92,10 @@ static void init_packet(packet_t *pkt) {
   if (pkt->buff_size > MAX_APDU_SIZE) THROW(EXC_WRONG_LENGTH_FOR_INS);
 }
 
-static int write_signature(uint8_t *const out, uint8_t const *const data,
-                           size_t const data_length) {
-
-    FUNC_ENTER(("out=%p, data=%p, data_length=%u", out, data, data_length));
-
-    cx_ecfp_private_key_t priv;
-    size_t signature_size = 0;
-    int error;
-
-
-    error = crypto_derive_private_key(&priv,
-                                      global.path_with_curve.derivation_type,
-                                      &global.path_with_curve.bip32_path);
-    if (error) {
-        THROW(EXC_WRONG_VALUES);
-    }
-
-    error = 0;
-    BEGIN_TRY {
-        TRY {
-            signature_size = sign(out,
-                                  MAX_SIGNATURE_SIZE,
-                                  global.path_with_curve.derivation_type,
-                                  &priv,
-                                  data,
-                                  data_length);
-        }
-        CATCH_OTHER(e) {
-            error = e;
-        }
-        FINALLY {
-            memset(&priv, 0, sizeof(priv));
-        }
-    }
-    END_TRY;
-
-    if (error) {
-        THROW(error);
-    }
-
-    FUNC_LEAVE();
-    return signature_size;
-}
-
 static void sign_packet() {
+  size_t siglen = MAX_SIGNATURE_SIZE;
   size_t tx = 0;
+  cx_err_t err;
 
   FUNC_ENTER(("void"));
   if (global.apdu.sign.return_hash) {
@@ -148,9 +105,14 @@ static void sign_packet() {
     tx += sizeof(global.apdu.hash.final_hash);
   }
 
-  tx += write_signature(&G_io_apdu_buffer[tx],
-                        global.apdu.hash.final_hash,
-                        sizeof(global.apdu.hash.final_hash));
+  err = sign(global.path_with_curve.derivation_type,
+             &global.path_with_curve.bip32_path,
+             global.apdu.hash.final_hash, sizeof(global.apdu.hash.final_hash),
+             &G_io_apdu_buffer[tx], &siglen);
+  if (err)
+    THROW(err);
+
+  tx += siglen;
   tx = finalize_successful_send(tx);
 
   if (global.apdu.sign.step != SIGN_ST_WAIT_USER_INPUT)
