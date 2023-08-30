@@ -138,11 +138,11 @@ cx_err_t public_key_hash(uint8_t *hash_out, size_t hash_out_size,
     cx_blake2b_t hash_state;
     CX_CHECK(cx_blake2b_init_no_throw(&hash_state, HASH_SIZE * 8));
     CX_CHECK(cx_hash_no_throw((cx_hash_t *) &hash_state,
-			      CX_LAST,
-			      compressed.W,
-			      compressed.W_len,
-			      hash_out,
-			      HASH_SIZE));
+                              CX_LAST,
+                              compressed.W,
+                              compressed.W_len,
+                              hash_out,
+                              HASH_SIZE));
     if (compressed_out != NULL) {
         memmove(compressed_out, &compressed, sizeof(*compressed_out));
     }
@@ -150,6 +150,30 @@ cx_err_t public_key_hash(uint8_t *hash_out, size_t hash_out_size,
 end:
     FUNC_LEAVE();
     return error;
+}
+
+cx_err_t print_pkh(bip32_path_t bip32_path,
+                   derivation_type_t derivation_type,
+                   char *buffer) {
+  cx_ecfp_public_key_t pubkey = {0};
+  uint8_t hash[21];
+  cx_err_t error = CX_OK;
+
+  FUNC_ENTER(("buffer=%p", buffer));
+  CX_CHECK(generate_public_key(&pubkey, derivation_type, &bip32_path));
+  CX_CHECK(public_key_hash(hash+1, 20, NULL, derivation_type, &pubkey));
+  switch (derivation_type) {
+  case DERIVATION_TYPE_SECP256K1: hash[0] = 1; break;
+  case DERIVATION_TYPE_SECP256R1: hash[0] = 2; break;
+  case DERIVATION_TYPE_ED25519:
+  case DERIVATION_TYPE_BIP32_ED25519: hash[0] = 0; break;
+  default: CX_CHECK(EXC_WRONG_PARAM); break;
+  }
+  tz_format_pkh(hash, 21, buffer);
+
+end:
+  FUNC_LEAVE();
+  return error;
 }
 
 cx_err_t sign(derivation_type_t derivation_type,

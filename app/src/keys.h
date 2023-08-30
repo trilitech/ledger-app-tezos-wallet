@@ -67,3 +67,5 @@ static inline cx_err_t check_derivation_type(derivation_type_t code) {
         return CX_OK;
     return EXC_WRONG_PARAM;
 }
+
+cx_err_t print_pkh(bip32_path_t, derivation_type_t, char *);
