@@ -1,6 +1,7 @@
 /* Tezos Embedded C parser for Ledger - Big num parser
 
    Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
+   Copyright 2023 Functori <contact@functori.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -28,3 +29,6 @@ tz_parser_result tz_parse_int_step(tz_num_parser_buffer *,
 tz_parser_result tz_parse_nat_step(tz_num_parser_buffer *,
                                    tz_num_parser_regs *,
                                    uint8_t);
+
+bool tz_adjust_decimal(const char *, int, char *, int, int);
+bool tz_print_uint64(uint64_t, char *, int, int);
