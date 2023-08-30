@@ -147,8 +147,8 @@ size_t handle_apdu_get_public_key(bool prompt) {
   // comm in browser)
   if (!prompt) require_permissioned_comm();
 
-  global.path_with_curve.derivation_type =
-    parse_derivation_type(G_io_apdu_buffer[OFFSET_CURVE]);
+  global.path_with_curve.derivation_type = G_io_apdu_buffer[OFFSET_CURVE];
+  CX_THROW(check_derivation_type(global.path_with_curve.derivation_type));
 
   CX_THROW(read_bip32_path(&global.path_with_curve.bip32_path, dataBuffer,
                            G_io_apdu_buffer[OFFSET_LC]));

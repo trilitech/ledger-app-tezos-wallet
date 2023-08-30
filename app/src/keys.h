@@ -33,11 +33,14 @@
 #define MAX_BIP32_LEN 10
 #define SIGN_HASH_SIZE 32
 
+/* The values in the following enum are from the on-the-wire protocol */
+
 typedef enum {
+    DERIVATION_TYPE_ED25519 = 0,
     DERIVATION_TYPE_SECP256K1 = 1,
     DERIVATION_TYPE_SECP256R1 = 2,
-    DERIVATION_TYPE_ED25519 = 3,
-    DERIVATION_TYPE_BIP32_ED25519 = 4
+    DERIVATION_TYPE_BIP32_ED25519 = 3,
+    DERIVATION_TYPE_MAX = 4
 } derivation_type_t;
 
 typedef struct {
@@ -60,19 +63,10 @@ void public_key_hash(uint8_t *, size_t, cx_ecfp_public_key_t *,
 cx_err_t sign(derivation_type_t, const bip32_path_t *, const uint8_t *, size_t,
               uint8_t *, size_t *);
 
-static inline derivation_type_t parse_derivation_type(uint8_t curve_code) {
-    switch (curve_code) {
-        case 0:
-            return DERIVATION_TYPE_ED25519;
-        case 1:
-            return DERIVATION_TYPE_SECP256K1;
-        case 2:
-            return DERIVATION_TYPE_SECP256R1;
-        case 3:
-            return DERIVATION_TYPE_BIP32_ED25519;
-        default:
-            THROW(EXC_WRONG_PARAM);
-    }
+static inline cx_err_t check_derivation_type(derivation_type_t code) {
+    if (code >= DERIVATION_TYPE_ED25519 && code < DERIVATION_TYPE_MAX)
+        return CX_OK;
+    return EXC_WRONG_PARAM;
 }
 
 int generate_public_key(cx_ecfp_public_key_t *, derivation_type_t,
