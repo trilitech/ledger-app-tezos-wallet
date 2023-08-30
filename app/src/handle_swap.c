@@ -30,7 +30,9 @@
 
 #include "parser/num_parser.h"
 
-#define TICKER_MAX_SIZE 9  // based on app-exchange
+// based on app-exchange
+#define TICKER_MAX_SIZE  9
+#define ADDRESS_MAX_SIZE 63
 
 /* Check check_address_parameters_t.address_to_check against specified
  * parameters.
@@ -131,6 +133,89 @@ swap_handle_get_printable_amount(get_printable_amount_parameters_t *params)
 error:
     memset(params->printable_amount, '\0', sizeof(params->printable_amount));
     FUNC_LEAVE();
+}
+
+typedef struct {
+    uint64_t amount;
+    uint64_t fee;
+    char     destination_address[ADDRESS_MAX_SIZE];
+} swap_transaction_parameters_t;
+
+static swap_transaction_parameters_t G_swap_params;
+
+static uint8_t *G_swap_transaction_result;
+
+/* Backup up transaction parameters and wipe BSS to avoid collusion with
+ * app-exchange BSS data.
+ *
+ * return false on error, true otherwise */
+bool
+swap_copy_transaction_parameters(create_transaction_parameters_t *params)
+{
+    FUNC_ENTER(("params=%p", params));
+
+    swap_transaction_parameters_t params_copy;
+    memset(&params_copy, 0, sizeof(params_copy));
+
+    if (!swap_str_to_u64(params->amount, params->amount_length,
+                         &params_copy.amount)) {
+        PRINTF("[ERROR] Fail to parse amount\n");
+        goto error;
+    }
+
+    if (!swap_str_to_u64(params->fee_amount, params->fee_amount_length,
+                         &params_copy.fee)) {
+        PRINTF("[ERROR] Fail to parse fee\n");
+        goto error;
+    }
+
+    if (params->destination_address == NULL) {
+        PRINTF("[ERROR] Destination address is null\n");
+        goto error;
+    }
+
+    strlcpy(params_copy.destination_address, params->destination_address,
+            sizeof(params_copy.destination_address));
+    if (params_copy
+            .destination_address[sizeof(params_copy.destination_address) - 1]
+        != '\0') {
+        PRINTF("[ERROR] Fail to copy destination address\n");
+        goto error;
+    }
+
+    if (params->destination_address_extra_id == NULL) {
+        PRINTF("[ERROR] Destination address extra id is null\n");
+        goto error;
+    }
+
+    if (params->destination_address_extra_id[0] != '\0') {
+        PRINTF("[ERROR] Destination address extra id is not empty: %s\n",
+               params->destination_address_extra_id);
+        goto error;
+    }
+
+    os_explicit_zero_BSS_segment();
+
+    G_swap_transaction_result = &params->result;
+
+    memcpy(&G_swap_params, &params_copy, sizeof(params_copy));
+
+    FUNC_LEAVE();
+    return true;
+
+error:
+    FUNC_LEAVE();
+    return false;
+}
+
+/* Set create_transaction.result and call os_lib_end().
+ *
+ * Doesn't return */
+void __attribute__((noreturn))
+swap_finalize_exchange_sign_transaction(bool is_success)
+{
+    *G_swap_transaction_result = is_success;
+    os_lib_end();
 }
 
 #endif  // HAVE_SWAP
