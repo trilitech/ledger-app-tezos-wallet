@@ -38,7 +38,7 @@ endif
 #        Mandatory configuration       #
 ########################################
 # Application name
-APPNAME = "Tezos Wallet"
+APPNAME = "New Tezos Wallet"
 
 # Application version
 APPVERSION_M=3
@@ -146,6 +146,7 @@ HAVE_APPLICATION_FLAG_LIBRARY = 1
 ########################################
 ENABLE_BLUETOOTH = 1
 #ENABLE_NFC = 1
+ENABLE_SWAP = 1
 
 ########################################
 #         NBGL custom features         #
