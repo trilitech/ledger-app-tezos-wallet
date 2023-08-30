@@ -257,8 +257,8 @@ static size_t handle_first_apdu(packet_t *pkt, bool return_hash) {
   clear_data();
   global.apdu.sign.return_hash = return_hash;
 
-  read_bip32_path(&global.path_with_curve.bip32_path, pkt->buff,
-                  pkt->buff_size);
+  CX_THROW(read_bip32_path(&global.path_with_curve.bip32_path, pkt->buff,
+                           pkt->buff_size));
   global.path_with_curve.derivation_type = parse_derivation_type(pkt->p2);
 
   // init hash

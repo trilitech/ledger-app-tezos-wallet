@@ -47,19 +47,21 @@ static cx_curve_t derivation_type_to_cx_curve(derivation_type_t const
   }
 }
 
-size_t read_bip32_path(bip32_path_t *const out, uint8_t const *const in,
-                       size_t in_size) {
+cx_err_t read_bip32_path(bip32_path_t *const out, uint8_t const *const in,
+                         size_t in_size) {
+    buffer_t cdata = {in, in_size, 0};
+    cx_err_t ret = CX_OK;
+
     FUNC_ENTER(("out=%p, in=%p, in_size=%u", out, in, in_size));
 
-    buffer_t cdata = {in, in_size, 0};
-
     if(!buffer_read_u8(&cdata, &out->length) ||
-       !buffer_read_bip32_path(&cdata, (uint32_t*) &out->components, out->length)) {
-      THROW(EXC_WRONG_LENGTH_FOR_INS);
+       !buffer_read_bip32_path(&cdata, (uint32_t *) &out->components,
+                               out->length)) {
+      ret = EXC_WRONG_LENGTH_FOR_INS;
     }
 
     FUNC_LEAVE();
-    return out->length * sizeof(out->components[0]);
+    return ret;
 }
 
 int generate_public_key(cx_ecfp_public_key_t *public_key,

@@ -150,9 +150,8 @@ size_t handle_apdu_get_public_key(bool prompt) {
   global.path_with_curve.derivation_type =
     parse_derivation_type(G_io_apdu_buffer[OFFSET_CURVE]);
 
-  size_t const cdata_size = G_io_apdu_buffer[OFFSET_LC];
-
-  read_bip32_path(&global.path_with_curve.bip32_path, dataBuffer, cdata_size);
+  CX_THROW(read_bip32_path(&global.path_with_curve.bip32_path, dataBuffer,
+                           G_io_apdu_buffer[OFFSET_LC]));
 
   if (!prompt) {
     return provide_pubkey(G_io_apdu_buffer);

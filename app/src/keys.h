@@ -51,7 +51,7 @@ typedef struct {
 } bip32_path_with_curve_t;
 
 // throws
-size_t read_bip32_path(bip32_path_t *, const uint8_t *, size_t);
+cx_err_t read_bip32_path(bip32_path_t *, const uint8_t *, size_t);
 
 // Non-reentrant
 void public_key_hash(uint8_t *, size_t, cx_ecfp_public_key_t *,
