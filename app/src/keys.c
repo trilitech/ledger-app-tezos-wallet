@@ -105,18 +105,20 @@ int generate_public_key(cx_ecfp_public_key_t *public_key,
 
 #define HASH_SIZE 20
 
-void public_key_hash(uint8_t *const hash_out,
-                     size_t const hash_out_size,
-                     cx_ecfp_public_key_t *compressed_out,
-                     derivation_type_t const derivation_type,
-                     cx_ecfp_public_key_t const *const public_key) {
+cx_err_t public_key_hash(uint8_t *hash_out, size_t hash_out_size,
+                         cx_ecfp_public_key_t *compressed_out,
+                         derivation_type_t derivation_type,
+                         const cx_ecfp_public_key_t *public_key) {
+    cx_err_t error = CX_OK;
+
     FUNC_ENTER(("hash_out=%p, hash_out_size=%u, compressed_out=%p, "
                 "derivation_type=%d, public_key=%p",
                 hash_out, hash_out_size, compressed_out,
                 derivation_type, public_key));
     check_null(hash_out);
     check_null(public_key);
-    if (hash_out_size < HASH_SIZE) THROW(EXC_WRONG_LENGTH);
+    if (hash_out_size < HASH_SIZE) 
+        return EXC_WRONG_LENGTH;
 
     cx_ecfp_public_key_t compressed = {0};
     switch (derivation_type) {
@@ -134,13 +136,13 @@ void public_key_hash(uint8_t *const hash_out,
             break;
         }
         default:
-            THROW(EXC_WRONG_PARAM);
+            return EXC_WRONG_PARAM;
     }
 
     cx_blake2b_t hash_state;
     // cx_blake2b_init_no_throw takes size in bits.
-    CX_THROW(cx_blake2b_init_no_throw(&hash_state, HASH_SIZE * 8));
-    CX_THROW(cx_hash_no_throw((cx_hash_t *) &hash_state,
+    CX_CHECK(cx_blake2b_init_no_throw(&hash_state, HASH_SIZE * 8));
+    CX_CHECK(cx_hash_no_throw((cx_hash_t *) &hash_state,
 			      CX_LAST,
 			      compressed.W,
 			      compressed.W_len,
@@ -149,7 +151,10 @@ void public_key_hash(uint8_t *const hash_out,
     if (compressed_out != NULL) {
         memmove(compressed_out, &compressed, sizeof(*compressed_out));
     }
+
+end:
     FUNC_LEAVE();
+    return error;
 }
 
 cx_err_t sign(derivation_type_t derivation_type,

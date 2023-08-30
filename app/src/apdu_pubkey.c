@@ -60,8 +60,8 @@ static void format_pkh(char* buffer) {
   FUNC_ENTER(("buffer=%p", buffer));
   generate_public_key(&pubkey, global.path_with_curve.derivation_type,
                       &global.path_with_curve.bip32_path);
-  public_key_hash(hash+1, 20, NULL, global.path_with_curve.derivation_type,
-                  &pubkey);
+  CX_THROW(public_key_hash(hash+1, 20, NULL,
+                           global.path_with_curve.derivation_type, &pubkey));
   switch (global.path_with_curve.derivation_type) {
   case DERIVATION_TYPE_SECP256K1: hash[0] = 1; break;
   case DERIVATION_TYPE_SECP256R1: hash[0] = 2; break;

@@ -53,13 +53,9 @@ typedef struct {
     derivation_type_t derivation_type;
 } bip32_path_with_curve_t;
 
-// throws
 cx_err_t read_bip32_path(bip32_path_t *, const uint8_t *, size_t);
-
-// Non-reentrant
-void public_key_hash(uint8_t *, size_t, cx_ecfp_public_key_t *,
-                     derivation_type_t, const cx_ecfp_public_key_t *);
-
+cx_err_t public_key_hash(uint8_t *, size_t, cx_ecfp_public_key_t *,
+                         derivation_type_t, const cx_ecfp_public_key_t *);
 cx_err_t sign(derivation_type_t, const bip32_path_t *, const uint8_t *, size_t,
               uint8_t *, size_t *);
 
