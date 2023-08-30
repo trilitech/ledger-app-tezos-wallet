@@ -1,6 +1,7 @@
 /* Tezos Embedded C parser for Ledger - Big num parser
 
    Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
+   Copyright 2023 Functori <contact@functori.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -65,4 +66,68 @@ tz_parser_result tz_parse_int_step(tz_num_parser_buffer *buffers,
 tz_parser_result tz_parse_nat_step(tz_num_parser_buffer *buffers,
                                    tz_num_parser_regs *regs, uint8_t b) {
   return tz_parse_num_step(buffers, regs, b, 1);
+}
+
+bool tz_adjust_decimal(const char *in,
+                       int in_len,
+                       char *out,
+                       int out_len,
+                       int nb_decimals) {
+  int offset = 0;
+
+  if (in_len <= 0 || in == NULL || out == NULL) return false;
+
+  // drop leading non significant zeroes
+  while (in_len != 1 && in[0] == '0') {
+    in++;
+    in_len--;
+  }
+
+  if (in_len == 1 && in[0] == '0') {
+    if (out_len < 2) return false;
+    out[offset++] = '0';
+    out[offset++] = '\0';
+    return true;
+  }
+
+  if (in_len <= nb_decimals) {
+    if (out_len < 3 + nb_decimals) return false;
+    int delta = nb_decimals - in_len;
+    out[offset++] = '0';
+    out[offset++] = '.';
+    for(int i = 0; i < delta; i++) out[offset++] = '0';
+    for(int i = 0; i < in_len; i++) out[offset++] = in[i];
+  } else {
+    if (out_len < 2 + in_len) return false;
+    int delta = in_len - nb_decimals;
+    for(int i = 0; i < delta; i++) out[offset++] = in[i];
+    out[offset++] = '.';
+    for(int i = delta; i < in_len; i++) out[offset++] = in[i];
+  }
+
+  out[offset--] = '\0';
+
+  // drop trailing non significant zeroes
+  while (out[offset] == '0') out[offset--] = '\0';
+  if (out[offset] == '.') out[offset--] = '\0';
+
+  return true;
+}
+
+bool tz_print_uint64(uint64_t value, char *out, int out_len, int nb_decimals) {
+  char buff[TZ_NUM_BUFFER_SIZE] = {0};
+  uint64_t power = 10;
+  int offset = 0;
+
+  while (power <= value) power *= 10;
+
+  while (power != 1) {
+    power /= 10;
+    buff[offset++] = value / power + '0';
+    value %= power;
+  }
+
+  buff[offset] = '\0';
+
+  return tz_adjust_decimal(buff, offset, out, out_len, nb_decimals);
 }
