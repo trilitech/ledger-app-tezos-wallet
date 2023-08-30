@@ -59,28 +59,10 @@ end:
   return error;
 }
 
-static cx_err_t format_pkh(char *buffer) {
-  cx_ecfp_public_key_t pubkey = {0};
-  uint8_t hash[21];
-  cx_err_t error = CX_OK;
-
-  FUNC_ENTER(("buffer=%p", buffer));
-  CX_CHECK(generate_public_key(&pubkey, global.path_with_curve.derivation_type,
-                               &global.path_with_curve.bip32_path));
-  CX_CHECK(public_key_hash(hash+1, 20, NULL,
-                           global.path_with_curve.derivation_type, &pubkey));
-  switch (global.path_with_curve.derivation_type) {
-  case DERIVATION_TYPE_SECP256K1: hash[0] = 1; break;
-  case DERIVATION_TYPE_SECP256R1: hash[0] = 2; break;
-  case DERIVATION_TYPE_ED25519:
-  case DERIVATION_TYPE_BIP32_ED25519: hash[0] = 0; break;
-  default: CX_CHECK(EXC_WRONG_PARAM); break;
-  }
-  tz_format_pkh(hash, 21, buffer);
-
-end:
-  FUNC_LEAVE();
-  return error;
+static cx_err_t format_pkh(char* buffer) {
+  return print_pkh(global.path_with_curve.bip32_path,
+                   global.path_with_curve.derivation_type,
+                   buffer);
 }
 
 static void stream_cb(tz_ui_cb_type_t type) {
