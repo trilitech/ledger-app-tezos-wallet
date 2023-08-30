@@ -22,10 +22,15 @@
 
 #ifdef HAVE_SWAP
 
+#include <format.h>
 #include <swap.h>
 
 #include "keys.h"
 #include "utils.h"
+
+#include "parser/num_parser.h"
+
+#define TICKER_MAX_SIZE 9  // based on app-exchange
 
 /* Check check_address_parameters_t.address_to_check against specified
  * parameters.
@@ -82,6 +87,49 @@ swap_handle_check_address(check_address_parameters_t *params)
 error:
 bail:
     params->result = 0;
+    FUNC_LEAVE();
+}
+
+/* Format printable amount including the ticker from specified parameters.
+ *
+ * Must set empty printable_amount on error, printable amount otherwise */
+void
+swap_handle_get_printable_amount(get_printable_amount_parameters_t *params)
+{
+    FUNC_ENTER(("params=%p", params));
+
+    uint64_t amount;
+    uint8_t  decimals;
+    char     ticker[TICKER_MAX_SIZE];
+
+    if (!swap_parse_config(params->coin_configuration,
+                           params->coin_configuration_length, ticker,
+                           sizeof(ticker), &decimals)) {
+        PRINTF("[ERROR] Fail to parse config\n");
+        goto error;
+    }
+
+    if (!swap_str_to_u64(params->amount, params->amount_length, &amount)) {
+        PRINTF("[ERROR] Fail to parse amount\n");
+        goto error;
+    }
+
+    if (!format_fpu64_trimmed(params->printable_amount,
+                              sizeof(params->printable_amount), amount,
+                              decimals)) {
+        PRINTF("[ERROR] Fail to print amount\n");
+        goto error;
+    }
+
+    strlcat(params->printable_amount, " ", sizeof(params->printable_amount));
+    strlcat(params->printable_amount, ticker,
+            sizeof(params->printable_amount));
+
+    FUNC_LEAVE();
+    return;
+
+error:
+    memset(params->printable_amount, '\0', sizeof(params->printable_amount));
     FUNC_LEAVE();
 }
 
