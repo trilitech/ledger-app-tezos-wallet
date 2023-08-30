@@ -29,54 +29,66 @@
 
 /* Prototypes */
 
-static size_t provide_pubkey(uint8_t *);
-static void format_pkh(char *);
+static cx_err_t provide_pubkey(uint8_t *, size_t *tx);
+static cx_err_t prompt_address(void);
+static cx_err_t format_pkh(char *);
 static void stream_cb(tz_ui_cb_type_t);
 
-static size_t provide_pubkey(uint8_t *const io_buffer) {
+static cx_err_t provide_pubkey(uint8_t *const io_buffer, size_t *tx) {
   cx_ecfp_public_key_t pubkey;
-  size_t tx = 0;
+  cx_err_t error = CX_OK;
 
-  FUNC_ENTER(("io_buffer=%p", io_buffer));
+  FUNC_ENTER(("io_buffer=%p, *tx=%u", io_buffer, *tx));
   check_null(io_buffer);
+  check_null(tx);
   // Application could be PIN-locked, and pubkey->W_len would then be 0,
   // so throwing an error rather than returning an empty key
   if (os_global_pin_is_validated() != BOLOS_UX_OK) {
     THROW(EXC_SECURITY);
   }
-  CX_THROW(generate_public_key(&pubkey, global.path_with_curve.derivation_type,
+  CX_CHECK(generate_public_key(&pubkey, global.path_with_curve.derivation_type,
                                &global.path_with_curve.bip32_path));
-  io_buffer[tx++] = pubkey.W_len;
-  memmove(io_buffer + tx, pubkey.W, pubkey.W_len);
-  tx += pubkey.W_len;
+  io_buffer[(*tx)++] = pubkey.W_len;
+  memmove(io_buffer + *tx, pubkey.W, pubkey.W_len);
+  *tx += pubkey.W_len;
+  *tx = finalize_successful_send(*tx);
+
+end:
   FUNC_LEAVE();
-  return finalize_successful_send(tx);
+  return error;
 }
 
-static void format_pkh(char* buffer) {
+static cx_err_t format_pkh(char *buffer) {
   cx_ecfp_public_key_t pubkey = {0};
   uint8_t hash[21];
+  cx_err_t error = CX_OK;
 
   FUNC_ENTER(("buffer=%p", buffer));
-  CX_THROW(generate_public_key(&pubkey, global.path_with_curve.derivation_type,
+  CX_CHECK(generate_public_key(&pubkey, global.path_with_curve.derivation_type,
                                &global.path_with_curve.bip32_path));
-  CX_THROW(public_key_hash(hash+1, 20, NULL,
+  CX_CHECK(public_key_hash(hash+1, 20, NULL,
                            global.path_with_curve.derivation_type, &pubkey));
   switch (global.path_with_curve.derivation_type) {
   case DERIVATION_TYPE_SECP256K1: hash[0] = 1; break;
   case DERIVATION_TYPE_SECP256R1: hash[0] = 2; break;
   case DERIVATION_TYPE_ED25519:
   case DERIVATION_TYPE_BIP32_ED25519: hash[0] = 0; break;
-  default: THROW(EXC_WRONG_PARAM); // XXX find appropriate error
+  default: CX_CHECK(EXC_WRONG_PARAM); break;
   }
   tz_format_pkh(hash, 21, buffer);
+
+end:
   FUNC_LEAVE();
+  return error;
 }
 
 static void stream_cb(tz_ui_cb_type_t type) {
+  size_t tx = 0;
+
   switch (type) {
   case TZ_UI_STREAM_CB_ACCEPT:
-    delayed_send(provide_pubkey(G_io_apdu_buffer));
+    CX_THROW(provide_pubkey(G_io_apdu_buffer, &tx));
+    delayed_send(tx);
     global.step = ST_IDLE;
     break;
   case TZ_UI_STREAM_CB_REFILL:
@@ -88,18 +100,22 @@ static void stream_cb(tz_ui_cb_type_t type) {
 }
 
 #ifdef HAVE_BAGL
-__attribute__((noreturn)) static void prompt_address() {
+static cx_err_t prompt_address(void) {
   char buf[TZ_UI_STREAM_CONTENTS_SIZE + 1];
+  cx_err_t error = CX_OK;
 
   FUNC_ENTER(("void"));
   tz_ui_stream_init(stream_cb);
-  format_pkh(buf);
+  CX_CHECK(format_pkh(buf));
   tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Provide Key", buf,
                         TZ_UI_ICON_NONE);
   tz_ui_stream_push_accept_reject();
   tz_ui_stream_close();
   tz_ui_stream();
   FUNC_LEAVE();
+
+end:
+  return error;
 }
 #elif HAVE_NBGL
 
@@ -125,12 +141,12 @@ static void confirmation_callback(bool confirm) {
 
 static void verify_address(void) {
   char buf[TZ_UI_STREAM_CONTENTS_SIZE + 1];
-  format_pkh(buf);
+  CX_THROW(format_pkh(buf));
 
   nbgl_useCaseAddressConfirmation(buf, confirmation_callback);
 }
 
-__attribute__((noreturn)) static void prompt_address () {
+static cx_err_t prompt_address(void) {
   FUNC_ENTER(("void"));
   nbgl_useCaseReviewStart(&C_tezos, "Verify Tezos\naddress", NULL, "Cancel", verify_address, cancel_callback);
   THROW(ASYNC_EXCEPTION);
@@ -155,10 +171,14 @@ size_t handle_apdu_get_public_key(bool prompt) {
                            G_io_apdu_buffer[OFFSET_LC]));
 
   if (!prompt) {
-    return provide_pubkey(G_io_apdu_buffer);
+    size_t tx = 0;
+    CX_THROW(provide_pubkey(G_io_apdu_buffer, &tx));
+    FUNC_LEAVE();
+    return tx;
   } else {
     global.step = ST_PROMPT;
     prompt_address();
   }
   FUNC_LEAVE();
+  return 0;
 }
