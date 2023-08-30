@@ -39,11 +39,6 @@ static size_t provide_pubkey(uint8_t *const io_buffer) {
 
   FUNC_ENTER(("io_buffer=%p", io_buffer));
   check_null(io_buffer);
-  // Application could be PIN-locked, and pubkey->W_len would then be 0,
-  // so throwing an error rather than returning an empty key
-  if (os_global_pin_is_validated() != BOLOS_UX_OK) {
-    THROW(EXC_SECURITY);
-  }
   generate_public_key(&pubkey, global.path_with_curve.derivation_type,
                       &global.path_with_curve.bip32_path);
   io_buffer[tx++] = pubkey.W_len;
