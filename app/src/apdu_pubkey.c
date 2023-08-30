@@ -44,8 +44,8 @@ static size_t provide_pubkey(uint8_t *const io_buffer) {
   if (os_global_pin_is_validated() != BOLOS_UX_OK) {
     THROW(EXC_SECURITY);
   }
-  generate_public_key(&pubkey, global.path_with_curve.derivation_type,
-                      &global.path_with_curve.bip32_path);
+  CX_THROW(generate_public_key(&pubkey, global.path_with_curve.derivation_type,
+                               &global.path_with_curve.bip32_path));
   io_buffer[tx++] = pubkey.W_len;
   memmove(io_buffer + tx, pubkey.W, pubkey.W_len);
   tx += pubkey.W_len;
@@ -58,8 +58,8 @@ static void format_pkh(char* buffer) {
   uint8_t hash[21];
 
   FUNC_ENTER(("buffer=%p", buffer));
-  generate_public_key(&pubkey, global.path_with_curve.derivation_type,
-                      &global.path_with_curve.bip32_path);
+  CX_THROW(generate_public_key(&pubkey, global.path_with_curve.derivation_type,
+                               &global.path_with_curve.bip32_path));
   CX_THROW(public_key_hash(hash+1, 20, NULL,
                            global.path_with_curve.derivation_type, &pubkey));
   switch (global.path_with_curve.derivation_type) {

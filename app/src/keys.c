@@ -64,9 +64,11 @@ cx_err_t read_bip32_path(bip32_path_t *const out, uint8_t const *const in,
     return ret;
 }
 
-int generate_public_key(cx_ecfp_public_key_t *public_key,
-                        derivation_type_t const derivation_type,
-                        bip32_path_t const *const bip32_path) {
+cx_err_t generate_public_key(cx_ecfp_public_key_t *public_key,
+                             derivation_type_t const derivation_type,
+                             bip32_path_t const *const bip32_path) {
+    cx_err_t error = CX_OK;
+
     FUNC_ENTER(("public_key=%p, derivation_type=%d, bip32_path=%p",
                 public_key, derivation_type, bip32_path));
 
@@ -77,30 +79,25 @@ int generate_public_key(cx_ecfp_public_key_t *public_key,
     if (derivation_type == DERIVATION_TYPE_ED25519)
       derivation_mode = HDW_ED25519_SLIP10;
 
-    cx_err_t error =
-      bip32_derive_with_seed_get_pubkey_256(derivation_mode,
-                                            public_key->curve,
-                                            bip32_path->components,
-                                            bip32_path->length,
-                                            public_key->W,
-                                            NULL,
-                                            CX_SHA512,
-                                            NULL,
-                                            0);
-
-    if (error) {
-      return error ? 1 : 0;
-    }
+    CX_CHECK(bip32_derive_with_seed_get_pubkey_256(derivation_mode,
+                                                   public_key->curve,
+                                                   bip32_path->components,
+                                                   bip32_path->length,
+                                                   public_key->W,
+                                                   NULL,
+                                                   CX_SHA512,
+                                                   NULL, 0));
 
     if (public_key->curve == CX_CURVE_Ed25519) {
-          cx_edwards_compress_point_no_throw(CX_CURVE_Ed25519,
-                                             public_key->W,
-                                             public_key->W_len);
+        CX_CHECK(cx_edwards_compress_point_no_throw(CX_CURVE_Ed25519,
+                                                    public_key->W,
+                                                    public_key->W_len));
         public_key->W_len = 33;
     }
 
+end:
     FUNC_LEAVE();
-    return error ? 1 : 0;
+    return error;
 }
 
 #define HASH_SIZE 20

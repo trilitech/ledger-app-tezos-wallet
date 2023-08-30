@@ -54,6 +54,8 @@ typedef struct {
 } bip32_path_with_curve_t;
 
 cx_err_t read_bip32_path(bip32_path_t *, const uint8_t *, size_t);
+cx_err_t generate_public_key(cx_ecfp_public_key_t *, derivation_type_t,
+                             const bip32_path_t *);
 cx_err_t public_key_hash(uint8_t *, size_t, cx_ecfp_public_key_t *,
                          derivation_type_t, const cx_ecfp_public_key_t *);
 cx_err_t sign(derivation_type_t, const bip32_path_t *, const uint8_t *, size_t,
@@ -64,6 +66,3 @@ static inline cx_err_t check_derivation_type(derivation_type_t code) {
         return CX_OK;
     return EXC_WRONG_PARAM;
 }
-
-int generate_public_key(cx_ecfp_public_key_t *, derivation_type_t,
-                        const bip32_path_t *);
