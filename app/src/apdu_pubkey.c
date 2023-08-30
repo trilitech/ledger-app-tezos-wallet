@@ -145,7 +145,8 @@ size_t handle_apdu_get_public_key(bool prompt) {
 
   // do not expose pks without prompt through U2F (permissionless legacy
   // comm in browser)
-  if (!prompt) require_permissioned_comm();
+  if (!prompt && G_io_apdu_media == IO_APDU_MEDIA_U2F)
+    THROW(EXC_HID_REQUIRED);
 
   global.path_with_curve.derivation_type = G_io_apdu_buffer[OFFSET_CURVE];
   CX_THROW(check_derivation_type(global.path_with_curve.derivation_type));

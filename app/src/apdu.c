@@ -73,11 +73,3 @@ void delay_exc(int exc) {
 void delay_reject(void) {
   delay_exc(EXC_REJECT);
 }
-
-void require_permissioned_comm(void) {
-  /* U2F is dangerous for privacy because any open website
-     in the browser can use it silently if the app is opened.*/
-  if (G_io_apdu_media == IO_APDU_MEDIA_U2F) {
-    THROW(EXC_HID_REQUIRED);
-  }
-}
