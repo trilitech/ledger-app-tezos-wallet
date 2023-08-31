@@ -325,10 +325,6 @@ test_a_path() {
                 (( num_left -= 1 )) || :
                 job=$1
                 shift
-                if [ -n "$ONLY_TESTS"                                   \
-                     -a "${ONLY_TESTS/$job/}" = "$ONLY_TESTS" ]; then
-                    continue
-                fi
                 run_both_tests $port "$job" &
                 new_pid=$!
                 eval $SLOTNAME=\$new_pid
@@ -417,10 +413,9 @@ main() {
     TEST_TRACE=0
     NUM_SPECULOS=32
 
-    while getopts FT:l:m:n:t:x o; do
+    while getopts Fl:m:n:t:x o; do
        case $o in
        F)  ONLY_FAILURES=YES                ;;
-       T)  ONLY_TESTS="$ONLY_TESTS $OPTARG" ;;
        d)  DTGZ="$OPTARG"                   ;;
        l)  TESTS_LEFT=$OPTARG               ;;
        m)  TARGET="$OPTARG"                 ;;
