@@ -22,6 +22,7 @@
 
 #ifdef HAVE_SWAP
 
+#include "handle_swap.h"
 #include "keys.h"
 #include "swap.h"
 #include "utils.h"
@@ -218,6 +219,72 @@ bool swap_copy_transaction_parameters(create_transaction_parameters_t *params) {
   G_swap_transaction_result = &params->result;
 
   memcpy(&G_swap_transaction_parameters, &params_copy, sizeof(params_copy));
+
+  FUNC_LEAVE();
+  return true;
+
+ error:
+  FUNC_LEAVE();
+  return false;
+}
+
+bool swap_check_validity(uint8_t *destination,
+                         uint16_t batch_size,
+                         tz_operation_tag tag,
+                         char *fee,
+                         char *amount) {
+  FUNC_ENTER(("destination=%p, batch_size=%u, tag=%d, fee=%p, amount=%p", destination, batch_size, tag, fee, amount));
+
+  char buff[ADDRESS_MAX_SIZE]; // max(ADDRESS_MAX_SIZE = 63, MAX_PRINTABLE_AMOUNT_SIZE = 50)
+
+  if (!G_swap_transaction_parameters.initialized) {
+    PRINTF("[DEBUG] Transaction_parameters non initialized\n");
+    goto error;
+  }
+
+  if (batch_size != 1) {
+    PRINTF("[DEBUG] More than one operation parsed: %d\n", batch_size);
+    goto error;
+  }
+
+  if (tag != TZ_OPERATION_TAG_TRANSACTION) {
+    PRINTF("[DEBUG] The operation parsed is not a transaction: %d\n", tag);
+    goto error;
+  }
+
+  tz_format_address(destination, 22, buff);
+  if (strcmp(buff, G_swap_transaction_parameters.destination_address) != 0) {
+    PRINTF("[DEBUG] Different address: %s !=  %s\n", buff, G_swap_transaction_parameters.destination_address);
+    goto error;
+  }
+
+  if (!swap_u64_to_printable_amount(G_swap_transaction_parameters.amount,
+                                    G_swap_transaction_parameters.decimals,
+                                    G_swap_transaction_parameters.ticker,
+                                    buff,
+                                    sizeof(buff))) {
+    PRINTF("[DEBUG] Fail to print amount\n");
+    goto error;
+  }
+
+  if (strcmp(buff, amount) != 0) {
+    PRINTF("[DEBUG] Different amount: %d != %d\n", buff, amount);
+    goto error;
+  }
+
+  if (!swap_u64_to_printable_amount(G_swap_transaction_parameters.fee,
+                                    G_swap_transaction_parameters.decimals,
+                                    G_swap_transaction_parameters.ticker,
+                                    buff,
+                                    sizeof(buff))) {
+    PRINTF("[DEBUG] Fail to print fee\n");
+    goto error;
+  }
+
+  if (strcmp(buff, fee) != 0) {
+    PRINTF("[DEBUG] Different fee: %d != %d\n", buff, fee);
+    goto error;
+  }
 
   FUNC_LEAVE();
   return true;

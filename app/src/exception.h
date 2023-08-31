@@ -34,6 +34,7 @@
 #define EXC_WRONG_LENGTH_FOR_INS      0x917E
 #define EXC_REJECT                    0x6985
 #define EXC_PARSE_ERROR               0x9405
+#define EXC_SWAP_CHECKING_FAIL        0x6A8E
 #define EXC_REFERENCED_DATA_NOT_FOUND 0x6A88
 #define EXC_WRONG_VALUES              0x6A80
 #define EXC_SECURITY                  0x6982

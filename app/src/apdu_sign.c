@@ -38,6 +38,14 @@
 #include "parser/parser_state.h"
 #include "parser/operation_parser.h"
 
+#ifdef HAVE_SWAP
+#include "swap.h"
+#include "handle_swap.h"
+#endif  // HAVE_SWAP
+
+#include <string.h>
+#include <stdbool.h>
+
 #ifdef HAVE_NBGL
 #include "nbgl_use_case.h"
 #endif
@@ -104,6 +112,25 @@ static tz_err_t sign_packet(void) {
   FUNC_ENTER(("void"));
   APDU_SIGN_ASSERT_STEP(SIGN_ST_WAIT_USER_INPUT);
   APDU_SIGN_ASSERT(global.apdu.sign.received_last_msg);
+
+#ifdef HAVE_SWAP
+  if (G_called_from_swap) {
+    if (G_swap_response_ready)
+      os_sched_exit(-1);
+    else
+      G_swap_response_ready = true;
+
+    tz_operation_state op = global.apdu.sign.u.clear.parser_state.operation;
+    if (!swap_check_validity(op.destination,
+                             op.batch_index,
+                             op.last_tag,
+                             op.last_fee,
+                             op.last_amount)) {
+      delay_exc(EXC_SWAP_CHECKING_FAIL);
+      TZ_CHECK(EXC_SWAP_CHECKING_FAIL);
+    }
+  }
+#endif  // HAVE_SWAP
 
   if (global.apdu.sign.return_hash) {
     memcpy(&G_io_apdu_buffer[tx],
