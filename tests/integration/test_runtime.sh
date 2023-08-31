@@ -48,7 +48,7 @@ seed="zebra`for i in $(seq 1 23) ; do echo -n ' zebra' ; done`"
 OUTPUT_BARS=$(for i in $(seq 1 $((COLUMNS-18))); do echo -n =; done)
 
 attempts() {
-    nb=2000
+    nb=$(( $TIMEOUT * 20 ))    # We use multiplication to avoid floats
     while (( nb > 0 )); do
         if "$@" ; then
             return 0
@@ -411,11 +411,13 @@ main() {
     # Defaults:
     TARGET=nanos
     TEST_TRACE=0
+    export TIMEOUT=5
     NUM_SPECULOS=32
 
-    while getopts Fl:m:n:t:x o; do
+    while getopts FT:l:m:n:t:x o; do
        case $o in
        F)  ONLY_FAILURES=YES                ;;
+       T)  TIMEOUT="$OPTARG"                ;;
        d)  DTGZ="$OPTARG"                   ;;
        l)  TESTS_LEFT=$OPTARG               ;;
        m)  TARGET="$OPTARG"                 ;;

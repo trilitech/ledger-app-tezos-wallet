@@ -14,11 +14,12 @@
 # limitations under the License.
 
 import argparse
+import os
 import requests
 from dataclasses import dataclass
 import time
 
-MAX_ATTEMPTS = 200
+TIMEOUT = int(os.environ.get('TIMEOUT', '100'))
 
 @dataclass
 class Screen:
@@ -41,7 +42,8 @@ class Screen:
     content = content.lstrip('\n')
     return content
 
-def with_retry(url, f, attempts=MAX_ATTEMPTS):
+def with_retry(url, f, timeout=TIMEOUT):
+    attempts = timeout / 0.5
     while True:
         try:
             on_screen = get_screen(url)

@@ -12,8 +12,8 @@
     NUM_SPECULOS: "32"
   script:
     - COLUMNS=80
-      ./tests/integration/run_test_local.sh -F -n ${NUM_SPECULOS} -m ${DEVICE}
-      ${TESTDIR}
+      ./tests/integration/run_test_local.sh -T100 -F -n${NUM_SPECULOS}
+      -m${DEVICE} ${TESTDIR}
   artifacts:
     when: always
     paths:
