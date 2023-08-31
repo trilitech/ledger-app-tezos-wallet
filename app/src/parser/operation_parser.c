@@ -276,6 +276,9 @@ void tz_operation_parser_init(tz_parser_state *state, uint16_t size,
   memset(&state->operation.source, 0, 22);
   memset(&state->operation.destination, 0, 22);
   state->operation.batch_index = 0;
+  state->operation.last_tag = TZ_OPERATION_TAG_END;
+  memset(&state->operation.last_fee, 0, 50);
+  memset(&state->operation.last_amount, 0, 50);
   state->operation.frame = state->operation.stack;
   state->operation.stack[0].stop = size;
   if (!skip_magic) {
@@ -369,6 +372,7 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
     const tz_operation_descriptor* d;
     uint8_t t;
     tz_must(tz_parser_read(state, &t));
+    state->operation.last_tag = t;
     for (d = tz_operation_descriptors; d->tag != TZ_OPERATION_TAG_END; d++) {
       if (d->tag == t) {
         state->operation.frame->step = TZ_OPERATION_STEP_OPERATION;
@@ -457,6 +461,12 @@ tz_parser_result tz_operation_parser_step(tz_parser_state *state) {
       }
       default: tz_raise(INVALID_STATE);
       }
+      if (strcmp(state->field_name, "Fee") == 0)
+        memcpy(state->operation.last_fee, str,
+               sizeof(state->operation.last_fee));
+      else
+        memcpy(state->operation.last_amount, str,
+               sizeof(state->operation.last_amount));
       state->operation.frame->step_print.str = str;
     }
     break;
