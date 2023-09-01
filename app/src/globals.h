@@ -99,8 +99,6 @@ typedef struct {
       uint8_t tag;
     } blind;
   } u;
-
-  char line_buf[TZ_UI_STREAM_CONTENTS_SIZE + 1];
 } apdu_sign_state_t;
 
 typedef struct {
@@ -117,6 +115,7 @@ typedef struct {
     apdu_hash_state_t hash;
     apdu_sign_state_t sign;
   } apdu;
+  char line_buf[TZ_UI_STREAM_CONTENTS_SIZE + 1];
 # ifdef HAVE_BAGL
   struct {
     bagl_element_t bagls[5 + TZ_SCREEN_LINES_11PX];

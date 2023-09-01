@@ -166,9 +166,9 @@ static void refill() {
   last_screen:
     global.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
     wrote = tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, st->field_name,
-                              global.apdu.sign.line_buf, TZ_UI_ICON_NONE);
+                              global.line_buf, TZ_UI_ICON_NONE);
 
-    tz_parser_flush_up_to(st, global.apdu.sign.line_buf,
+    tz_parser_flush_up_to(st, global.line_buf,
                           TZ_UI_STREAM_CONTENTS_SIZE, wrote);
     break;
   case TZ_BLO_FEED_ME:
@@ -286,7 +286,7 @@ static void handle_first_apdu_clear(__attribute__((unused)) packet_t *pkt) {
 
   tz_operation_parser_init(st, TZ_UNKNOWN_SIZE, false);
   tz_parser_refill(st, NULL, 0);
-  tz_parser_flush(st, global.apdu.sign.line_buf, TZ_UI_STREAM_CONTENTS_SIZE);
+  tz_parser_flush(st, global.line_buf, TZ_UI_STREAM_CONTENTS_SIZE);
 }
 
 static void handle_first_apdu_blind(__attribute__((unused)) packet_t *pkt) {
