@@ -50,12 +50,6 @@ void clear_apdu_globals(void);
 void init_globals(void);
 
 #define MAX_APDU_SIZE 235  // Maximum number of bytes in a single APDU
-
-// Our buffer must accommodate any remainder from hashing and the
-// next message at once.
-#define TEZOS_BUFSIZE (BLAKE2B_BLOCKBYTES + MAX_APDU_SIZE)
-
-#define PRIVATE_KEY_DATA_SIZE 64
 #define MAX_SIGNATURE_SIZE 100
 
 typedef enum {
