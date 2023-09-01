@@ -181,6 +181,7 @@ static void refill() {
     }
     if (st->regs.oofs != 0)
       goto last_screen;
+    global.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
     tz_ui_stream_push_accept_reject();
     tz_ui_stream_close();
     break;
