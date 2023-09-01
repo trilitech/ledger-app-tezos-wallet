@@ -55,4 +55,11 @@ typedef struct {
     } u;
 } apdu_sign_state_t;
 
+/* Macros to assert our state */
+
+#define APDU_SIGN_ASSERT(_cond)  TZ_ASSERT(EXC_UNEXPECTED_SIGN_STATE, (_cond))
+#define APDU_SIGN_ASSERT_STEP(x) APDU_SIGN_ASSERT(global.apdu.sign.step == (x))
+
+/* Prototypes */
+
 size_t handle_apdu_sign(bool);

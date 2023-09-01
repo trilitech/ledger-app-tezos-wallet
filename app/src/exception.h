@@ -45,6 +45,14 @@
 #define EXC_UNEXPECTED_SIGN_STATE     0x9002
 #define EXC_UNKNOWN                   0x90FF
 
+#define TZ_ASSERT(_err, _cond) do {                                         \
+                if (!(_cond)) {                                             \
+                    PRINTF("Assertion (\"%s\") on %s:%u failed with %s\n",  \
+                           #_cond, __FILE__, __LINE__, #_err);              \
+                    THROW(_err);                                            \
+                }                                                           \
+            } while (0)
+
 // Crashes can be harder to debug than exceptions and
 // latency isn't a big concern
 static inline void check_null(void volatile const *const ptr) {

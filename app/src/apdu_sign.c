@@ -98,6 +98,9 @@ static void sign_packet() {
   cx_err_t err;
 
   FUNC_ENTER(("void"));
+  APDU_SIGN_ASSERT_STEP(SIGN_ST_WAIT_USER_INPUT);
+  APDU_SIGN_ASSERT(global.apdu.sign.received_last_msg);
+
   if (global.apdu.sign.return_hash) {
     memcpy(&G_io_apdu_buffer[tx],
            global.apdu.hash.final_hash,
@@ -115,11 +118,6 @@ static void sign_packet() {
   tx += siglen;
   tx = finalize_successful_send(tx);
 
-  if (global.apdu.sign.step != SIGN_ST_WAIT_USER_INPUT)
-    THROW(EXC_UNEXPECTED_SIGN_STATE);
-  if (!(global.apdu.sign.received_last_msg))
-    THROW(EXC_UNEXPECTED_SIGN_STATE);
-
   delayed_send(tx);
 
   global.step = ST_IDLE;
@@ -129,10 +127,9 @@ static void sign_packet() {
 
 static void send_reject() {
   FUNC_ENTER(("void"));
-  if (global.apdu.sign.step != SIGN_ST_WAIT_USER_INPUT)
-    THROW(EXC_UNEXPECTED_SIGN_STATE);
-  if (!(global.apdu.sign.received_last_msg))
-    THROW(EXC_UNEXPECTED_SIGN_STATE);
+  APDU_SIGN_ASSERT_STEP(SIGN_ST_WAIT_USER_INPUT);
+  APDU_SIGN_ASSERT(global.apdu.sign.received_last_msg);
+
   clear_data();
   delay_reject();
 
@@ -143,11 +140,10 @@ static void send_reject() {
 
 static void send_continue() {
   FUNC_ENTER(("void"));
-  if (global.apdu.sign.step != SIGN_ST_WAIT_USER_INPUT &&
-      global.apdu.sign.step != SIGN_ST_WAIT_DATA)
-    THROW(EXC_UNEXPECTED_SIGN_STATE);
-  if (global.apdu.sign.received_last_msg)
-    THROW(EXC_UNEXPECTED_SIGN_STATE);
+  APDU_SIGN_ASSERT(global.apdu.sign.step == SIGN_ST_WAIT_USER_INPUT ||
+                   global.apdu.sign.step == SIGN_ST_WAIT_DATA);
+  APDU_SIGN_ASSERT(!global.apdu.sign.received_last_msg);
+
   delayed_send(finalize_successful_send(0));
   global.apdu.sign.step = SIGN_ST_WAIT_DATA;
   FUNC_LEAVE();
@@ -253,7 +249,7 @@ static void stream_cb(tz_ui_cb_type_t type) {
 static size_t handle_first_apdu(packet_t *pkt, bool return_hash) {
 
   FUNC_ENTER(("pkt=%p", pkt));
-  if (global.apdu.sign.step != SIGN_ST_IDLE) THROW(EXC_UNEXPECTED_SIGN_STATE);
+  APDU_SIGN_ASSERT_STEP(SIGN_ST_IDLE);
 
   clear_data();
   global.apdu.sign.return_hash = return_hash;
@@ -304,9 +300,7 @@ static void handle_first_apdu_blind(__attribute__((unused)) packet_t *pkt) {
 
 static size_t handle_data_apdu(packet_t *pkt) {
   FUNC_ENTER(("pkt=%p", pkt));
-  if (global.apdu.sign.step != SIGN_ST_WAIT_DATA)
-    // we received a packet while we did not explicitly asked for one
-    THROW(EXC_UNEXPECTED_SIGN_STATE);
+  APDU_SIGN_ASSERT_STEP(SIGN_ST_WAIT_DATA);
   global.apdu.sign.packet_index++; // XXX drop or check
 
   // do the incremental hashing
