@@ -49,7 +49,31 @@
                 if (!(_cond)) {                                             \
                     PRINTF("Assertion (\"%s\") on %s:%u failed with %s\n",  \
                            #_cond, __FILE__, __LINE__, #_err);              \
-                    THROW(_err);                                            \
+                    error = (_err);                                         \
+                    goto end;                                               \
+                }                                                           \
+            } while (0)
+
+/*
+ * TZ_CHECK() has the same calling conventions as CX_CHECK including using
+ * the same variable (error) and label (end).  This is by design as we
+ * intend to use it in the same way, but we do not want to imply that it
+ * is only for crypto functions.
+ *
+ * We expect "tz_err_t error" to be defined in the environment, and a label
+ * "end:" at the end of the function which may do some cleanup and then will
+ * return "error".
+ */
+
+typedef uint32_t tz_err_t;
+#define TZ_OK 0x0000
+
+#define TZ_CHECK(_call) do {                                                \
+                error = (_call);                                            \
+                if (error) {                                                \
+                    PRINTF("TZ_CHECK(\"%s\") on %s:%u failed with %u\n",    \
+                           #_call, __FILE__, __LINE__, error);              \
+                    goto end;                                               \
                 }                                                           \
             } while (0)
 
