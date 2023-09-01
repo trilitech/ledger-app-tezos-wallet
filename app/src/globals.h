@@ -28,6 +28,10 @@
 #include "parser/parser_state.h"
 #include "utils.h"
 
+#include "apdu.h"
+#include "apdu_pubkey.h"
+#include "apdu_sign.h"
+
 #define TZ_SCREEN_WITDH_FULL_REGULAR_11PX       19
 #define TZ_SCREEN_WITDH_BETWEEN_ICONS_BOLD_11PX 16
 #ifdef TARGET_NANOS
@@ -40,10 +44,6 @@
 #include "ui_stream.h"
 #include "ui_home.h"
 #include "ui_settings.h"
-
-// Zeros out all globals that can keep track of APDU instruction state.
-// Notably this does *not* include UI state.
-void clear_apdu_globals(void);
 
 // Zeros out all application-specific globals and SDK-specific
 // UI/exchange buffers.
@@ -65,35 +65,6 @@ typedef enum {
   ST_BLIND_SIGN,
   ST_PROMPT
 } main_step_t;
-
-typedef struct {
-  cx_blake2b_t state;
-  uint8_t final_hash[SIGN_HASH_SIZE];
-} apdu_hash_state_t;
-
-typedef enum {
-  SIGN_ST_IDLE,
-  SIGN_ST_WAIT_DATA,
-  SIGN_ST_WAIT_USER_INPUT
-} sign_step_t;
-
-typedef struct {
-  uint8_t packet_index;
-
-  sign_step_t step;
-  bool return_hash;
-  bool received_last_msg;
-
-  union {
-    struct {
-      size_t total_length;
-      tz_parser_state parser_state;
-    } clear;
-    struct {
-      uint8_t tag;
-    } blind;
-  } u;
-} apdu_sign_state_t;
 
 typedef struct {
   /* Settings */

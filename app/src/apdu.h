@@ -53,6 +53,8 @@
 // Last valid instruction code
 #define INS_MAX                       0x0F
 
+void clear_apdu_globals(void);
+
 size_t finalize_successful_send(size_t);
 void delayed_send(size_t);
 void delay_reject(void);
