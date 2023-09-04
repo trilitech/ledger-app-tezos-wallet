@@ -324,6 +324,7 @@ static size_t handle_data_apdu(packet_t *pkt) {
 static size_t handle_data_apdu_clear(packet_t *pkt) {
   tz_parser_state *st = &global.apdu.sign.u.clear.parser_state;
 
+  TZ_ASSERT_NOTNULL(pkt);
   if (st->regs.ilen > 0)
     // we asked for more input but did not consume what we already had
     THROW(EXC_UNEXPECTED_SIGN_STATE);
@@ -412,6 +413,8 @@ void continue_blindsign_cb(void) {
 
 #define FINAL_HASH global.apdu.hash.final_hash
 static size_t handle_data_apdu_blind(packet_t *pkt) {
+
+  TZ_ASSERT_NOTNULL(pkt);
   if (!global.apdu.sign.u.blind.tag)
     global.apdu.sign.u.blind.tag = pkt->buff[0];
   if (pkt->is_last) {

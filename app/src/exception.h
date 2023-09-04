@@ -53,6 +53,8 @@
                 }                                                           \
             } while (0)
 
+#define TZ_ASSERT_NOTNULL(_x) TZ_ASSERT(EXC_MEMORY_ERROR, (_x) != NULL)
+
 // Crashes can be harder to debug than exceptions and
 // latency isn't a big concern
 static inline void check_null(void volatile const *const ptr) {
