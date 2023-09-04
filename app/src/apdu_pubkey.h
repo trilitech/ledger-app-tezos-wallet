@@ -23,4 +23,6 @@
 #include <unistd.h>
 #include <stdbool.h>
 
-size_t handle_apdu_get_public_key(bool);
+#include "exception.h"
+
+tz_err_t handle_apdu_get_public_key(bool, size_t *);

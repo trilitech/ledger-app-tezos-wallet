@@ -34,17 +34,19 @@ const uint8_t version[4] = {
   PATCH_VERSION
 };
 
-size_t handle_apdu_version() {
+tz_err_t handle_apdu_version(size_t *tx) {
     memcpy(G_io_apdu_buffer, &version, sizeof(version));
-    size_t tx = sizeof(version);
-    return finalize_successful_send(tx);
+    *tx = sizeof(version);
+    *tx = finalize_successful_send(*tx);
+    return TZ_OK;
 }
 
-size_t handle_apdu_git() {
+tz_err_t handle_apdu_git(size_t *tx) {
     static const char commit[] = COMMIT;
     memcpy(G_io_apdu_buffer, commit, sizeof(commit));
-    size_t tx = sizeof(commit);
-    return finalize_successful_send(tx);
+    *tx = sizeof(commit);
+    *tx = finalize_successful_send(*tx);
+    return TZ_OK;
 }
 
 size_t finalize_successful_send(size_t tx) {

@@ -32,13 +32,17 @@
 #include "apdu_sign.h"
 #include "apdu_pubkey.h"
 
-static uint8_t dispatch(uint8_t instruction) {
+static tz_err_t dispatch(uint8_t instruction, size_t *tx) {
+  cx_err_t error = CX_OK;
+
   FUNC_ENTER(("%u", instruction));
+  TZ_ASSERT_NOTNULL(tx);
 
   switch (tz_ui_stream_get_type()) {
   case SCREEN_QUIT:
     PRINTF("[ERROR] received instruction whilst on Quit screen\n");
-    THROW(EXC_UNEXPECTED_STATE);
+    TZ_CHECK(EXC_UNEXPECTED_STATE);
+    break;
   default:
     break;
   }
@@ -48,21 +52,18 @@ static uint8_t dispatch(uint8_t instruction) {
   case INS_PROMPT_PUBLIC_KEY:
   case INS_GET_PUBLIC_KEY:
   case INS_GIT:
-    if (!(global.step == ST_IDLE))
-      THROW(EXC_UNEXPECTED_STATE);
+    TZ_ASSERT(EXC_UNEXPECTED_STATE, global.step == ST_IDLE);
   }
 
   switch (instruction) {
-  case INS_SIGN:
-  case INS_SIGN_WITH_HASH:
-      return handle_apdu_sign(instruction == INS_SIGN_WITH_HASH);
-  case INS_VERSION:
-    return handle_apdu_version();
-  case INS_PROMPT_PUBLIC_KEY:
-  case INS_GET_PUBLIC_KEY:
-    return handle_apdu_get_public_key(instruction == INS_PROMPT_PUBLIC_KEY);
-  case INS_GIT:
-    return handle_apdu_git();
+  case INS_SIGN:              error = handle_apdu_sign(false, tx); break;
+  case INS_SIGN_WITH_HASH:    error = handle_apdu_sign(true, tx);  break;
+  case INS_VERSION:           error = handle_apdu_version(tx);     break;
+  case INS_PROMPT_PUBLIC_KEY: error = handle_apdu_get_public_key(true, tx);
+                              break;
+  case INS_GET_PUBLIC_KEY:    error = handle_apdu_get_public_key(false, tx);
+                              break;
+  case INS_GIT:               error = handle_apdu_git(tx);         break;
   case INS_AUTHORIZE_BAKING:
   case INS_RESET:
   case INS_QUERY_AUTH_KEY:
@@ -74,9 +75,12 @@ static uint8_t dispatch(uint8_t instruction) {
   case INS_SIGN_UNSAFE:
   default:
     PRINTF("[ERROR] invalid instruction %02X\n", instruction);
-    THROW(EXC_INVALID_INS);
+    error = EXC_INVALID_INS;
   }
+
+end:
   FUNC_LEAVE();
+  return error;
 }
 
 
@@ -143,8 +147,8 @@ void app_main() {
                     THROW(EXC_WRONG_LENGTH);
                 }
 
-                uint8_t const instruction = G_io_apdu_buffer[OFFSET_INS];
-                size_t const tx = dispatch(instruction);
+                size_t tx = 0;
+                CX_THROW(dispatch(G_io_apdu_buffer[OFFSET_INS], &tx));
 
                 rx = io_exchange(CHANNEL_APDU, tx);
             }

@@ -153,32 +153,32 @@ static cx_err_t prompt_address(void) {
 }
 #endif
 
-size_t handle_apdu_get_public_key(bool prompt) {
+tz_err_t handle_apdu_get_public_key(bool prompt, size_t *tx) {
   uint8_t *dataBuffer = G_io_apdu_buffer + OFFSET_CDATA;
+  tz_err_t error = TZ_OK;
 
   FUNC_ENTER(("prompt=%s", prompt ? "true" : "false"));
-  if (G_io_apdu_buffer[OFFSET_P1] != 0) THROW(EXC_WRONG_PARAM);
+  TZ_ASSERT(EXC_WRONG_PARAM, G_io_apdu_buffer[OFFSET_P1] == 0);
+  TZ_ASSERT_NOTNULL(tx);
 
   // do not expose pks without prompt through U2F (permissionless legacy
   // comm in browser)
-  if (!prompt && G_io_apdu_media == IO_APDU_MEDIA_U2F)
-    THROW(EXC_HID_REQUIRED);
+  TZ_ASSERT(EXC_HID_REQUIRED, prompt || G_io_apdu_media != IO_APDU_MEDIA_U2F);
 
   global.path_with_curve.derivation_type = G_io_apdu_buffer[OFFSET_CURVE];
-  CX_THROW(check_derivation_type(global.path_with_curve.derivation_type));
+  CX_CHECK(check_derivation_type(global.path_with_curve.derivation_type));
 
-  CX_THROW(read_bip32_path(&global.path_with_curve.bip32_path, dataBuffer,
+  CX_CHECK(read_bip32_path(&global.path_with_curve.bip32_path, dataBuffer,
                            G_io_apdu_buffer[OFFSET_LC]));
 
   if (!prompt) {
-    size_t tx = 0;
-    CX_THROW(provide_pubkey(G_io_apdu_buffer, &tx));
-    FUNC_LEAVE();
-    return tx;
+    CX_CHECK(provide_pubkey(G_io_apdu_buffer, tx));
   } else {
     global.step = ST_PROMPT;
     prompt_address();
   }
+
+end:
   FUNC_LEAVE();
-  return 0;
+  return error;
 }

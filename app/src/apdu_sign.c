@@ -510,19 +510,17 @@ static void the_cb(tz_ui_cb_type_t type) {
   CX_THROW(stream_cb(type));
 }
 
-size_t handle_apdu_sign(bool return_hash) {
+tz_err_t handle_apdu_sign(bool return_hash, size_t *tx) {
   packet_t pkt;
-  size_t ret;
+  tz_err_t error = CX_OK;
 
   FUNC_ENTER(("return_hash=%s", return_hash ? "true" : "false"));
 
   init_packet(&pkt);
-  if (pkt.buff_size > MAX_APDU_SIZE)
-    THROW(EXC_WRONG_LENGTH_FOR_INS);
+  TZ_ASSERT(EXC_WRONG_LENGTH_FOR_INS, pkt.buff_size <= MAX_APDU_SIZE);
 
   if (pkt.is_first) {
-    if (global.step != ST_IDLE)
-      THROW(EXC_UNEXPECTED_STATE);
+    TZ_ASSERT(EXC_UNEXPECTED_STATE, global.step == ST_IDLE);
 
     #ifdef HAVE_BAGL
     switch (tz_ui_stream_get_type()) {
@@ -533,20 +531,20 @@ size_t handle_apdu_sign(bool return_hash) {
     case SCREEN_BLIND_SIGN: global.step = ST_BLIND_SIGN; break;
     default:
       /* XXXrcd: WRONG */
-      THROW(EXC_UNEXPECTED_STATE);
+      CX_CHECK(EXC_UNEXPECTED_STATE);
     }
 
-    CX_THROW(handle_first_apdu(&pkt, &ret));
+    TZ_CHECK(handle_first_apdu(&pkt, tx));
     global.apdu.sign.return_hash = return_hash;
   } else {
-    if (global.step != ST_BLIND_SIGN && global.step != ST_CLEAR_SIGN)
-      THROW(EXC_UNEXPECTED_STATE);
-    if (return_hash != global.apdu.sign.return_hash)
-      THROW(EXC_INVALID_INS);
+    TZ_ASSERT(EXC_UNEXPECTED_STATE,
+              global.step == ST_BLIND_SIGN || global.step == ST_CLEAR_SIGN);
+    TZ_ASSERT(EXC_INVALID_INS, return_hash == global.apdu.sign.return_hash);
 
-    CX_THROW(handle_data_apdu(&pkt, &ret));
+    TZ_CHECK(handle_data_apdu(&pkt, tx));
   }
 
+end:
   FUNC_LEAVE();
-  return ret;
+  return error;
 }

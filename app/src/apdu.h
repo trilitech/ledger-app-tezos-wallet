@@ -24,6 +24,8 @@
 
 #include <string.h>
 
+#include "exception.h"
+
 #define OFFSET_CLA   0
 #define OFFSET_INS   1  // instruction code
 #define OFFSET_P1    2  // user-defined 1-byte parameter
@@ -61,5 +63,5 @@ void delay_reject(void);
 void delay_exc(int);
 void require_permissioned_comm(void);
 
-size_t handle_apdu_version(void);
-size_t handle_apdu_git(void);
+tz_err_t handle_apdu_version(size_t *);
+tz_err_t handle_apdu_git(size_t *);

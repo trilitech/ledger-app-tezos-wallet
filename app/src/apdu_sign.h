@@ -62,4 +62,4 @@ typedef struct {
 
 /* Prototypes */
 
-size_t handle_apdu_sign(bool);
+tz_err_t handle_apdu_sign(bool, size_t *);
