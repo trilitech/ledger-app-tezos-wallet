@@ -48,7 +48,7 @@
 // UI/exchange buffers.
 void init_globals(void);
 
-#define MAX_APDU_SIZE 235  // Maximum number of bytes in a single APDU
+#define MAX_APDU_SIZE      235
 #define MAX_SIGNATURE_SIZE 100
 
 typedef enum {

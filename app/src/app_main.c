@@ -124,8 +124,6 @@ void app_main() {
         BEGIN_TRY {
             TRY {
                 PRINTF("[DEBUG] recv(0x%.*H)\n", rx, G_io_apdu_buffer);
-                // Process APDU of size rx
-
                 if (rx == 0) {
                     // no apdu received, well, reset the session, and reset the
                     // bootloader configuration

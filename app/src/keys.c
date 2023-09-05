@@ -136,7 +136,6 @@ cx_err_t public_key_hash(uint8_t *hash_out, size_t hash_out_size,
     }
 
     cx_blake2b_t hash_state;
-    // cx_blake2b_init_no_throw takes size in bits.
     CX_CHECK(cx_blake2b_init_no_throw(&hash_state, HASH_SIZE * 8));
     CX_CHECK(cx_hash_no_throw((cx_hash_t *) &hash_state,
 			      CX_LAST,

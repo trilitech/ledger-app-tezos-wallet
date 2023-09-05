@@ -276,7 +276,6 @@ static tz_err_t handle_first_apdu(packet_t *pkt, size_t *ret) {
   global.path_with_curve.derivation_type = pkt->p2;
   TZ_CHECK(check_derivation_type(global.path_with_curve.derivation_type));
 
-  // init hash
   TZ_CHECK(cx_blake2b_init_no_throw(&global.apdu.hash.state,
                                     SIGN_HASH_SIZE * 8));
 
@@ -327,7 +326,6 @@ static tz_err_t handle_data_apdu(packet_t *pkt, size_t *tx) {
 
   global.apdu.sign.packet_index++; // XXX drop or check
 
-  // do the incremental hashing
   TZ_CHECK(cx_hash_no_throw((cx_hash_t *)&global.apdu.hash.state,
 			    pkt->is_last ? CX_LAST : 0,
 			    pkt->buff, pkt->buff_size,
