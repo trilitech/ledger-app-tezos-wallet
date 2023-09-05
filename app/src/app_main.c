@@ -34,17 +34,18 @@ void app_exit(void) {
   os_sched_exit(-1);
 }
 
-static uint8_t dispatch(command_t *cmd) {
+static void dispatch(command_t *cmd) {
   tz_handler_t f;
+  TZ_PREAMBLE(("cmd=0x%p {cla=0x02x ins=%u ...}", cmd, cmd->cla, cmd->ins));
 
-  FUNC_ENTER(("cmd=0x%p ins=%u", cmd, cmd->ins));
   if (cmd->cla != CLA)
-    THROW(EXC_CLASS);
+    TZ_FAIL(EXC_CLASS);
 
   switch (tz_ui_stream_get_type()) {
   case SCREEN_QUIT:
     PRINTF("[ERROR] received instruction whilst on Quit screen\n");
-    THROW(EXC_UNEXPECTED_STATE);
+    TZ_FAIL(EXC_UNEXPECTED_STATE);
+    break;
   default:
     break;
   }
@@ -67,17 +68,18 @@ static uint8_t dispatch(command_t *cmd) {
   case INS_SIGN_UNSAFE:               f = handle_unimplemented;       break;
   default:
     PRINTF("[ERROR] invalid instruction 0x%02x\n", cmd->ins);
-    THROW(EXC_INVALID_INS);
+    TZ_FAIL(EXC_INVALID_INS);
   }
 
-  uint8_t ret = f(cmd);
-  FUNC_LEAVE();
-  return ret;
+  TZ_CHECK(f(cmd));
+
+  TZ_POSTAMBLE;
 }
 
 
 void app_main() {
     command_t cmd;
+    int rx;
 
     FUNC_ENTER(("void"));
     app_stack_canary = 0xDEADBEEF;
@@ -109,61 +111,23 @@ void app_main() {
     PRINTF("[PTR]    G_io_app: 0x%p\n", &G_io_app);
     PRINTF("[SIZEOF] G_io_app: %d\n", sizeof(G_io_app));
 
-    global.step = ST_IDLE;
-    ui_home_init();
+    /* ST_ERROR implies that we are completely unknown and need to reset */
+    global.step = ST_ERROR;
 
-    volatile size_t rx = io_exchange(CHANNEL_APDU, 0);
-
-    while (true) {
-
-        BEGIN_TRY {
-            TRY {
-                PRINTF("[DEBUG] recv(0x%.*H)\n", rx, G_io_apdu_buffer);
-                if (rx == 0) {
-                    // no apdu received, well, reset the session, and reset the
-                    // bootloader configuration
-                    THROW(EXC_SECURITY);
-                }
-
-		if (!apdu_parser(&cmd, G_io_apdu_buffer, rx)) {
-		    PRINTF("[ERROR] Bad length: %u\n", rx);
-                    THROW(EXC_WRONG_LENGTH);
-		}
-
-                size_t const tx = dispatch(&cmd);
-
-                rx = io_exchange(CHANNEL_APDU, tx);
-            }
-            CATCH(ASYNC_EXCEPTION) {
-                rx = io_exchange(CHANNEL_APDU | IO_ASYNCH_REPLY, 0);
-            }
-            CATCH(EXCEPTION_IO_RESET) {
-                THROW(EXCEPTION_IO_RESET);
-            }
-            CATCH_OTHER(e) {
-                global.step = ST_IDLE;
-
-                uint16_t sw = e;
-                PRINTF("[ERROR] caught at top level, number: %x\n", sw);
-                switch (sw) {
-                    default:
-                        sw = 0x6800 | (e & 0x7FF);
-                        __attribute__((fallthrough));
-                    case 0x6000 ... 0x6FFF:
-                        __attribute__((fallthrough));
-                    case 0x9000 ... 0x9FFF: {
-                        PRINTF("[ERROR] line number: %d\n", sw & 0x0FFF);
-                        size_t tx = 0;
-                        G_io_apdu_buffer[tx++] = sw >> 8;
-                        G_io_apdu_buffer[tx++] = sw;
-                        rx = io_exchange(CHANNEL_APDU, tx);
-                        break;
-                    }
-                }
-            }
-            FINALLY {
-            }
+    for (;;) {
+        if (global.step == ST_ERROR) {
+            global.step = ST_IDLE;
+            ui_home_init();
         }
-        END_TRY;
+
+        PRINTF("Ready to receive a command packet.\n");
+        rx = io_recv_command();
+
+        if (!apdu_parser(&cmd, G_io_apdu_buffer, rx)) {
+            PRINTF("[ERROR] Bad length: %d\n", rx);
+            return;
+        }
+
+        dispatch(&cmd);
     }
 }

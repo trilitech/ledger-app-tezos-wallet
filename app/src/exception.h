@@ -22,8 +22,7 @@
 
 #include <os.h>
 
-// Throw this to indicate prompting
-#define ASYNC_EXCEPTION 0x2000
+#define SW_OK                         0x9000
 
 // Standard APDU error codes:
 // https://www.eftlab.co.uk/index.php/site-map/knowledge-base/118-apdu-response-list
@@ -43,58 +42,83 @@
 
 #define EXC_UNEXPECTED_STATE          0x9001
 #define EXC_UNEXPECTED_SIGN_STATE     0x9002
+#define EXC_UNKNOWN_CX_ERR            0x9003
 #define EXC_UNKNOWN                   0x90FF
+
+/*
+ * In the handlers and the routines that they call, we define a set of
+ * macros to standardise them, ease writing, and reduce repetition.
+ *
+ * Each function returns void.  We do this because we have to have the
+ * same logic in callbacks from the UI code which may also send responses.
+ * And so, to keep things the same we assume that all of our handlers
+ * can't return values, either, and do things the same way in both places.
+ * Our mechanism is to set global.step == ST_ERROR after we get an error.
+ *
+ * Each function should begin with TZ_PREAMBLE() which takes a
+ * bracketted list of PRINTF() arguments.  It also sets up all of
+ * the variables necessary for the following macros.
+ *
+ * Each function should end with TZ_POSTAMBLE which: sets up all of
+ * labels to which the remaining macros jump; responds on error via
+ * io_send_sw(); and sets global.step on error.
+ *
+ * TZ_CHECK() calls a function.  If global.step == ST_ERROR, it will
+ * jump to the end after calling the function and let TZ_POSTAMBLE do
+ * its thing.
+ *
+ * TZ_FAIL(sw_code) will set vars and jump into the postamble which
+ * will reply using io_send_sw(sw_code) and set global.step = ST_ERROR.
+ *
+ * TZ_ASSERT(sw_code, condition) will TZ_FAIL(sw_code) if the condition
+ * is not true.
+ *
+ * CX_CHECK() is a macro provided by BOLOS, however, we catch it
+ * with this framework, reply with io_send_sw() and return TZ_DONE.
+ */
+
+#define TZ_PREAMBLE(_args)                                              \
+                uint16_t _sw_ret_code = 0x0000;                         \
+                cx_err_t error = CX_OK;                                 \
+                if (0)                                                  \
+                    goto bail;                                          \
+                if (0)                                                  \
+                    goto end;                                           \
+                FUNC_ENTER(_args)
+
+#define TZ_POSTAMBLE                                                    \
+            end:                                                        \
+                if (error != CX_OK) {                                   \
+                    _sw_ret_code = EXC_UNKNOWN_CX_ERR;                  \
+                    PRINTF("CX_CHECK failed with 0x%08x", error);       \
+                }                                                       \
+            bail:                                                       \
+                if (_sw_ret_code) {                                     \
+                    global.step = ST_ERROR;                             \
+                    io_send_sw(_sw_ret_code);                           \
+                }                                                       \
+                FUNC_LEAVE();
+
+#define TZ_FAIL(_sw_code) do {                                          \
+                _sw_ret_code = _sw_code;                                \
+                goto bail;                                              \
+            } while (0)
 
 #define TZ_ASSERT(_err, _cond) do {                                         \
                 if (!(_cond)) {                                             \
                     PRINTF("Assertion (\"%s\") on %s:%u failed with %s\n",  \
                            #_cond, __FILE__, __LINE__, #_err);              \
-                    error = (_err);                                         \
-                    goto end;                                               \
+                    TZ_FAIL(_err);                                          \
                 }                                                           \
             } while (0)
 
-/*
- * TZ_CHECK() has the same calling conventions as CX_CHECK including using
- * the same variable (error) and label (end).  This is by design as we
- * intend to use it in the same way, but we do not want to imply that it
- * is only for crypto functions.
- *
- * We expect "tz_err_t error" to be defined in the environment, and a label
- * "end:" at the end of the function which may do some cleanup and then will
- * return "error".
- */
-
-typedef uint32_t tz_err_t;
-#define TZ_OK 0x0000
-
 #define TZ_CHECK(_call) do {                                                \
-                error = (_call);                                            \
-                if (error) {                                                \
-                    PRINTF("TZ_CHECK(\"%s\") on %s:%u failed with %u\n",    \
-                           #_call, __FILE__, __LINE__, error);              \
-                    goto end;                                               \
+                (_call);                                                    \
+                if (global.step == ST_ERROR) {                              \
+                    PRINTF("TZ_CHECK(\"%s\") on %s:%u\n", #_call,           \
+                           __FILE__, __LINE__);                             \
+                    goto bail;                                              \
                 }                                                           \
             } while (0)
 
 #define TZ_ASSERT_NOTNULL(_x) TZ_ASSERT(EXC_MEMORY_ERROR, (_x) != NULL)
-
-// Crashes can be harder to debug than exceptions and
-// latency isn't a big concern
-static inline void check_null(void volatile const *const ptr) {
-    if (ptr == NULL) {
-        THROW(EXC_MEMORY_ERROR);
-    }
-}
-
-#ifdef TEZOS_DEBUG
-static inline __attribute((noreturn)) void failwith(const char* message) {
-  PRINTF("[ERROR] %s\n", message);
-  THROW(EXC_UNEXPECTED_STATE);
-}
-#else
-static inline __attribute((noreturn)) void failwith(__attribute((unused))
-                                                    const char* message) {
-  THROW(EXC_UNEXPECTED_STATE);
-}
-#endif

@@ -109,6 +109,6 @@ size_t tz_ui_stream_push_all(tz_ui_cb_type_t, const char *, const char *,
                              tz_ui_icon_t);
 void tz_ui_stream_push_accept_reject(void);
 void tz_ui_stream_close(void);
-__attribute__((noreturn)) void tz_ui_stream(void);
+void tz_ui_stream(void);
 void tz_ui_stream_start(void);
 tz_ui_cb_type_t tz_ui_stream_get_type(void);

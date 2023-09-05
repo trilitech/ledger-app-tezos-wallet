@@ -22,6 +22,7 @@
    limitations under the License. */
 
 #include <parser.h>
+#include <io.h>
 
 #include "apdu.h"
 #include "globals.h"
@@ -33,52 +34,27 @@ const uint8_t version[4] = {
   PATCH_VERSION
 };
 
-size_t handle_unimplemented(__attribute__((unused))command_t *cmd) {
+void handle_unimplemented(__attribute__((unused))command_t *cmd) {
+    TZ_PREAMBLE(("cmd=0x%p", cmd));
+
     PRINTF("[ERROR] Unimplemented instruction 0x%02x\n", cmd->ins);
-    THROW(EXC_INVALID_INS);
+    TZ_FAIL(EXC_INVALID_INS);
+    TZ_POSTAMBLE;
 }
 
-size_t handle_apdu_version(__attribute__((unused))command_t *cmd) {
-    if (global.step != ST_IDLE)
-        THROW(EXC_UNEXPECTED_STATE);
-    memcpy(G_io_apdu_buffer, &version, sizeof(version));
-    size_t tx = sizeof(version);
-    return finalize_successful_send(tx);
+void handle_apdu_version(__attribute__((unused))command_t *cmd) {
+    TZ_PREAMBLE(("cmd=0x%p", cmd));
+
+    TZ_ASSERT(EXC_UNEXPECTED_STATE, global.step == ST_IDLE);
+    io_send_response_pointer((void *)&version, sizeof(version), SW_OK);
+    TZ_POSTAMBLE;
 }
 
-size_t handle_apdu_git(__attribute__((unused))command_t *cmd) {
+void handle_apdu_git(__attribute__((unused))command_t *cmd) {
     static const char commit[] = COMMIT;
+    TZ_PREAMBLE(("cmd=0x%p", cmd));
 
-    if (global.step != ST_IDLE)
-        THROW(EXC_UNEXPECTED_STATE);
-    memcpy(G_io_apdu_buffer, commit, sizeof(commit));
-    size_t tx = sizeof(commit);
-    return finalize_successful_send(tx);
-}
-
-size_t finalize_successful_send(size_t tx) {
-  G_io_apdu_buffer[tx++] = 0x90;
-  G_io_apdu_buffer[tx++] = 0x00;
-  return tx;
-}
-
-// Send back response; do not restart the event loop
-void delayed_send(size_t tx) {
-  FUNC_ENTER(("tx=%u", tx));
-  io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, tx);
-  FUNC_LEAVE();
-}
-
-void delay_exc(int exc) {
-  size_t tx = 0;
-  FUNC_ENTER(("exc=%d", exc));
-  G_io_apdu_buffer[tx++] = exc >> 8;
-  G_io_apdu_buffer[tx++] = exc & 0xFF;
-  delayed_send(tx);
-  global.step = ST_IDLE;
-  FUNC_LEAVE();
-}
-
-void delay_reject(void) {
-  delay_exc(EXC_REJECT);
+    TZ_ASSERT(EXC_UNEXPECTED_STATE, global.step == ST_IDLE);
+    io_send_response_pointer((void *)commit, sizeof(commit), SW_OK);
+    TZ_POSTAMBLE;
 }

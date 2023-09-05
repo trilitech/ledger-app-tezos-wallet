@@ -61,7 +61,8 @@ typedef enum {
   ST_IDLE,
   ST_CLEAR_SIGN,
   ST_BLIND_SIGN,
-  ST_PROMPT
+  ST_PROMPT,
+  ST_ERROR
 } main_step_t;
 
 typedef struct {

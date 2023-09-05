@@ -26,6 +26,8 @@
 
 #include <parser.h>
 
+#include "exception.h"
+
 // Instruction codes
 #define INS_VERSION                   0x00
 #define INS_AUTHORIZE_BAKING          0x01
@@ -47,28 +49,23 @@
 // Last valid instruction code
 #define INS_MAX                       0x0F
 
-void clear_apdu_globals(void);
-
-size_t finalize_successful_send(size_t);
-void delayed_send(size_t);
-void delay_reject(void);
-void delay_exc(int);
-void require_permissioned_comm(void);
-
 /*
  * All of the handlers must be defined together below.  We
  * define them together as they are required to present the
  * same interface and it's easier to validate if they are
  * in the same place.
  *
- * Handlers return the length of bytes that are stored for
- * sending and toss an exception on failure.
+ * Handlers do not return a value, rather they set global.step
+ * to ST_ERROR on errors.  We do this because we need a unified
+ * error handling regime which also works with callbacks from
+ * the UI code which has no way to percolate return values.
  *
- * Handlers frequently need to update the global state.  They should do
- * this by directly setting global.step.  Each handler should:
+ * Handlers frequently need to update the global state.  They
+ * should do this by directly setting global.step.  Each handler
+ * should:
  *
  *     1. if global.step == ST_IDLE, this is first time that the
- *        handler is being called and so all handler specific mem
+ *        handler is being called and so all handler specific memory
  *        should be initialised,
  *
  *     2. the handler should assert that it is in the correct state.
@@ -85,7 +82,7 @@ void require_permissioned_comm(void);
  *
  */
 
-typedef size_t (tz_handler)(command_t *);
+typedef void (tz_handler)(command_t *);
 typedef tz_handler *tz_handler_t;
 
 tz_handler handle_unimplemented;
