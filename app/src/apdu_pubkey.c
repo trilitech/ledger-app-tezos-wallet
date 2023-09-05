@@ -21,6 +21,7 @@
 #include <string.h>
 
 #include <cx.h>
+#include <io.h>
 #include <os.h>
 #include <ux.h>
 
@@ -30,18 +31,17 @@
 
 /* Prototypes */
 
-static cx_err_t provide_pubkey(uint8_t *, size_t *tx);
+static cx_err_t provide_pubkey(void);
 static cx_err_t prompt_address(void);
 static cx_err_t format_pkh(char *);
 static void stream_cb(tz_ui_cb_type_t);
 
-static cx_err_t provide_pubkey(uint8_t *const io_buffer, size_t *tx) {
+static tz_err_t provide_pubkey(void) {
+  uint8_t io_buffer[128];  /* XXXrcd: fixed length, fix it */
   cx_ecfp_public_key_t pubkey;
-  cx_err_t error = CX_OK;
+  TZ_PREAMBLE(("io_buffer=%p", io_buffer));
 
-  FUNC_ENTER(("io_buffer=%p, *tx=%u", io_buffer, *tx));
-  check_null(io_buffer);
-  check_null(tx);
+  TZ_ASSERT_NOTNULL(io_buffer);
   // Application could be PIN-locked, and pubkey->W_len would then be 0,
   // so throwing an error rather than returning an empty key
   if (os_global_pin_is_validated() != BOLOS_UX_OK) {
@@ -49,22 +49,20 @@ static cx_err_t provide_pubkey(uint8_t *const io_buffer, size_t *tx) {
   }
   CX_CHECK(generate_public_key(&pubkey, global.path_with_curve.derivation_type,
                                &global.path_with_curve.bip32_path));
-  io_buffer[(*tx)++] = pubkey.W_len;
-  memmove(io_buffer + *tx, pubkey.W, pubkey.W_len);
-  *tx += pubkey.W_len;
-  *tx = finalize_successful_send(*tx);
+  /* XXXrcd: NO NO NO NO NO !!! */
+  io_buffer[0] = pubkey.W_len;
+  memmove(io_buffer + 1, pubkey.W, pubkey.W_len);
+  io_send_response_pointer(io_buffer, pubkey.W_len + 1, SW_OK);
+  /* XXXrcd: huh?!? */
 
-end:
-  FUNC_LEAVE();
-  return error;
+  TZ_POSTAMBLE;
 }
 
 static cx_err_t format_pkh(char *buffer) {
   cx_ecfp_public_key_t pubkey = {0};
   uint8_t hash[21];
-  cx_err_t error = CX_OK;
+  TZ_PREAMBLE(("buffer=%p", buffer));
 
-  FUNC_ENTER(("buffer=%p", buffer));
   CX_CHECK(generate_public_key(&pubkey, global.path_with_curve.derivation_type,
                                &global.path_with_curve.bip32_path));
   CX_CHECK(public_key_hash(hash+1, 20, NULL,
@@ -78,24 +76,21 @@ static cx_err_t format_pkh(char *buffer) {
   }
   tz_format_pkh(hash, 21, buffer);
 
-end:
-  FUNC_LEAVE();
-  return error;
+  TZ_POSTAMBLE;
 }
 
 static void stream_cb(tz_ui_cb_type_t type) {
-  size_t tx = 0;
 
   switch (type) {
   case TZ_UI_STREAM_CB_ACCEPT:
-    CX_THROW(provide_pubkey(G_io_apdu_buffer, &tx));
-    delayed_send(tx);
+    provide_pubkey();       /* XXXrcd: not much to do on failure */
     global.step = ST_IDLE;
     break;
   case TZ_UI_STREAM_CB_REFILL:
     break;
   case TZ_UI_STREAM_CB_REJECT:
-    delay_reject();
+    io_send_sw(EXC_REJECT);
+    global.step = ST_IDLE;
     break;
   }
 }
@@ -103,9 +98,8 @@ static void stream_cb(tz_ui_cb_type_t type) {
 #ifdef HAVE_BAGL
 static cx_err_t prompt_address(void) {
   char buf[TZ_UI_STREAM_CONTENTS_SIZE + 1];
-  cx_err_t error = CX_OK;
+  TZ_PREAMBLE(("void"));
 
-  FUNC_ENTER(("void"));
   tz_ui_stream_init(stream_cb);
   CX_CHECK(format_pkh(buf));
   tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Provide Key", buf,
@@ -113,10 +107,8 @@ static cx_err_t prompt_address(void) {
   tz_ui_stream_push_accept_reject();
   tz_ui_stream_close();
   tz_ui_stream();
-  FUNC_LEAVE();
 
-end:
-  return error;
+  TZ_POSTAMBLE;
 }
 #elif HAVE_NBGL
 
@@ -150,41 +142,32 @@ static void verify_address(void) {
 static cx_err_t prompt_address(void) {
   FUNC_ENTER(("void"));
   nbgl_useCaseReviewStart(&C_tezos, "Verify Tezos\naddress", NULL, "Cancel", verify_address, cancel_callback);
-  THROW(ASYNC_EXCEPTION);
+  // THROW(ASYNC_EXCEPTION);
 }
 #endif
 
-size_t handle_apdu_get_public_key(command_t *cmd) {
+tz_err_t handle_apdu_get_public_key(command_t *cmd) {
   bool prompt = cmd->ins == INS_PROMPT_PUBLIC_KEY;
+  TZ_PREAMBLE(("cmd=%p", cmd));
 
-  FUNC_ENTER(("cmd=%p", cmd));
-  if (global.step != ST_IDLE)
-    THROW(EXC_UNEXPECTED_STATE);
-
-  if (cmd->p1 != 0)
-    THROW(EXC_WRONG_PARAM);
+  TZ_ASSERT(EXC_UNEXPECTED_STATE, global.step == ST_IDLE);
+  TZ_ASSERT(EXC_WRONG_PARAM, cmd->p1 == 0);
 
   // do not expose pks without prompt through U2F (permissionless legacy
   // comm in browser)
-  if (!prompt && G_io_apdu_media == IO_APDU_MEDIA_U2F)
-    THROW(EXC_HID_REQUIRED);
+  TZ_ASSERT(EXC_HID_REQUIRED, prompt || G_io_apdu_media != IO_APDU_MEDIA_U2F);
 
   global.path_with_curve.derivation_type = cmd->p2;
-  CX_THROW(check_derivation_type(global.path_with_curve.derivation_type));
-
-  CX_THROW(read_bip32_path(&global.path_with_curve.bip32_path, cmd->data,
+  CX_CHECK(check_derivation_type(global.path_with_curve.derivation_type));
+  CX_CHECK(read_bip32_path(&global.path_with_curve.bip32_path, cmd->data,
                            cmd->lc));
-
   if (!prompt) {
-    size_t tx = 0;
-    CX_THROW(provide_pubkey(G_io_apdu_buffer, &tx));
-    FUNC_LEAVE();
-    return tx;
+    error = provide_pubkey();
+    goto end;
   }
 
   global.step = ST_PROMPT;
   prompt_address();
 
-  FUNC_LEAVE();
-  return 0;
+  TZ_POSTAMBLE;
 }

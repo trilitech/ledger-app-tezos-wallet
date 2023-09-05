@@ -26,6 +26,8 @@
 
 #include <parser.h>
 
+#include "exception.h"
+
 // Instruction codes
 #define INS_VERSION                   0x00
 #define INS_AUTHORIZE_BAKING          0x01
@@ -49,20 +51,17 @@
 
 void clear_apdu_globals(void);
 
-size_t finalize_successful_send(size_t);
-void delayed_send(size_t);
-void delay_reject(void);
-void delay_exc(int);
-void require_permissioned_comm(void);
-
 /*
  * All of the handlers must be defined together below.  We
  * define them together as they are required to present the
  * same interface and it's easier to validate if they are
  * in the same place.
  *
- * Handlers return the length of bytes that are stored for
- * sending and toss an exception on failure.
+ * Handlers return a tz_err_t and its value is percolated up
+ * and down the stack using the macros defined in exception.h.
+ * If the main loop receives a non-zero return, then it should
+ * consider that value to be the SW that is returned to the client
+ * via io_send_sw().
  *
  * Handlers frequently need to update the global state.  They should do
  * this by directly setting global.step.  Each handler should:
@@ -85,7 +84,7 @@ void require_permissioned_comm(void);
  *
  */
 
-typedef size_t (tz_handler)(command_t *);
+typedef tz_err_t (tz_handler)(command_t *);
 typedef tz_handler *tz_handler_t;
 
 tz_handler handle_unimplemented;

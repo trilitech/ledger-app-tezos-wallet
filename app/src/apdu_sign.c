@@ -25,6 +25,7 @@
 #include <stdbool.h>
 
 #include <cx.h>
+#include <io.h>
 #include <os.h>
 #include <parser.h>
 #include <ux.h>
@@ -59,12 +60,12 @@ static tz_err_t send_cancel(void);
 static tz_err_t refill(void);
 static tz_err_t stream_cb(tz_ui_cb_type_t);
 static void the_cb(tz_ui_cb_type_t);
-static tz_err_t handle_first_apdu(packet_t *, size_t *);
+static tz_err_t handle_first_apdu(packet_t *);
 static void   handle_first_apdu_clear(packet_t *);
 static void   handle_first_apdu_blind(packet_t *);
-static tz_err_t handle_data_apdu(packet_t *, size_t *);
-static tz_err_t handle_data_apdu_clear(packet_t *, size_t *);
-static tz_err_t handle_data_apdu_blind(packet_t *, size_t *);
+static tz_err_t handle_data_apdu(packet_t *);
+static tz_err_t handle_data_apdu_clear(packet_t *);
+static tz_err_t handle_data_apdu_blind(packet_t *);
 
 
 /* Macros */
@@ -99,9 +100,8 @@ static void init_packet(packet_t *pkt, command_t *cmd) {
 static tz_err_t sign_packet(void) {
   size_t siglen = MAX_SIGNATURE_SIZE;
   size_t tx = 0;
-  tz_err_t error = TZ_OK;
+  TZ_PREAMBLE(("void"));
 
-  FUNC_ENTER(("void"));
   APDU_SIGN_ASSERT_STEP(SIGN_ST_WAIT_USER_INPUT);
   APDU_SIGN_ASSERT(global.apdu.sign.received_last_msg);
 
@@ -118,58 +118,48 @@ static tz_err_t sign_packet(void) {
                 sizeof(global.apdu.hash.final_hash),
                 &G_io_apdu_buffer[tx], &siglen));
   tx += siglen;
-  tx = finalize_successful_send(tx);
 
-  delayed_send(tx);
+  io_send_response_pointer(G_io_apdu_buffer, tx, SW_OK);
 
   global.step = ST_IDLE;
   global.apdu.sign.step = SIGN_ST_IDLE;
 
-end:
-  FUNC_LEAVE();
-  return error;
+  TZ_POSTAMBLE;
 }
 
 static tz_err_t send_reject(void) {
-  tz_err_t error = TZ_OK;
+  TZ_PREAMBLE(("void"));
 
-  FUNC_ENTER(("void"));
   APDU_SIGN_ASSERT_STEP(SIGN_ST_WAIT_USER_INPUT);
   APDU_SIGN_ASSERT(global.apdu.sign.received_last_msg);
 
   clear_data();
-  delay_reject();
+  io_send_sw(EXC_REJECT);
 
   global.step = ST_IDLE;
   global.apdu.sign.step = SIGN_ST_IDLE;
 
-end:
-  FUNC_LEAVE();
-  return error;
+  TZ_POSTAMBLE;
 }
 
 static tz_err_t send_continue(void) {
-  tz_err_t error = TZ_OK;
+  TZ_PREAMBLE(("void"));
 
-  FUNC_ENTER(("void"));
   APDU_SIGN_ASSERT(global.apdu.sign.step == SIGN_ST_WAIT_USER_INPUT ||
                    global.apdu.sign.step == SIGN_ST_WAIT_DATA);
   APDU_SIGN_ASSERT(!global.apdu.sign.received_last_msg);
 
-  delayed_send(finalize_successful_send(0));
+  io_send_sw(SW_OK);
   global.apdu.sign.step = SIGN_ST_WAIT_DATA;
 
-end:
-  FUNC_LEAVE();
-  return error;
+  TZ_POSTAMBLE;
 }
 
 static tz_err_t refill() {
   size_t wrote = 0;
   tz_parser_state *st = &global.apdu.sign.u.clear.parser_state;
-  tz_err_t error = TZ_OK;
+  TZ_PREAMBLE(("void"));
 
-  FUNC_ENTER(("void"));
   while (!TZ_IS_BLOCKED(tz_operation_parser_step(st)))
     ;
   PRINTF("[DEBUG] refill(errno: %s) \n", tz_parser_result_name(st->errno));
@@ -219,37 +209,32 @@ static tz_err_t refill() {
     TZ_CHECK(EXC_UNEXPECTED_STATE);
   }
 
-end:
-  FUNC_LEAVE();
-  return error;
+  TZ_POSTAMBLE;
 }
 
 static tz_err_t send_cancel(void) {
   tz_parser_state *st = &global.apdu.sign.u.clear.parser_state;
-  tz_err_t error = TZ_OK;
+  TZ_PREAMBLE(("void"));
 
-  FUNC_ENTER(("void"));
+  global.step = ST_IDLE;
+  global.apdu.sign.step = SIGN_ST_IDLE;
+
   switch (st->errno) {
   case TZ_ERR_INVALID_STATE:
-    delay_exc(EXC_UNEXPECTED_STATE);
+    io_send_sw(EXC_UNEXPECTED_STATE);
     break;
   case TZ_ERR_INVALID_TAG:
   case TZ_ERR_INVALID_OP:
   case TZ_ERR_UNSUPPORTED:
   case TZ_ERR_TOO_LARGE:
   case TZ_ERR_TOO_DEEP:
-    delay_exc(EXC_PARSE_ERROR);
+    io_send_sw(EXC_PARSE_ERROR);
     break;
   default:
     TZ_CHECK(EXC_UNEXPECTED_STATE);
   }
-  clear_data();
-  global.step = ST_IDLE;
-  global.apdu.sign.step = SIGN_ST_IDLE;
 
-end:
-  FUNC_LEAVE();
-  return error;
+  TZ_POSTAMBLE;
 }
 
 static tz_err_t stream_cb(tz_ui_cb_type_t type) {
@@ -262,12 +247,10 @@ static tz_err_t stream_cb(tz_ui_cb_type_t type) {
   }
 }
 
-static tz_err_t handle_first_apdu(packet_t *pkt, size_t *ret) {
-  tz_err_t error = TZ_OK;
+static tz_err_t handle_first_apdu(packet_t *pkt) {
+  TZ_PREAMBLE(("pkt=%p", pkt));
 
-  FUNC_ENTER(("pkt=%p", pkt));
   TZ_ASSERT_NOTNULL(pkt);
-  TZ_ASSERT_NOTNULL(ret);
   APDU_SIGN_ASSERT_STEP(SIGN_ST_IDLE);
 
   clear_data();
@@ -289,11 +272,9 @@ static tz_err_t handle_first_apdu(packet_t *pkt, size_t *ret) {
   }
 
   global.apdu.sign.step = SIGN_ST_WAIT_DATA;
-  *ret = finalize_successful_send(0);
+  io_send_sw(SW_OK);
 
-end:
-  FUNC_LEAVE();
-  return error;
+  TZ_POSTAMBLE;
 }
 
 static void handle_first_apdu_clear(__attribute__((unused)) packet_t *pkt) {
@@ -317,17 +298,15 @@ static void handle_first_apdu_blind(__attribute__((unused)) packet_t *pkt) {
   global.apdu.sign.u.blind.tag = 0;
 }
 
-static tz_err_t handle_data_apdu(packet_t *pkt, size_t *tx) {
-  tz_err_t error = TZ_OK;
+static tz_err_t handle_data_apdu(packet_t *pkt) {
+  TZ_PREAMBLE(("pkt=%p", pkt));
 
-  FUNC_ENTER(("pkt=%p", pkt));
   APDU_SIGN_ASSERT_STEP(SIGN_ST_WAIT_DATA);
   TZ_ASSERT_NOTNULL(pkt);
-  TZ_ASSERT_NOTNULL(tx);
 
   global.apdu.sign.packet_index++; // XXX drop or check
 
-  TZ_CHECK(cx_hash_no_throw((cx_hash_t *)&global.apdu.hash.state,
+  CX_CHECK(cx_hash_no_throw((cx_hash_t *)&global.apdu.hash.state,
 			    pkt->is_last ? CX_LAST : 0,
 			    pkt->cmd.data, pkt->cmd.lc,
 			    global.apdu.hash.final_hash,
@@ -337,21 +316,19 @@ static tz_err_t handle_data_apdu(packet_t *pkt, size_t *tx) {
     global.apdu.sign.received_last_msg = true;
 
   switch (global.step) {
-  case ST_CLEAR_SIGN: return handle_data_apdu_clear(pkt, tx);
-  case ST_BLIND_SIGN: return handle_data_apdu_blind(pkt, tx);
-  default:            return EXC_UNEXPECTED_STATE;
+  case ST_CLEAR_SIGN: CX_CHECK(handle_data_apdu_clear(pkt)); break;
+  case ST_BLIND_SIGN: CX_CHECK(handle_data_apdu_blind(pkt)); break;
+  default:            CX_CHECK(EXC_UNEXPECTED_STATE);        break;
   }
 
-end:
-  return error;
+  TZ_POSTAMBLE;
 }
 
-static tz_err_t handle_data_apdu_clear(packet_t *pkt, size_t *tx) {
+static tz_err_t handle_data_apdu_clear(packet_t *pkt) {
   tz_parser_state *st = &global.apdu.sign.u.clear.parser_state;
-  tz_err_t error = TZ_OK;
+  TZ_PREAMBLE(("pkt=0x%p", pkt));
 
   TZ_ASSERT_NOTNULL(pkt);
-  TZ_ASSERT_NOTNULL(tx);
   if (st->regs.ilen > 0)
     // we asked for more input but did not consume what we already had
     TZ_CHECK(EXC_UNEXPECTED_SIGN_STATE);
@@ -364,9 +341,7 @@ static tz_err_t handle_data_apdu_clear(packet_t *pkt, size_t *tx) {
   TZ_CHECK(refill());
   tz_ui_stream();
 
-end:
-  FUNC_LEAVE();
-  return error;
+  TZ_POSTAMBLE;
 }
 
 #ifdef HAVE_NBGL
@@ -442,17 +417,14 @@ void continue_blindsign_cb(void) {
 #endif
 
 #define FINAL_HASH global.apdu.hash.final_hash
-static tz_err_t handle_data_apdu_blind(packet_t *pkt, size_t *tx) {
-  tz_err_t error = TZ_OK;
+static tz_err_t handle_data_apdu_blind(packet_t *pkt) {
+  TZ_PREAMBLE(("pkt=0x%p", pkt));
 
   TZ_ASSERT_NOTNULL(pkt);
-  TZ_ASSERT_NOTNULL(tx);
   if (!global.apdu.sign.u.blind.tag)
     global.apdu.sign.u.blind.tag = pkt->cmd.data[0];
-  if (!pkt->is_last) {
-    *tx = finalize_successful_send(0);
-    goto end;
-  }
+  if (!pkt->is_last)
+    return io_send_sw(SW_OK);
 
   char obuf[TZ_BASE58_BUFFER_SIZE(sizeof(FINAL_HASH))];
   const char *type = "unknown type";
@@ -501,8 +473,8 @@ static tz_err_t handle_data_apdu_blind(packet_t *pkt, size_t *tx) {
   tz_ui_stream_close();
   tz_ui_stream();
 
-end:
-  return error;
+  /* XXXrcd: the logic here need analysis. */
+  TZ_POSTAMBLE;
 }
 #undef FINAL_HASH
 
@@ -512,20 +484,17 @@ static void the_cb(tz_ui_cb_type_t type) {
   CX_THROW(stream_cb(type));
 }
 
-size_t handle_apdu_sign(command_t *cmd) {
+tz_err_t handle_apdu_sign(command_t *cmd) {
   bool return_hash = cmd->ins == INS_SIGN_WITH_HASH;
   packet_t pkt;
-  size_t ret;
-
-  FUNC_ENTER(("cmd=0x%p", cmd));
+  TZ_PREAMBLE(("cmd=0x%p", cmd));
 
   init_packet(&pkt, cmd);
-  if (pkt.cmd.lc > MAX_APDU_SIZE)
-    THROW(EXC_WRONG_LENGTH_FOR_INS);
+  TZ_ASSERT(EXC_WRONG_LENGTH_FOR_INS, pkt.cmd.lc <= MAX_APDU_SIZE);
 
+PRINTF("pkt.is_first: %x\n", pkt.is_first);
   if (pkt.is_first) {
-    if (global.step != ST_IDLE)
-      THROW(EXC_UNEXPECTED_STATE);
+    TZ_ASSERT(EXC_UNEXPECTED_STATE, global.step == ST_IDLE);
 
     memset(&global.apdu, 0, sizeof(global.apdu));
 
@@ -538,22 +507,19 @@ size_t handle_apdu_sign(command_t *cmd) {
     case SCREEN_BLIND_SIGN: global.step = ST_BLIND_SIGN; break;
     default:
       /* XXXrcd: WRONG */
-      THROW(EXC_UNEXPECTED_STATE);
+      CX_CHECK(EXC_UNEXPECTED_STATE);
     }
 
-    CX_THROW(handle_first_apdu(&pkt, &ret));
+    TZ_CHECK(handle_first_apdu(&pkt));
     global.apdu.sign.return_hash = return_hash;
     goto end;
   }
 
-  if (global.step != ST_BLIND_SIGN && global.step != ST_CLEAR_SIGN)
-    THROW(EXC_UNEXPECTED_STATE);
-  if (return_hash != global.apdu.sign.return_hash)
-    THROW(EXC_INVALID_INS);
+  TZ_ASSERT(EXC_UNEXPECTED_STATE,
+            global.step == ST_BLIND_SIGN || global.step == ST_CLEAR_SIGN);
+  TZ_ASSERT(EXC_INVALID_INS, return_hash == global.apdu.sign.return_hash);
 
-  CX_THROW(handle_data_apdu(&pkt, &ret));
+  TZ_CHECK(handle_data_apdu(&pkt));
 
-end:
-  FUNC_LEAVE();
-  return ret;
+  TZ_POSTAMBLE;
 }

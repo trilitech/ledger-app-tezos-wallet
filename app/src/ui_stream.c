@@ -353,7 +353,7 @@ void tz_ui_stream_start(void) {
   FUNC_LEAVE();
 }
 
-__attribute__((noreturn)) void tz_ui_stream() {
+void tz_ui_stream() {
   FUNC_ENTER(("void"));
 
 #ifdef HAVE_BAGL
@@ -363,6 +363,5 @@ __attribute__((noreturn)) void tz_ui_stream() {
 
   redisplay();
 #endif // HAVE_BAGL
-
-  THROW(ASYNC_EXCEPTION);
+  FUNC_LEAVE();
 }

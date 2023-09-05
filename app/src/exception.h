@@ -25,6 +25,8 @@
 // Throw this to indicate prompting
 #define ASYNC_EXCEPTION 0x2000
 
+#define SW_OK	0x9000
+
 // Standard APDU error codes:
 // https://www.eftlab.co.uk/index.php/site-map/knowledge-base/118-apdu-response-list
 
@@ -43,49 +45,73 @@
 
 #define EXC_UNEXPECTED_STATE          0x9001
 #define EXC_UNEXPECTED_SIGN_STATE     0x9002
+#define EXC_UNKNOWN_CX_ERR            0x9003
 #define EXC_UNKNOWN                   0x90FF
+
+/*
+ * In the handlers and the routines that they call, we define a set of
+ * macros to standardise them, ease writing, and reduce repetition.  We
+ * begin with TZ_PREAMBLE().  It takes a bracketted list of PRINTF()
+ * arguments analogous the FUNC_ENTER() which it calls with said list.
+ * It also defines local variables for error handing.  TZ_PREAMBLE()
+ * must be placed after all of the variable definitions and before
+ * the code if you are using C89 or prior. Otherwise, it is sufficient
+ * that it is before any call to TZ_ASSERT(), TZ_CHECK(), CX_CHECK(), etc.
+ *
+ * TZ_CHECK() has similar calling conventions to CX_CHECK, but it uses
+ * different variables and that's because the meaning is different.  The
+ * former uses a tz_err_t which should correspond directly to an SW sent
+ * back to a client if it is non-zero when percolated all the way back
+ * up to main.  CX_CHECK() is caught in TZ_POSTAMBLE and converted into
+ * a tz_err_t.
+ *
+ * TZ_POSTAMBLE defines the labels to which {CX,TZ}_CHECK() and
+ * TZ_ASSERT() jump.  They are ref'd in TZ_POSTAMBLE() to suppress
+ * warnings. TZ_POSTAMBLE also calls FUNC_LEAVE to mirror the preamble
+ * calling FUNC_ENTER().
+ */
+
+typedef uint32_t tz_err_t;
+#define TZ_OK		0x0000
+
+#define TZ_PREAMBLE(_args)   						\
+		tz_err_t _tz_ret_code = TZ_OK;				\
+		cx_err_t error = CX_OK;					\
+		if (0)							\
+		    goto bail;						\
+		if (0)							\
+		    goto end;						\
+		FUNC_ENTER(_args)
+
+#define TZ_POSTAMBLE		  					\
+	    end:							\
+		if (error != CX_OK) {					\
+	            _tz_ret_code = EXC_UNKNOWN_CX_ERR;			\
+		    PRINTF("CX_CHECK failed with 0x%08x", error);	\
+		}							\
+	    bail:							\
+		FUNC_LEAVE();						\
+		return _tz_ret_code
 
 #define TZ_ASSERT(_err, _cond) do {                                         \
                 if (!(_cond)) {                                             \
                     PRINTF("Assertion (\"%s\") on %s:%u failed with %s\n",  \
                            #_cond, __FILE__, __LINE__, #_err);              \
-                    error = (_err);                                         \
-                    goto end;                                               \
+                    _tz_ret_code = (_err);                                  \
+                    goto bail;                                              \
                 }                                                           \
             } while (0)
 
-/*
- * TZ_CHECK() has the same calling conventions as CX_CHECK including using
- * the same variable (error) and label (end).  This is by design as we
- * intend to use it in the same way, but we do not want to imply that it
- * is only for crypto functions.
- *
- * We expect "tz_err_t error" to be defined in the environment, and a label
- * "end:" at the end of the function which may do some cleanup and then will
- * return "error".
- */
-
-typedef uint32_t tz_err_t;
-#define TZ_OK 0x0000
-
 #define TZ_CHECK(_call) do {                                                \
-                error = (_call);                                            \
-                if (error) {                                                \
+                _tz_ret_code = (_call);                                     \
+                if (_tz_ret_code) {                                         \
                     PRINTF("TZ_CHECK(\"%s\") on %s:%u failed with %u\n",    \
-                           #_call, __FILE__, __LINE__, error);              \
-                    goto end;                                               \
+                           #_call, __FILE__, __LINE__, _tz_ret_code);       \
+                    goto bail;                                              \
                 }                                                           \
             } while (0)
 
 #define TZ_ASSERT_NOTNULL(_x) TZ_ASSERT(EXC_MEMORY_ERROR, (_x) != NULL)
-
-// Crashes can be harder to debug than exceptions and
-// latency isn't a big concern
-static inline void check_null(void volatile const *const ptr) {
-    if (ptr == NULL) {
-        THROW(EXC_MEMORY_ERROR);
-    }
-}
 
 #ifdef TEZOS_DEBUG
 static inline __attribute((noreturn)) void failwith(const char* message) {
