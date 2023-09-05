@@ -50,21 +50,88 @@ jobs:
   build_docker_integration_tests:
     name: Build docker integration tests
     runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.container_tag.outputs.tag }}
     steps:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
       - name: Login to registry
         uses: docker/login-action@v2
         with:
-          registry: europe-west1-docker.pkg.dev
+          registry: ${{ vars.DOCKER_REGISTRY }}
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Branches ref
+        id: branches
+        shell: bash
+        run: |
+          echo "source=$(echo ${{ github.head_ref }} | cut -c -63 | sed -E 's/[^a-z0-9-]+/-/g' | sed -E 's/^-*([a-z0-9-]+[a-z0-9])-*$$/\1/g')" >> $GITHUB_OUTPUT
+          echo "target=$(echo ${GITHUB_BASE_REF} | cut -c -63 | sed -E 's/[^a-z0-9-]+/-/g' | sed -E 's/^-*([a-z0-9-]+[a-z0-9])-*$$/\1/g')" >> $GITHUB_OUTPUT
+          echo "branch=$(echo ${{ github.ref }} | perl -pE 's|.*?/.*?/||g' | cut -c -63 | sed -E 's/[^a-z0-9-]+/-/g' | sed -E 's/^-*([a-z0-9-]+[a-z0-9])-*$$/\1/g')" >> $GITHUB_OUTPUT
+      - name: Container tag
+        id: container_tag
+        run: |
+          BASE=${{ vars.DOCKER_REGISTRY }}/${{ vars.DOCKER_REPOSITORY }}/integration_tests
+          if [ ! -z ${{ steps.branches.outputs.target }} ]; then
+            echo "tag=$BASE:${{ steps.branches.outputs.source }}" >> $GITHUB_OUTPUT
+            echo "prev_tag=$BASE:${{ steps.branches.outputs.target }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=$BASE:${{ steps.branches.outputs.branch }}" >> $GITHUB_OUTPUT
+          fi
       - name: Build Testing docker image
         uses: docker/build-push-action@v4
         with:
           push: true
-          tags: europe-west1-docker.pkg.dev/blockchain-speedtest-368211/ledger-build/integration_tests:${{ github.sha }}
           file: docker/Dockerfile.integration-tests
+          tags: ${{ steps.container_tag.outputs.tag }}
+
+
+  build_docker_tezos_ocaml:
+    name: Build docker tezos ocaml
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.container_tag.outputs.tag }}
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Login to registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ vars.DOCKER_REGISTRY }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Clear more space
+        shell: bash
+        run: |
+          sudo df -h
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          sudo df -h
+      - name: Branches ref
+        id: branches
+        shell: bash
+        run: |
+          echo "source=$(echo ${{ github.head_ref }} | cut -c -63 | sed -E 's/[^a-z0-9-]+/-/g' | sed -E 's/^-*([a-z0-9-]+[a-z0-9])-*$$/\1/g')" >> $GITHUB_OUTPUT
+          echo "target=$(echo ${GITHUB_BASE_REF} | cut -c -63 | sed -E 's/[^a-z0-9-]+/-/g' | sed -E 's/^-*([a-z0-9-]+[a-z0-9])-*$$/\1/g')" >> $GITHUB_OUTPUT
+          echo "branch=$(echo ${{ github.ref }} | perl -pE 's|.*?/.*?/||g' | cut -c -63 | sed -E 's/[^a-z0-9-]+/-/g' | sed -E 's/^-*([a-z0-9-]+[a-z0-9])-*$$/\1/g')" >> $GITHUB_OUTPUT
+      - name: Container tag
+        id: container_tag
+        run: |
+          BASE=${{ vars.DOCKER_REGISTRY }}/${{ vars.DOCKER_REPOSITORY }}/tezos_ocaml
+          if [ ! -z ${{ steps.branches.outputs.target }} ]; then
+            echo "tag=$BASE:${{ steps.branches.outputs.source }}" >> $GITHUB_OUTPUT
+            echo "prev_tag=$BASE:${{ steps.branches.outputs.target }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=$BASE:${{ steps.branches.outputs.branch }}" >> $GITHUB_OUTPUT
+          fi
+      - name: Build Testing docker image
+        uses: docker/build-push-action@v4
+        with:
+          push: true
+          file: docker/Dockerfile.ocaml
+          tags: ${{ steps.container_tag.outputs.tag }}
 
   integration_tests_basic:
     needs: [build_app, build_docker_integration_tests]
@@ -74,7 +141,7 @@ jobs:
       matrix:
         device: [nanos, nanosp, nanox, stax]
     container:
-      image: europe-west1-docker.pkg.dev/blockchain-speedtest-368211/ledger-build/integration_tests:${{ github.sha }}
+      image: ${{ needs.build_docker_integration_tests.outputs.image }}
       credentials:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
@@ -94,6 +161,7 @@ jobs:
 
       - name: Run test
         run: |
+          echo "IMAGE: ${{ needs.build_docker_integration_tests.outputs.image }}"
           ./tests/integration/run_test_local.sh -F -m ${{ matrix.device }} \
             ./tests/integration/${{ matrix.device }}
 
