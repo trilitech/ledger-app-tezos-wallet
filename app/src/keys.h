@@ -22,13 +22,14 @@
 
 #pragma once
 
+#include <memory.h>
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <cx.h>
+
 #include "exception.h"
-#include "memory.h"
-#include "cx.h"
 
 #define MAX_BIP32_LEN 10
 #define SIGN_HASH_SIZE 32

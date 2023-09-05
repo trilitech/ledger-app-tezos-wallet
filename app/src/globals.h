@@ -21,16 +21,7 @@
 
 #pragma once
 
-#include "bolos_target.h"
-
-#include "exception.h"
-#include "keys.h"
-#include "parser/parser_state.h"
-#include "utils.h"
-
-#include "apdu.h"
-#include "apdu_pubkey.h"
-#include "apdu_sign.h"
+#include <bolos_target.h>
 
 #define TZ_SCREEN_WITDH_FULL_REGULAR_11PX       19
 #define TZ_SCREEN_WITDH_BETWEEN_ICONS_BOLD_11PX 16
@@ -40,10 +31,18 @@
 #  define TZ_SCREEN_LINES_11PX                    5
 #endif
 
+#include "apdu.h"
+#include "apdu_pubkey.h"
+#include "apdu_sign.h"
+#include "exception.h"
+#include "keys.h"
 #include "ui_commons.h"
 #include "ui_stream.h"
 #include "ui_home.h"
 #include "ui_settings.h"
+#include "utils.h"
+
+#include "parser/parser_state.h"
 
 // Zeros out all application-specific globals and SDK-specific
 // UI/exchange buffers.

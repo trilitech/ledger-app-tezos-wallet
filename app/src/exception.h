@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include "os.h"
+#include <os.h>
 
 // Throw this to indicate prompting
 #define ASYNC_EXCEPTION 0x2000

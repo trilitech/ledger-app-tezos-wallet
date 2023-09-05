@@ -20,20 +20,22 @@
    See the License for the specific language governing permissions and
    limitations under the License. */
 
-#include "cx.h"
+#include <memory.h>
+#include <string.h>
+#include <stdbool.h>
+
+#include <cx.h>
+#include <os.h>
+#include <ux.h>
 
 #include "apdu.h"
 #include "apdu_sign.h"
 #include "globals.h"
 #include "keys.h"
-#include "memory.h"
 #include "ui_stream.h"
 
 #include "parser/parser_state.h"
 #include "parser/operation_parser.h"
-
-#include <string.h>
-#include <stdbool.h>
 
 #ifdef HAVE_NBGL
 #include "nbgl_use_case.h"

@@ -19,18 +19,15 @@
    See the License for the specific language governing permissions and
    limitations under the License. */
 
-#include "app_main.h"
-
-#include "os.h"
-#include "cx.h"
-#include "io.h"
-
-#include "globals.h"
+#include <os.h>
+#include <cx.h>
+#include <io.h>
 
 #include "apdu.h"
-
+#include "app_main.h"
 #include "apdu_sign.h"
 #include "apdu_pubkey.h"
+#include "globals.h"
 
 void app_exit(void) {
   os_sched_exit(-1);

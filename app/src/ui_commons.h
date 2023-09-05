@@ -21,11 +21,11 @@
 
 #pragma once
 
-#include "os_io_seproxyhal.h"
-#include "os.h"
-#include "ux.h"
-
 #ifdef HAVE_BAGL
+#include <os.h>
+#include <os_io_seproxyhal.h>
+#include <ux.h>
+
 #define DISPLAY(elts, cb)\
   memcpy(global.ux.bagls, elts, sizeof(elts)); \
   G_ux.stack[0].element_arrays[0].element_array = global.ux.bagls; \

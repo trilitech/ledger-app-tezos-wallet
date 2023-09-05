@@ -21,6 +21,9 @@
 
 #ifdef HAVE_NBGL
 
+#include <os.h>
+#include <ux.h>
+
 #include "app_main.h"
 #include "globals.h"
 #include "nbgl_use_case.h"

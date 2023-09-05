@@ -18,14 +18,16 @@
    See the License for the specific language governing permissions and
    limitations under the License. */
 
-#include "apdu_pubkey.h"
+#include <string.h>
+
+#include <cx.h>
+#include <os.h>
+#include <ux.h>
 
 #include "apdu.h"
-#include "cx.h"
+#include "apdu_pubkey.h"
 #include "globals.h"
 #include "keys.h"
-
-#include <string.h>
 
 /* Prototypes */
 

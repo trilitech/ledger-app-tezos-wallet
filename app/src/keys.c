@@ -24,12 +24,11 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include "buffer.h"
-#include "crypto_helpers.h"
-
-#include "keys.h"
+#include <buffer.h>
+#include <crypto_helpers.h>
 
 #include "apdu.h"
+#include "keys.h"
 #include "globals.h"
 
 static cx_curve_t derivation_type_to_cx_curve(derivation_type_t const
