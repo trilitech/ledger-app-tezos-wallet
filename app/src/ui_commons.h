@@ -38,8 +38,4 @@
 
 #define REGULAR BAGL_FONT_OPEN_SANS_REGULAR_11px | BAGL_FONT_ALIGNMENT_CENTER
 #define BOLD BAGL_FONT_OPEN_SANS_EXTRABOLD_11px | BAGL_FONT_ALIGNMENT_CENTER
-
-extern const bagl_icon_details_t C_icon_rien;
 #endif // HAVE_BAGL
-
-void exit_app(void);

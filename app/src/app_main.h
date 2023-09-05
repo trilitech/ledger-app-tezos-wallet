@@ -22,3 +22,4 @@
 #pragma once
 
 void app_main(void);
+void app_exit(void);

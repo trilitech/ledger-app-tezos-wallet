@@ -18,6 +18,7 @@
    See the License for the specific language governing permissions and
    limitations under the License. */
 
+#include "app_main.h"
 #include "globals.h"
 #include "ui_home_nbgl.h"
 
@@ -38,7 +39,7 @@ static void cb(tz_ui_cb_type_t type) {
     ui_settings_init();
     break;
   case SCREEN_QUIT:
-    exit_app();
+    app_exit();
   }
 
   FUNC_LEAVE();

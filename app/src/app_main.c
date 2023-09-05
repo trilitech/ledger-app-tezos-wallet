@@ -32,6 +32,10 @@
 #include "apdu_sign.h"
 #include "apdu_pubkey.h"
 
+void app_exit(void) {
+  os_sched_exit(-1);
+}
+
 static uint8_t dispatch(uint8_t instruction) {
   FUNC_ENTER(("%u", instruction));
 

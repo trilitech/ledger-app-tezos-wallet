@@ -21,6 +21,7 @@
 
 #ifdef HAVE_NBGL
 
+#include "app_main.h"
 #include "globals.h"
 #include "nbgl_use_case.h"
 
@@ -103,7 +104,7 @@ void tz_ui_home_redisplay(void) {
                      "Ready for signing",
                      true,
                      ui_menu_about_wallet,
-                     exit_app);
+                     app_exit);
   } else {
     const char* button_text;
     const char* tagline;
@@ -128,7 +129,7 @@ void tz_ui_home_redisplay(void) {
                         button_text,
                         ui_toggle_clear_blind,
                         ui_menu_about_wallet,
-                        exit_app);
+                        app_exit);
   }
 
   FUNC_LEAVE();

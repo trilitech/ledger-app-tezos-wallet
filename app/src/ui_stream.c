@@ -27,6 +27,8 @@ static void succ(void);
 static void change_screen_left(void);
 static void change_screen_right(void);
 static void redisplay(void);
+
+const bagl_icon_details_t C_icon_rien = { 0, 0, 1, NULL, NULL };
 #endif // HAVE_BAGL
 
 // Model
