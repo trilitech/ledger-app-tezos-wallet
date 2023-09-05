@@ -450,56 +450,57 @@ static tz_err_t handle_data_apdu_blind(packet_t *pkt, size_t *tx) {
   TZ_ASSERT_NOTNULL(tx);
   if (!global.apdu.sign.u.blind.tag)
     global.apdu.sign.u.blind.tag = pkt->buff[0];
-  if (pkt->is_last) {
-    char obuf[TZ_BASE58_BUFFER_SIZE(sizeof(FINAL_HASH))];
-    const char *type = "unknown type";
+  if (!pkt->is_last) {
+    *tx = finalize_successful_send(0);
+    goto end;
+  }
 
-    global.apdu.sign.received_last_msg = true;
-    global.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
+  char obuf[TZ_BASE58_BUFFER_SIZE(sizeof(FINAL_HASH))];
+  const char *type = "unknown type";
 
-    tz_format_base58(FINAL_HASH, sizeof(FINAL_HASH), obuf);
+  global.apdu.sign.received_last_msg = true;
+  global.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
 
-    switch(global.apdu.sign.u.blind.tag) {
-    case 0x01: case 0x11: type = "Block\nproposal";         break;
-    case 0x03:            type = "Manager\noperation";      break;
-    case 0x02:
-    case 0x12: case 0x13: type = "Consensus\noperation";    break;
-    case 0x05:            type = "Micheline\nexpression";   break;
-    default:                                                break;
-    }
+  tz_format_base58(FINAL_HASH, sizeof(FINAL_HASH), obuf);
+
+  switch(global.apdu.sign.u.blind.tag) {
+  case 0x01: case 0x11: type = "Block\nproposal";         break;
+  case 0x03:            type = "Manager\noperation";      break;
+  case 0x02:
+  case 0x12: case 0x13: type = "Consensus\noperation";    break;
+  case 0x05:            type = "Micheline\nexpression";   break;
+  default:                                                break;
+  }
 
 #ifdef HAVE_BAGL
-    tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Sign Hash", type,
-                          TZ_UI_ICON_NONE);
+  tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Sign Hash", type,
+                        TZ_UI_ICON_NONE);
 
-    tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Sign Hash", obuf,
-                          TZ_UI_ICON_NONE);
+  tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Sign Hash", obuf,
+                        TZ_UI_ICON_NONE);
 
-    tz_ui_stream_push_accept_reject();
+  tz_ui_stream_push_accept_reject();
 #endif
 
 #ifdef HAVE_NBGL
-    char request[80];
-    snprintf(request, sizeof(request), "Review request to blind\nsign %s", type);
-    global.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
+  char request[80];
+  snprintf(request, sizeof(request), "Review request to blind\nsign %s", type);
+  global.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
 
-    transaction_type = type;
-    strcpy(hash, obuf);
+  transaction_type = type;
+  strcpy(hash, obuf);
 
-    nbgl_useCaseReviewStart(&C_tezos,
-                            request,
-                            NULL,
-                            "Reject request",
-                            continue_blindsign_cb,
-                            reject_blindsign_cb
-                            );
+  nbgl_useCaseReviewStart(&C_tezos,
+                          request,
+                          NULL,
+                          "Reject request",
+                          continue_blindsign_cb,
+                          reject_blindsign_cb
+                          );
 #endif
 
-    tz_ui_stream_close();
-    tz_ui_stream();
-  } else {
-    *tx = finalize_successful_send(0);
-  }
+  tz_ui_stream_close();
+  tz_ui_stream();
 
 end:
   return error;
