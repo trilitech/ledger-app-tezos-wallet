@@ -58,8 +58,10 @@ void tz_ui_stream_close() {
   tz_ui_stream_t *s = &global.stream;
 
   FUNC_ENTER(("void"));
-  if (s->full)
-    failwith("trying to close already closed stream display");
+  if (s->full) {
+    PRINTF("trying to close already closed stream display");
+    THROW(EXC_UNKNOWN);
+  }
   s->full = true;
   FUNC_LEAVE();
 }
@@ -119,7 +121,8 @@ size_t tz_ui_stream_pushl(tz_ui_cb_type_t type, const char *title,
 
   FUNC_ENTER(("title=%s, value=%s", title, value));
   if (s->full) {
-    failwith("trying to push in already closed stream display");
+    PRINTF("trying to push in already closed stream display");
+    THROW(EXC_UNKNOWN);
   }
 #ifdef TEZOS_DEBUG
   int prev_total = s->total;
@@ -353,7 +356,7 @@ void tz_ui_stream_start(void) {
   FUNC_LEAVE();
 }
 
-__attribute__((noreturn)) void tz_ui_stream() {
+void tz_ui_stream() {
   FUNC_ENTER(("void"));
 
 #ifdef HAVE_BAGL
@@ -363,6 +366,5 @@ __attribute__((noreturn)) void tz_ui_stream() {
 
   redisplay();
 #endif // HAVE_BAGL
-
-  THROW(ASYNC_EXCEPTION);
+  FUNC_LEAVE();
 }
