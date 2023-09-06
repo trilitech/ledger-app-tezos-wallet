@@ -263,12 +263,13 @@ run_a_test() {
     fi
 
     jq -sR --rawfile stdout $OUTF --rawfile stderr $ERRF       \
-          --rawfile speculog $SPECULOG                         \
+           --rawfile script $CMD --rawfile speculog $SPECULOG  \
     '
         { "path":     "'"$CMD"'"
         , "pid":      "'$PID'"
         , "port":     "'$PORT'"
         , "retcode":  "'$RETCODE'"
+        , "script":   $script
         , "stdout":   $stdout
         , "stderr":   $stderr
         , "speculog": $speculog
