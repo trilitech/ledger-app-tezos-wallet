@@ -253,9 +253,9 @@ run_a_test() {
                     ;;
             esac
         )
-     ) > $OUTF 2> $ERRF
-     RETCODE=$?
-     set -e
+    ) > $OUTF 2> $ERRF
+    RETCODE=$?
+    set -e
 
     if [ $RETCODE = 0 -a "$ONLY_FAILURES" = "YES" ]; then
         rm $OUTF $ERRF $SPECULOG
