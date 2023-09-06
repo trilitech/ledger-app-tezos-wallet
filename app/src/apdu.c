@@ -21,6 +21,8 @@
    See the License for the specific language governing permissions and
    limitations under the License. */
 
+#include <parser.h>
+
 #include "apdu.h"
 #include "globals.h"
 
@@ -34,14 +36,24 @@ const uint8_t version[4] = {
   PATCH_VERSION
 };
 
-size_t handle_apdu_version() {
+size_t handle_unimplemented(__attribute__((unused))command_t *cmd) {
+    PRINTF("[ERROR] Unimplemented instruction 0x%02x\n", cmd->ins);
+    THROW(EXC_INVALID_INS);
+}
+
+size_t handle_apdu_version(__attribute__((unused))command_t *cmd) {
+    if (global.step != ST_IDLE)
+        THROW(EXC_UNEXPECTED_STATE);
     memcpy(G_io_apdu_buffer, &version, sizeof(version));
     size_t tx = sizeof(version);
     return finalize_successful_send(tx);
 }
 
-size_t handle_apdu_git() {
+size_t handle_apdu_git(__attribute__((unused))command_t *cmd) {
     static const char commit[] = COMMIT;
+
+    if (global.step != ST_IDLE)
+        THROW(EXC_UNEXPECTED_STATE);
     memcpy(G_io_apdu_buffer, commit, sizeof(commit));
     size_t tx = sizeof(commit);
     return finalize_successful_send(tx);

@@ -23,4 +23,6 @@
 #include <unistd.h>
 #include <stdbool.h>
 
-size_t handle_apdu_get_public_key(bool);
+#include <parser.h>
+
+size_t handle_apdu_get_public_key(command_t *);

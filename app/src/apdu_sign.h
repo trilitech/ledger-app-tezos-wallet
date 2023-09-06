@@ -23,6 +23,8 @@
 #include <unistd.h>
 #include <stdbool.h>
 
+#include <parser.h>
+
 #include "keys.h"
 #include "parser/parser_state.h"
 
@@ -62,4 +64,4 @@ typedef struct {
 
 /* Prototypes */
 
-size_t handle_apdu_sign(bool);
+size_t handle_apdu_sign(command_t *);

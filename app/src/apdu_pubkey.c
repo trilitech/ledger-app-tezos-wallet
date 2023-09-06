@@ -155,22 +155,26 @@ static cx_err_t prompt_address(void) {
 }
 #endif
 
-size_t handle_apdu_get_public_key(bool prompt) {
-  uint8_t *dataBuffer = G_io_apdu_buffer + OFFSET_CDATA;
+size_t handle_apdu_get_public_key(command_t *cmd) {
+  bool prompt = cmd->ins == INS_PROMPT_PUBLIC_KEY;
 
-  FUNC_ENTER(("prompt=%s", prompt ? "true" : "false"));
-  if (G_io_apdu_buffer[OFFSET_P1] != 0) THROW(EXC_WRONG_PARAM);
+  FUNC_ENTER(("cmd=%p", cmd));
+  if (global.step != ST_IDLE)
+    THROW(EXC_UNEXPECTED_STATE);
+
+  if (cmd->p1 != 0)
+    THROW(EXC_WRONG_PARAM);
 
   // do not expose pks without prompt through U2F (permissionless legacy
   // comm in browser)
   if (!prompt && G_io_apdu_media == IO_APDU_MEDIA_U2F)
     THROW(EXC_HID_REQUIRED);
 
-  global.path_with_curve.derivation_type = G_io_apdu_buffer[OFFSET_CURVE];
+  global.path_with_curve.derivation_type = cmd->p2;
   CX_THROW(check_derivation_type(global.path_with_curve.derivation_type));
 
-  CX_THROW(read_bip32_path(&global.path_with_curve.bip32_path, dataBuffer,
-                           G_io_apdu_buffer[OFFSET_LC]));
+  CX_THROW(read_bip32_path(&global.path_with_curve.bip32_path, cmd->data,
+                           cmd->lc));
 
   if (!prompt) {
     size_t tx = 0;

@@ -22,6 +22,7 @@
 #include <os.h>
 #include <cx.h>
 #include <io.h>
+#include <parser.h>
 
 #include "apdu.h"
 #include "app_main.h"
@@ -29,12 +30,18 @@
 #include "apdu_pubkey.h"
 #include "globals.h"
 
+#define CLA 0x80
+
 void app_exit(void) {
   os_sched_exit(-1);
 }
 
-static uint8_t dispatch(uint8_t instruction) {
-  FUNC_ENTER(("%u", instruction));
+static uint8_t dispatch(command_t *cmd) {
+  size_t (*f)(command_t *);
+
+  FUNC_ENTER(("cmd=0x%p ins=%u", cmd, cmd->ins));
+  if (cmd->cla != CLA)
+    THROW(EXC_CLASS);
 
   switch (tz_ui_stream_get_type()) {
   case SCREEN_QUIT:
@@ -44,46 +51,36 @@ static uint8_t dispatch(uint8_t instruction) {
     break;
   }
 
-  switch (instruction) {
-  case INS_VERSION:
-  case INS_PROMPT_PUBLIC_KEY:
-  case INS_GET_PUBLIC_KEY:
-  case INS_GIT:
-    if (!(global.step == ST_IDLE))
-      THROW(EXC_UNEXPECTED_STATE);
-  }
-
-  switch (instruction) {
-  case INS_SIGN:
-  case INS_SIGN_WITH_HASH:
-      return handle_apdu_sign(instruction == INS_SIGN_WITH_HASH);
-  case INS_VERSION:
-    return handle_apdu_version();
-  case INS_PROMPT_PUBLIC_KEY:
-  case INS_GET_PUBLIC_KEY:
-    return handle_apdu_get_public_key(instruction == INS_PROMPT_PUBLIC_KEY);
-  case INS_GIT:
-    return handle_apdu_git();
-  case INS_AUTHORIZE_BAKING:
-  case INS_RESET:
-  case INS_QUERY_AUTH_KEY:
-  case INS_QUERY_MAIN_HWM:
-  case INS_SETUP:
-  case INS_QUERY_ALL_HWM:
-  case INS_QUERY_AUTH_KEY_WITH_CURVE:
-  case INS_HMAC:
-  case INS_SIGN_UNSAFE:
+  switch (cmd->ins) {
+  case INS_VERSION:                   f = handle_apdu_version;        break;
+  case INS_SIGN:                      f = handle_apdu_sign;           break;
+  case INS_SIGN_WITH_HASH:            f = handle_apdu_sign;           break;
+  case INS_PROMPT_PUBLIC_KEY:         f = handle_apdu_get_public_key; break;
+  case INS_GET_PUBLIC_KEY:            f = handle_apdu_get_public_key; break;
+  case INS_GIT:                       f = handle_apdu_git;            break;
+  case INS_AUTHORIZE_BAKING:          f = handle_unimplemented;       break;
+  case INS_RESET:                     f = handle_unimplemented;       break;
+  case INS_QUERY_AUTH_KEY:            f = handle_unimplemented;       break;
+  case INS_QUERY_MAIN_HWM:            f = handle_unimplemented;       break;
+  case INS_SETUP:                     f = handle_unimplemented;       break;
+  case INS_QUERY_ALL_HWM:             f = handle_unimplemented;       break;
+  case INS_QUERY_AUTH_KEY_WITH_CURVE: f = handle_unimplemented;       break;
+  case INS_HMAC:                      f = handle_unimplemented;       break;
+  case INS_SIGN_UNSAFE:               f = handle_unimplemented;       break;
   default:
-    PRINTF("[ERROR] invalid instruction %02X\n", instruction);
+    PRINTF("[ERROR] invalid instruction 0x%02x\n", cmd->ins);
     THROW(EXC_INVALID_INS);
   }
+
+  uint8_t ret = f(cmd);
   FUNC_LEAVE();
+  return ret;
 }
 
 
-#define CLA 0x80
-
 void app_main() {
+    command_t cmd;
+
     FUNC_ENTER(("void"));
     app_stack_canary = 0xDEADBEEF;
 
@@ -130,20 +127,12 @@ void app_main() {
                     THROW(EXC_SECURITY);
                 }
 
-                if (G_io_apdu_buffer[OFFSET_CLA] != CLA) {
-                    THROW(EXC_CLASS);
-                }
-
-                // The amount of bytes we get in our APDU must match what
-                // the APDU declares its own content length is. All these
-                // values are unsigned, so this implies that
-                // if rx < OFFSET_CDATA it also throws.
-                if (rx != G_io_apdu_buffer[OFFSET_LC] + OFFSET_CDATA) {
+		if (!apdu_parser(&cmd, G_io_apdu_buffer, rx)) {
+		    PRINTF("[ERROR] Bad length: %u\n", rx);
                     THROW(EXC_WRONG_LENGTH);
-                }
+		}
 
-                uint8_t const instruction = G_io_apdu_buffer[OFFSET_INS];
-                size_t const tx = dispatch(instruction);
+                size_t const tx = dispatch(&cmd);
 
                 rx = io_exchange(CHANNEL_APDU, tx);
             }

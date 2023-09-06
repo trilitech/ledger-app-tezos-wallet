@@ -24,13 +24,7 @@
 
 #include <string.h>
 
-#define OFFSET_CLA   0
-#define OFFSET_INS   1  // instruction code
-#define OFFSET_P1    2  // user-defined 1-byte parameter
-#define OFFSET_P2    3
-#define OFFSET_CURVE OFFSET_P2
-#define OFFSET_LC    4  // length of CDATA
-#define OFFSET_CDATA 5  // payload
+#include <parser.h>
 
 // Instruction codes
 #define INS_VERSION                   0x00
@@ -61,5 +55,6 @@ void delay_reject(void);
 void delay_exc(int);
 void require_permissioned_comm(void);
 
-size_t handle_apdu_version(void);
-size_t handle_apdu_git(void);
+size_t handle_unimplemented(command_t *);
+size_t handle_apdu_version(command_t *);
+size_t handle_apdu_git(command_t *);
