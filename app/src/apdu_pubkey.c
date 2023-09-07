@@ -181,10 +181,11 @@ size_t handle_apdu_get_public_key(command_t *cmd) {
     CX_THROW(provide_pubkey(G_io_apdu_buffer, &tx));
     FUNC_LEAVE();
     return tx;
-  } else {
-    global.step = ST_PROMPT;
-    prompt_address();
   }
+
+  global.step = ST_PROMPT;
+  prompt_address();
+
   FUNC_LEAVE();
   return 0;
 }

@@ -536,15 +536,17 @@ size_t handle_apdu_sign(command_t *cmd) {
 
     CX_THROW(handle_first_apdu(&pkt, &ret));
     global.apdu.sign.return_hash = return_hash;
-  } else {
-    if (global.step != ST_BLIND_SIGN && global.step != ST_CLEAR_SIGN)
-      THROW(EXC_UNEXPECTED_STATE);
-    if (return_hash != global.apdu.sign.return_hash)
-      THROW(EXC_INVALID_INS);
-
-    CX_THROW(handle_data_apdu(&pkt, &ret));
+    goto end;
   }
 
+  if (global.step != ST_BLIND_SIGN && global.step != ST_CLEAR_SIGN)
+    THROW(EXC_UNEXPECTED_STATE);
+  if (return_hash != global.apdu.sign.return_hash)
+    THROW(EXC_INVALID_INS);
+
+  CX_THROW(handle_data_apdu(&pkt, &ret));
+
+end:
   FUNC_LEAVE();
   return ret;
 }
