@@ -26,9 +26,6 @@
 #include "apdu.h"
 #include "globals.h"
 
-#include "apdu_sign.h"
-#include "apdu_pubkey.h"
-
 const uint8_t version[4] = {
   0 /* wallet */,
   MAJOR_VERSION,

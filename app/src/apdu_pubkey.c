@@ -25,7 +25,6 @@
 #include <ux.h>
 
 #include "apdu.h"
-#include "apdu_pubkey.h"
 #include "globals.h"
 #include "keys.h"
 

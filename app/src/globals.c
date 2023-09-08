@@ -25,10 +25,6 @@
 
 globals_t global;
 
-void clear_apdu_globals(void) {
-    memset(&global.apdu, 0, sizeof(global.apdu));
-}
-
 void init_globals(void) {
     memset(&global, 0, sizeof(global));
     memset(G_io_seproxyhal_spi_buffer, 0, sizeof(G_io_seproxyhal_spi_buffer));

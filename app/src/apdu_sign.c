@@ -67,12 +67,17 @@ static tz_err_t handle_data_apdu_clear(packet_t *, size_t *);
 static tz_err_t handle_data_apdu_blind(packet_t *, size_t *);
 
 
+/* Macros */
+
 #define P1_FIRST          0x00
 #define P1_NEXT           0x01
 #define P1_HASH_ONLY_NEXT 0x03  // You only need it once
 #define P1_LAST_MARKER    0x80
 
 #define TZ_UI_STREAM_CB_CANCEL 0xf0
+
+#define APDU_SIGN_ASSERT(_cond)  TZ_ASSERT(EXC_UNEXPECTED_SIGN_STATE, (_cond))
+#define APDU_SIGN_ASSERT_STEP(x) APDU_SIGN_ASSERT(global.apdu.sign.step == (x))
 
 
 static inline void clear_data(void) {
@@ -521,6 +526,8 @@ size_t handle_apdu_sign(command_t *cmd) {
   if (pkt.is_first) {
     if (global.step != ST_IDLE)
       THROW(EXC_UNEXPECTED_STATE);
+
+    memset(&global.apdu, 0, sizeof(global.apdu));
 
     #ifdef HAVE_BAGL
     switch (tz_ui_stream_get_type()) {

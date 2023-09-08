@@ -32,7 +32,6 @@
 #endif
 
 #include "apdu.h"
-#include "apdu_pubkey.h"
 #include "apdu_sign.h"
 #include "exception.h"
 #include "keys.h"

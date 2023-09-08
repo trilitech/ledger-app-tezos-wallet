@@ -55,6 +55,41 @@ void delay_reject(void);
 void delay_exc(int);
 void require_permissioned_comm(void);
 
-size_t handle_unimplemented(command_t *);
-size_t handle_apdu_version(command_t *);
-size_t handle_apdu_git(command_t *);
+/*
+ * All of the handlers must be defined together below.  We
+ * define them together as they are required to present the
+ * same interface and it's easier to validate if they are
+ * in the same place.
+ *
+ * Handlers return the length of bytes that are stored for
+ * sending and toss an exception on failure.
+ *
+ * Handlers frequently need to update the global state.  They should do
+ * this by directly setting global.step.  Each handler should:
+ *
+ *     1. if global.step == ST_IDLE, this is first time that the
+ *        handler is being called and so all handler specific mem
+ *        should be initialised,
+ *
+ *     2. the handler should assert that it is in the correct state.
+ *
+ * Note that (1) occurs before (2).  This is because if we are back in
+ * ST_IDLE, that means that a previous invocation of this handler or a
+ * callback in the UI bits has invalidated any existing transaction that
+ * is in flight.  Our variables might be a union with other handlers and
+ * all zeroes may not be the default state for any handler and so there
+ * is no reliable way for any handler to reset its memory to a factory
+ * default setting for another unspecified future handler.  And so, we
+ * have each handler reset its data structures up front where we know
+ * what the next handler is going to be.
+ *
+ */
+
+typedef size_t (tz_handler)(command_t *);
+typedef tz_handler *tz_handler_t;
+
+tz_handler handle_unimplemented;
+tz_handler handle_apdu_version;
+tz_handler handle_apdu_git;
+tz_handler handle_apdu_get_public_key;
+tz_handler handle_apdu_sign;

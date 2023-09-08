@@ -26,8 +26,6 @@
 
 #include "apdu.h"
 #include "app_main.h"
-#include "apdu_sign.h"
-#include "apdu_pubkey.h"
 #include "globals.h"
 
 #define CLA 0x80
@@ -37,7 +35,7 @@ void app_exit(void) {
 }
 
 static uint8_t dispatch(command_t *cmd) {
-  size_t (*f)(command_t *);
+  tz_handler_t f;
 
   FUNC_ENTER(("cmd=0x%p ins=%u", cmd, cmd->ins));
   if (cmd->cla != CLA)
@@ -143,8 +141,6 @@ void app_main() {
                 THROW(EXCEPTION_IO_RESET);
             }
             CATCH_OTHER(e) {
-                clear_apdu_globals();  // IMPORTANT: Application state must
-                                       // not persist through errors
                 global.step = ST_IDLE;
 
                 uint16_t sw = e;
