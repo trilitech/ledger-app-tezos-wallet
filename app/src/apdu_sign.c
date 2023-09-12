@@ -206,6 +206,7 @@ static tz_err_t refill() {
     break;
   case TZ_ERR_INVALID_TAG:
   case TZ_ERR_INVALID_OP:
+  case TZ_ERR_INVALID_DATA:
   case TZ_ERR_UNSUPPORTED:
   case TZ_ERR_TOO_LARGE:
   case TZ_ERR_TOO_DEEP:
@@ -235,6 +236,7 @@ static tz_err_t send_cancel(void) {
     break;
   case TZ_ERR_INVALID_TAG:
   case TZ_ERR_INVALID_OP:
+  case TZ_ERR_INVALID_DATA:
   case TZ_ERR_UNSUPPORTED:
   case TZ_ERR_TOO_LARGE:
   case TZ_ERR_TOO_DEEP:

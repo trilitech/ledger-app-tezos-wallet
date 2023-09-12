@@ -26,6 +26,7 @@ const char* tz_parser_result_name(tz_parser_result code) {
   case TZ_BLO_IM_FULL: return "IM_FULL";
   case TZ_ERR_INVALID_TAG: return "ERR_INVALID_TAG";
   case TZ_ERR_INVALID_OP: return "ERR_INVALID_OP";
+  case TZ_ERR_INVALID_DATA: return "ERR_INVALID_DATA";
   case TZ_ERR_UNSUPPORTED: return "ERR_UNSUPPORTED";
   case TZ_ERR_TOO_LARGE: return "ERR_TOO_LARGE";
   case TZ_ERR_TOO_DEEP: return "ERR_TOO_DEEP";

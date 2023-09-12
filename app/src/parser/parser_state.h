@@ -54,6 +54,7 @@ typedef enum {
   // everything below is an error
   TZ_ERR_INVALID_TAG = 200,
   TZ_ERR_INVALID_OP,
+  TZ_ERR_INVALID_DATA,
   TZ_ERR_UNSUPPORTED,
   TZ_ERR_TOO_LARGE,
   TZ_ERR_TOO_DEEP,
