@@ -29,3 +29,4 @@ tz_parser_result tz_parse_nat_step(tz_num_parser_buffer *,
 
 bool tz_adjust_decimal(const char *, int, char *, int, int);
 bool tz_print_uint64(uint64_t, char *, int, int);
+bool tz_string_to_uint64(const char *, uint64_t *);

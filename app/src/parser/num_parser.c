@@ -152,3 +152,31 @@ tz_print_uint64(uint64_t value, char *out, int out_len, int nb_decimals)
 
     return tz_adjust_decimal(buff, offset, out, out_len, nb_decimals);
 }
+
+bool
+tz_string_to_uint64(const char *str, uint64_t *res)
+{
+    if (str == NULL || res == NULL) {
+        PRINTF("[ERROR] Null parameter\n");
+        goto error;
+    }
+
+    memset(res, '\0', sizeof(uint64_t));
+    int  r = 0;
+    char c;
+
+    while ((c = *str++) != '\0') {
+        if (c < '0' || c > '9') {
+            PRINTF("[ERROR] Non-digit character: %c\n", c);
+            goto error;
+        }
+        r    = r * 10 + (c - '0');
+        *res = *res * 10 + (c - '0');
+    }
+
+    return true;
+
+error:
+    memset(res, '\0', sizeof(uint64_t));
+    return false;
+}
