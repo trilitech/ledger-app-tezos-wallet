@@ -151,4 +151,9 @@ typedef struct {
     uint8_t  source[22];       // check consistent source in batch
     uint8_t  destination[22];  // saved for entrypoint dispatch
     uint16_t batch_index;      // to print a sequence number
+#ifdef HAVE_SWAP
+    tz_operation_tag last_tag;
+    uint64_t         last_fee;
+    uint64_t         last_amount;
+#endif  // HAVE_SWAP
 } tz_operation_state;
