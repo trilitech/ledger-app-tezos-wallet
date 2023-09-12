@@ -38,7 +38,7 @@ endif
 #        Mandatory configuration       #
 ########################################
 # Application name
-APPNAME = "Tezos Wallet"
+APPNAME = "New Tezos Wallet"
 
 # Application version
 APPVERSION_M=2
