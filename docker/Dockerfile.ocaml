@@ -16,4 +16,6 @@ RUN    sudo cp /usr/bin/opam-2.1 /usr/bin/opam;                                 
        opam pin tezos-017-PtNairob-test-helpers.$OCTEZ_VERSION              $OCTEZ_URL; \
        opam pin tezos-benchmark-017-PtNairob.$OCTEZ_VERSION                 $OCTEZ_URL; \
        opam pin tezos-shell-benchmarks.$OCTEZ_VERSION                       $OCTEZ_URL; \
-       opam pin tezos-benchmarks-proto-017-PtNairob.$OCTEZ_VERSION          $OCTEZ_URL
+       opam pin tezos-benchmarks-proto-017-PtNairob.$OCTEZ_VERSION          $OCTEZ_URL; \
+       rm -rf opam-repository .opam/download-cache .opam/repo \
+              .opam/4.14/.opam-switch/build .opam/4.14/.opam-switch/sources;
