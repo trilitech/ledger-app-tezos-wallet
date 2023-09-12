@@ -38,6 +38,11 @@
 #include "parser/parser_state.h"
 #include "parser/operation_parser.h"
 
+#ifdef HAVE_SWAP
+#include "swap.h"
+#include "handle_swap.h"
+#endif  // HAVE_SWAP
+
 #ifdef HAVE_NBGL
 #include "nbgl_use_case.h"
 #endif
@@ -256,7 +261,33 @@ end:
 
 static tz_err_t stream_cb(tz_ui_cb_type_t type) {
   switch (type) {
-  case TZ_UI_STREAM_CB_ACCEPT: return sign_packet();
+  case TZ_UI_STREAM_CB_ACCEPT:
+#ifdef HAVE_SWAP
+    if (G_called_from_swap) {
+      if (G_swap_response_ready)
+        os_sched_exit(-1);
+      else
+        G_swap_response_ready = true;
+
+      tz_err_t error = TZ_OK;
+
+      tz_operation_state op = global.apdu.sign.u.clear.parser_state.operation;
+      if (swap_check_validity(op.destination,
+                              op.batch_index,
+                              op.last_tag,
+                              op.last_fee,
+                              op.last_amount)) {
+        TZ_CHECK(sign_packet());
+      } else {
+        TZ_CHECK(send_reject());
+      }
+      TZ_CHECK(EXCEPTION_IO_RESET);
+    end:
+      FUNC_LEAVE();
+      return error;
+    }
+#endif  // HAVE_SWAP
+    return sign_packet();
   case TZ_UI_STREAM_CB_REFILL: return refill();
   case TZ_UI_STREAM_CB_REJECT: return send_reject();
   case TZ_UI_STREAM_CB_CANCEL: return send_cancel();

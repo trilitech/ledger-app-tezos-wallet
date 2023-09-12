@@ -22,6 +22,7 @@
 
 #ifdef HAVE_SWAP
 
+#include "handle_swap.h"
 #include "keys.h"
 #include "swap.h"
 #include "utils.h"
@@ -193,6 +194,51 @@ bool swap_copy_transaction_parameters(create_transaction_parameters_t *params) {
   G_swap_transaction_result = &params->result;
 
   memcpy(&G_swap_transaction_parameters, &params_copy, sizeof(params_copy));
+
+  FUNC_LEAVE();
+  return true;
+
+ error:
+  FUNC_LEAVE();
+  return false;
+}
+
+bool swap_check_validity(uint8_t *destination,
+                         uint16_t batch_size,
+                         tz_operation_tag tag,
+                         uint64_t fee,
+                         uint64_t amount) {
+  FUNC_ENTER(("destination=%p, batch_size=%u, tag=%d", destination, batch_size, tag));
+
+  char destination_address[ADDRESS_MAX_SIZE];
+
+  if (batch_size != 1) {
+    PRINTF("[ERROR] More than one operation parsed: %d\n", batch_size);
+    goto error;
+  }
+
+  if (tag != TZ_OPERATION_TAG_TRANSACTION) {
+    PRINTF("[ERROR] The operation parsed is not a transaction: %d\n", tag);
+    goto error;
+  }
+
+  tz_format_address(destination, 22, destination_address);
+  if (strcmp(destination_address, G_swap_transaction_parameters.destination_address) != 0) {
+    PRINTF("[ERROR] Different addresses: %s !=  %s\n",
+           destination_address,
+           G_swap_transaction_parameters.destination_address);
+    goto error;
+  }
+
+  if (G_swap_transaction_parameters.amount != amount) {
+    PRINTF("[ERROR] Different amounts\n");
+    goto error;
+  }
+
+  if (G_swap_transaction_parameters.fee != fee) {
+    PRINTF("[ERROR] Different fees\n");
+    goto error;
+  }
 
   FUNC_LEAVE();
   return true;
