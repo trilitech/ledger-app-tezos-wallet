@@ -437,11 +437,11 @@ main() {
     fi
 
     if [ -z "$TGZ" ]; then
-        TGZ="app_${TARGET}.tgz"
+        TGZ="./app_${TARGET}.tgz"
     fi
 
     if [ -z "$DTGZ" ]; then
-        DTGZ="app_${TARGET}_dbg.tgz"
+        DTGZ="./app_${TARGET}_dbg.tgz"
     fi
 
     [ ! -f "$TGZ" ]  && usage "Tarball \"$TGZ\" does not exist."
