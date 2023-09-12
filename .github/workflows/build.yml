@@ -1,0 +1,223 @@
+name: Build & test apps
+
+# This workflow will build the app and then run functional tests using the Ragger framework upon Speculos emulation.
+# It then calls another reusable workflow to run the Ragger tests on the compiled application binary.
+#
+# While this workflow is optional, having functional testing on your application is mandatory and this workflow and
+# tooling environment is meant to be easy to use and adapt after forking your application
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build_app:
+    name: Build application
+    strategy:
+      matrix:
+        device: [nanos, nanosp, nanox, stax]
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder:1d9f741e9bc969b072e2de53762b64993536c0f7
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Build
+        run: |
+          DEVICE_SDK="$(echo ${{ matrix.device }} | tr a-z A-Z)_SDK"
+          bash -c "make -C app BOLOS_SDK=\$${DEVICE_SDK}"
+          tar -C app/bin -czf app_${{ matrix.device }}.tgz .
+          bash -c "make -C app BOLOS_SDK=\$${DEVICE_SDK} DEBUG=1"
+          tar -C app/bin -czf app_${{ matrix.device }}_dbg.tgz .
+      - name: Upload
+        uses: actions/upload-artifact@v3
+        with:
+          path: app_${{ matrix.device }}.tgz
+          name: app_${{ matrix.device }}.tgz
+      - name: Upload (dbg)
+        uses: actions/upload-artifact@v3
+        with:
+          path: app_${{ matrix.device }}_dbg.tgz
+          name: app_${{ matrix.device }}_dbg.tgz
+
+  build_docker_integration_tests:
+    uses: ./.github/workflows/docker.yml
+    secrets: inherit
+    with:
+      dockerfile: docker/Dockerfile.integration-tests
+      image_name: integration_tests
+
+  build_docker_tezos_ocaml:
+    uses: ./.github/workflows/docker.yml
+    secrets: inherit
+    with:
+      dockerfile: docker/Dockerfile.ocaml
+      image_name: tezos_ocaml
+
+  integration_tests_basic:
+    needs: [build_app, build_docker_integration_tests]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        device: [nanos, nanosp, nanox, stax]
+    container:
+      image: ${{ needs.build_docker_integration_tests.outputs.image }}
+      credentials:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Download app
+        uses: actions/download-artifact@v3
+        with:
+          name: app_${{ matrix.device }}.tgz
+
+      - name: Download app (dbg)
+        uses: actions/download-artifact@v3
+        with:
+          name: app_${{ matrix.device }}_dbg.tgz
+
+      - name: Run test
+        run: |
+          ./tests/integration/run_test_local.sh -F -m ${{ matrix.device }} \
+            ./tests/integration/${{ matrix.device }}
+
+      - name: Upload results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: integration_tests_${{ matrix.device }}.json
+          path: ./integration_tests.json
+
+  generate_samples_unit_tests:
+    needs: [build_docker_tezos_ocaml]
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ needs.build_docker_tezos_ocaml.outputs.image }}
+      credentials:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+      options: -u root --entrypoint /bin/bash
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Create dirs
+        run: |
+          mkdir -p tests/samples/micheline/nanos
+          mkdir -p tests/samples/operations/nanos
+
+          mkdir -p tests/samples/micheline/nanosp
+          mkdir -p tests/samples/operations/nanosp
+
+          mkdir -p tests/samples/micheline/nanox
+          mkdir -p tests/samples/operations/nanox
+
+      - name: Generate
+        run: |
+          export PATH=/home/opam/.opam/4.14/bin:$PATH
+
+          dune exec ./tests/generate/generate.exe micheline 500 \
+              nanos tests/samples/micheline
+          dune exec ./tests/generate/generate.exe operations 500 \
+              nanos tests/samples/operations
+
+          dune exec ./tests/generate/generate.exe micheline 500 \
+              nanosp tests/samples/micheline
+          dune exec ./tests/generate/generate.exe operations 500 \
+              nanosp tests/samples/operations \
+
+          dune exec ./tests/generate/generate.exe micheline 500 \
+              nanox tests/samples/micheline
+          dune exec ./tests/generate/generate.exe operations 500 \
+              nanox tests/samples/operations
+
+      - name: Unit tests
+        run: |
+          export PATH=/home/opam/.opam/4.14/bin:$PATH
+
+          make -C tests/unit
+
+      - name: Upload results (nanos, micheline)
+        uses: actions/upload-artifact@v3
+        with:
+          name: nanos_samples_micheline
+          path: tests/samples/micheline/nanos
+      - name: Upload results (nanos, operations)
+        uses: actions/upload-artifact@v3
+        with:
+          name: nanos_samples_operations
+          path: tests/samples/operations/nanos
+
+      - name: Upload results (nanosp, micheline)
+        uses: actions/upload-artifact@v3
+        with:
+          name: nanosp_samples_micheline
+          path: tests/samples/micheline/nanosp
+
+      - name: Upload results (nanosp, operations)
+        uses: actions/upload-artifact@v3
+        with:
+          name: nanosp_samples_operations
+          path: tests/samples/operations/nanosp
+
+      - name: Upload results (nanox, micheline)
+        uses: actions/upload-artifact@v3
+        with:
+          name: nanox_samples_micheline
+          path: tests/samples/micheline/nanox
+
+      - name: Upload results (nanox, operations)
+        uses: actions/upload-artifact@v3
+        with:
+          name: nanox_samples_operations
+          path: tests/samples/operations/nanox
+
+  integration_tests_samples:
+    needs: [build_app, generate_samples_unit_tests, build_docker_integration_tests]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        device: [nanos, nanosp, nanox]
+        type: [micheline, operations]
+    container:
+      image: ${{ needs.build_docker_integration_tests.outputs.image }}
+      credentials:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Download app
+        uses: actions/download-artifact@v3
+        with:
+          name: app_${{ matrix.device }}.tgz
+
+      - name: Download app (dbg)
+        uses: actions/download-artifact@v3
+        with:
+          name: app_${{ matrix.device }}_dbg.tgz
+
+      - name: Download samples
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ matrix.device }}_samples_${{ matrix.type }}
+          path: tests
+
+      - name: Test
+        run: ./tests/integration/run_test_local.sh -T100 -F -m ${{ matrix.device }} tests
+
+      - name: Upload results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: integration_tests_${{ matrix.type}}_${{ matrix.device }}.json
+          path: ./integration_tests.json
