@@ -75,7 +75,7 @@ const tz_operation_field_descriptor failing_noop_fields[] = {
 const tz_operation_field_descriptor transaction_fields[] = {
   // Name,           Kind,                        Req,  Skip,  None
     {"Source",        TZ_OPERATION_FIELD_SOURCE,      true,  true,  false},
-    {"Fee",           TZ_OPERATION_FIELD_AMOUNT,      true,  false, false},
+    {"Fee",           TZ_OPERATION_FIELD_FEE,         true,  false, false},
     {"Counter",       TZ_OPERATION_FIELD_NAT,         true,  true,  false},
     {"Gas",           TZ_OPERATION_FIELD_NAT,         true,  true,  false},
     {"Storage limit", TZ_OPERATION_FIELD_NAT,         true,  false, false},
@@ -88,7 +88,7 @@ const tz_operation_field_descriptor transaction_fields[] = {
 const tz_operation_field_descriptor reveal_fields[] = {
   // Name,           Kind,                        Req,  Skip,  None
     {"Source",        TZ_OPERATION_FIELD_SOURCE, true, true,  false},
-    {"Fee",           TZ_OPERATION_FIELD_AMOUNT, true, false, false},
+    {"Fee",           TZ_OPERATION_FIELD_FEE,    true, false, false},
     {"Counter",       TZ_OPERATION_FIELD_NAT,    true, true,  false},
     {"Gas",           TZ_OPERATION_FIELD_NAT,    true, true,  false},
     {"Storage limit", TZ_OPERATION_FIELD_NAT,    true, false, false},
@@ -99,7 +99,7 @@ const tz_operation_field_descriptor reveal_fields[] = {
 const tz_operation_field_descriptor delegation_fields[] = {
   // Name,           Kind,                        Req,  Skip,  None
     {"Source",        TZ_OPERATION_FIELD_SOURCE, true,  true,  false},
-    {"Fee",           TZ_OPERATION_FIELD_AMOUNT, true,  false, false},
+    {"Fee",           TZ_OPERATION_FIELD_FEE,    true,  false, false},
     {"Counter",       TZ_OPERATION_FIELD_NAT,    true,  true,  false},
     {"Gas",           TZ_OPERATION_FIELD_NAT,    true,  true,  false},
     {"Storage limit", TZ_OPERATION_FIELD_NAT,    true,  false, false},
@@ -110,7 +110,7 @@ const tz_operation_field_descriptor delegation_fields[] = {
 const tz_operation_field_descriptor reg_glb_cst_fields[] = {
   // Name,           Kind,                        Req,  Skip,  None
     {"Source",        TZ_OPERATION_FIELD_SOURCE, true, true,  false},
-    {"Fee",           TZ_OPERATION_FIELD_AMOUNT, true, false, false},
+    {"Fee",           TZ_OPERATION_FIELD_FEE,    true, false, false},
     {"Counter",       TZ_OPERATION_FIELD_NAT,    true, true,  false},
     {"Gas",           TZ_OPERATION_FIELD_NAT,    true, true,  false},
     {"Storage limit", TZ_OPERATION_FIELD_NAT,    true, false, false},
@@ -121,7 +121,7 @@ const tz_operation_field_descriptor reg_glb_cst_fields[] = {
 const tz_operation_field_descriptor set_deposit_fields[] = {
   // Name,           Kind,                        Req,  Skip,  None
     {"Source",        TZ_OPERATION_FIELD_SOURCE, true,  true,  false},
-    {"Fee",           TZ_OPERATION_FIELD_AMOUNT, true,  false, false},
+    {"Fee",           TZ_OPERATION_FIELD_FEE,    true,  false, false},
     {"Counter",       TZ_OPERATION_FIELD_NAT,    true,  true,  false},
     {"Gas",           TZ_OPERATION_FIELD_NAT,    true,  true,  false},
     {"Storage limit", TZ_OPERATION_FIELD_NAT,    true,  false, false},
@@ -132,7 +132,7 @@ const tz_operation_field_descriptor set_deposit_fields[] = {
 const tz_operation_field_descriptor inc_paid_stg_fields[] = {
   // Name,           Kind,                        Req,  Skip,  None
     {"Source",        TZ_OPERATION_FIELD_SOURCE,      true, true,  false},
-    {"Fee",           TZ_OPERATION_FIELD_AMOUNT,      true, false, false},
+    {"Fee",           TZ_OPERATION_FIELD_FEE,         true, false, false},
     {"Counter",       TZ_OPERATION_FIELD_NAT,         true, true,  false},
     {"Gas",           TZ_OPERATION_FIELD_NAT,         true, true,  false},
     {"Storage limit", TZ_OPERATION_FIELD_NAT,         true, false, false},
@@ -144,7 +144,7 @@ const tz_operation_field_descriptor inc_paid_stg_fields[] = {
 const tz_operation_field_descriptor update_ck_fields[] = {
   // Name,           Kind,                        Req,  Skip,  None
     {"Source",        TZ_OPERATION_FIELD_SOURCE, true, true,  false},
-    {"Fee",           TZ_OPERATION_FIELD_AMOUNT, true, false, false},
+    {"Fee",           TZ_OPERATION_FIELD_FEE,    true, false, false},
     {"Counter",       TZ_OPERATION_FIELD_NAT,    true, true,  false},
     {"Gas",           TZ_OPERATION_FIELD_NAT,    true, true,  false},
     {"Storage limit", TZ_OPERATION_FIELD_NAT,    true, false, false},
@@ -155,7 +155,7 @@ const tz_operation_field_descriptor update_ck_fields[] = {
 const tz_operation_field_descriptor origination_fields[] = {
   // Name,           Kind,                        Req,  Skip,  None
     {"Source",        TZ_OPERATION_FIELD_SOURCE, true,  true,  false},
-    {"Fee",           TZ_OPERATION_FIELD_AMOUNT, true,  false, false},
+    {"Fee",           TZ_OPERATION_FIELD_FEE,    true,  false, false},
     {"Counter",       TZ_OPERATION_FIELD_NAT,    true,  true,  false},
     {"Gas",           TZ_OPERATION_FIELD_NAT,    true,  true,  false},
     {"Storage limit", TZ_OPERATION_FIELD_NAT,    true,  false, false},
@@ -169,7 +169,7 @@ const tz_operation_field_descriptor origination_fields[] = {
 const tz_operation_field_descriptor transfer_tck_fields[] = {
   // Name,           Kind,                        Req,  Skip,  None
     {"Source",        TZ_OPERATION_FIELD_SOURCE,      true, true,  false},
-    {"Fee",           TZ_OPERATION_FIELD_AMOUNT,      true, false, false},
+    {"Fee",           TZ_OPERATION_FIELD_FEE,         true, false, false},
     {"Counter",       TZ_OPERATION_FIELD_NAT,         true, true,  false},
     {"Gas",           TZ_OPERATION_FIELD_NAT,         true, true,  false},
     {"Storage limit", TZ_OPERATION_FIELD_NAT,         true, false, false},
@@ -185,7 +185,7 @@ const tz_operation_field_descriptor transfer_tck_fields[] = {
 const tz_operation_field_descriptor soru_add_msg_fields[] = {
   // Name,           Kind,                        Req,  Skip,  None
     {"Source",        TZ_OPERATION_FIELD_SOURCE,        true, true,  false},
-    {"Fee",           TZ_OPERATION_FIELD_AMOUNT,        true, false, false},
+    {"Fee",           TZ_OPERATION_FIELD_FEE,           true, false, false},
     {"Counter",       TZ_OPERATION_FIELD_NAT,           true, true,  false},
     {"Gas",           TZ_OPERATION_FIELD_NAT,           true, true,  false},
     {"Storage limit", TZ_OPERATION_FIELD_NAT,           true, false, false},
@@ -196,7 +196,7 @@ const tz_operation_field_descriptor soru_add_msg_fields[] = {
 const tz_operation_field_descriptor soru_exe_msg_fields[] = {
   // Name,           Kind,                        Req,  Skip,  None
     {"Source",        TZ_OPERATION_FIELD_SOURCE, true, true,  false},
-    {"Fee",           TZ_OPERATION_FIELD_AMOUNT, true, false, false},
+    {"Fee",           TZ_OPERATION_FIELD_FEE,    true, false, false},
     {"Counter",       TZ_OPERATION_FIELD_NAT,    true, true,  false},
     {"Gas",           TZ_OPERATION_FIELD_NAT,    true, true,  false},
     {"Storage limit", TZ_OPERATION_FIELD_NAT,    true, false, false},
@@ -209,7 +209,7 @@ const tz_operation_field_descriptor soru_exe_msg_fields[] = {
 const tz_operation_field_descriptor soru_origin_fields[] = {
   // Name,           Kind,                        Req,  Skip,  None
     {"Source",        TZ_OPERATION_FIELD_SOURCE,    true, true,  false},
-    {"Fee",           TZ_OPERATION_FIELD_AMOUNT,    true, false, false},
+    {"Fee",           TZ_OPERATION_FIELD_FEE,       true, false, false},
     {"Counter",       TZ_OPERATION_FIELD_NAT,       true, true,  false},
     {"Gas",           TZ_OPERATION_FIELD_NAT,       true, true,  false},
     {"Storage limit", TZ_OPERATION_FIELD_NAT,       true, false, false},
@@ -447,6 +447,7 @@ tz_operation_parser_step(tz_parser_state *state)
             case TZ_OPERATION_FIELD_INT:
             case TZ_OPERATION_FIELD_NAT:
                 break;
+            case TZ_OPERATION_FIELD_FEE:
             case TZ_OPERATION_FIELD_AMOUNT: {
                 int len = 0;
                 while (str[len])
@@ -759,6 +760,7 @@ tz_operation_parser_step(tz_parser_state *state)
                 break;
             }
             case TZ_OPERATION_FIELD_NAT:
+            case TZ_OPERATION_FIELD_FEE:
             case TZ_OPERATION_FIELD_AMOUNT: {
                 tz_must(push_frame(state, TZ_OPERATION_STEP_READ_NUM));
                 tz_parse_num_state_init(&state->buffers.num,
