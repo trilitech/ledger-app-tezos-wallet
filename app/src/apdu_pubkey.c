@@ -66,29 +66,8 @@ provide_pubkey(void)
 static void
 format_pkh(char *buffer, size_t len)
 {
-    cx_ecfp_public_key_t pubkey = {0};
-    uint8_t              hash[21];
-    TZ_PREAMBLE(("buffer=%p, len=%u", buffer, len));
-
-    TZ_CHECK(generate_public_key(&pubkey,
-                                 global.path_with_curve.derivation_type,
-                                 &global.path_with_curve.bip32_path));
-    // clang-format off
-    TZ_CHECK(public_key_hash(hash+1, 20, NULL,
-                             global.path_with_curve.derivation_type, &pubkey));
-    switch (global.path_with_curve.derivation_type) {
-    case DERIVATION_TYPE_SECP256K1: hash[0] = 1; break;
-    case DERIVATION_TYPE_SECP256R1: hash[0] = 2; break;
-    case DERIVATION_TYPE_ED25519:
-    case DERIVATION_TYPE_BIP32_ED25519: hash[0] = 0; break;
-    default: CX_CHECK(EXC_WRONG_PARAM); break;
-    }
-    // clang-format on
-
-    if (tz_format_pkh(hash, 21, buffer, len))
-        TZ_FAIL(EXC_UNKNOWN);
-
-    TZ_POSTAMBLE;
+    generate_pkh(global.path_with_curve.derivation_type,
+                 &global.path_with_curve.bip32_path, buffer, len);
 }
 
 static void
