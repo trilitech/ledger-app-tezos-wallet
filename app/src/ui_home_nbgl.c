@@ -52,7 +52,7 @@ static bool navigation_cb_wallet(__attribute__((unused))uint8_t page,
   case 1:
     switches[0] =
       (nbgl_layoutSwitch_t)
-      {.initState = global.settings.blindsigning ? ON_STATE : OFF_STATE,
+      {.initState = N_settings.blindsigning ? ON_STATE : OFF_STATE,
        .text = "Blind signing",
        .subText = "Enable blindsigning",
        .token = BLIND_SIGNING_TOKEN,
@@ -73,8 +73,9 @@ static void controls_callback(int token,
                               __attribute__((unused))uint8_t index) {
   switch (token) {
   case BLIND_SIGNING_TOKEN:
-    global.settings.blindsigning = !global.settings.blindsigning;
-    if (!global.settings.blindsigning)
+    toggle_blindsigning();
+
+    if (!N_settings.blindsigning)
       global.home_screen = SCREEN_CLEAR_SIGN;
     break;
   }
@@ -101,7 +102,7 @@ static void ui_toggle_clear_blind(void) {
 void tz_ui_home_redisplay(void) {
   FUNC_ENTER(("void"));
 
-  if (!global.settings.blindsigning) {
+  if (!N_settings.blindsigning) {
     nbgl_useCaseHome("Tezos Wallet",
                      &C_tezos,
                      "Ready for signing",
