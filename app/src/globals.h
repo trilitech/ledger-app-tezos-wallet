@@ -47,6 +47,9 @@
 // UI/exchange buffers.
 void init_globals(void);
 
+// Toggles the persisted blindsigning setting
+void toggle_blindsigning(void);
+
 #define MAX_APDU_SIZE      235
 #define MAX_SIGNATURE_SIZE 100
 
@@ -66,11 +69,6 @@ typedef enum {
 } main_step_t;
 
 typedef struct {
-  /* Settings */
-  struct {
-    bool blindsigning;
-  } settings;
-
   /* State */
   main_step_t step;
   tz_ui_stream_t stream;
@@ -91,7 +89,15 @@ typedef struct {
 # endif
 } globals_t;
 
+/* Settings */
+typedef struct {
+  bool blindsigning;
+} settings_t;
+
 extern globals_t global;
+
+extern const settings_t N_settings_real;
+#define N_settings (*(volatile settings_t *) PIC(&N_settings_real))
 
 extern unsigned int app_stack_canary;  // From SDK
 

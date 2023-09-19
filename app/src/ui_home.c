@@ -1,6 +1,7 @@
 /* Tezos Ledger application - Home screen display
 
    Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
+   Copyright 2023 Trilitech <contact@trili.tech>
 
    With code excerpts from:
     - Legacy Tezos app, Copyright 2019 Obsidian Systems
@@ -73,7 +74,7 @@ void ui_home_init(void) {
 #ifdef HAVE_BAGL
   tz_ui_stream_init(cb);
   clear_sign_screen();
-  if (global.settings.blindsigning)
+  if (N_settings.blindsigning)
     blind_sign_screen();
   tz_ui_stream_push(SCREEN_SETTINGS, "Settings", "", TZ_UI_ICON_SETTINGS);
   tz_ui_stream_push(SCREEN_QUIT, "Quit?", "", TZ_UI_ICON_DASHBOARD);

@@ -1,6 +1,7 @@
 /* Tezos Ledger application - Global application state
 
    Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
+   Copyright 2023 Trilitech <contact@trili.tech>
 
    With code excerpts from:
     - Legacy Tezos app, Copyright 2019 Obsidian Systems
@@ -25,9 +26,22 @@
 
 globals_t global;
 
+const settings_t N_settings_real;
+
 void init_globals(void) {
     memset(&global, 0, sizeof(global));
     memset(G_io_seproxyhal_spi_buffer, 0, sizeof(G_io_seproxyhal_spi_buffer));
     memset(&G_ux, 0, sizeof(G_ux));
     memset(&G_ux_params, 0, sizeof(G_ux_params));
+}
+
+void toggle_blindsigning(void) {
+    settings_t tmp;
+    memcpy(&tmp,
+           (void*) &N_settings,
+           sizeof(tmp));
+    tmp.blindsigning = !N_settings.blindsigning;
+    nvm_write((void*) &N_settings,
+              (void*) &tmp,
+              sizeof(N_settings));
 }
