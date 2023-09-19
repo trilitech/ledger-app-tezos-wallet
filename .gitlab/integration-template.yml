@@ -2,7 +2,6 @@
 
 .integration:
   image:
-  image:
     name: $CI_REGISTRY_IMAGE/ledger-app-tezos-integration-tests:$CI_COMMIT_REF_SLUG
     entrypoint: [""]
   stage: test
