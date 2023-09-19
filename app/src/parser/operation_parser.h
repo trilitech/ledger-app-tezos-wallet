@@ -22,4 +22,3 @@
 void tz_operation_parser_init(tz_parser_state *, uint16_t, bool);
 void tz_operation_parser_set_size(tz_parser_state *, uint16_t);
 tz_parser_result tz_operation_parser_step(tz_parser_state *);
-
