@@ -29,4 +29,3 @@ typedef struct {
     uint8_t bytes[TZ_NUM_BUFFER_SIZE/8];
     char decimal[TZ_DECIMAL_BUFFER_SIZE(TZ_NUM_BUFFER_SIZE/8)];
 } tz_num_parser_buffer;
-
