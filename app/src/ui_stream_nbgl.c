@@ -21,26 +21,26 @@
 
 size_t tz_ui_stream_push(tz_ui_cb_type_t type, const char *title,
                          const char *value, tz_ui_icon_t icon) {
-  return tz_ui_stream_pushl(type, title, value, -1, icon);
+    return tz_ui_stream_pushl(type, title, value, -1, icon);
 }
 
 size_t tz_ui_stream_push_all(__attribute__((unused))tz_ui_cb_type_t type,
                              __attribute__((unused))const char *title,
                              const char *value,
                              __attribute__((unused))tz_ui_icon_t icon) {
-  return strlen(value);
+    return strlen(value);
 }
 
 size_t tz_ui_stream_pushl(__attribute__((unused))tz_ui_cb_type_t type,
                           __attribute__((unused))const char *title,
                           const char *value, ssize_t max,
                           __attribute__((unused))tz_ui_icon_t icon) {
-  size_t length = strlen(value);
+    size_t length = strlen(value);
 
-  if (max != -1)
-    length = MIN(length, (size_t)max);
+    if (max != -1)
+        length = MIN(length, (size_t)max);
 
-  return length;
+    return length;
 }
 
 #endif

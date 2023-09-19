@@ -31,49 +31,49 @@
 #define CLA 0x80
 
 void app_exit(void) {
-  os_sched_exit(-1);
+    os_sched_exit(-1);
 }
 
 static void dispatch(command_t *cmd) {
-  tz_handler_t f;
-  TZ_PREAMBLE(("cmd=0x%p {cla=0x02x ins=%u ...}", cmd, cmd->cla, cmd->ins));
+    tz_handler_t f;
+    TZ_PREAMBLE(("cmd=0x%p {cla=0x02x ins=%u ...}", cmd, cmd->cla, cmd->ins));
 
-  if (cmd->cla != CLA)
-    TZ_FAIL(EXC_CLASS);
+    if (cmd->cla != CLA)
+        TZ_FAIL(EXC_CLASS);
 
-  switch (tz_ui_stream_get_type()) {
-  case SCREEN_QUIT:
-    PRINTF("[ERROR] received instruction whilst on Quit screen\n");
-    TZ_FAIL(EXC_UNEXPECTED_STATE);
-    break;
-  default:
-    break;
-  }
+    switch (tz_ui_stream_get_type()) {
+    case SCREEN_QUIT:
+        PRINTF("[ERROR] received instruction whilst on Quit screen\n");
+        TZ_FAIL(EXC_UNEXPECTED_STATE);
+        break;
+    default:
+        break;
+    }
 
-  switch (cmd->ins) {
-  case INS_VERSION:                   f = handle_apdu_version;        break;
-  case INS_SIGN:                      f = handle_apdu_sign;           break;
-  case INS_SIGN_WITH_HASH:            f = handle_apdu_sign;           break;
-  case INS_PROMPT_PUBLIC_KEY:         f = handle_apdu_get_public_key; break;
-  case INS_GET_PUBLIC_KEY:            f = handle_apdu_get_public_key; break;
-  case INS_GIT:                       f = handle_apdu_git;            break;
-  case INS_AUTHORIZE_BAKING:          f = handle_unimplemented;       break;
-  case INS_RESET:                     f = handle_unimplemented;       break;
-  case INS_QUERY_AUTH_KEY:            f = handle_unimplemented;       break;
-  case INS_QUERY_MAIN_HWM:            f = handle_unimplemented;       break;
-  case INS_SETUP:                     f = handle_unimplemented;       break;
-  case INS_QUERY_ALL_HWM:             f = handle_unimplemented;       break;
-  case INS_QUERY_AUTH_KEY_WITH_CURVE: f = handle_unimplemented;       break;
-  case INS_HMAC:                      f = handle_unimplemented;       break;
-  case INS_SIGN_UNSAFE:               f = handle_unimplemented;       break;
-  default:
-    PRINTF("[ERROR] invalid instruction 0x%02x\n", cmd->ins);
-    TZ_FAIL(EXC_INVALID_INS);
-  }
+    switch (cmd->ins) {
+    case INS_VERSION:                   f = handle_apdu_version;        break;
+    case INS_SIGN:                      f = handle_apdu_sign;           break;
+    case INS_SIGN_WITH_HASH:            f = handle_apdu_sign;           break;
+    case INS_PROMPT_PUBLIC_KEY:         f = handle_apdu_get_public_key; break;
+    case INS_GET_PUBLIC_KEY:            f = handle_apdu_get_public_key; break;
+    case INS_GIT:                       f = handle_apdu_git;            break;
+    case INS_AUTHORIZE_BAKING:          f = handle_unimplemented;       break;
+    case INS_RESET:                     f = handle_unimplemented;       break;
+    case INS_QUERY_AUTH_KEY:            f = handle_unimplemented;       break;
+    case INS_QUERY_MAIN_HWM:            f = handle_unimplemented;       break;
+    case INS_SETUP:                     f = handle_unimplemented;       break;
+    case INS_QUERY_ALL_HWM:             f = handle_unimplemented;       break;
+    case INS_QUERY_AUTH_KEY_WITH_CURVE: f = handle_unimplemented;       break;
+    case INS_HMAC:                      f = handle_unimplemented;       break;
+    case INS_SIGN_UNSAFE:               f = handle_unimplemented;       break;
+    default:
+        PRINTF("[ERROR] invalid instruction 0x%02x\n", cmd->ins);
+        TZ_FAIL(EXC_INVALID_INS);
+    }
 
-  TZ_CHECK(f(cmd));
+    TZ_CHECK(f(cmd));
 
-  TZ_POSTAMBLE;
+    TZ_POSTAMBLE;
 }
 
 

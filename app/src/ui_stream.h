@@ -78,21 +78,21 @@ typedef uint8_t tz_ui_icon_t;
 #define TZ_UI_ICON_SETTINGS	0x04
 
 typedef struct {
-  tz_ui_icon_t icon;
-  tz_ui_cb_type_t type;
-  char title[TZ_UI_STREAM_TITLE_WIDTH + 1];
-  char body[TZ_UI_STREAM_CONTENTS_LINES][TZ_UI_STREAM_CONTENTS_WIDTH + 1];
+    tz_ui_icon_t icon;
+    tz_ui_cb_type_t type;
+    char title[TZ_UI_STREAM_TITLE_WIDTH + 1];
+    char body[TZ_UI_STREAM_CONTENTS_LINES][TZ_UI_STREAM_CONTENTS_WIDTH + 1];
 } tz_ui_stream_screen_t;
 
 typedef struct {
-  void (*cb)(tz_ui_cb_type_t);
-  tz_ui_stream_screen_t screens[TZ_UI_STREAM_HISTORY_SCREENS];
-  int16_t current;
-  int16_t total;
-  bool full;
-  // FIXME: workaround for issue with non-local control flow. Remove once fixed
-  // see !66
-  bool pressed_right;
+    void (*cb)(tz_ui_cb_type_t);
+    tz_ui_stream_screen_t screens[TZ_UI_STREAM_HISTORY_SCREENS];
+    int16_t current;
+    int16_t total;
+    bool full;
+    // FIXME: workaround for issue with non-local control flow. Remove once fixed
+    // see !66
+    bool pressed_right;
 } tz_ui_stream_t;
 
 void tz_ui_stream_init(void (*)(tz_ui_cb_type_t));

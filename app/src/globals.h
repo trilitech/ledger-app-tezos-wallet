@@ -54,38 +54,38 @@ void toggle_blindsigning(void);
 #define MAX_SIGNATURE_SIZE 100
 
 typedef enum {
-  SCREEN_CLEAR_SIGN = 0,
-  SCREEN_BLIND_SIGN,
-  SCREEN_SETTINGS,
-  SCREEN_QUIT,
+    SCREEN_CLEAR_SIGN = 0,
+    SCREEN_BLIND_SIGN,
+    SCREEN_SETTINGS,
+    SCREEN_QUIT,
 } screen_t;
 
 typedef enum {
-  ST_IDLE,
-  ST_CLEAR_SIGN,
-  ST_BLIND_SIGN,
-  ST_PROMPT,
-  ST_ERROR
+    ST_IDLE,
+    ST_CLEAR_SIGN,
+    ST_BLIND_SIGN,
+    ST_PROMPT,
+    ST_ERROR
 } main_step_t;
 
 typedef struct {
-  /* State */
-  main_step_t step;
-  tz_ui_stream_t stream;
-  bip32_path_with_curve_t path_with_curve;
-  struct {
-    apdu_hash_state_t hash;
-    apdu_sign_state_t sign;
-  } apdu;
-  char line_buf[TZ_UI_STREAM_CONTENTS_SIZE + 1];
+    /* State */
+    main_step_t step;
+    tz_ui_stream_t stream;
+    bip32_path_with_curve_t path_with_curve;
+    struct {
+        apdu_hash_state_t hash;
+        apdu_sign_state_t sign;
+    } apdu;
+    char line_buf[TZ_UI_STREAM_CONTENTS_SIZE + 1];
 # ifdef HAVE_BAGL
-  struct {
-    bagl_element_t bagls[5 + TZ_SCREEN_LINES_11PX];
-    char lines[TZ_SCREEN_LINES_11PX][TZ_SCREEN_WITDH_FULL_REGULAR_11PX + 1];
-  } ux;
+    struct {
+        bagl_element_t bagls[5 + TZ_SCREEN_LINES_11PX];
+        char lines[TZ_SCREEN_LINES_11PX][TZ_SCREEN_WITDH_FULL_REGULAR_11PX + 1];
+    } ux;
 # endif
 # ifdef HAVE_NBGL
-  screen_t home_screen;
+    screen_t home_screen;
 # endif
 } globals_t;
 

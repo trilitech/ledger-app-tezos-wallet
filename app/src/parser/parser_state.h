@@ -24,18 +24,18 @@
 // Parser buffers and buffer handling registers
 
 typedef struct {
-  // update `ibuf`, `iofs` and `ilen` at once with `parser_regs_refill`
-  // invariant between two refills:
-  //   `iofs + ilen` = (constant) number of readable bytes in `ibuf`
-  uint8_t* ibuf; // input buffer
-  size_t iofs; // current offset
-  size_t ilen; // remaining bytes readable in input
-  // update `obuf`, `oofs` and `olen` at once with `parser_regs_flush`
-  // invariant between two refills:
-  //   `oofs + olen` = (constant) number of readable bytes in `obuf`
-  char* obuf; // output buffer
-  size_t oofs; // current offset
-  size_t olen; // remaining bytes writable in output
+    // update `ibuf`, `iofs` and `ilen` at once with `parser_regs_refill`
+    // invariant between two refills:
+    //   `iofs + ilen` = (constant) number of readable bytes in `ibuf`
+    uint8_t* ibuf; // input buffer
+    size_t iofs; // current offset
+    size_t ilen; // remaining bytes readable in input
+    // update `obuf`, `oofs` and `olen` at once with `parser_regs_flush`
+    // invariant between two refills:
+    //   `oofs + olen` = (constant) number of readable bytes in `obuf`
+    char* obuf; // output buffer
+    size_t oofs; // current offset
+    size_t olen; // remaining bytes writable in output
 } tz_parser_regs;
 
 // Parser state
@@ -44,20 +44,20 @@ typedef struct {
 #define TZ_CAPTURE_BUFFER_SIZE 256
 
 typedef enum {
-  // success and non blocking, should loop again
-  TZ_CONTINUE = 0, // fall through rest of current step
-  TZ_BREAK, // signals caller to return, errno should be CONTINUE
-  // success but parsing blocked
-  TZ_BLO_DONE = 100, // parsing complete
-  TZ_BLO_FEED_ME, // blocked on read from input
-  TZ_BLO_IM_FULL, // blocked on output space
-  // everything below is an error
-  TZ_ERR_INVALID_TAG = 200,
-  TZ_ERR_INVALID_OP,
-  TZ_ERR_UNSUPPORTED,
-  TZ_ERR_TOO_LARGE,
-  TZ_ERR_TOO_DEEP,
-  TZ_ERR_INVALID_STATE,
+    // success and non blocking, should loop again
+    TZ_CONTINUE = 0, // fall through rest of current step
+    TZ_BREAK, // signals caller to return, errno should be CONTINUE
+    // success but parsing blocked
+    TZ_BLO_DONE = 100, // parsing complete
+    TZ_BLO_FEED_ME, // blocked on read from input
+    TZ_BLO_IM_FULL, // blocked on output space
+    // everything below is an error
+    TZ_ERR_INVALID_TAG = 200,
+    TZ_ERR_INVALID_OP,
+    TZ_ERR_UNSUPPORTED,
+    TZ_ERR_TOO_LARGE,
+    TZ_ERR_TOO_DEEP,
+    TZ_ERR_INVALID_STATE,
 } tz_parser_result;
 #define TZ_IS_BLOCKED(code) (code >= 100)
 #define TZ_IS_ERR(code) (code >= 200)
@@ -65,20 +65,20 @@ typedef enum {
 const char* tz_parser_result_name(tz_parser_result);
 
 typedef struct {
-  tz_parser_regs regs;
+    tz_parser_regs regs;
 
-  // common fields to communicate with caller
-  tz_parser_result errno;
-  char field_name[TZ_FIELD_NAME_SIZE];
-  // common singleton buffers
-  int ofs;
-  struct {
-    tz_num_parser_buffer num;
-    uint8_t capture[TZ_CAPTURE_BUFFER_SIZE];
-  } buffers;
-  // input type specific state
-  tz_micheline_state micheline;
-  tz_operation_state operation;
+    // common fields to communicate with caller
+    tz_parser_result errno;
+    char field_name[TZ_FIELD_NAME_SIZE];
+    // common singleton buffers
+    int ofs;
+    struct {
+        tz_num_parser_buffer num;
+        uint8_t capture[TZ_CAPTURE_BUFFER_SIZE];
+    } buffers;
+    // input type specific state
+    tz_micheline_state micheline;
+    tz_operation_state operation;
 } tz_parser_state;
 
 void tz_parser_init(tz_parser_state *);

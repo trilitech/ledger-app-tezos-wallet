@@ -35,17 +35,17 @@
 
 static cx_curve_t derivation_type_to_cx_curve(derivation_type_t const
                                               derivation_type) {
-  switch (derivation_type) {
-  case DERIVATION_TYPE_ED25519:
-  case DERIVATION_TYPE_BIP32_ED25519:
-    return CX_CURVE_Ed25519;
-  case DERIVATION_TYPE_SECP256K1:
-    return CX_CURVE_SECP256K1;
-  case DERIVATION_TYPE_SECP256R1:
-    return CX_CURVE_SECP256R1;
-  default:
-    return CX_CURVE_NONE;
-  }
+    switch (derivation_type) {
+    case DERIVATION_TYPE_ED25519:
+    case DERIVATION_TYPE_BIP32_ED25519:
+        return CX_CURVE_Ed25519;
+    case DERIVATION_TYPE_SECP256K1:
+        return CX_CURVE_SECP256K1;
+    case DERIVATION_TYPE_SECP256R1:
+        return CX_CURVE_SECP256R1;
+    default:
+        return CX_CURVE_NONE;
+    }
 }
 
 void read_bip32_path(bip32_path_t *const out, uint8_t const *const in,
@@ -109,21 +109,21 @@ void public_key_hash(uint8_t *hash_out, size_t hash_out_size,
 
     cx_ecfp_public_key_t compressed = {0};
     switch (derivation_type) {
-        case DERIVATION_TYPE_BIP32_ED25519:
-        case DERIVATION_TYPE_ED25519: {
-            compressed.W_len = public_key->W_len - 1;
-            memcpy(compressed.W, public_key->W + 1, compressed.W_len);
-            break;
-        }
-        case DERIVATION_TYPE_SECP256K1:
-        case DERIVATION_TYPE_SECP256R1: {
-            memcpy(compressed.W, public_key->W, public_key->W_len);
-            compressed.W[0] = 0x02 + (public_key->W[64] & 0x01);
-            compressed.W_len = 33;
-            break;
-        }
-        default:
-            TZ_FAIL(EXC_WRONG_PARAM);
+    case DERIVATION_TYPE_BIP32_ED25519:
+    case DERIVATION_TYPE_ED25519: {
+        compressed.W_len = public_key->W_len - 1;
+        memcpy(compressed.W, public_key->W + 1, compressed.W_len);
+        break;
+    }
+    case DERIVATION_TYPE_SECP256K1:
+    case DERIVATION_TYPE_SECP256R1: {
+        memcpy(compressed.W, public_key->W, public_key->W_len);
+        compressed.W[0] = 0x02 + (public_key->W[64] & 0x01);
+        compressed.W_len = 33;
+        break;
+    }
+    default:
+        TZ_FAIL(EXC_WRONG_PARAM);
     }
 
     cx_blake2b_t hash_state;
