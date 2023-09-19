@@ -55,7 +55,7 @@ This parses as:
 | `EXC_MEMORY_ERROR`              | 0x9200 | Memory error.                                            |
 | `EXC_UNEXPECTED_STATE`          | 0x9001 | The state of the application is unexpected.              |
 | `EXC_UNEXPECTED_SIGN_STATE`     | 0x9002 | The state of the application at signature is unexpected. |
-| `EXC_UNKNOWN`                   | 0x90FF | Unkown exception.                                        |
+| `EXC_UNKNOWN`                   | 0x90FF | Unknown exception.                                        |
 
 ## APDU instructions in use by Tezos Ledger apps
 
@@ -172,11 +172,11 @@ All these APDUs should respond with a success RAPDU as follows:
 Except for the last one, which will reply, after confirmation, with
 the `message` signed in a RAPDU as follows:
 
-| Length       | Description                                              |
-|--------------|----------------------------------------------------------|
-| `32`         | The hash (Only with the instuction `INS_SIGN_WITH_HASH`) |
-| `<variable>` | The signed hash                                          |
-| `2`          | Should be 0x9000                                         |
+| Length       | Description                                               |
+|--------------|-----------------------------------------------------------|
+| `32`         | The hash (Only with the instruction `INS_SIGN_WITH_HASH`) |
+| `<variable>` | The signed hash                                           |
+| `2`          | Should be 0x9000                                          |
 
 ### `INS_GIT`
 
