@@ -471,6 +471,12 @@ static void handle_data_apdu_blind(packet_t *pkt) {
 }
 #undef FINAL_HASH
 
+#ifdef HAVE_BAGL
+#define GET_HOME_SCREEN() tz_ui_stream_get_type()
+#elif HAVE_NBGL
+#define GET_HOME_SCREEN() global.home_screen
+#endif
+
 void handle_apdu_sign(command_t *cmd) {
     bool return_hash = cmd->ins == INS_SIGN_WITH_HASH;
     packet_t pkt;
@@ -485,11 +491,7 @@ void handle_apdu_sign(command_t *cmd) {
         memset(&global.apdu, 0, sizeof(global.apdu));
 
         // clang-format off
-        #ifdef HAVE_BAGL
-        switch (tz_ui_stream_get_type()) {
-        #elif HAVE_NBGL
-        switch (global.home_screen) {
-        #endif
+        switch (GET_HOME_SCREEN()) {
         case SCREEN_CLEAR_SIGN: global.step = ST_CLEAR_SIGN; break;
         case SCREEN_BLIND_SIGN: global.step = ST_BLIND_SIGN; break;
         default:
