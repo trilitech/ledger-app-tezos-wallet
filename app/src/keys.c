@@ -33,7 +33,7 @@
 #include "keys.h"
 #include "globals.h"
 
-static cx_curve_t derivation_type_to_cx_curve(derivation_type_t const
+static cx_curve_t derivation_type_to_cx_curve(derivation_type_t
                                               derivation_type) {
     switch (derivation_type) {
     case DERIVATION_TYPE_ED25519:
@@ -48,7 +48,7 @@ static cx_curve_t derivation_type_to_cx_curve(derivation_type_t const
     }
 }
 
-void read_bip32_path(bip32_path_t *const out, uint8_t const *const in,
+void read_bip32_path(bip32_path_t *out, const uint8_t *in,
                      size_t in_size) {
     buffer_t cdata = {in, in_size, 0};
     TZ_PREAMBLE(("out=%p, in=%p, in_size=%u", out, in, in_size));
@@ -61,8 +61,8 @@ void read_bip32_path(bip32_path_t *const out, uint8_t const *const in,
 }
 
 void generate_public_key(cx_ecfp_public_key_t *public_key,
-                         derivation_type_t const derivation_type,
-                         bip32_path_t const *const bip32_path) {
+                         derivation_type_t derivation_type,
+                         const bip32_path_t *bip32_path) {
     TZ_PREAMBLE(("public_key=%p, derivation_type=%d, bip32_path=%p",
                  public_key, derivation_type, bip32_path));
 
