@@ -17,20 +17,24 @@
 
 #include "parser_state.h"
 
+#define TZ_LABEL(_x)  case TZ_ ## _x: return #_x
+#define BLO_LABEL(_x) case TZ_BLO_ ## _x: return #_x
+
 const char* tz_parser_result_name(tz_parser_result code) {
     switch (code) {
-    case TZ_CONTINUE: return "CONTINUE";
-    case TZ_BREAK: return "BREAK";
-    case TZ_BLO_DONE: return "DONE";
-    case TZ_BLO_FEED_ME: return "FEED_ME";
-    case TZ_BLO_IM_FULL: return "IM_FULL";
-    case TZ_ERR_INVALID_TAG: return "ERR_INVALID_TAG";
-    case TZ_ERR_INVALID_OP: return "ERR_INVALID_OP";
-    case TZ_ERR_UNSUPPORTED: return "ERR_UNSUPPORTED";
-    case TZ_ERR_TOO_LARGE: return "ERR_TOO_LARGE";
-    case TZ_ERR_TOO_DEEP: return "ERR_TOO_DEEP";
-    case TZ_ERR_INVALID_STATE: return "ERR_INVALID_STATE";
-    default: return "???";
+    TZ_LABEL(CONTINUE);
+    TZ_LABEL(BREAK);
+    BLO_LABEL(DONE);
+    BLO_LABEL(FEED_ME);
+    BLO_LABEL(IM_FULL);
+    TZ_LABEL(ERR_INVALID_TAG);
+    TZ_LABEL(ERR_INVALID_OP);
+    TZ_LABEL(ERR_UNSUPPORTED);
+    TZ_LABEL(ERR_TOO_LARGE);
+    TZ_LABEL(ERR_TOO_DEEP);
+    TZ_LABEL(ERR_INVALID_STATE);
+    default:
+        return "???";
     }
 }
 
