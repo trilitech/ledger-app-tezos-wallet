@@ -4,4 +4,4 @@
 
 #pragma once
 
-void    ui_settings_init(void);
+void ui_settings_init(void);

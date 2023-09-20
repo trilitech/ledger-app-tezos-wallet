@@ -1,4 +1,5 @@
-/* Tezos Embedded C parser for Ledger - Full parser state definition and helpers
+/* Tezos Embedded C parser for Ledger - Full parser state definition and
+   helpers
 
    Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
    Copyright 2023 TriliTech <contact@trili.tech>
@@ -17,10 +18,16 @@
 
 #include "parser_state.h"
 
-#define TZ_LABEL(_x)  case TZ_ ## _x: return #_x
-#define BLO_LABEL(_x) case TZ_BLO_ ## _x: return #_x
+#define TZ_LABEL(_x) \
+    case TZ_##_x:    \
+        return #_x
+#define BLO_LABEL(_x) \
+    case TZ_BLO_##_x: \
+        return #_x
 
-const char* tz_parser_result_name(tz_parser_result code) {
+const char *
+tz_parser_result_name(tz_parser_result code)
+{
     // clang-format off
     switch (code) {
     TZ_LABEL(CONTINUE);
@@ -40,18 +47,24 @@ const char* tz_parser_result_name(tz_parser_result code) {
     // clang-format on
 }
 
-void tz_parser_init(tz_parser_state *state) {
-    state->errno = TZ_CONTINUE;
-    state->ofs = 0;
+void
+tz_parser_init(tz_parser_state *state)
+{
+    state->errno         = TZ_CONTINUE;
+    state->ofs           = 0;
     state->field_name[0] = 0;
 }
 
-void tz_parser_flush(tz_parser_state *st, char *obuf, size_t olen) {
+void
+tz_parser_flush(tz_parser_state *st, char *obuf, size_t olen)
+{
     tz_parser_flush_up_to(st, obuf, olen, olen);
 }
 
-void tz_parser_flush_up_to(tz_parser_state *st, char *obuf, size_t olen,
-                                size_t up_to) {
+void
+tz_parser_flush_up_to(tz_parser_state *st, char *obuf, size_t olen,
+                      size_t up_to)
+{
     tz_parser_regs *regs = &st->regs;
 
     regs->obuf = obuf;
@@ -66,7 +79,9 @@ void tz_parser_flush_up_to(tz_parser_state *st, char *obuf, size_t olen,
     memset(regs->obuf + regs->oofs, 0x0, regs->olen);
 }
 
-void tz_parser_refill(tz_parser_state *st, uint8_t *ibuf, size_t ilen) {
+void
+tz_parser_refill(tz_parser_state *st, uint8_t *ibuf, size_t ilen)
+{
     tz_parser_regs *regs = &st->regs;
 
     regs->ibuf = ibuf;
@@ -74,41 +89,53 @@ void tz_parser_refill(tz_parser_state *st, uint8_t *ibuf, size_t ilen) {
     regs->ilen = ilen;
 }
 
-tz_parser_result tz_parser_set_errno(tz_parser_state *state,
-                                     tz_parser_result code) {
+tz_parser_result
+tz_parser_set_errno(tz_parser_state *state, tz_parser_result code)
+{
     state->errno = ((code == TZ_BREAK) ? TZ_CONTINUE : code);
     return code;
 }
 
-tz_parser_result tz_parser_put(tz_parser_state *state, char c) {
-  tz_parser_regs *regs = &state->regs;
+tz_parser_result
+tz_parser_put(tz_parser_state *state, char c)
+{
+    tz_parser_regs *regs = &state->regs;
 
-    if (regs->olen<1) tz_stop(IM_FULL);
+    if (regs->olen < 1)
+        tz_stop(IM_FULL);
     regs->obuf[regs->oofs] = c;
     regs->oofs++;
     regs->olen--;
     tz_continue;
 }
 
-tz_parser_result tz_parser_read(tz_parser_state *state, uint8_t *r) {
+tz_parser_result
+tz_parser_read(tz_parser_state *state, uint8_t *r)
+{
     tz_parser_regs *regs = &state->regs;
 
-    if (regs->ilen<1) tz_stop(FEED_ME);
+    if (regs->ilen < 1)
+        tz_stop(FEED_ME);
     state->ofs++;
     regs->ilen--;
     *r = regs->ibuf[regs->iofs++];
     tz_continue;
 }
 
-tz_parser_result tz_parser_peek(tz_parser_state *state, uint8_t *r) {
+tz_parser_result
+tz_parser_peek(tz_parser_state *state, uint8_t *r)
+{
     tz_parser_regs *regs = &state->regs;
 
-    if (regs->ilen<1) tz_stop(FEED_ME);
+    if (regs->ilen < 1)
+        tz_stop(FEED_ME);
     *r = regs->ibuf[regs->iofs];
     tz_continue;
 }
 
-void tz_parser_skip(tz_parser_state *state) {
+void
+tz_parser_skip(tz_parser_state *state)
+{
     tz_parser_regs *regs = &state->regs;
 
     regs->iofs++;

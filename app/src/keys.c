@@ -33,8 +33,9 @@
 #include "keys.h"
 #include "globals.h"
 
-static cx_curve_t derivation_type_to_cx_curve(derivation_type_t
-                                              derivation_type) {
+static cx_curve_t
+derivation_type_to_cx_curve(derivation_type_t derivation_type)
+{
     // clang-format off
     switch (derivation_type) {
     case DERIVATION_TYPE_ED25519:
@@ -46,21 +47,24 @@ static cx_curve_t derivation_type_to_cx_curve(derivation_type_t
     // clang-format on
 }
 
-void read_bip32_path(bip32_path_t *out, const uint8_t *in,
-                     size_t in_size) {
+void
+read_bip32_path(bip32_path_t *out, const uint8_t *in, size_t in_size)
+{
     buffer_t cdata = {in, in_size, 0};
     TZ_PREAMBLE(("out=%p, in=%p, in_size=%u", out, in, in_size));
 
     TZ_ASSERT(EXC_WRONG_LENGTH_FOR_INS,
-              buffer_read_u8(&cdata, &out->length) &&
-              buffer_read_bip32_path(&cdata, (uint32_t *) &out->components,
-                                     out->length));
+              buffer_read_u8(&cdata, &out->length)
+                  && buffer_read_bip32_path(
+                      &cdata, (uint32_t *)&out->components, out->length));
     TZ_POSTAMBLE;
 }
 
-void generate_public_key(cx_ecfp_public_key_t *public_key,
-                         derivation_type_t derivation_type,
-                         const bip32_path_t *bip32_path) {
+void
+generate_public_key(cx_ecfp_public_key_t *public_key,
+                    derivation_type_t     derivation_type,
+                    const bip32_path_t   *bip32_path)
+{
     TZ_PREAMBLE(("public_key=%p, derivation_type=%d, bip32_path=%p",
                  public_key, derivation_type, bip32_path));
 
@@ -69,21 +73,15 @@ void generate_public_key(cx_ecfp_public_key_t *public_key,
 
     int derivation_mode = HDW_NORMAL;
     if (derivation_type == DERIVATION_TYPE_ED25519)
-      derivation_mode = HDW_ED25519_SLIP10;
+        derivation_mode = HDW_ED25519_SLIP10;
 
-    CX_CHECK(bip32_derive_with_seed_get_pubkey_256(derivation_mode,
-                                                   public_key->curve,
-                                                   bip32_path->components,
-                                                   bip32_path->length,
-                                                   public_key->W,
-                                                   NULL,
-                                                   CX_SHA512,
-                                                   NULL, 0));
+    CX_CHECK(bip32_derive_with_seed_get_pubkey_256(
+        derivation_mode, public_key->curve, bip32_path->components,
+        bip32_path->length, public_key->W, NULL, CX_SHA512, NULL, 0));
 
     if (public_key->curve == CX_CURVE_Ed25519) {
-        CX_CHECK(cx_edwards_compress_point_no_throw(CX_CURVE_Ed25519,
-                                                    public_key->W,
-                                                    public_key->W_len));
+        CX_CHECK(cx_edwards_compress_point_no_throw(
+            CX_CURVE_Ed25519, public_key->W, public_key->W_len));
         public_key->W_len = 33;
     }
 
@@ -92,14 +90,17 @@ void generate_public_key(cx_ecfp_public_key_t *public_key,
 
 #define HASH_SIZE 20
 
-void public_key_hash(uint8_t *hash_out, size_t hash_out_size,
-                     cx_ecfp_public_key_t *compressed_out,
-                     derivation_type_t derivation_type,
-                     const cx_ecfp_public_key_t *public_key) {
-    TZ_PREAMBLE(("hash_out=%p, hash_out_size=%u, compressed_out=%p, "
-                 "derivation_type=%d, public_key=%p",
-                 hash_out, hash_out_size, compressed_out,
-                 derivation_type, public_key));
+void
+public_key_hash(uint8_t *hash_out, size_t hash_out_size,
+                cx_ecfp_public_key_t       *compressed_out,
+                derivation_type_t           derivation_type,
+                const cx_ecfp_public_key_t *public_key)
+{
+    TZ_PREAMBLE(
+        ("hash_out=%p, hash_out_size=%u, compressed_out=%p, "
+         "derivation_type=%d, public_key=%p",
+         hash_out, hash_out_size, compressed_out, derivation_type,
+         public_key));
 
     TZ_ASSERT_NOTNULL(hash_out);
     TZ_ASSERT_NOTNULL(public_key);
@@ -115,7 +116,7 @@ void public_key_hash(uint8_t *hash_out, size_t hash_out_size,
     case DERIVATION_TYPE_SECP256K1:
     case DERIVATION_TYPE_SECP256R1:
         memcpy(compressed.W, public_key->W, public_key->W_len);
-        compressed.W[0] = 0x02 + (public_key->W[64] & 0x01);
+        compressed.W[0]  = 0x02 + (public_key->W[64] & 0x01);
         compressed.W_len = 33;
         break;
     default:
@@ -124,12 +125,8 @@ void public_key_hash(uint8_t *hash_out, size_t hash_out_size,
 
     cx_blake2b_t hash_state;
     CX_CHECK(cx_blake2b_init_no_throw(&hash_state, HASH_SIZE * 8));
-    CX_CHECK(cx_hash_no_throw((cx_hash_t *) &hash_state,
-			      CX_LAST,
-			      compressed.W,
-			      compressed.W_len,
-			      hash_out,
-			      HASH_SIZE));
+    CX_CHECK(cx_hash_no_throw((cx_hash_t *)&hash_state, CX_LAST, compressed.W,
+                              compressed.W_len, hash_out, HASH_SIZE));
     if (compressed_out != NULL) {
         memmove(compressed_out, &compressed, sizeof(*compressed_out));
     }
@@ -137,16 +134,17 @@ void public_key_hash(uint8_t *hash_out, size_t hash_out_size,
     TZ_POSTAMBLE;
 }
 
-void sign(derivation_type_t derivation_type,
-          const bip32_path_t *path,
-          const uint8_t *hash, size_t hashlen,
-          uint8_t *sig, size_t *siglen) {
-    unsigned derivation_mode;
-    uint32_t info;
+void
+sign(derivation_type_t derivation_type, const bip32_path_t *path,
+     const uint8_t *hash, size_t hashlen, uint8_t *sig, size_t *siglen)
+{
+    unsigned   derivation_mode;
+    uint32_t   info;
     cx_curve_t curve = derivation_type_to_cx_curve(derivation_type);
-    TZ_PREAMBLE(("sig=%p, siglen=%u, derivation_type=%d, "
-                 "path=%p, hash=%p, hashlen=%u",
-                 sig, *siglen, derivation_type, path, hash, hashlen));
+    TZ_PREAMBLE(
+        ("sig=%p, siglen=%u, derivation_type=%d, "
+         "path=%p, hash=%p, hashlen=%u",
+         sig, *siglen, derivation_type, path, hash, hashlen));
     TZ_ASSERT_NOTNULL(path);
     TZ_ASSERT_NOTNULL(hash);
     TZ_ASSERT_NOTNULL(sig);
@@ -158,24 +156,15 @@ void sign(derivation_type_t derivation_type,
         derivation_mode = HDW_NORMAL;
         if (derivation_type == DERIVATION_TYPE_ED25519)
             derivation_mode = HDW_ED25519_SLIP10;
-        CX_CHECK(bip32_derive_with_seed_eddsa_sign_hash_256(derivation_mode,
-                                                            curve,
-                                                            path->components,
-                                                            path->length,
-                                                            CX_SHA512,
-                                                            hash, hashlen,
-                                                            sig, siglen,
-                                                            NULL, 0));
+        CX_CHECK(bip32_derive_with_seed_eddsa_sign_hash_256(
+            derivation_mode, curve, path->components, path->length, CX_SHA512,
+            hash, hashlen, sig, siglen, NULL, 0));
         break;
     case DERIVATION_TYPE_SECP256K1:
     case DERIVATION_TYPE_SECP256R1:
-        CX_CHECK(bip32_derive_ecdsa_sign_hash_256(curve,
-                                                  path->components,
-                                                  path->length,
-                                                  CX_RND_RFC6979 | CX_LAST,
-                                                  CX_SHA256,
-                                                  hash, hashlen,
-                                                  sig, siglen, &info));
+        CX_CHECK(bip32_derive_ecdsa_sign_hash_256(
+            curve, path->components, path->length, CX_RND_RFC6979 | CX_LAST,
+            CX_SHA256, hash, hashlen, sig, siglen, &info));
         if (info & CX_ECCINFO_PARITY_ODD)
             sig[0] |= 0x01;
         break;

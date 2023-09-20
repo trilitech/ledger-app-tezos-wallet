@@ -38,13 +38,13 @@
 
 #include <stdbool.h>
 
-#define TZ_UI_STREAM_HISTORY_SCREENS  8
-#define TZ_UI_STREAM_TITLE_WIDTH      TZ_SCREEN_WITDH_BETWEEN_ICONS_BOLD_11PX
-#define TZ_UI_STREAM_CONTENTS_WIDTH   TZ_SCREEN_WITDH_FULL_REGULAR_11PX
-#define TZ_UI_STREAM_CONTENTS_LINES   (TZ_SCREEN_LINES_11PX - 1)
+#define TZ_UI_STREAM_HISTORY_SCREENS 8
+#define TZ_UI_STREAM_TITLE_WIDTH     TZ_SCREEN_WITDH_BETWEEN_ICONS_BOLD_11PX
+#define TZ_UI_STREAM_CONTENTS_WIDTH  TZ_SCREEN_WITDH_FULL_REGULAR_11PX
+#define TZ_UI_STREAM_CONTENTS_LINES  (TZ_SCREEN_LINES_11PX - 1)
 
-#define TZ_UI_STREAM_CONTENTS_SIZE (TZ_UI_STREAM_CONTENTS_WIDTH * \
-                                    TZ_UI_STREAM_CONTENTS_LINES)
+#define TZ_UI_STREAM_CONTENTS_SIZE \
+    (TZ_UI_STREAM_CONTENTS_WIDTH * TZ_UI_STREAM_CONTENTS_LINES)
 
 /*
  * In the following structure, "type" is passed to our callback and
@@ -60,38 +60,38 @@
  */
 
 typedef uint8_t tz_ui_cb_type_t;
-#define TZ_UI_STREAM_CB_NOCB            0x00
-#define TZ_UI_STREAM_CB_REFILL          0xef
-#define TZ_UI_STREAM_CB_MAINMASK        0xf0
-#define TZ_UI_STREAM_CB_REJECT          0xfe
-#define TZ_UI_STREAM_CB_ACCEPT          0xff
+#define TZ_UI_STREAM_CB_NOCB     0x00
+#define TZ_UI_STREAM_CB_REFILL   0xef
+#define TZ_UI_STREAM_CB_MAINMASK 0xf0
+#define TZ_UI_STREAM_CB_REJECT   0xfe
+#define TZ_UI_STREAM_CB_ACCEPT   0xff
 
 /*
  * The icons we used are generalised to allow for seamless Stax support
  */
 
 typedef uint8_t tz_ui_icon_t;
-#define TZ_UI_ICON_NONE		0x00
-#define TZ_UI_ICON_TICK		0x01
-#define TZ_UI_ICON_CROSS	0x02
-#define TZ_UI_ICON_DASHBOARD	0x03
-#define TZ_UI_ICON_SETTINGS	0x04
+#define TZ_UI_ICON_NONE      0x00
+#define TZ_UI_ICON_TICK      0x01
+#define TZ_UI_ICON_CROSS     0x02
+#define TZ_UI_ICON_DASHBOARD 0x03
+#define TZ_UI_ICON_SETTINGS  0x04
 
 typedef struct {
-    tz_ui_icon_t icon;
+    tz_ui_icon_t    icon;
     tz_ui_cb_type_t type;
-    char title[TZ_UI_STREAM_TITLE_WIDTH + 1];
+    char            title[TZ_UI_STREAM_TITLE_WIDTH + 1];
     char body[TZ_UI_STREAM_CONTENTS_LINES][TZ_UI_STREAM_CONTENTS_WIDTH + 1];
 } tz_ui_stream_screen_t;
 
 typedef struct {
     void (*cb)(tz_ui_cb_type_t);
     tz_ui_stream_screen_t screens[TZ_UI_STREAM_HISTORY_SCREENS];
-    int16_t current;
-    int16_t total;
-    bool full;
-    // FIXME: workaround for issue with non-local control flow. Remove once fixed
-    // see !66
+    int16_t               current;
+    int16_t               total;
+    bool                  full;
+    // FIXME: workaround for issue with non-local control flow. Remove once
+    // fixed see !66
     bool pressed_right;
 } tz_ui_stream_t;
 
@@ -107,8 +107,8 @@ size_t tz_ui_stream_pushl(tz_ui_cb_type_t, const char *, const char *,
                           ssize_t, tz_ui_icon_t);
 size_t tz_ui_stream_push_all(tz_ui_cb_type_t, const char *, const char *,
                              tz_ui_icon_t);
-void tz_ui_stream_push_accept_reject(void);
-void tz_ui_stream_close(void);
-void tz_ui_stream(void);
-void tz_ui_stream_start(void);
+void   tz_ui_stream_push_accept_reject(void);
+void   tz_ui_stream_close(void);
+void   tz_ui_stream(void);
+void   tz_ui_stream_start(void);
 tz_ui_cb_type_t tz_ui_stream_get_type(void);

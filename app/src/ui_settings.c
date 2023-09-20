@@ -23,9 +23,8 @@
 
 static void cb(tz_ui_cb_type_t);
 
-#define BLIND_SIGNING	0x01
-#define BACK    	0x02
-
+#define BLIND_SIGNING 0x01
+#define BACK          0x02
 
 static void
 cb(tz_ui_cb_type_t type)
@@ -53,7 +52,8 @@ ui_settings_init(void)
         bsigning = "ENABLED";
 
     tz_ui_stream_init(cb);
-    tz_ui_stream_push(BLIND_SIGNING, "Blind Signing", bsigning, TZ_UI_ICON_NONE);
+    tz_ui_stream_push(BLIND_SIGNING, "Blind Signing", bsigning,
+                      TZ_UI_ICON_NONE);
     tz_ui_stream_push(BACK, "Back", "", TZ_UI_ICON_DASHBOARD);
     tz_ui_stream_close();
     tz_ui_stream_start();

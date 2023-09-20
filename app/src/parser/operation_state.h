@@ -20,10 +20,10 @@
 #include "num_state.h"
 
 typedef enum {
-    TZ_OPERATION_TAG_END          =   0,
-    TZ_OPERATION_TAG_PROPOSALS    =   5,
-    TZ_OPERATION_TAG_BALLOT       =   6,
-    TZ_OPERATION_TAG_FAILING_NOOP =  17,
+    TZ_OPERATION_TAG_END          = 0,
+    TZ_OPERATION_TAG_PROPOSALS    = 5,
+    TZ_OPERATION_TAG_BALLOT       = 6,
+    TZ_OPERATION_TAG_FAILING_NOOP = 17,
     TZ_OPERATION_TAG_REVEAL       = 107,
     TZ_OPERATION_TAG_TRANSACTION  = 108,
     TZ_OPERATION_TAG_ORIGINATION  = 109,
@@ -62,7 +62,7 @@ typedef enum {
 } tz_operation_parser_step_kind;
 
 typedef enum {
-    TZ_OPERATION_FIELD_SKIP, // not for use in field descriptors
+    TZ_OPERATION_FIELD_SKIP,  // not for use in field descriptors
     TZ_OPERATION_FIELD_BINARY,
     TZ_OPERATION_FIELD_INT,
     TZ_OPERATION_FIELD_NAT,
@@ -86,58 +86,57 @@ typedef enum {
     TZ_OPERATION_FIELD_BALLOT
 } tz_operation_field_kind;
 
-
 typedef struct {
-    const char *name;
+    const char             *name;
     tz_operation_field_kind kind : 5;
-    uint8_t required : 1, skip : 1, display_none : 1;
+    uint8_t                 required : 1, skip : 1, display_none : 1;
 } tz_operation_field_descriptor;
 
 typedef struct {
-    tz_operation_tag tag;
-    const char *name;
+    tz_operation_tag                     tag;
+    const char                          *name;
     const tz_operation_field_descriptor *fields;
 } tz_operation_descriptor;
 
 typedef struct {
     tz_operation_parser_step_kind step : 5;
-    uint16_t stop;
+    uint16_t                      stop;
     union {
         struct {
-            uint8_t size_len;
+            uint8_t  size_len;
             uint16_t size;
         } step_size;
         struct {
             const tz_operation_descriptor *descriptor;
-            uint8_t field;
+            uint8_t                        field;
         } step_operation;
         struct {
             const char *str;
         } step_print;
         struct {
-            uint16_t ofs;
-            uint16_t len;
+            uint16_t                ofs;
+            uint16_t                len;
             tz_operation_field_kind kind : 5;
-            uint8_t skip : 1;
+            uint8_t                 skip : 1;
         } step_read_bytes;
         struct {
-            tz_num_parser_regs state;
+            tz_num_parser_regs      state;
             tz_operation_field_kind kind : 5;
-            uint8_t skip : 1, natural : 1;
+            uint8_t                 skip : 1, natural : 1;
         } step_read_num;
         struct {
             uint16_t ofs;
-            uint8_t skip : 1;
+            uint8_t  skip : 1;
         } step_read_string;
         struct {
             const char *name;
-            uint8_t inited : 1;
-            uint8_t skip : 1;
+            uint8_t     inited : 1;
+            uint8_t     skip : 1;
         } step_read_micheline;
         struct {
             const char *name;
-            uint16_t index;
-            uint8_t skip : 1;
+            uint16_t    index;
+            uint8_t     skip : 1;
         } step_read_list;
     };
 } tz_operation_parser_frame;
@@ -145,10 +144,10 @@ typedef struct {
 #define TZ_OPERATION_STACK_DEPTH 6
 
 typedef struct {
-    tz_operation_parser_frame stack[TZ_OPERATION_STACK_DEPTH];
-    tz_operation_parser_frame *frame; // init == stack, NULL when done
-    uint8_t seen_reveal : 1; // check at most one reveal
-    uint8_t source[22];      // check consistent source in batch
-    uint8_t destination[22]; // saved for entrypoint dispatch
-    uint16_t batch_index;    // to print a sequence number
+    tz_operation_parser_frame  stack[TZ_OPERATION_STACK_DEPTH];
+    tz_operation_parser_frame *frame;  // init == stack, NULL when done
+    uint8_t                    seen_reveal : 1;  // check at most one reveal
+    uint8_t  source[22];       // check consistent source in batch
+    uint8_t  destination[22];  // saved for entrypoint dispatch
+    uint16_t batch_index;      // to print a sequence number
 } tz_operation_state;
