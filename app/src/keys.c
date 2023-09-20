@@ -38,14 +38,10 @@ static cx_curve_t derivation_type_to_cx_curve(derivation_type_t
     // clang-format off
     switch (derivation_type) {
     case DERIVATION_TYPE_ED25519:
-    case DERIVATION_TYPE_BIP32_ED25519:
-        return CX_CURVE_Ed25519;
-    case DERIVATION_TYPE_SECP256K1:
-        return CX_CURVE_SECP256K1;
-    case DERIVATION_TYPE_SECP256R1:
-        return CX_CURVE_SECP256R1;
-    default:
-        return CX_CURVE_NONE;
+    case DERIVATION_TYPE_BIP32_ED25519: return CX_CURVE_Ed25519;
+    case DERIVATION_TYPE_SECP256K1:     return CX_CURVE_SECP256K1;
+    case DERIVATION_TYPE_SECP256R1:     return CX_CURVE_SECP256R1;
+    default:                            return CX_CURVE_NONE;
     }
     // clang-format on
 }
