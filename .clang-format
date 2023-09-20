@@ -1,0 +1,39 @@
+---
+Language:         Cpp
+BasedOnStyle:     Chromium
+IndentWidth:      4
+ColumnLimit:      78
+UseTab:           Never
+IndentCaseLabels: false
+InsertBraces:     false
+PointerAlignment: Right
+
+AlwaysBreakAfterReturnType: TopLevelDefinitions
+BreakBeforeBraces: Linux
+BreakBeforeBinaryOperators: true
+
+BinPackArguments: true
+BinPackParameters: true
+
+AlignAfterOpenBracket: Align
+
+AlignConsecutiveMacros:
+  Enabled: true
+  AcrossComments: true
+  AcrossEmptyLines: false
+
+AlignConsecutiveDeclarations:
+  Enabled: true
+  AcrossComments: false
+  AcrossEmptyLines: false
+
+AlignConsecutiveAssignments:
+  Enabled: true
+  AcrossComments: false
+  AcrossEmptyLines: false
+
+AlignArrayOfStructures: Left
+SortIncludes: Never
+SpaceAfterCStyleCast: false
+AllowShortEnumsOnASingleLine: false
+...
