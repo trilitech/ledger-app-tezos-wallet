@@ -301,7 +301,8 @@ static void cx_hash_sha256(uint8_t *data, size_t size, uint8_t *out,
             }                                   \
         } while (0)
 
-static int find_prefix(const char *s, const uint8_t **p, size_t *pl, size_t dl)
+static int
+find_prefix(const char *s, const uint8_t **p, size_t *pl, size_t dl)
 {
 
     /* For tz_format_hash */
@@ -340,7 +341,7 @@ static int find_prefix(const char *s, const uint8_t **p, size_t *pl, size_t dl)
     B58_PREFIX("src1", "\x11\xa5\x86\x8a", 4, 32);
 
     return 1;
-};
+}
 // clang-format on
 
 int tz_format_base58check(const char *sprefix, const uint8_t *data,
