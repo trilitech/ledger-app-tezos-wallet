@@ -61,42 +61,43 @@ typedef enum {
 
 typedef struct {
     tz_micheline_parser_step_kind step : 4;
-    uint16_t stop;
+    uint16_t                      stop;
     union {
         struct {
             uint16_t size;
-        } step_size; // TZ_MICHELINE_STEP_SIZE
+        } step_size;  // TZ_MICHELINE_STEP_SIZE
         struct {
             uint8_t first : 1;
-        } step_seq; // TZ_MICHELINE_STEP_SEQ
+        } step_seq;  // TZ_MICHELINE_STEP_SEQ
         struct {
-            uint8_t first : 1, has_rem_half: 1;
+            uint8_t first : 1, has_rem_half : 1;
             uint8_t rem_half;
-        } step_bytes; // TZ_MICHELINE_STEP_BYTES
+        } step_bytes;  // TZ_MICHELINE_STEP_BYTES
         struct {
             uint8_t first : 1;
-        } step_string; // TZ_MICHELINE_STEP_STRING
+        } step_string;  // TZ_MICHELINE_STEP_STRING
         struct {
             uint8_t first : 1;
-        } step_annot; // TZ_MICHELINE_STEP_ANNOT
-        tz_num_parser_regs step_int; // TZ_MICHELINE_STEP_INT,
-                                     // TZ_MICHELINE_STEP_PRINT_INT
+        } step_annot;                 // TZ_MICHELINE_STEP_ANNOT
+        tz_num_parser_regs step_int;  // TZ_MICHELINE_STEP_INT,
+                                      // TZ_MICHELINE_STEP_PRINT_INT
         struct {
             uint8_t op;
             uint8_t ofs;
             uint8_t nargs : 2, wrap : 1, spc : 1, annot : 1, first : 1;
-        } step_prim; // TZ_MICHELINE_STEP_PRIM_OP,
-                     // TZ_MICHELINE_STEP_PRIM_NAME,
-                     // TZ_MICHELINE_STEP_PRIM
+        } step_prim;  // TZ_MICHELINE_STEP_PRIM_OP,
+                      // TZ_MICHELINE_STEP_PRIM_NAME,
+                      // TZ_MICHELINE_STEP_PRIM
         struct {
             int ofs;
-        } step_capture; // TZ_MICHELINE_STEP_CAPTURE_BYTES,
-                        // TZ_MICHELINE_STEP_PRINT_CAPTURE
-        tz_micheline_capture_kind step_capturing; // TZ_MICHELINE_STEP_CAPTURING
+        } step_capture;  // TZ_MICHELINE_STEP_CAPTURE_BYTES,
+                         // TZ_MICHELINE_STEP_PRINT_CAPTURE
+        tz_micheline_capture_kind
+            step_capturing;  // TZ_MICHELINE_STEP_CAPTURING
     };
 } tz_micheline_parser_frame;
 
 typedef struct {
-    tz_micheline_parser_frame stack[TZ_MICHELINE_STACK_DEPTH];
-    tz_micheline_parser_frame *frame; // init == stack, NULL when done
+    tz_micheline_parser_frame  stack[TZ_MICHELINE_STACK_DEPTH];
+    tz_micheline_parser_frame *frame;  // init == stack, NULL when done
 } tz_micheline_state;

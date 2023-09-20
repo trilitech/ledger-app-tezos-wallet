@@ -11,8 +11,8 @@ repos:
       - id: check-yaml
       - id: check-added-large-files
 
-#  - repo: https://github.com/pre-commit/mirrors-clang-format
-#    rev: v16.0.6
-#    hooks:
-#    - id: clang-format
-#      types_or: [c]
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v16.0.6
+    hooks:
+    - id: clang-format
+      types_or: [c]

@@ -30,11 +30,15 @@
 
 #define CLA 0x80
 
-void app_exit(void) {
+void
+app_exit(void)
+{
     os_sched_exit(-1);
 }
 
-static void dispatch(command_t *cmd) {
+static void
+dispatch(command_t *cmd)
+{
     tz_handler_t f;
     TZ_PREAMBLE(("cmd=0x%p {cla=0x02x ins=%u ...}", cmd, cmd->cla, cmd->ins));
 
@@ -78,10 +82,11 @@ static void dispatch(command_t *cmd) {
     TZ_POSTAMBLE;
 }
 
-
-void app_main() {
+void
+app_main()
+{
     command_t cmd;
-    int rx;
+    int       rx;
 
     FUNC_ENTER(("void"));
     app_stack_canary = 0xDEADBEEF;
@@ -99,9 +104,9 @@ void app_main() {
     PRINTF("[PTR]    G_io_apdu_buffer: 0x%p\n", G_io_apdu_buffer);
     PRINTF("[SIZEOF] G_io_apdu_buffer: %u\n", sizeof(G_io_apdu_buffer));
     PRINTF("[PTR]    G_io_seproxyhal_spi_buffer: 0x%p\n",
-                     G_io_seproxyhal_spi_buffer);
+           G_io_seproxyhal_spi_buffer);
     PRINTF("[SIZEOF] G_io_seproxyhal_spi_buffer: %u\n",
-              sizeof(G_io_seproxyhal_spi_buffer));
+           sizeof(G_io_seproxyhal_spi_buffer));
     PRINTF("[PTR]    G_ux: 0x%p\n", &G_ux);
     PRINTF("[SIZEOF] G_ux: %u\n", sizeof(G_ux));
     PRINTF("[PTR]    G_ux_os: 0x%p\n", &G_ux_os);

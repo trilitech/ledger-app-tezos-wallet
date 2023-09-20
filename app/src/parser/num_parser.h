@@ -20,11 +20,8 @@
 
 void tz_parse_num_state_init(tz_num_parser_buffer *, tz_num_parser_regs *);
 tz_parser_result tz_parse_num_step(tz_num_parser_buffer *,
-                                   tz_num_parser_regs *,
-                                   uint8_t, bool);
+                                   tz_num_parser_regs *, uint8_t, bool);
 tz_parser_result tz_parse_int_step(tz_num_parser_buffer *,
-                                   tz_num_parser_regs *,
-                                   uint8_t);
+                                   tz_num_parser_regs *, uint8_t);
 tz_parser_result tz_parse_nat_step(tz_num_parser_buffer *,
-                                   tz_num_parser_regs *,
-                                   uint8_t);
+                                   tz_num_parser_regs *, uint8_t);

@@ -26,9 +26,9 @@
 #define TZ_SCREEN_WITDH_FULL_REGULAR_11PX       19
 #define TZ_SCREEN_WITDH_BETWEEN_ICONS_BOLD_11PX 16
 #ifdef TARGET_NANOS
-#  define TZ_SCREEN_LINES_11PX                    2
+#define TZ_SCREEN_LINES_11PX 2
 #else
-#  define TZ_SCREEN_LINES_11PX                    5
+#define TZ_SCREEN_LINES_11PX 5
 #endif
 
 #include "apdu.h"
@@ -70,34 +70,35 @@ typedef enum {
 
 typedef struct {
     /* State */
-    main_step_t step;
-    tz_ui_stream_t stream;
+    main_step_t             step;
+    tz_ui_stream_t          stream;
     bip32_path_with_curve_t path_with_curve;
     struct {
         apdu_hash_state_t hash;
         apdu_sign_state_t sign;
     } apdu;
     char line_buf[TZ_UI_STREAM_CONTENTS_SIZE + 1];
-# ifdef HAVE_BAGL
+#ifdef HAVE_BAGL
     struct {
         bagl_element_t bagls[5 + TZ_SCREEN_LINES_11PX];
-        char lines[TZ_SCREEN_LINES_11PX][TZ_SCREEN_WITDH_FULL_REGULAR_11PX + 1];
+        char           lines[TZ_SCREEN_LINES_11PX]
+                  [TZ_SCREEN_WITDH_FULL_REGULAR_11PX + 1];
     } ux;
-# endif
-# ifdef HAVE_NBGL
+#endif
+#ifdef HAVE_NBGL
     screen_t home_screen;
-# endif
+#endif
 } globals_t;
 
 /* Settings */
 typedef struct {
-  bool blindsigning;
+    bool blindsigning;
 } settings_t;
 
 extern globals_t global;
 
 extern const settings_t N_settings_real;
-#define N_settings (*(volatile settings_t *) PIC(&N_settings_real))
+#define N_settings (*(volatile settings_t *)PIC(&N_settings_real))
 
 extern unsigned int app_stack_canary;  // From SDK
 

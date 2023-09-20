@@ -27,14 +27,12 @@
 #include "apdu.h"
 #include "globals.h"
 
-const uint8_t version[4] = {
-  0 /* wallet */,
-  MAJOR_VERSION,
-  MINOR_VERSION,
-  PATCH_VERSION
-};
+const uint8_t version[4]
+    = {0 /* wallet */, MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION};
 
-void handle_unimplemented(__attribute__((unused))command_t *cmd) {
+void
+handle_unimplemented(__attribute__((unused)) command_t *cmd)
+{
     TZ_PREAMBLE(("cmd=0x%p", cmd));
 
     PRINTF("[ERROR] Unimplemented instruction 0x%02x\n", cmd->ins);
@@ -42,7 +40,9 @@ void handle_unimplemented(__attribute__((unused))command_t *cmd) {
     TZ_POSTAMBLE;
 }
 
-void handle_apdu_version(__attribute__((unused))command_t *cmd) {
+void
+handle_apdu_version(__attribute__((unused)) command_t *cmd)
+{
     TZ_PREAMBLE(("cmd=0x%p", cmd));
 
     TZ_ASSERT(EXC_UNEXPECTED_STATE, global.step == ST_IDLE);
@@ -50,7 +50,9 @@ void handle_apdu_version(__attribute__((unused))command_t *cmd) {
     TZ_POSTAMBLE;
 }
 
-void handle_apdu_git(__attribute__((unused))command_t *cmd) {
+void
+handle_apdu_git(__attribute__((unused)) command_t *cmd)
+{
     static const char commit[] = COMMIT;
     TZ_PREAMBLE(("cmd=0x%p", cmd));
 

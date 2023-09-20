@@ -30,7 +30,7 @@
 
 typedef struct {
     cx_blake2b_t state;
-    uint8_t final_hash[SIGN_HASH_SIZE];
+    uint8_t      final_hash[SIGN_HASH_SIZE];
 } apdu_hash_state_t;
 
 typedef enum {
@@ -43,12 +43,12 @@ typedef struct {
     uint8_t packet_index;
 
     sign_step_t step;
-    bool return_hash;
-    bool received_last_msg;
+    bool        return_hash;
+    bool        received_last_msg;
 
     union {
         struct {
-            size_t total_length;
+            size_t          total_length;
             tz_parser_state parser_state;
         } clear;
         struct {

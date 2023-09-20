@@ -47,7 +47,7 @@
 #define INS_SIGN_WITH_HASH            0x0F
 
 // Last valid instruction code
-#define INS_MAX                       0x0F
+#define INS_MAX 0x0F
 
 /*
  * All of the handlers must be defined together below.  We
@@ -82,7 +82,7 @@
  *
  */
 
-typedef void (tz_handler)(command_t *);
+typedef void(tz_handler)(command_t *);
 typedef tz_handler *tz_handler_t;
 
 tz_handler handle_unimplemented;

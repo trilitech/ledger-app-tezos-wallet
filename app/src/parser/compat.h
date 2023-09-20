@@ -20,28 +20,30 @@
 // for BOLOS or running in the Tezos client/testing.
 #if __has_include("os.h")
 #include "os.h"
-#  if __has_include("cx.h")
-#    define ACTUALLY_ON_LEDGER
-#  endif
+#if __has_include("cx.h")
+#define ACTUALLY_ON_LEDGER
+#endif
 #endif
 
 // On BOLOS, use the SDK.
 // Elsewhere, simulate the BOLOS API calls we need.
 #ifdef ACTUALLY_ON_LEDGER
-#  include "os.h"
-#  include "os_io_seproxyhal.h"
-#  include "cx.h"
-#  if CX_APILEVEL < 8
-#    error "Only compiles with API level 8 or higher; requires newer firmware"
-#  endif
+#include "os.h"
+#include "os_io_seproxyhal.h"
+#include "cx.h"
+#if CX_APILEVEL < 8
+#error "Only compiles with API level 8 or higher; requires newer firmware"
+#endif
 #else
-#  include <stdio.h>
-#  define PIC(x) ((void*) x)
-#  ifdef TEZOS_DEBUG
-#    define PRINTF printf
-#  else
-#    define PRINTF(...) do {} while (0)
-#  endif
+#include <stdio.h>
+#define PIC(x) ((void *)x)
+#ifdef TEZOS_DEBUG
+#define PRINTF printf
+#else
+#define PRINTF(...) \
+    do {            \
+    } while (0)
+#endif
 #endif
 
 #include <stdbool.h>
@@ -50,11 +52,11 @@
 
 // Type-safe versions of true/false
 #undef true
-#define true ((bool) 1)
+#define true ((bool)1)
 #undef false
-#define false ((bool) 0)
+#define false ((bool)0)
 
 #ifdef MIN
 #undef MIN
 #endif
-#define MIN(a,b) (((a)<(b))?(a):(b))
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))

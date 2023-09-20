@@ -37,16 +37,19 @@ static void prompt_address(void);
 static void format_pkh(char *);
 static void stream_cb(tz_ui_cb_type_t);
 
-static void provide_pubkey(void) {
-    buffer_t bufs[2] = {0};
-    uint8_t byte;
+static void
+provide_pubkey(void)
+{
+    buffer_t             bufs[2] = {0};
+    uint8_t              byte;
     cx_ecfp_public_key_t pubkey;
     TZ_PREAMBLE(("void"));
 
     // Application could be PIN-locked, and pubkey->W_len would then be 0,
     // so throwing an error rather than returning an empty key
     TZ_ASSERT(EXC_SECURITY, os_global_pin_is_validated() == BOLOS_UX_OK);
-    TZ_CHECK(generate_public_key(&pubkey, global.path_with_curve.derivation_type,
+    TZ_CHECK(generate_public_key(&pubkey,
+                                 global.path_with_curve.derivation_type,
                                  &global.path_with_curve.bip32_path));
 
     byte         = pubkey.W_len;
@@ -60,12 +63,15 @@ static void provide_pubkey(void) {
     TZ_POSTAMBLE;
 }
 
-static void format_pkh(char *buffer) {
+static void
+format_pkh(char *buffer)
+{
     cx_ecfp_public_key_t pubkey = {0};
-    uint8_t hash[21];
+    uint8_t              hash[21];
     TZ_PREAMBLE(("buffer=%p", buffer));
 
-    TZ_CHECK(generate_public_key(&pubkey, global.path_with_curve.derivation_type,
+    TZ_CHECK(generate_public_key(&pubkey,
+                                 global.path_with_curve.derivation_type,
                                  &global.path_with_curve.bip32_path));
     // clang-format off
     TZ_CHECK(public_key_hash(hash+1, 20, NULL,
@@ -83,7 +89,9 @@ static void format_pkh(char *buffer) {
     TZ_POSTAMBLE;
 }
 
-static void stream_cb(tz_ui_cb_type_t type) {
+static void
+stream_cb(tz_ui_cb_type_t type)
+{
     TZ_PREAMBLE(("type=%u", type));
 
     // clang-format off
@@ -98,7 +106,9 @@ static void stream_cb(tz_ui_cb_type_t type) {
 }
 
 #ifdef HAVE_BAGL
-static void prompt_address(void) {
+static void
+prompt_address(void)
+{
     char buf[TZ_UI_STREAM_CONTENTS_SIZE + 1];
     TZ_PREAMBLE(("void"));
 
@@ -117,25 +127,33 @@ static void prompt_address(void) {
 
 #include "nbgl_use_case.h"
 
-static void cancel_callback(void) {
+static void
+cancel_callback(void)
+{
     stream_cb(TZ_UI_STREAM_CB_REJECT);
     nbgl_useCaseStatus("Address rejected", false, ui_home_init);
 }
 
-static void approve_callback(void) {
+static void
+approve_callback(void)
+{
     stream_cb(TZ_UI_STREAM_CB_ACCEPT);
     nbgl_useCaseStatus("ADDRESS\nVERIFIED", true, ui_home_init);
 }
 
-static void confirmation_callback(bool confirm) {
+static void
+confirmation_callback(bool confirm)
+{
     if (confirm) {
-      approve_callback();
+        approve_callback();
     } else {
-      cancel_callback();
+        cancel_callback();
     }
 }
 
-static void verify_address(void) {
+static void
+verify_address(void)
+{
     char buf[TZ_UI_STREAM_CONTENTS_SIZE + 1];
     TZ_PREAMBLE(("void"));
 
@@ -144,16 +162,21 @@ static void verify_address(void) {
     TZ_POSTAMBLE;
 }
 
-static void prompt_address(void) {
+static void
+prompt_address(void)
+{
     TZ_PREAMBLE(("void"));
 
     global.step = ST_PROMPT;
-    nbgl_useCaseReviewStart(&C_tezos, "Verify Tezos\naddress", NULL, "Cancel", verify_address, cancel_callback);
+    nbgl_useCaseReviewStart(&C_tezos, "Verify Tezos\naddress", NULL, "Cancel",
+                            verify_address, cancel_callback);
     TZ_POSTAMBLE;
 }
 #endif
 
-void handle_apdu_get_public_key(command_t *cmd) {
+void
+handle_apdu_get_public_key(command_t *cmd)
+{
     bool prompt = cmd->ins == INS_PROMPT_PUBLIC_KEY;
     TZ_PREAMBLE(("cmd=%p", cmd));
 
@@ -162,17 +185,18 @@ void handle_apdu_get_public_key(command_t *cmd) {
 
     // do not expose pks without prompt through U2F (permissionless legacy
     // comm in browser)
-    TZ_ASSERT(EXC_HID_REQUIRED, prompt || G_io_apdu_media != IO_APDU_MEDIA_U2F);
+    TZ_ASSERT(EXC_HID_REQUIRED,
+              prompt || G_io_apdu_media != IO_APDU_MEDIA_U2F);
 
     global.path_with_curve.derivation_type = cmd->p2;
     TZ_ASSERT(EXC_WRONG_PARAM,
               check_derivation_type(global.path_with_curve.derivation_type));
-    TZ_CHECK(read_bip32_path(&global.path_with_curve.bip32_path,
-                             cmd->data, cmd->lc));
+    TZ_CHECK(read_bip32_path(&global.path_with_curve.bip32_path, cmd->data,
+                             cmd->lc));
     if (prompt)
-      prompt_address();
+        prompt_address();
     else
-      provide_pubkey();
+        provide_pubkey();
 
     TZ_POSTAMBLE;
 }

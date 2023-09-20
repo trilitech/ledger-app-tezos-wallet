@@ -30,9 +30,9 @@
 
 void tz_ui_home_redisplay(void);
 
-static const char* const infoTypes[] = {"Version", "Developer", "Copyright"};
-static const char* const infoContents[] =
-                                      {APPVERSION, "Tezos", "(c) 2023 <Tezos>"};
+static const char *const infoTypes[] = {"Version", "Developer", "Copyright"};
+static const char *const infoContents[]
+    = {APPVERSION, "Tezos", "(c) 2023 <Tezos>"};
 
 enum {
     BLIND_SIGNING_TOKEN = FIRST_USER_TOKEN,
@@ -40,27 +40,28 @@ enum {
 
 static nbgl_layoutSwitch_t switches[1];
 
-static bool navigation_cb_wallet(__attribute__((unused))uint8_t page,
-                                 nbgl_pageContent_t* content) {
+static bool
+navigation_cb_wallet(__attribute__((unused)) uint8_t page,
+                     nbgl_pageContent_t             *content)
+{
     switch (page) {
     case 0:
-        content->type = INFOS_LIST;
-        content->infosList.nbInfos = 3;
-        content->infosList.infoTypes = infoTypes;
+        content->type                   = INFOS_LIST;
+        content->infosList.nbInfos      = 3;
+        content->infosList.infoTypes    = infoTypes;
         content->infosList.infoContents = infoContents;
         break;
     case 1:
-        switches[0] =
-          (nbgl_layoutSwitch_t)
-          {.initState = N_settings.blindsigning ? ON_STATE : OFF_STATE,
-           .text = "Blind signing",
-           .subText = "Enable blindsigning",
-           .token = BLIND_SIGNING_TOKEN,
-           .tuneId = TUNE_TAP_CASUAL};
+        switches[0] = (nbgl_layoutSwitch_t){
+            .initState = N_settings.blindsigning ? ON_STATE : OFF_STATE,
+            .text      = "Blind signing",
+            .subText   = "Enable blindsigning",
+            .token     = BLIND_SIGNING_TOKEN,
+            .tuneId    = TUNE_TAP_CASUAL};
 
-        content->type = SWITCHES_LIST;
+        content->type                    = SWITCHES_LIST;
         content->switchesList.nbSwitches = 1;
-        content->switchesList.switches = (nbgl_layoutSwitch_t*) switches;
+        content->switchesList.switches   = (nbgl_layoutSwitch_t *)switches;
         break;
     default:
         return false;
@@ -69,8 +70,9 @@ static bool navigation_cb_wallet(__attribute__((unused))uint8_t page,
     return true;
 }
 
-static void controls_callback(int token,
-                              __attribute__((unused))uint8_t index) {
+static void
+controls_callback(int token, __attribute__((unused)) uint8_t index)
+{
     switch (token) {
     case BLIND_SIGNING_TOKEN:
         toggle_blindsigning();
@@ -81,14 +83,18 @@ static void controls_callback(int token,
     }
 }
 
-static void ui_menu_about_wallet(void) {
+static void
+ui_menu_about_wallet(void)
+{
     uint8_t nb_screens = 2;
-    nbgl_useCaseSettings("Tezos wallet",
-                         0, nb_screens, false, tz_ui_home_redisplay,
-                         navigation_cb_wallet, controls_callback);
+    nbgl_useCaseSettings("Tezos wallet", 0, nb_screens, false,
+                         tz_ui_home_redisplay, navigation_cb_wallet,
+                         controls_callback);
 }
 
-static void ui_toggle_clear_blind(void) {
+static void
+ui_toggle_clear_blind(void)
+{
     // clang-format off
     switch (global.home_screen) {
     case SCREEN_CLEAR_SIGN: global.home_screen = SCREEN_BLIND_SIGN; break;
@@ -101,44 +107,37 @@ static void ui_toggle_clear_blind(void) {
     tz_ui_home_redisplay();
 }
 
-void tz_ui_home_redisplay(void) {
+void
+tz_ui_home_redisplay(void)
+{
     FUNC_ENTER(("void"));
 
     if (!N_settings.blindsigning) {
-        nbgl_useCaseHome("Tezos Wallet",
-                         &C_tezos,
-                         "Ready for signing",
-                         true,
-                         ui_menu_about_wallet,
-                         app_exit);
+        nbgl_useCaseHome("Tezos Wallet", &C_tezos, "Ready for signing", true,
+                         ui_menu_about_wallet, app_exit);
     } else {
-        const char* button_text;
-        const char* tagline;
+        const char *button_text;
+        const char *tagline;
 
         switch (global.home_screen) {
         case SCREEN_CLEAR_SIGN:
-            tagline = "Ready for clear signing";
+            tagline     = "Ready for clear signing";
             button_text = "blind sign";
             break;
         case SCREEN_BLIND_SIGN:
-            tagline = "Ready for blind signing";
+            tagline     = "Ready for blind signing";
             button_text = "clear sign";
             break;
         default:
-            THROW (EXC_UNEXPECTED_STATE);
+            THROW(EXC_UNEXPECTED_STATE);
         }
 
-        nbgl_useCaseHomeExt("Tezos Wallet",
-                            &C_tezos,
-                            tagline,
-                            true,
-                            button_text,
-                            ui_toggle_clear_blind,
-                            ui_menu_about_wallet,
-                            app_exit);
+        nbgl_useCaseHomeExt("Tezos Wallet", &C_tezos, tagline, true,
+                            button_text, ui_toggle_clear_blind,
+                            ui_menu_about_wallet, app_exit);
     }
 
     FUNC_LEAVE();
 }
 
-#endif // HAVE_NBGL
+#endif  // HAVE_NBGL

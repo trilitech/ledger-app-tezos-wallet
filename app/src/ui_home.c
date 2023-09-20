@@ -28,8 +28,9 @@
 
 static void cb(tz_ui_cb_type_t);
 
-
-static void cb(tz_ui_cb_type_t type) {
+static void
+cb(tz_ui_cb_type_t type)
+{
     FUNC_ENTER(("type=%u\n", type));
 
     switch (type) {
@@ -47,29 +48,39 @@ static void cb(tz_ui_cb_type_t type) {
 }
 
 #ifdef TARGET_NANOS
-static void clear_sign_screen(void) {
-    tz_ui_stream_push(SCREEN_CLEAR_SIGN, "ready for",
-                      "safe signing", TZ_UI_ICON_NONE);
+static void
+clear_sign_screen(void)
+{
+    tz_ui_stream_push(SCREEN_CLEAR_SIGN, "ready for", "safe signing",
+                      TZ_UI_ICON_NONE);
 }
 
-static void blind_sign_screen(void) {
-    tz_ui_stream_push(SCREEN_BLIND_SIGN, "ready for",
-                      "BLIND signing", TZ_UI_ICON_NONE);
+static void
+blind_sign_screen(void)
+{
+    tz_ui_stream_push(SCREEN_BLIND_SIGN, "ready for", "BLIND signing",
+                      TZ_UI_ICON_NONE);
 }
 #else
-static void clear_sign_screen(void) {
+static void
+clear_sign_screen(void)
+{
     tz_ui_stream_push(SCREEN_CLEAR_SIGN, "Tezos Wallet",
                       "ready for\nsafe signing", TZ_UI_ICON_NONE);
 }
 
-static void blind_sign_screen(void) {
+static void
+blind_sign_screen(void)
+{
     tz_ui_stream_push(SCREEN_BLIND_SIGN, "Tezos Wallet",
                       "ready for\nBLIND signing", TZ_UI_ICON_NONE);
 }
 #endif
-#endif // HAVE_BAGL
+#endif  // HAVE_BAGL
 
-void ui_home_init(void) {
+void
+ui_home_init(void)
+{
     FUNC_ENTER(("void"));
 #ifdef HAVE_BAGL
     tz_ui_stream_init(cb);

@@ -22,7 +22,7 @@
 
 #include <os.h>
 
-#define SW_OK                         0x9000
+#define SW_OK 0x9000
 
 // Standard APDU error codes:
 // https://www.eftlab.co.uk/index.php/site-map/knowledge-base/118-apdu-response-list
@@ -40,10 +40,10 @@
 #define EXC_CLASS                     0x6E00
 #define EXC_MEMORY_ERROR              0x9200
 
-#define EXC_UNEXPECTED_STATE          0x9001
-#define EXC_UNEXPECTED_SIGN_STATE     0x9002
-#define EXC_UNKNOWN_CX_ERR            0x9003
-#define EXC_UNKNOWN                   0x90FF
+#define EXC_UNEXPECTED_STATE      0x9001
+#define EXC_UNEXPECTED_SIGN_STATE 0x9002
+#define EXC_UNKNOWN_CX_ERR        0x9003
+#define EXC_UNKNOWN               0x90FF
 
 /*
  * In the handlers and the routines that they call, we define a set of
@@ -77,48 +77,51 @@
  * with this framework, reply with io_send_sw() and return TZ_DONE.
  */
 
-#define TZ_PREAMBLE(_args)                                              \
-                uint16_t _sw_ret_code = 0x0000;                         \
-                cx_err_t error = CX_OK;                                 \
-                if (0)                                                  \
-                    goto bail;                                          \
-                if (0)                                                  \
-                    goto end;                                           \
-                FUNC_ENTER(_args)
+#define TZ_PREAMBLE(_args)          \
+    uint16_t _sw_ret_code = 0x0000; \
+    cx_err_t error        = CX_OK;  \
+    if (0)                          \
+        goto bail;                  \
+    if (0)                          \
+        goto end;                   \
+    FUNC_ENTER(_args)
 
-#define TZ_POSTAMBLE                                                    \
-            end:                                                        \
-                if (error != CX_OK) {                                   \
-                    _sw_ret_code = EXC_UNKNOWN_CX_ERR;                  \
-                    PRINTF("CX_CHECK failed with 0x%08x", error);       \
-                }                                                       \
-            bail:                                                       \
-                if (_sw_ret_code) {                                     \
-                    global.step = ST_ERROR;                             \
-                    io_send_sw(_sw_ret_code);                           \
-                }                                                       \
-                FUNC_LEAVE();
+#define TZ_POSTAMBLE                                  \
+    end:                                              \
+    if (error != CX_OK) {                             \
+        _sw_ret_code = EXC_UNKNOWN_CX_ERR;            \
+        PRINTF("CX_CHECK failed with 0x%08x", error); \
+    }                                                 \
+    bail:                                             \
+    if (_sw_ret_code) {                               \
+        global.step = ST_ERROR;                       \
+        io_send_sw(_sw_ret_code);                     \
+    }                                                 \
+    FUNC_LEAVE();
 
-#define TZ_FAIL(_sw_code) do {                                          \
-                _sw_ret_code = _sw_code;                                \
-                goto bail;                                              \
-            } while (0)
+#define TZ_FAIL(_sw_code)        \
+    do {                         \
+        _sw_ret_code = _sw_code; \
+        goto bail;               \
+    } while (0)
 
-#define TZ_ASSERT(_err, _cond) do {                                         \
-                if (!(_cond)) {                                             \
-                    PRINTF("Assertion (\"%s\") on %s:%u failed with %s\n",  \
-                           #_cond, __FILE__, __LINE__, #_err);              \
-                    TZ_FAIL(_err);                                          \
-                }                                                           \
-            } while (0)
+#define TZ_ASSERT(_err, _cond)                                             \
+    do {                                                                   \
+        if (!(_cond)) {                                                    \
+            PRINTF("Assertion (\"%s\") on %s:%u failed with %s\n", #_cond, \
+                   __FILE__, __LINE__, #_err);                             \
+            TZ_FAIL(_err);                                                 \
+        }                                                                  \
+    } while (0)
 
-#define TZ_CHECK(_call) do {                                                \
-                (_call);                                                    \
-                if (global.step == ST_ERROR) {                              \
-                    PRINTF("TZ_CHECK(\"%s\") on %s:%u\n", #_call,           \
-                           __FILE__, __LINE__);                             \
-                    goto bail;                                              \
-                }                                                           \
-            } while (0)
+#define TZ_CHECK(_call)                                             \
+    do {                                                            \
+        (_call);                                                    \
+        if (global.step == ST_ERROR) {                              \
+            PRINTF("TZ_CHECK(\"%s\") on %s:%u\n", #_call, __FILE__, \
+                   __LINE__);                                       \
+            goto bail;                                              \
+        }                                                           \
+    } while (0)
 
 #define TZ_ASSERT_NOTNULL(_x) TZ_ASSERT(EXC_MEMORY_ERROR, (_x) != NULL)
