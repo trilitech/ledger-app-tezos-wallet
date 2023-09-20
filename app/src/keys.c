@@ -110,18 +110,16 @@ void public_key_hash(uint8_t *hash_out, size_t hash_out_size,
     cx_ecfp_public_key_t compressed = {0};
     switch (derivation_type) {
     case DERIVATION_TYPE_BIP32_ED25519:
-    case DERIVATION_TYPE_ED25519: {
+    case DERIVATION_TYPE_ED25519:
         compressed.W_len = public_key->W_len - 1;
         memcpy(compressed.W, public_key->W + 1, compressed.W_len);
         break;
-    }
     case DERIVATION_TYPE_SECP256K1:
-    case DERIVATION_TYPE_SECP256R1: {
+    case DERIVATION_TYPE_SECP256R1:
         memcpy(compressed.W, public_key->W, public_key->W_len);
         compressed.W[0] = 0x02 + (public_key->W[64] & 0x01);
         compressed.W_len = 33;
         break;
-    }
     default:
         TZ_FAIL(EXC_WRONG_PARAM);
     }
