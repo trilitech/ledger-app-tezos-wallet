@@ -67,6 +67,7 @@ static void format_pkh(char *buffer) {
 
     TZ_CHECK(generate_public_key(&pubkey, global.path_with_curve.derivation_type,
                                  &global.path_with_curve.bip32_path));
+    // clang-format off
     TZ_CHECK(public_key_hash(hash+1, 20, NULL,
                              global.path_with_curve.derivation_type, &pubkey));
     switch (global.path_with_curve.derivation_type) {
@@ -77,6 +78,7 @@ static void format_pkh(char *buffer) {
     default: CX_CHECK(EXC_WRONG_PARAM); break;
     }
     TZ_CHECK(tz_format_pkh(hash, 21, buffer));
+    // clang-format on
 
     TZ_POSTAMBLE;
 }
@@ -84,11 +86,13 @@ static void format_pkh(char *buffer) {
 static void stream_cb(tz_ui_cb_type_t type) {
     TZ_PREAMBLE(("type=%u", type));
 
+    // clang-format off
     switch (type) {
     case TZ_UI_STREAM_CB_ACCEPT: TZ_CHECK(provide_pubkey()); break;
     case TZ_UI_STREAM_CB_REFILL:                             break;
     case TZ_UI_STREAM_CB_REJECT: TZ_FAIL(EXC_REJECT);        break;
     }
+    // clang-format on
 
     TZ_POSTAMBLE;
 }

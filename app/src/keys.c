@@ -35,6 +35,7 @@
 
 static cx_curve_t derivation_type_to_cx_curve(derivation_type_t
                                               derivation_type) {
+    // clang-format off
     switch (derivation_type) {
     case DERIVATION_TYPE_ED25519:
     case DERIVATION_TYPE_BIP32_ED25519:
@@ -46,6 +47,7 @@ static cx_curve_t derivation_type_to_cx_curve(derivation_type_t
     default:
         return CX_CURVE_NONE;
     }
+    // clang-format on
 }
 
 void read_bip32_path(bip32_path_t *out, const uint8_t *in,

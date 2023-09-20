@@ -50,6 +50,7 @@ static void dispatch(command_t *cmd) {
         break;
     }
 
+    // clang-format off
     switch (cmd->ins) {
     case INS_VERSION:                   f = handle_apdu_version;        break;
     case INS_SIGN:                      f = handle_apdu_sign;           break;
@@ -70,6 +71,7 @@ static void dispatch(command_t *cmd) {
         PRINTF("[ERROR] invalid instruction 0x%02x\n", cmd->ins);
         TZ_FAIL(EXC_INVALID_INS);
     }
+    // clang-format on
 
     TZ_CHECK(f(cmd));
 
