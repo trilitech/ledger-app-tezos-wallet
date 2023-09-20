@@ -99,10 +99,10 @@ static tz_parser_result print_escaped(tz_parser_state *state, uint8_t b) {
     // clang-format off
     switch (b) {
     case '\\': strncpy(buf,"\\\\",TZ_CAPTURE_BUFFER_SIZE); break;
-    case '"': strncpy(buf,"\\\"",TZ_CAPTURE_BUFFER_SIZE); break;
-    case '\r': strncpy(buf,"\\r",TZ_CAPTURE_BUFFER_SIZE); break;
-    case '\n': strncpy(buf,"\\n",TZ_CAPTURE_BUFFER_SIZE); break;
-    case '\t': strncpy(buf,"\\t",TZ_CAPTURE_BUFFER_SIZE); break;
+    case '"':  strncpy(buf,"\\\"",TZ_CAPTURE_BUFFER_SIZE); break;
+    case '\r': strncpy(buf,"\\r",TZ_CAPTURE_BUFFER_SIZE);  break;
+    case '\n': strncpy(buf,"\\n",TZ_CAPTURE_BUFFER_SIZE);  break;
+    case '\t': strncpy(buf,"\\t",TZ_CAPTURE_BUFFER_SIZE);  break;
     default:
         buf[0] = '0' + b/100;
         buf[1] = '0' + (b/10)%10;
