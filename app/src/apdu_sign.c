@@ -223,6 +223,7 @@ static void send_cancel(void) {
 static void stream_cb(tz_ui_cb_type_t type) {
     TZ_PREAMBLE(("type=%u", type));
 
+    // clang-format off
     switch (type) {
     case TZ_UI_STREAM_CB_ACCEPT: return sign_packet();
     case TZ_UI_STREAM_CB_REFILL: return refill();
@@ -230,6 +231,7 @@ static void stream_cb(tz_ui_cb_type_t type) {
     case TZ_UI_STREAM_CB_CANCEL: return send_cancel();
     default:                     TZ_FAIL(EXC_UNKNOWN);
     }
+    // clang-format on
 
     TZ_POSTAMBLE;
 }
@@ -248,11 +250,13 @@ static void handle_first_apdu(packet_t *pkt) {
                                       SIGN_HASH_SIZE * 8));
     tz_ui_stream_init(stream_cb);
 
+    // clang-format off
     switch (global.step) {
     case ST_CLEAR_SIGN: TZ_CHECK(handle_first_apdu_clear(pkt)); break;
     case ST_BLIND_SIGN: TZ_CHECK(handle_first_apdu_blind(pkt)); break;
     default:            TZ_FAIL(EXC_UNEXPECTED_STATE);
     }
+    // clang-format on
 
     io_send_sw(SW_OK);
     global.apdu.sign.step = SIGN_ST_WAIT_DATA;
@@ -298,11 +302,13 @@ static void handle_data_apdu(packet_t *pkt) {
     if (pkt->is_last)
         global.apdu.sign.received_last_msg = true;
 
+    // clang-format off
     switch (global.step) {
     case ST_CLEAR_SIGN: TZ_CHECK(handle_data_apdu_clear(pkt)); break;
     case ST_BLIND_SIGN: TZ_CHECK(handle_data_apdu_blind(pkt)); break;
     default:            TZ_FAIL(EXC_UNEXPECTED_STATE);         break;
     }
+    // clang-format on
 
     TZ_POSTAMBLE;
 }
@@ -419,6 +425,7 @@ static void handle_data_apdu_blind(packet_t *pkt) {
 
     tz_format_base58(FINAL_HASH, sizeof(FINAL_HASH), obuf);
 
+    // clang-format off
     switch(global.apdu.sign.u.blind.tag) {
     case 0x01: case 0x11: type = "Block\nproposal";         break;
     case 0x03:            type = "Manager\noperation";      break;
@@ -427,6 +434,7 @@ static void handle_data_apdu_blind(packet_t *pkt) {
     case 0x05:            type = "Micheline\nexpression";   break;
     default:                                                break;
     }
+    // clang-format on
 
 #ifdef HAVE_BAGL
     tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Sign Hash", type,
@@ -476,6 +484,7 @@ void handle_apdu_sign(command_t *cmd) {
 
         memset(&global.apdu, 0, sizeof(global.apdu));
 
+        // clang-format off
         #ifdef HAVE_BAGL
         switch (tz_ui_stream_get_type()) {
         #elif HAVE_NBGL
@@ -486,6 +495,7 @@ void handle_apdu_sign(command_t *cmd) {
         default:
             TZ_FAIL(EXC_UNEXPECTED_STATE);
         }
+        // clang-format on
 
         TZ_CHECK(handle_first_apdu(&pkt));
         global.apdu.sign.return_hash = return_hash;

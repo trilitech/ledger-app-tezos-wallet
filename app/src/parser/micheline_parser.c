@@ -96,6 +96,7 @@ static tz_parser_result print_escaped(tz_parser_state *state, uint8_t b) {
     char* buf = (char*) state->buffers.capture;
     tz_must(push_frame(state, TZ_MICHELINE_STEP_PRINT_CAPTURE));
     state->micheline.frame->step_capture.ofs = 0;
+    // clang-format off
     switch (b) {
     case '\\': strncpy(buf,"\\\\",TZ_CAPTURE_BUFFER_SIZE); break;
     case '"': strncpy(buf,"\\\"",TZ_CAPTURE_BUFFER_SIZE); break;
@@ -109,6 +110,7 @@ static tz_parser_result print_escaped(tz_parser_state *state, uint8_t b) {
         buf[3] = 0;
         break;
     }
+    // clang-format on
     tz_continue;
 }
 

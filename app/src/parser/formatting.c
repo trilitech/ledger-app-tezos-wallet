@@ -286,8 +286,11 @@ static void cx_hash_sha256(uint8_t *data, size_t size, uint8_t *out,
  *
  * find_prefix() returns successfully if it finds a definition and the
  * length is correct.
+ *
+ * We turn off clang format for this so that we can line everything up.
  */
 
+// clang-format off
 #define B58_PREFIX(_s, _p, _pl, _dl) do {       \
             if (!strcmp((_s), s)) {             \
                 if ((_dl) != dl)                \
@@ -338,6 +341,7 @@ static int find_prefix(const char *s, const uint8_t **p, size_t *pl, size_t dl)
 
     return 1;
 };
+// clang-format on
 
 int tz_format_base58check(const char *sprefix, const uint8_t *data,
                           size_t size, char *obuf) {
@@ -367,6 +371,7 @@ int tz_format_pkh(const uint8_t *data, size_t size, char *obuf) {
 
     if (size < 1)
         return 1;
+    // clang-format off
     switch (data[0]) {
     case 0:  prefix = "tz1"; break;
     case 1:  prefix = "tz2"; break;
@@ -374,6 +379,7 @@ int tz_format_pkh(const uint8_t *data, size_t size, char *obuf) {
     case 3:  prefix = "tz4"; break;
     default: return 1;
     }
+    // clang-format on
 
     return tz_format_base58check(prefix, data+1, size-1, obuf);
 }
@@ -383,6 +389,7 @@ int tz_format_pk(const uint8_t *data, size_t size, char *obuf) {
 
     if (size < 1)
         return 1;
+    // clang-format off
     switch (data[0]) {
     case 0:  prefix = "edpk"; break;
     case 1:  prefix = "sppk"; break;
@@ -390,6 +397,7 @@ int tz_format_pk(const uint8_t *data, size_t size, char *obuf) {
     case 3:  prefix = "BLpk"; break;
     default: return 1;
     }
+    // clang-format on
 
     return tz_format_base58check(prefix, data+1, size-1, obuf);
 }
@@ -409,6 +417,7 @@ int tz_format_address(const uint8_t *data, size_t size, char *obuf) {
 
     if (size < 1)
         return 1;
+    // clang-format off
     switch (data[0]) {
     case 1:  prefix = "KT1";  break;
     case 2:  prefix = "txr1"; break;
@@ -418,6 +427,7 @@ int tz_format_address(const uint8_t *data, size_t size, char *obuf) {
     case 0:  return tz_format_pkh (data+1, size-1, obuf);
     default: return 1;
     }
+    // clang-format on
 
     return tz_format_base58check(prefix, data+1, size-2, obuf);
 }

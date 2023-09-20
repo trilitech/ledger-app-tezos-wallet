@@ -89,12 +89,14 @@ static void ui_menu_about_wallet(void) {
 }
 
 static void ui_toggle_clear_blind(void) {
+    // clang-format off
     switch (global.home_screen) {
     case SCREEN_CLEAR_SIGN: global.home_screen = SCREEN_BLIND_SIGN; break;
     case SCREEN_BLIND_SIGN: global.home_screen = SCREEN_CLEAR_SIGN; break;
     default:
         THROW (EXC_UNEXPECTED_STATE);
     }
+    // clang-format on
 
     tz_ui_home_redisplay();
 }

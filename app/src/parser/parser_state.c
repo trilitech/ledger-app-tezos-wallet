@@ -21,6 +21,7 @@
 #define BLO_LABEL(_x) case TZ_BLO_ ## _x: return #_x
 
 const char* tz_parser_result_name(tz_parser_result code) {
+    // clang-format off
     switch (code) {
     TZ_LABEL(CONTINUE);
     TZ_LABEL(BREAK);
@@ -36,6 +37,7 @@ const char* tz_parser_result_name(tz_parser_result code) {
     default:
         return "???";
     }
+    // clang-format on
 }
 
 void tz_parser_init(tz_parser_state *state) {

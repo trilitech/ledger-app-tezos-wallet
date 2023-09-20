@@ -246,6 +246,7 @@ static unsigned int cb(unsigned int button_mask,
 
 static const char *find_icon(tz_ui_icon_t icon) {
 
+    // clang-format off
     switch (icon) {
     case TZ_UI_ICON_TICK:       return (const char *)&C_icon_validate_14;
     case TZ_UI_ICON_CROSS:      return (const char *)&C_icon_crossmark;
@@ -253,6 +254,7 @@ static const char *find_icon(tz_ui_icon_t icon) {
     case TZ_UI_ICON_SETTINGS:   return (const char *)&C_icon_settings;
     default:                    return NULL;
     }
+    // clang-format on
 }
 
 static void redisplay() {
