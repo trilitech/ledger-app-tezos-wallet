@@ -14,12 +14,12 @@
 static inline int io_send_response_buffers(const buffer_t *rdatalist,
                                            size_t count, uint16_t sw)
 {
-  uint8_t buf[128];
-  size_t  tx = 0;
+    uint8_t buf[128];
+    size_t  tx = 0;
 
-  for (size_t i=0; i < count; i++) {
-    memcpy(&buf[tx], rdatalist[i].ptr, rdatalist[i].size);
-    tx += rdatalist[i].size;
-  }
-  return io_send_response_pointer(buf, tx, sw);
+    for (size_t i=0; i < count; i++) {
+        memcpy(&buf[tx], rdatalist[i].ptr, rdatalist[i].size);
+        tx += rdatalist[i].size;
+    }
+    return io_send_response_pointer(buf, tx, sw);
 }
