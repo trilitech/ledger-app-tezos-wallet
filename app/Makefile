@@ -100,7 +100,7 @@ PATH_APP_LOAD_PARAMS = "44'/1729'"
 #   * It must at least contains one value.
 #   * Values can be the app ticker or anything else but should be unique.
 VARIANT_PARAM = APP_TYPE
-VARIANT_VALUES = WALLET
+VARIANT_VALUES = tezos_wallet
 
 # Enabling DEBUG flag will enable PRINTF and disable optimizations
 #DEBUG = 1
@@ -135,9 +135,11 @@ CFLAGS   += -Wwrite-strings
 ########################################
 # See SDK `include/appflags.h` for the purpose of each permission
 #HAVE_APPLICATION_FLAG_DERIVE_MASTER = 1
-#HAVE_APPLICATION_FLAG_GLOBAL_PIN = 1
-#HAVE_APPLICATION_FLAG_BOLOS_SETTINGS = 1
-#HAVE_APPLICATION_FLAG_LIBRARY = 1
+ifneq ($(TARGET_NAME), TARGET_NANOS)
+HAVE_APPLICATION_FLAG_GLOBAL_PIN = 1
+HAVE_APPLICATION_FLAG_BOLOS_SETTINGS = 1
+endif
+HAVE_APPLICATION_FLAG_LIBRARY = 1
 
 ########################################
 # Application communication interfaces #
