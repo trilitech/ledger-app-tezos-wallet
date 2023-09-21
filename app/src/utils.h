@@ -3,8 +3,6 @@
 
 #include "globals.h"
 
-#define STRLCPY(x, y) strlcpy((x), (y), sizeof(x))
-
 /*
  * Debugging macros.
  *
