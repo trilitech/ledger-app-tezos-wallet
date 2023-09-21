@@ -497,7 +497,7 @@ handle_data_apdu_blind(packet_t *pkt)
     global.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
 
     transaction_type = type;
-    strcpy(hash, obuf);
+    STRLCPY(hash, obuf);
 
     nbgl_useCaseReviewStart(&C_tezos, request, NULL, "Reject request",
                             continue_blindsign_cb, reject_blindsign_cb);

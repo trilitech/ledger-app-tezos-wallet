@@ -60,3 +60,5 @@
 #undef MIN
 #endif
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
+
+#define STRLCPY(x, y) strlcpy((x), (y), sizeof(x))
