@@ -35,7 +35,7 @@ handle_unimplemented(__attribute__((unused)) command_t *cmd)
 {
     TZ_PREAMBLE(("cmd=0x%p", cmd));
 
-    PRINTF("[ERROR] Unimplemented instruction 0x%02x\n", cmd->ins);
+       PRINTF("[ERROR] Unimplemented instruction 0x%02x\n", cmd->ins);
     TZ_FAIL(EXC_INVALID_INS);
     TZ_POSTAMBLE;
 }
