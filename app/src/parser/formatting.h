@@ -193,13 +193,13 @@ typedef enum {
 // output buffer `obuf` must be at least `DECIMAL_BUFFER_SIZE(l)`
 // (caller responsibility).
 void tz_format_decimal(const uint8_t *, size_t, char *);
-#define TZ_DECIMAL_BUFFER_SIZE(l) (l * 241 / 100 + 1)
+#define TZ_DECIMAL_BUFFER_SIZE(_l) ((_l)*241 / 100 + 1)
 
 // Formats a data `n` of size `l` in base58 using Tezos' alphabet
 // order (same as Bitcoin). The output buffer `obuf` must be at least
 // `BASE58_BUFFER_SIZE(l)` (caller responsibility).
 void tz_format_base58(const uint8_t *, size_t, char *);
-#define TZ_BASE58_BUFFER_SIZE(l) (l * 138 / 100 + 1)
+#define TZ_BASE58_BUFFER_SIZE(_l) ((_l)*138 / 100 + 1)
 
 // Looks up the prefix from the provided string (arg1), e.g. "B",
 // "o", "expr", "tz2", etc.  This indexes into a table which finds
@@ -210,7 +210,8 @@ void tz_format_base58(const uint8_t *, size_t, char *);
 // output buffer `obuf` must be at least `BASE58CHECK_BUFFER_SIZE(l,
 // prefix_len)` (caller responsibility).
 int tz_format_base58check(const char *, const uint8_t *, size_t, char *);
-#define TZ_BASE58CHECK_BUFFER_SIZE(l, p) TZ_BASE58_BUFFER_SIZE(p + l + 4)
+#define TZ_BASE58CHECK_BUFFER_SIZE(_l, _p) \
+    TZ_BASE58_BUFFER_SIZE((_p) + (_l) + 4)
 
 // Some Tezos-specific base58check formatters. These functions
 // deconstruct the Tezos binary header to figure out the kind within
