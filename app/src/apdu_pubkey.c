@@ -34,7 +34,7 @@
 
 static void provide_pubkey(void);
 static void prompt_address(void);
-static void format_pkh(char *);
+static void format_pkh(char *, size_t);
 static void stream_cb(tz_ui_cb_type_t);
 
 static void
@@ -64,11 +64,11 @@ provide_pubkey(void)
 }
 
 static void
-format_pkh(char *buffer)
+format_pkh(char *buffer, size_t len)
 {
     cx_ecfp_public_key_t pubkey = {0};
     uint8_t              hash[21];
-    TZ_PREAMBLE(("buffer=%p", buffer));
+    TZ_PREAMBLE(("buffer=%p, len=%u", buffer, len));
 
     TZ_CHECK(generate_public_key(&pubkey,
                                  global.path_with_curve.derivation_type,
@@ -83,8 +83,10 @@ format_pkh(char *buffer)
     case DERIVATION_TYPE_BIP32_ED25519: hash[0] = 0; break;
     default: CX_CHECK(EXC_WRONG_PARAM); break;
     }
-    TZ_CHECK(tz_format_pkh(hash, 21, buffer));
     // clang-format on
+
+    if (tz_format_pkh(hash, 21, buffer, len))
+        TZ_FAIL(EXC_UNKNOWN);
 
     TZ_POSTAMBLE;
 }
@@ -114,7 +116,7 @@ prompt_address(void)
 
     global.step = ST_PROMPT;
     tz_ui_stream_init(stream_cb);
-    TZ_CHECK(format_pkh(buf));
+    TZ_CHECK(format_pkh(buf, sizeof(buf)));
     tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Provide Key", buf,
                           TZ_UI_ICON_NONE);
     tz_ui_stream_push_accept_reject();
@@ -157,7 +159,7 @@ verify_address(void)
     char buf[TZ_BASE58CHECK_BUFFER_SIZE(20, 3)];
     TZ_PREAMBLE(("void"));
 
-    TZ_CHECK(format_pkh(buf));
+    TZ_CHECK(format_pkh(buf, sizeof(buf)));
     nbgl_useCaseAddressConfirmation(buf, confirmation_callback);
     TZ_POSTAMBLE;
 }

@@ -303,6 +303,18 @@ tz_operation_parser_init(tz_parser_state *state, uint16_t size,
     }
 }
 
+/*
+ * We use a macro for CAPTURE rather than defining a ptr like:
+ *
+ *     uint8_t *capture = state->buffers.capture
+ *
+ * because sizeof(*capture) == 1, whereas sizeof(CAPTURE) is
+ * the size of the buffer.  This allows us to more idiomatically
+ * check the size of buffers.
+ */
+
+#define CAPTURE (state->buffers.capture)
+
 static tz_parser_result
 tz_print_string(tz_parser_state *state)
 {
@@ -313,16 +325,15 @@ tz_print_string(tz_parser_state *state)
         tz_continue;
     }
     op->frame->step           = TZ_OPERATION_STEP_PRINT;
-    op->frame->step_print.str = (char *)state->buffers.capture;
+    op->frame->step_print.str = (char *)CAPTURE;
     tz_continue;
 }
 
 tz_parser_result
 tz_operation_parser_step(tz_parser_state *state)
 {
-    tz_operation_state *op      = &state->operation;
-    tz_parser_regs     *regs    = &state->regs;
-    uint8_t            *capture = state->buffers.capture;
+    tz_operation_state *op   = &state->operation;
+    tz_parser_regs     *regs = &state->regs;
 
     // cannot restart after error
     if (TZ_IS_ERR(state->errno))
@@ -495,14 +506,14 @@ tz_operation_parser_step(tz_parser_state *state)
             tz_must(tz_parser_read(state, &b));
             value = value << 8 | b;
         }
-        snprintf((char *)capture, 30, "%d", value);
+        snprintf((char *)CAPTURE, sizeof(CAPTURE), "%d", value);
         tz_must(tz_print_string(state));
         break;
     }
     case TZ_OPERATION_STEP_READ_BYTES: {
         if (op->frame->step_read_bytes.ofs < op->frame->step_read_bytes.len) {
             uint8_t *c;
-            c = &capture[op->frame->step_read_bytes.ofs];
+            c = &CAPTURE[op->frame->step_read_bytes.ofs];
             tz_must(tz_parser_read(state, c));
             op->frame->step_read_bytes.ofs++;
         } else {
@@ -512,50 +523,54 @@ tz_operation_parser_step(tz_parser_state *state)
             }
             switch (op->frame->step_read_bytes.kind) {
             case TZ_OPERATION_FIELD_SOURCE:
-                memcpy(op->source, capture, 22);
+                memcpy(op->source, CAPTURE, 22);
                 __attribute__((fallthrough));
             case TZ_OPERATION_FIELD_PKH:
-                if (tz_format_pkh(capture, 21, (char *)capture))
+                if (tz_format_pkh(CAPTURE, 21, (char *)CAPTURE,
+                                  sizeof(CAPTURE)))
                     tz_raise(INVALID_TAG);
                 break;
             case TZ_OPERATION_FIELD_PK:
-                if (tz_format_pk(capture, op->frame->step_read_bytes.len,
-                                 (char *)capture))
+                if (tz_format_pk(CAPTURE, op->frame->step_read_bytes.len,
+                                 (char *)CAPTURE, sizeof(CAPTURE)))
                     tz_raise(INVALID_TAG);
                 break;
             case TZ_OPERATION_FIELD_SR:
-                if (tz_format_base58check("sr1", capture, 20,
-                                          (char *)capture))
+                if (tz_format_base58check("sr1", CAPTURE, 20, (char *)CAPTURE,
+                                          sizeof(CAPTURE)))
                     tz_raise(INVALID_TAG);
                 break;
             case TZ_OPERATION_FIELD_SRC:
-                if (tz_format_base58check("src1", capture, 32,
-                                          (char *)capture))
+                if (tz_format_base58check("src1", CAPTURE, 32,
+                                          (char *)CAPTURE, sizeof(CAPTURE)))
                     tz_raise(INVALID_TAG);
                 break;
             case TZ_OPERATION_FIELD_PROTO:
-                if (tz_format_base58check("proto", capture, 32,
-                                          (char *)capture))
+                if (tz_format_base58check("proto", CAPTURE, 32,
+                                          (char *)CAPTURE, sizeof(CAPTURE)))
                     tz_raise(INVALID_TAG);
                 break;
             case TZ_OPERATION_FIELD_DESTINATION:
-                memcpy(op->destination, capture, 22);
-                if (tz_format_address(capture, 22, (char *)capture))
+                memcpy(op->destination, CAPTURE, 22);
+                if (tz_format_address(CAPTURE, 22, (char *)CAPTURE,
+                                      sizeof(CAPTURE)))
                     tz_raise(INVALID_TAG);
                 break;
             case TZ_OPERATION_FIELD_OPH:
-                if (tz_format_oph(capture, 32, (char *)capture))
+                if (tz_format_oph(CAPTURE, 32, (char *)CAPTURE,
+                                  sizeof(CAPTURE)))
                     tz_raise(INVALID_TAG);
                 break;
             case TZ_OPERATION_FIELD_BH:
-                if (tz_format_bh(capture, 32, (char *)capture))
+                if (tz_format_bh(CAPTURE, 32, (char *)CAPTURE,
+                                 sizeof(CAPTURE)))
                     tz_raise(INVALID_TAG);
                 break;
             default:
                 tz_raise(INVALID_STATE);
             }
             op->frame->step           = TZ_OPERATION_STEP_PRINT;
-            op->frame->step_print.str = (char *)capture;
+            op->frame->step_print.str = (char *)CAPTURE;
         }
         break;
     }
@@ -577,32 +592,32 @@ tz_operation_parser_step(tz_parser_state *state)
     }
     case TZ_OPERATION_STEP_READ_STRING: {
         if (state->ofs == op->frame->stop) {
-            capture[op->frame->step_read_string.ofs] = 0;
+            CAPTURE[op->frame->step_read_string.ofs] = 0;
             tz_must(tz_print_string(state));
         } else {
             uint8_t b;
             tz_must(tz_parser_read(state, &b));
-            capture[op->frame->step_read_string.ofs] = b;
+            CAPTURE[op->frame->step_read_string.ofs] = b;
             op->frame->step_read_string.ofs++;
         }
         break;
     }
     case TZ_OPERATION_STEP_READ_BINARY: {
         if (state->ofs == op->frame->stop) {
-            capture[op->frame->step_read_string.ofs] = 0;
+            CAPTURE[op->frame->step_read_string.ofs] = 0;
             tz_must(tz_print_string(state));
         } else if (op->frame->step_read_string.ofs + 2
                    >= TZ_CAPTURE_BUFFER_SIZE) {
-            capture[op->frame->step_read_string.ofs] = 0;
+            CAPTURE[op->frame->step_read_string.ofs] = 0;
             op->frame->step_read_string.ofs          = 0;
             if (!op->frame->step_read_string.skip) {
                 tz_must(push_frame(state, TZ_OPERATION_STEP_PARTIAL_PRINT));
-                op->frame->step_print.str = (char *)capture;
+                op->frame->step_print.str = (char *)CAPTURE;
             }
         } else {
             uint8_t b;
             tz_must(tz_parser_read(state, &b));
-            char *buf = (char *)capture + op->frame->step_read_string.ofs;
+            char *buf = (char *)CAPTURE + op->frame->step_read_string.ofs;
             snprintf(buf, 4, "%02x", b);
             op->frame->step_read_string.ofs += 2;
         }
@@ -613,27 +628,27 @@ tz_operation_parser_step(tz_parser_state *state)
         tz_must(tz_parser_read(state, &b));
         switch (b) {
         case 0:
-            strcpy((char *)capture, "default");
+            strcpy((char *)CAPTURE, "default");
             tz_must(tz_print_string(state));
             break;
         case 1:
-            strcpy((char *)capture, "root");
+            strcpy((char *)CAPTURE, "root");
             tz_must(tz_print_string(state));
             break;
         case 2:
-            strcpy((char *)capture, "do");
+            strcpy((char *)CAPTURE, "do");
             tz_must(tz_print_string(state));
             break;
         case 3:
-            strcpy((char *)capture, "set_delegate");
+            strcpy((char *)CAPTURE, "set_delegate");
             tz_must(tz_print_string(state));
             break;
         case 4:
-            strcpy((char *)capture, "remove_delegate");
+            strcpy((char *)CAPTURE, "remove_delegate");
             tz_must(tz_print_string(state));
             break;
         case 5:
-            strcpy((char *)capture, "deposit");
+            strcpy((char *)CAPTURE, "deposit");
             tz_must(tz_print_string(state));
             break;
         case 0xFF:
@@ -881,10 +896,10 @@ tz_operation_parser_step(tz_parser_state *state)
         tz_must(tz_parser_read(state, &b));
         switch (b) {
         case 0:
-            strcpy((char *)capture, "arith");
+            strcpy((char *)CAPTURE, "arith");
             break;
         case 1:
-            strcpy((char *)capture, "wasm_2_0_0");
+            strcpy((char *)CAPTURE, "wasm_2_0_0");
             break;
         default:
             tz_raise(INVALID_TAG);
@@ -897,13 +912,13 @@ tz_operation_parser_step(tz_parser_state *state)
         tz_must(tz_parser_read(state, &b));
         switch (b) {
         case 0:
-            strcpy((char *)capture, "yay");
+            strcpy((char *)CAPTURE, "yay");
             break;
         case 1:
-            strcpy((char *)capture, "nay");
+            strcpy((char *)CAPTURE, "nay");
             break;
         case 2:
-            strcpy((char *)capture, "pass");
+            strcpy((char *)CAPTURE, "pass");
             break;
         default:
             tz_raise(INVALID_TAG);

@@ -57,7 +57,7 @@ tz_parse_num_step(tz_num_parser_buffer *buffers, tz_num_parser_regs *regs,
     if (!cont) {
         regs->stop = true;
         tz_format_decimal(buffers->bytes, (regs->size + 7) / 8,
-                          buffers->decimal);
+                          buffers->decimal, sizeof(buffers->decimal));
     }
     return TZ_CONTINUE;
 }
