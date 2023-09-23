@@ -109,7 +109,7 @@ stream_cb(tz_ui_cb_type_t type)
 static void
 prompt_address(void)
 {
-    char buf[TZ_UI_STREAM_CONTENTS_SIZE + 1];
+    char buf[TZ_BASE58CHECK_BUFFER_SIZE(20, 3)];
     TZ_PREAMBLE(("void"));
 
     global.step = ST_PROMPT;
@@ -154,7 +154,7 @@ confirmation_callback(bool confirm)
 static void
 verify_address(void)
 {
-    char buf[TZ_UI_STREAM_CONTENTS_SIZE + 1];
+    char buf[TZ_BASE58CHECK_BUFFER_SIZE(20, 3)];
     TZ_PREAMBLE(("void"));
 
     TZ_CHECK(format_pkh(buf));
