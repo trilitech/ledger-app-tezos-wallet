@@ -36,6 +36,10 @@
    `tz_ui_stream_push`, calling `tz_ui_stream_close`, and launching
    with a `refill` callback set to NULL. */
 
+#ifdef HAVE_NBGL
+#include <nbgl_use_case.h>
+#endif
+
 #include <stdbool.h>
 
 #define TZ_UI_STREAM_HISTORY_SCREENS 8
@@ -90,6 +94,15 @@ typedef struct {
     char body[TZ_UI_STREAM_CONTENTS_LINES][TZ_UI_STREAM_CONTENTS_WIDTH + 1];
 } tz_ui_stream_screen_t;
 
+#ifdef HAVE_NBGL
+typedef struct {
+    char                      title[TZ_UI_STREAM_TITLE_WIDTH + 1];
+    char                      body[TZ_UI_STREAM_CONTENTS_WIDTH + 1];
+    nbgl_layoutTagValue_t     pair;
+    nbgl_layoutTagValueList_t list;
+} tz_ui_stream_display_t;
+#endif  // HAVE_NBGL
+
 typedef struct {
     void (*cb)(tz_ui_cb_type_t);
     tz_ui_stream_screen_t screens[TZ_UI_STREAM_HISTORY_SCREENS];
@@ -99,6 +112,9 @@ typedef struct {
     // FIXME: workaround for issue with non-local control flow. Remove once
     // fixed see !66
     bool pressed_right;
+#ifdef HAVE_NBGL
+    tz_ui_stream_display_t current_screen;
+#endif  // HAVE_NBGL
 } tz_ui_stream_t;
 
 void tz_ui_stream_init(void (*)(tz_ui_cb_type_t));

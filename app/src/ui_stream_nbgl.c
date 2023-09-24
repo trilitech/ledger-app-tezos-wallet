@@ -22,6 +22,8 @@
 
 #include "globals.h"
 
+bool tz_ui_nav_cb(uint8_t, nbgl_pageContent_t *);
+
 void
 tz_reject(void)
 {
@@ -46,9 +48,39 @@ tz_reject_ui(void)
 }
 
 void
+tz_choice_ui(bool accept)
+{
+    FUNC_ENTER(("accept=%d", accept));
+
+    if (accept) {
+        // FIXME: implement accept workflow
+    } else {
+        tz_reject_ui();
+    }
+
+    FUNC_LEAVE();
+}
+
+void
+tz_ui_continue(void)
+{
+    FUNC_ENTER(("void"));
+
+    tz_ui_stream_t *s = &global.stream;
+
+    if (!s->full)
+        s->cb(TZ_UI_STREAM_CB_REFILL);
+
+    FUNC_LEAVE();
+    return;
+}
+
+void
 tz_ui_start(void)
 {
     FUNC_ENTER(("void"));
+
+    nbgl_useCaseForwardOnlyReview("Reject", NULL, tz_ui_nav_cb, tz_choice_ui);
 
     FUNC_LEAVE();
     return;
@@ -71,6 +103,82 @@ tz_ui_stream_init(void (*cb)(uint8_t))
                             tz_reject_ui);
 
     FUNC_LEAVE();
+}
+
+static nbgl_layoutTagValue_t *
+tz_ui_current_screen(__attribute__((unused)) uint8_t pairIndex)
+{
+    FUNC_ENTER(("pairIndex=%d", pairIndex));
+
+    tz_ui_stream_t         *s = &global.stream;
+    tz_ui_stream_display_t *c = &s->current_screen;
+
+    PRINTF("[DEBUG] pressed_right=%d\n", s->pressed_right);
+
+    if (s->current < s->total && s->pressed_right) {
+        s->current++;
+        s->pressed_right = false;
+    }
+
+    c->title[0] = 0;
+    c->body[0]  = 0;
+
+    size_t bucket = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
+    STRLCPY(c->title, s->screens[bucket].title);
+    STRLCPY(c->body, s->screens[bucket].body[0]);
+
+    c->pair.item  = c->title;
+    c->pair.value = c->body;
+
+    PRINTF("show title=%s, body=%s from bucket=%d\n", c->title, c->body,
+           bucket);
+    FUNC_LEAVE();
+    return &c->pair;
+}
+
+bool
+tz_ui_nav_cb(uint8_t page, nbgl_pageContent_t *content)
+{
+    FUNC_ENTER(("page=%d, content=%p", page, content));
+
+    tz_ui_stream_t         *s = &global.stream;
+    tz_ui_stream_display_t *c = &s->current_screen;
+
+    if (s->total < 0) {
+        return false;
+    }
+
+    if (page > 0 && !s->pressed_right) {
+        s->pressed_right = true;
+    }
+
+    PRINTF("pressed_right=%d, current=%d, total=%d, full=%d\n",
+           s->pressed_right, s->current, s->total, s->full);
+
+    if ((s->current == s->total) && !s->full) {
+        tz_ui_continue();
+    }
+
+    if (!s->full) {
+        c->list.pairs             = NULL;
+        c->list.callback          = tz_ui_current_screen;
+        c->list.startIndex        = 0;
+        c->list.nbPairs           = 1;
+        c->list.smallCaseForValue = false;
+        c->list.wrapping          = false;
+
+        content->type         = TAG_VALUE_LIST;
+        content->tagValueList = c->list;
+    } else {
+        content->type                        = INFO_LONG_PRESS;
+        content->infoLongPress.icon          = &C_tezos;
+        content->infoLongPress.text          = "Sign";
+        content->infoLongPress.longPressText = "Sign";
+    }
+
+    FUNC_LEAVE();
+
+    return true;
 }
 
 #endif
