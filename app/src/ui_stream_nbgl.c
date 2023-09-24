@@ -48,12 +48,26 @@ tz_reject_ui(void)
 }
 
 void
+tz_accept_cb(void)
+{
+    tz_ui_stream_t *s = &global.stream;
+
+    FUNC_ENTER(("void"));
+
+    global.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
+    s->cb(TZ_UI_STREAM_CB_ACCEPT);
+    ui_home_init();
+
+    FUNC_LEAVE();
+}
+
+void
 tz_choice_ui(bool accept)
 {
     FUNC_ENTER(("accept=%d", accept));
 
     if (accept) {
-        // FIXME: implement accept workflow
+        nbgl_useCaseStatus("SIGNING\nSUCCESSFUL", true, tz_accept_cb);
     } else {
         tz_reject_ui();
     }
