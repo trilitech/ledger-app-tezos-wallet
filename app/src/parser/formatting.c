@@ -202,11 +202,17 @@ tz_michelson_op_name(uint8_t op_code)
 static const char tz_b58digits_ordered[]
     = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
-void
-tz_format_base58(const uint8_t *n, size_t l, char *obuf)
+int
+tz_format_base58(const uint8_t *n, size_t l, char *obuf, size_t olen)
 {
     int    carry;
     size_t i, j, high, zcount = 0, obuf_len = TZ_BASE58_BUFFER_SIZE(l);
+
+    if (olen < obuf_len) {
+        PRINTF("[DEBUG] tz_format_base58() called with %u obuf need %u\n",
+               olen, obuf_len);
+        return 1;
+    }
 
     memset(obuf, 0, obuf_len);
 
@@ -230,13 +236,20 @@ tz_format_base58(const uint8_t *n, size_t l, char *obuf)
     for (i = 0; j < obuf_len; ++i, ++j)
         obuf[i] = tz_b58digits_ordered[(unsigned)obuf[j]];
     obuf[i] = '\0';
+    return 0;
 }
 
-void
-tz_format_decimal(const uint8_t *n, size_t l, char *obuf)
+int
+tz_format_decimal(const uint8_t *n, size_t l, char *obuf, size_t olen)
 {
     int    carry;
     size_t i, j, high, zcount = 0, obuf_len = TZ_DECIMAL_BUFFER_SIZE(l);
+
+    if (olen < obuf_len) {
+        PRINTF("[DEBUG] tz_format_base58() called with %u obuf need %u\n",
+               olen, obuf_len);
+        return 1;
+    }
 
     memset(obuf, 0, obuf_len);
 
@@ -245,7 +258,7 @@ tz_format_decimal(const uint8_t *n, size_t l, char *obuf)
 
     if (zcount == l) {
         obuf[0] = '0';
-        return;
+        return 0;
     }
 
     for (i = zcount, high = obuf_len - 1; i < l; ++i, high = j) {
@@ -262,6 +275,7 @@ tz_format_decimal(const uint8_t *n, size_t l, char *obuf)
     for (i = 0; j < obuf_len; ++i, ++j)
         obuf[i] = '0' + obuf[j];
     obuf[i] = '\0';
+    return 0;
 }
 
 #ifndef ACTUALLY_ON_LEDGER
@@ -365,7 +379,7 @@ find_prefix(const char *s, const uint8_t **p, size_t *pl, size_t dl)
 
 int
 tz_format_base58check(const char *sprefix, const uint8_t *data, size_t size,
-                      char *obuf)
+                      char *obuf, size_t olen)
 {
     const uint8_t *prefix = NULL;
     size_t         prefix_len;
@@ -375,8 +389,13 @@ tz_format_base58check(const char *sprefix, const uint8_t *data, size_t size,
 
     /* In order to avoid vla, we have a maximum buffer size of 64 */
     uint8_t prepared[64];
-    if (prefix_len + size + 4 > 64)
+    if (prefix_len + size + 4 > sizeof(prepared)) {
+        PRINTF(
+            "[WARNING] tz_format_base58check() failed: fixed size "
+            "array is too small need: %u\n",
+            prefix_len + size + 4);
         return 1;
+    }
 
     memcpy(prepared, prefix, prefix_len);
     memcpy(prepared + prefix_len, data, size);
@@ -384,12 +403,11 @@ tz_format_base58check(const char *sprefix, const uint8_t *data, size_t size,
     cx_hash_sha256(prepared, size + prefix_len, tmp, 32);
     cx_hash_sha256(tmp, 32, tmp, 32);
     memcpy(prepared + size + prefix_len, tmp, 4);
-    tz_format_base58(prepared, prefix_len + size + 4, obuf);
-    return 0;
+    return tz_format_base58(prepared, prefix_len + size + 4, obuf, olen);
 }
 
 int
-tz_format_pkh(const uint8_t *data, size_t size, char *obuf)
+tz_format_pkh(const uint8_t *data, size_t size, char *obuf, size_t olen)
 {
     const char *prefix;
 
@@ -405,11 +423,11 @@ tz_format_pkh(const uint8_t *data, size_t size, char *obuf)
     }
     // clang-format on
 
-    return tz_format_base58check(prefix, data + 1, size - 1, obuf);
+    return tz_format_base58check(prefix, data + 1, size - 1, obuf, olen);
 }
 
 int
-tz_format_pk(const uint8_t *data, size_t size, char *obuf)
+tz_format_pk(const uint8_t *data, size_t size, char *obuf, size_t olen)
 {
     const char *prefix;
 
@@ -425,25 +443,25 @@ tz_format_pk(const uint8_t *data, size_t size, char *obuf)
     }
     // clang-format on
 
-    return tz_format_base58check(prefix, data + 1, size - 1, obuf);
+    return tz_format_base58check(prefix, data + 1, size - 1, obuf, olen);
 }
 
 /* Deprecated, use tz_format_base58check("o", ...) instead */
 int
-tz_format_oph(const uint8_t *data, size_t size, char *obuf)
+tz_format_oph(const uint8_t *data, size_t size, char *obuf, size_t olen)
 {
-    return tz_format_base58check("o", data, size, obuf);
+    return tz_format_base58check("o", data, size, obuf, olen);
 }
 
 /* Deprecated, use tz_format_base58check("B", ...) instead */
 int
-tz_format_bh(const uint8_t *data, size_t size, char *obuf)
+tz_format_bh(const uint8_t *data, size_t size, char *obuf, size_t olen)
 {
-    return tz_format_base58check("B", data, size, obuf);
+    return tz_format_base58check("B", data, size, obuf, olen);
 }
 
 int
-tz_format_address(const uint8_t *data, size_t size, char *obuf)
+tz_format_address(const uint8_t *data, size_t size, char *obuf, size_t olen)
 {
     const char *prefix;
 
@@ -456,10 +474,10 @@ tz_format_address(const uint8_t *data, size_t size, char *obuf)
     case 3:  prefix = "scr1"; break;
     case 4:  prefix = "zkr1"; break;
 
-    case 0:  return tz_format_pkh (data+1, size-1, obuf);
+    case 0:  return tz_format_pkh(data+1, size-1, obuf, olen);
     default: return 1;
     }
     // clang-format on
 
-    return tz_format_base58check(prefix, data + 1, size - 2, obuf);
+    return tz_format_base58check(prefix, data + 1, size - 2, obuf, olen);
 }

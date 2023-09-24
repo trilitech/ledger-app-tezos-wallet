@@ -453,7 +453,8 @@ handle_data_apdu_blind(packet_t *pkt)
     global.apdu.sign.received_last_msg = true;
     global.apdu.sign.step              = SIGN_ST_WAIT_USER_INPUT;
 
-    tz_format_base58(FINAL_HASH, sizeof(FINAL_HASH), obuf);
+    if (tz_format_base58(FINAL_HASH, sizeof(FINAL_HASH), obuf, sizeof(obuf)))
+        TZ_FAIL(EXC_UNKNOWN);
 
     // clang-format off
     switch(global.apdu.sign.u.blind.tag) {
