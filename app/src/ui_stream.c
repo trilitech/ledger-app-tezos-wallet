@@ -72,7 +72,6 @@ tz_ui_stream_close()
     FUNC_LEAVE();
 }
 
-#ifdef HAVE_BAGL
 uint8_t
 tz_ui_max_line_chars(const char *value, int length)
 {
@@ -88,7 +87,7 @@ tz_ui_max_line_chars(const char *value, int length)
 #ifdef TARGET_NANOS
     will_fit = se_get_cropped_length(value, will_fit, BAGL_WIDTH,
                                      BAGL_ENCODING_LATIN1);
-#else
+#elif defined(HAVE_BAGL)
     uint8_t width;
     will_fit++;
     do {
@@ -195,7 +194,6 @@ tz_ui_stream_pushl(tz_ui_cb_type_t type, const char *title, const char *value,
 
     return offset;
 }
-#endif  // HAVE_BAGL
 
 tz_ui_cb_type_t
 tz_ui_stream_get_type(void)
