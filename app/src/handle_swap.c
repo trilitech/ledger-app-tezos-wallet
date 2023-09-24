@@ -22,6 +22,7 @@
 
 #ifdef HAVE_SWAP
 
+#include "handle_swap.h"
 #include "keys.h"
 #include "swap.h"
 #include "utils.h"
@@ -208,6 +209,29 @@ error:
     return false;
 }
 
+void
+swap_check_validity(void)
+{
+    tz_operation_state *op = &global.apdu.sign.u.clear.parser_state.operation;
+    char                dstaddr[ADDRESS_MAX_SIZE];
+    TZ_PREAMBLE((""));
+
+    PRINTF("[DEBUG] batch_index = %u, tag=%d\n", op->batch_index, op->tag);
+    TZ_ASSERT(EXC_UNKNOWN, batch_size == 1);
+    TZ_ASSERT(EXC_UNKNOWN, tag == TZ_OPERATION_TAG_TRANSACTION);
+    TZ_ASSERT(EXC_UNKNOWN, G_swap_params.amount == op->amount);
+    TZ_ASSERT(EXC_UNKNOWN, G_swap_params.fee == op->fee);
+
+    tz_format_address(op->destination, 22, dstaddr);
+
+    PRINTF("[DEBUG] dstaddr=\"%s\"\n", dstaddr);
+    PRINTF("[DEBUG] G...dstaddr=\"%s\"\n", G_swap_params.destination_address);
+    TZ_ASSERT(EXC_UNKNOWN, !strcmp(destination_address,
+                                   G_swap_params.destination_address));
+
+    TZ_POSTAMBLE;
+}
+
 /* Set create_transaction.result and call os_lib_end().
  *
  * Doesn't return */
@@ -217,5 +241,9 @@ swap_finalize_exchange_sign_transaction(bool is_success)
     *G_swap_transaction_result = is_success;
     os_lib_end();
 }
-
+#else
+void
+swap_check_validity(void)
+{
+}
 #endif  // HAVE_SWAP

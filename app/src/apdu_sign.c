@@ -40,6 +40,11 @@
 #include "parser/parser_state.h"
 #include "parser/operation_parser.h"
 
+#ifdef HAVE_SWAP
+#include "swap.h"
+#endif
+#include "handle_swap.h"
+
 #ifdef HAVE_NBGL
 #include "nbgl_use_case.h"
 #endif
@@ -101,6 +106,8 @@ sign_packet(void)
 
     APDU_SIGN_ASSERT_STEP(SIGN_ST_WAIT_USER_INPUT);
     APDU_SIGN_ASSERT(global.apdu.sign.received_last_msg);
+
+    TZ_CHECK(swap_check_validity());
 
     bufs[0].ptr  = global.apdu.hash.final_hash;
     bufs[0].size = sizeof(global.apdu.hash.final_hash);
