@@ -150,6 +150,25 @@ tz_ui_current_screen(__attribute__((unused)) uint8_t pairIndex)
     return &c->pair;
 }
 
+void
+tz_ui_stream_close()
+{
+    tz_ui_stream_t *s = &global.stream;
+
+    FUNC_ENTER(("void"));
+    if (s->full) {
+        PRINTF("trying to close already closed stream display");
+        THROW(EXC_UNKNOWN);
+    }
+    s->full = true;
+
+    if (global.apdu.sign.u.clear.skip_to_sign) {
+        tz_ui_start();
+    }
+
+    FUNC_LEAVE();
+}
+
 bool
 tz_ui_nav_cb(uint8_t page, nbgl_pageContent_t *content)
 {
@@ -169,11 +188,17 @@ tz_ui_nav_cb(uint8_t page, nbgl_pageContent_t *content)
     PRINTF("pressed_right=%d, current=%d, total=%d, full=%d\n",
            s->pressed_right, s->current, s->total, s->full);
 
+    if (page == LAST_PAGE_FOR_REVIEW) {
+        // skipped
+        PRINTF("Skip requested");
+        global.apdu.sign.u.clear.skip_to_sign = true;
+        tz_ui_continue();
+    }
     if ((s->current == s->total) && !s->full) {
         tz_ui_continue();
     }
 
-    if (!s->full) {
+    if (!s->full && !global.apdu.sign.u.clear.skip_to_sign) {
         c->list.pairs             = NULL;
         c->list.callback          = tz_ui_current_screen;
         c->list.startIndex        = 0;

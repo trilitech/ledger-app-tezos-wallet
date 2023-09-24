@@ -62,6 +62,7 @@ tz_ui_stream_push_accept_reject(void)
     FUNC_LEAVE();
 }
 
+#ifdef HAVE_BAGL
 void
 tz_ui_stream_close()
 {
@@ -75,6 +76,7 @@ tz_ui_stream_close()
     s->full = true;
     FUNC_LEAVE();
 }
+#endif  // HAVE_BAGL
 
 uint8_t
 tz_ui_max_line_chars(const char *value, int length)
