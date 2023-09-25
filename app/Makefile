@@ -144,6 +144,7 @@ CFLAGS   += -Wwrite-strings
 ########################################
 ENABLE_BLUETOOTH = 1
 #ENABLE_NFC = 1
+ENABLE_SWAP = 1
 
 ########################################
 #         NBGL custom features         #
