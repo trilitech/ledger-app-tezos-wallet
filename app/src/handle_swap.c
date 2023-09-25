@@ -25,6 +25,8 @@
 #include <format.h>
 #include <swap.h>
 
+#include "compat.h"
+#include "handle_swap.h"
 #include "keys.h"
 #include "utils.h"
 
@@ -206,6 +208,30 @@ swap_copy_transaction_parameters(create_transaction_parameters_t *params)
 error:
     FUNC_LEAVE();
     return false;
+}
+
+void
+swap_check_validity(void)
+{
+    tz_operation_state *op = &global.apdu.sign.u.clear.parser_state.operation;
+    char                dstaddr[ADDRESS_MAX_SIZE];
+    TZ_PREAMBLE((""));
+
+    PRINTF("[DEBUG] batch_index = %u, tag=%d\n", op->batch_index,
+           op->last_tag);
+    TZ_ASSERT(EXC_REJECT, op->batch_index == 1);
+    TZ_ASSERT(EXC_REJECT, op->last_tag == TZ_OPERATION_TAG_TRANSACTION);
+    TZ_ASSERT(EXC_REJECT, op->last_amount == G_swap_params.amount);
+    TZ_ASSERT(EXC_REJECT, op->last_fee == G_swap_params.fee);
+
+    tz_format_address(op->destination, 22, dstaddr, sizeof(dstaddr));
+
+    PRINTF("[DEBUG] dstaddr=\"%s\"\n", dstaddr);
+    PRINTF("[DEBUG] G...dstaddr=\"%s\"\n", G_swap_params.destination_address);
+    TZ_ASSERT(EXC_REJECT,
+              !strcmp(dstaddr, G_swap_params.destination_address));
+
+    TZ_POSTAMBLE;
 }
 
 /* Set create_transaction.result and call os_lib_end().
