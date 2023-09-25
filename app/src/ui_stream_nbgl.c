@@ -17,6 +17,60 @@
 
 #ifdef HAVE_NBGL
 
+#include <nbgl_use_case.h>
+#include <ux.h>
+
 #include "globals.h"
+
+void
+tz_reject(void)
+{
+    tz_ui_stream_t *s = &global.stream;
+
+    FUNC_ENTER(("void"));
+
+    s->cb(TZ_UI_STREAM_CB_REJECT);
+    ui_home_init();
+
+    FUNC_LEAVE();
+}
+
+void
+tz_reject_ui(void)
+{
+    // Stax can move into user input at any point in the flow
+    global.apdu.sign.step              = SIGN_ST_WAIT_USER_INPUT;
+    global.apdu.sign.received_last_msg = true;
+
+    nbgl_useCaseStatus("Rejected", false, tz_reject);
+}
+
+void
+tz_ui_start(void)
+{
+    FUNC_ENTER(("void"));
+
+    FUNC_LEAVE();
+    return;
+}
+
+void
+tz_ui_stream_init(void (*cb)(uint8_t))
+{
+    tz_ui_stream_t *s = &global.stream;
+
+    FUNC_ENTER(("cb=%p", cb));
+    memset(s, 0x0, sizeof(*s));
+    s->cb      = cb;
+    s->full    = false;
+    s->current = 0;
+    s->total   = -1;
+
+    nbgl_useCaseReviewStart(&C_tezos, "Review request to sign operation",
+                            NULL, "Reject request", tz_ui_start,
+                            tz_reject_ui);
+
+    FUNC_LEAVE();
+}
 
 #endif

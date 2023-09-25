@@ -33,6 +33,7 @@ const bagl_icon_details_t C_icon_rien = {0, 0, 1, NULL, NULL};
 
 // Model
 
+#ifdef HAVE_BAGL
 void
 tz_ui_stream_init(void (*cb)(uint8_t))
 {
@@ -46,6 +47,7 @@ tz_ui_stream_init(void (*cb)(uint8_t))
     s->total   = -1;
     FUNC_LEAVE();
 }
+#endif
 
 void
 tz_ui_stream_push_accept_reject(void)

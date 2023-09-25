@@ -16,6 +16,7 @@ import os
 import time
 
 from ragger.backend import SpeculosBackend
+from ragger.backend.interface import RaisePolicy
 from ragger.firmware import Firmware
 from ragger.firmware.stax.screen import MetaScreen
 from ragger.firmware.stax.use_cases import UseCaseHomeExt, UseCaseSettings, UseCaseAddressConfirmation, UseCaseReview
@@ -66,6 +67,12 @@ class TezosAppScreen(metaclass=MetaScreen):
         expected = bytes.fromhex(expected)
         assert response == expected, f"Expected {expected}, received {response}"
 
+    def expect_apdu_failure(self, code):
+        """Expect failure of 'code'"""
+        self.__backend.raise_policy = RaisePolicy.RAISE_NOTHING
+        self.expect_apdu_return(code)
+        self.__backend.raise_policy = RaisePolicy.RAISE_ALL_BUT_0x9000
+
     def send_async_apdu(self, data):
         """Send hex-encoded bytes asynchronously to the apdu"""
         return self.__backend.exchange_async_raw(bytes.fromhex(data))
@@ -107,6 +114,13 @@ class TezosAppScreen(metaclass=MetaScreen):
         self.assert_screen("signing_successful")
         self.review.tap()
         self.expect_apdu_return(expected_apdu)
+
+    def review_reject_signing(self):
+        self.welcome.client.pause_ticker()
+        self.review.reject()
+        self.assert_screen("reject_review")
+        self.review.tap()
+        self.welcome.client.resume_ticker()
 
 def stax_app() -> TezosAppScreen:
     port = os.environ["PORT"]
