@@ -40,6 +40,10 @@ jobs:
           sudo rm -rf "/usr/local/share/boost"
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
           sudo df -h
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
       - name: Branches ref
         id: branches
         shell: bash
@@ -47,6 +51,12 @@ jobs:
           echo "source=$(echo ${{ github.head_ref }} | cut -c -63 | sed -E 's/[^a-z0-9-]+/-/g' | sed -E 's/^-*([a-z0-9-]+[a-z0-9])-*$$/\1/g')" >> $GITHUB_OUTPUT
           echo "target=$(echo ${GITHUB_BASE_REF} | cut -c -63 | sed -E 's/[^a-z0-9-]+/-/g' | sed -E 's/^-*([a-z0-9-]+[a-z0-9])-*$$/\1/g')" >> $GITHUB_OUTPUT
           echo "branch=$(echo ${{ github.ref }} | perl -pE 's|.*?/.*?/||g' | cut -c -63 | sed -E 's/[^a-z0-9-]+/-/g' | sed -E 's/^-*([a-z0-9-]+[a-z0-9])-*$$/\1/g')" >> $GITHUB_OUTPUT
+
+      - name: Fetch branches
+        run: |
+          if [ ! -z ${{ steps.branches.outputs.target }} ]; then
+            git fetch origin ${GITHUB_BASE_REF}
+          fi
       - name: Container tag
         id: container_tag
         run: |
