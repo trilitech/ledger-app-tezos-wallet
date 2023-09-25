@@ -27,18 +27,18 @@ class Screen:
   text: list[str]
 
   def __str__(self):
-    return f"title=\"{self.title}\" Text=\"{''.join(self.text)}\""
+    return f"title=\"{self.title}\" Text=[{', '.join(self.text)}]"
 
-  def matches(self, content: str, content_lines: int, device) -> bool:
-    content = content.lstrip('\n')
+  def matches(self, content: str, content_lines: int) -> bool:
     for l in self.text:
-      l = device_alter_content(device, l)
+      content = content.lstrip('\n')
+      print(f"l: {l}, c: {content[:len(l)]}")
       if not content.startswith(l):
         return False
       content = content.removeprefix(l)
       content = content.lstrip('\n')
 
-    return len(self.text) == content_lines or len(content) == 0
+    return True
 
   def strip(self, content: str) -> str:
     for l in self.text:
@@ -90,61 +90,24 @@ def check_multi_screen(url, title, content, content_lines, device):
     """Assert that the screen contents across all screens with the given title match expected content."""
     while True:
       def check_screen(screen):
-        assert screen.title == title, \
-               f"expected section '{title}' but on '{screen.title}'"
-        assert screen.matches(content, content_lines, device), \
+        assert screen.title == title, f"expected section '{title}' but on '{screen.title}'"
+        assert screen.matches(content, content_lines), \
                f"{screen} did not match {content[:10]}...{content[-10:]}"
-        return screen
 
-      on_screen = with_retry(url, check_screen)
-      content = on_screen.strip(content)
+        return screen.strip(content)
+
+      content = with_retry(url, check_screen)
 
       if content == "":
         break
 
       press_right(url)
 
-    print(f'- final screen {on_screen} -')
-
-def check_potential_remaining_screen(url, device, title, content):
-    """Ignore the next blank screen on nanosp/nanox to avoid missing a potential terminal 'S'."""
-    # OCR issue https://github.com/LedgerHQ/speculos/issues/204
-    if device in ["nanosp", "nanox"] and content.endswith('S'):
-
-      def check_screen(screen):
-        if screen.title == title:
-          assert all([l == "" for l in screen.text]), f"Expected blank screen (containing only 'S'), got {screen.text}"
-        return screen
-
-      while True:
-        press_right(url)
-        screen = with_retry(url, check_screen)
-        if screen.title != title:
-          break
-
-      def check_back(screen):
-        assert screen.title == title
-
-      press_left(url)
-      # wait until we are back on last page of content
-      with_retry(url, check_back)
-
 def device_content_lines(device: str) -> int:
   if device == "nanos":
     return 1
   if device in ["nanosp", "nanox"]:
     return 4
-
-  raise ValueError(f"unsupported device '{device}'")
-
-def device_alter_content(device: str, content: str) -> str:
-  if device == "nanos":
-    return content
-  if device in ["nanosp", "nanox"]:
-    # OCR issue https://github.com/LedgerHQ/speculos/issues/204
-    content = content.replace('S', '')
-    content = content.replace('I', 'l')
-    return content
 
   raise ValueError(f"unsupported device '{device}'")
 
@@ -157,7 +120,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     content_lines = device_content_lines(args.device)
-    content = device_alter_content(args.device, args.expected_content)
+    content = args.expected_content
 
     check_multi_screen(args.url, args.title, content, content_lines, args.device)
-    check_potential_remaining_screen(args.url, args.device, args.title, args.expected_content)

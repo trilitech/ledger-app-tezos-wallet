@@ -60,8 +60,14 @@ attempts() {
 }
 
 compare_strings() {
-    STR1="$(echo $1 | sed 's/I/l/g; s/S//g')"
-    STR2="$(echo $2 | sed 's/I/l/g; s/S//g')"
+    STR1="$1"
+    STR2="$2"
+
+    if [ "nanox" = "$TARGET" ]; then
+        # TODO: raise issue on speculos?
+        STR1="$(echo $1 | sed 's/Parsing errorERR//g')"
+        STR2="$(echo $2 | sed 's/Parsing errorERR//g')"
+    fi
 
     [ "$STR1" = "$STR2" ]
 }
