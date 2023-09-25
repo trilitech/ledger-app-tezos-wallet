@@ -1,4 +1,8 @@
-# Tezos Ledger Wallet App Revamped
+# Tezos Ledger Wallet App
+
+## Interfaces
+
+Both `webusb` and `u2f` interfaces are supported. For example, `u2f` interface is used by the [Kukai](https://wallet.kukai.app/connect-ledger) web wallet.
 
 ## Compile using `docker` containers for build dependencies
 
