@@ -20,6 +20,4 @@
    See the License for the specific language governing permissions and
    limitations under the License. */
 
-#ifdef HAVE_SWAP
 void swap_check_validity(void);
-#endif  // HAVE_SWAP
