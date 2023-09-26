@@ -25,30 +25,26 @@
 bool tz_ui_nav_cb(uint8_t, nbgl_pageContent_t *);
 
 void
-tz_reject(void)
+tz_reject_ui(void)
 {
     tz_ui_stream_t *s = &global.stream;
 
     FUNC_ENTER(("void"));
 
+    // Stax can reject early
+    global.apdu.sign.step              = SIGN_ST_WAIT_USER_INPUT;
+    global.apdu.sign.received_last_msg = true;
+
     s->cb(TZ_UI_STREAM_CB_REJECT);
-    ui_home_init();
+
+    global.step = ST_IDLE;
+    nbgl_useCaseStatus("Rejected", false, ui_home_init);
 
     FUNC_LEAVE();
 }
 
 void
-tz_reject_ui(void)
-{
-    // Stax can move into user input at any point in the flow
-    global.apdu.sign.step              = SIGN_ST_WAIT_USER_INPUT;
-    global.apdu.sign.received_last_msg = true;
-
-    nbgl_useCaseStatus("Rejected", false, tz_reject);
-}
-
-void
-tz_accept_cb(void)
+tz_accept_ui(void)
 {
     tz_ui_stream_t *s = &global.stream;
 
@@ -56,7 +52,8 @@ tz_accept_cb(void)
 
     global.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
     s->cb(TZ_UI_STREAM_CB_ACCEPT);
-    ui_home_init();
+
+    nbgl_useCaseStatus("SIGNING\nSUCCESSFUL", true, ui_home_init);
 
     FUNC_LEAVE();
 }
@@ -67,7 +64,7 @@ tz_choice_ui(bool accept)
     FUNC_ENTER(("accept=%d", accept));
 
     if (accept) {
-        nbgl_useCaseStatus("SIGNING\nSUCCESSFUL", true, tz_accept_cb);
+        tz_accept_ui();
     } else {
         tz_reject_ui();
     }
