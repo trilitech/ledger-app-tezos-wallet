@@ -50,6 +50,7 @@ typedef struct {
         struct {
             size_t          total_length;
             tz_parser_state parser_state;
+            bool            skip_to_sign;
         } clear;
         struct {
             uint8_t tag;

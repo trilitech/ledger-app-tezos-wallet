@@ -153,6 +153,7 @@ refill()
     tz_parser_state *st    = &global.apdu.sign.u.clear.parser_state;
     TZ_PREAMBLE(("void"));
 
+skip:
     while (!TZ_IS_BLOCKED(tz_operation_parser_step(st)))
         ;
     PRINTF("[DEBUG] refill(errno: %s) \n", tz_parser_result_name(st->errno));
@@ -165,6 +166,13 @@ refill()
 
         tz_parser_flush_up_to(st, global.line_buf, TZ_UI_STREAM_CONTENTS_SIZE,
                               wrote);
+
+        // Do as much parsing as we can in one go when skipping.
+        // TODO: perhaps when skipping we could only skip the current
+        //       operation, rather than the whole rest-of-batch
+        if (global.apdu.sign.u.clear.skip_to_sign)
+            goto skip;
+
         break;
     case TZ_BLO_FEED_ME:
         TZ_CHECK(send_continue());
