@@ -297,7 +297,7 @@ tz_operation_parser_init(tz_parser_state *state, uint16_t size,
     if (!skip_magic) {
         op->stack[0].step = TZ_OPERATION_STEP_MAGIC;
     } else {
-        strcpy(state->field_name, "Branch");
+        STRLCPY(state->field_name, "Branch");
         op->stack[0].step = TZ_OPERATION_STEP_BRANCH;
         push_frame(state, TZ_OPERATION_STEP_READ_BYTES);  // ignore result,
                                                           // assume success
@@ -362,7 +362,7 @@ tz_operation_parser_step(tz_parser_state *state)
         tz_must(tz_parser_read(state, &b));
         switch (b) {
         case 3:  // manager/anonymous operation
-            strcpy(state->field_name, "Branch");
+            STRLCPY(state->field_name, "Branch");
             op->stack[0].step = TZ_OPERATION_STEP_BRANCH;
             push_frame(state,
                        TZ_OPERATION_STEP_READ_BYTES);  // ignore result,
@@ -423,7 +423,7 @@ tz_operation_parser_step(tz_parser_state *state)
     case TZ_OPERATION_STEP_READ_MICHELINE: {
         if (!op->frame->step_read_micheline.inited) {
             op->frame->step_read_micheline.inited = 1;
-            strcpy(state->field_name, op->frame->step_read_micheline.name);
+            STRLCPY(state->field_name, op->frame->step_read_micheline.name);
             tz_micheline_parser_init(state);
         }
         tz_micheline_parser_step(state);
@@ -652,27 +652,27 @@ tz_operation_parser_step(tz_parser_state *state)
         tz_must(tz_parser_read(state, &b));
         switch (b) {
         case 0:
-            strcpy((char *)CAPTURE, "default");
+            strlcpy((char *)CAPTURE, "default", sizeof(CAPTURE));
             tz_must(tz_print_string(state));
             break;
         case 1:
-            strcpy((char *)CAPTURE, "root");
+            strlcpy((char *)CAPTURE, "root", sizeof(CAPTURE));
             tz_must(tz_print_string(state));
             break;
         case 2:
-            strcpy((char *)CAPTURE, "do");
+            strlcpy((char *)CAPTURE, "do", sizeof(CAPTURE));
             tz_must(tz_print_string(state));
             break;
         case 3:
-            strcpy((char *)CAPTURE, "set_delegate");
+            strlcpy((char *)CAPTURE, "set_delegate", sizeof(CAPTURE));
             tz_must(tz_print_string(state));
             break;
         case 4:
-            strcpy((char *)CAPTURE, "remove_delegate");
+            strlcpy((char *)CAPTURE, "remove_delegate", sizeof(CAPTURE));
             tz_must(tz_print_string(state));
             break;
         case 5:
-            strcpy((char *)CAPTURE, "deposit");
+            strlcpy((char *)CAPTURE, "deposit", sizeof(CAPTURE));
             tz_must(tz_print_string(state));
             break;
         case 0xFF:
@@ -705,7 +705,7 @@ tz_operation_parser_step(tz_parser_state *state)
             if (!field->required)
                 tz_must(tz_parser_read(state, &present));
             if (!field->skip)
-                strcpy(state->field_name, name);
+                STRLCPY(state->field_name, name);
             op->frame->step_operation.field++;
             if (!present) {
                 if (field->display_none) {
@@ -817,7 +817,7 @@ tz_operation_parser_step(tz_parser_state *state)
                 op->frame->step_size.size_len = 4;
                 tz_must(push_frame(state,
                                    TZ_OPERATION_STEP_READ_SMART_ENTRYPOINT));
-                strcpy(state->field_name, "Entrypoint");
+                STRLCPY(state->field_name, "Entrypoint");
                 op->frame->step_read_string.ofs  = 0;
                 op->frame->step_read_string.skip = field->skip;
                 break;
@@ -921,10 +921,10 @@ tz_operation_parser_step(tz_parser_state *state)
         tz_must(tz_parser_read(state, &b));
         switch (b) {
         case 0:
-            strcpy((char *)CAPTURE, "arith");
+            strlcpy((char *)CAPTURE, "arith", sizeof(CAPTURE));
             break;
         case 1:
-            strcpy((char *)CAPTURE, "wasm_2_0_0");
+            strlcpy((char *)CAPTURE, "wasm_2_0_0", sizeof(CAPTURE));
             break;
         default:
             tz_raise(INVALID_TAG);
@@ -937,13 +937,13 @@ tz_operation_parser_step(tz_parser_state *state)
         tz_must(tz_parser_read(state, &b));
         switch (b) {
         case 0:
-            strcpy((char *)CAPTURE, "yay");
+            strlcpy((char *)CAPTURE, "yay", sizeof(CAPTURE));
             break;
         case 1:
-            strcpy((char *)CAPTURE, "nay");
+            strlcpy((char *)CAPTURE, "nay", sizeof(CAPTURE));
             break;
         case 2:
-            strcpy((char *)CAPTURE, "pass");
+            strlcpy((char *)CAPTURE, "pass", sizeof(CAPTURE));
             break;
         default:
             tz_raise(INVALID_TAG);
