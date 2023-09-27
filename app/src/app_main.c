@@ -111,7 +111,7 @@ dispatch(command_t *cmd)
 }
 
 void
-app_main()
+app_main(void)
 {
     command_t cmd;
     int       rx;

@@ -150,7 +150,7 @@ send_continue(void)
 }
 
 static void
-refill()
+refill(void)
 {
     size_t           wrote = 0;
     tz_parser_state *st    = &global.apdu.sign.u.clear.parser_state;
