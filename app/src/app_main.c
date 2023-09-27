@@ -88,8 +88,8 @@ app_main()
     command_t cmd;
     int       rx;
 
-    FUNC_ENTER(("void"));
     app_stack_canary = 0xDEADBEEF;
+    FUNC_ENTER(("void"));
 
     io_init();
     init_globals();
