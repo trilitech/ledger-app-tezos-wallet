@@ -494,7 +494,6 @@ handle_data_apdu_blind(packet_t *pkt)
     char request[80];
     snprintf(request, sizeof(request), "Review request to blind\nsign %s",
              type);
-    global.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
 
     transaction_type = type;
     STRLCPY(hash, obuf);
