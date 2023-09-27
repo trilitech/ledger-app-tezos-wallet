@@ -37,6 +37,34 @@ app_exit(void)
 }
 
 static void
+print_memory_layout(void)
+{
+    PRINTF("[PTR]    stack canary: 0x%x\n", &app_stack_canary);
+    PRINTF("[PTR]    G_io_apdu_buffer: 0x%p\n", G_io_apdu_buffer);
+    PRINTF("[PTR]    global: 0x%p\n", &global);
+    PRINTF("[SIZEOF] global: %d\n", sizeof(global));
+    PRINTF("[SIZEOF] global.apdu.sign: %d\n", sizeof(global.apdu.sign));
+    PRINTF("[SIZEOF] global.apdu.hash: %d\n", sizeof(global.apdu.hash));
+    PRINTF("[SIZEOF] global.stream: %d\n", sizeof(global.stream));
+    PRINTF("[PTR]    G_io_apdu_buffer: 0x%p\n", G_io_apdu_buffer);
+    PRINTF("[SIZEOF] G_io_apdu_buffer: %u\n", sizeof(G_io_apdu_buffer));
+    PRINTF("[PTR]    G_io_seproxyhal_spi_buffer: 0x%p\n",
+           G_io_seproxyhal_spi_buffer);
+    PRINTF("[SIZEOF] G_io_seproxyhal_spi_buffer: %u\n",
+           sizeof(G_io_seproxyhal_spi_buffer));
+    PRINTF("[PTR]    G_ux: 0x%p\n", &G_ux);
+    PRINTF("[SIZEOF] G_ux: %u\n", sizeof(G_ux));
+    PRINTF("[PTR]    G_ux_os: 0x%p\n", &G_ux_os);
+    PRINTF("[SIZEOF] G_ux_os: %u\n", sizeof(G_ux_os));
+    PRINTF("[PTR]    G_ux_params: 0x%p\n", &G_ux_params);
+    PRINTF("[SIZEOF] G_ux_params: %u\n", sizeof(G_ux_params));
+    PRINTF("[PTR]    G_io_usb_ep_buffer: 0x%p\n", G_io_usb_ep_buffer);
+    PRINTF("[SIZEOF] G_io_usb_ep_buffer: %d\n", sizeof(G_io_usb_ep_buffer));
+    PRINTF("[PTR]    G_io_app: 0x%p\n", &G_io_app);
+    PRINTF("[SIZEOF] G_io_app: %d\n", sizeof(G_io_app));
+}
+
+static void
 dispatch(command_t *cmd)
 {
     tz_handler_t f;
@@ -91,32 +119,9 @@ app_main()
     app_stack_canary = 0xDEADBEEF;
     FUNC_ENTER(("void"));
 
+    print_memory_layout();
     io_init();
     init_globals();
-
-    PRINTF("[PTR]    stack canary: 0x%x\n", &app_stack_canary);
-    PRINTF("[PTR]    G_io_apdu_buffer: 0x%p\n", G_io_apdu_buffer);
-    PRINTF("[PTR]    global: 0x%p\n", &global);
-    PRINTF("[SIZEOF] global: %d\n", sizeof(global));
-    PRINTF("[SIZEOF] global.apdu.sign: %d\n", sizeof(global.apdu.sign));
-    PRINTF("[SIZEOF] global.apdu.hash: %d\n", sizeof(global.apdu.hash));
-    PRINTF("[SIZEOF] global.stream: %d\n", sizeof(global.stream));
-    PRINTF("[PTR]    G_io_apdu_buffer: 0x%p\n", G_io_apdu_buffer);
-    PRINTF("[SIZEOF] G_io_apdu_buffer: %u\n", sizeof(G_io_apdu_buffer));
-    PRINTF("[PTR]    G_io_seproxyhal_spi_buffer: 0x%p\n",
-           G_io_seproxyhal_spi_buffer);
-    PRINTF("[SIZEOF] G_io_seproxyhal_spi_buffer: %u\n",
-           sizeof(G_io_seproxyhal_spi_buffer));
-    PRINTF("[PTR]    G_ux: 0x%p\n", &G_ux);
-    PRINTF("[SIZEOF] G_ux: %u\n", sizeof(G_ux));
-    PRINTF("[PTR]    G_ux_os: 0x%p\n", &G_ux_os);
-    PRINTF("[SIZEOF] G_ux_os: %u\n", sizeof(G_ux_os));
-    PRINTF("[PTR]    G_ux_params: 0x%p\n", &G_ux_params);
-    PRINTF("[SIZEOF] G_ux_params: %u\n", sizeof(G_ux_params));
-    PRINTF("[PTR]    G_io_usb_ep_buffer: 0x%p\n", G_io_usb_ep_buffer);
-    PRINTF("[SIZEOF] G_io_usb_ep_buffer: %d\n", sizeof(G_io_usb_ep_buffer));
-    PRINTF("[PTR]    G_io_app: 0x%p\n", &G_io_app);
-    PRINTF("[SIZEOF] G_io_app: %d\n", sizeof(G_io_app));
 
     /* ST_ERROR implies that we are completely unknown and need to reset */
     global.step = ST_ERROR;
