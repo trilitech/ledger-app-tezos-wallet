@@ -64,9 +64,8 @@ read_bip32_path(bip32_path_t *out, const uint8_t *in, size_t in_size)
 }
 
 void
-generate_public_key(cx_ecfp_public_key_t *public_key,
-                    derivation_type_t     derivation_type,
-                    const bip32_path_t   *bip32_path)
+derive_pk(cx_ecfp_public_key_t *public_key, derivation_type_t derivation_type,
+          const bip32_path_t *bip32_path)
 {
     TZ_PREAMBLE(("public_key=%p, derivation_type=%d, bip32_path=%p",
                  public_key, derivation_type, bip32_path));
@@ -100,7 +99,7 @@ derive_pkh(derivation_type_t derivation_type, const bip32_path_t *bip32_path,
     TZ_PREAMBLE(("buffer=%p, len=%u", buffer, len));
 
     TZ_ASSERT_NOTNULL(buffer);
-    TZ_CHECK(generate_public_key(&pubkey, derivation_type, bip32_path));
+    TZ_CHECK(derive_pk(&pubkey, derivation_type, bip32_path));
     TZ_CHECK(public_key_hash(hash + 1, 20, NULL, derivation_type, &pubkey));
     // clang-format off
     switch (derivation_type) {

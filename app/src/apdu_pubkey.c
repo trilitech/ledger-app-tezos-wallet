@@ -48,9 +48,8 @@ provide_pubkey(void)
     // Application could be PIN-locked, and pubkey->W_len would then be 0,
     // so throwing an error rather than returning an empty key
     TZ_ASSERT(EXC_SECURITY, os_global_pin_is_validated() == BOLOS_UX_OK);
-    TZ_CHECK(generate_public_key(&pubkey,
-                                 global.path_with_curve.derivation_type,
-                                 &global.path_with_curve.bip32_path));
+    TZ_CHECK(derive_pk(&pubkey, global.path_with_curve.derivation_type,
+                       &global.path_with_curve.bip32_path));
 
     byte         = pubkey.W_len;
     bufs[0].ptr  = &byte;
