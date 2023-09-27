@@ -105,6 +105,11 @@
         goto bail;               \
     } while (0)
 
+#define TZ_SUCCEED() \
+    do {             \
+        goto bail;   \
+    } while (0)
+
 #define TZ_ASSERT(_err, _cond)                                             \
     do {                                                                   \
         if (!(_cond)) {                                                    \
