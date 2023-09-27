@@ -1,7 +1,12 @@
-/* Tezos Embedded C parser for Ledger - Big num parser
+/* Tezos Ledger application - Swap requirement
 
    Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
+   Copyright 2023 TriliTech <contact@trili.tech>
    Copyright 2023 Functori <contact@functori.com>
+
+   With code excerpts from:
+   - Legacy Tezos app, Copyright 2019 Obsidian Systems
+   - Ledger Blue sample apps, Copyright 2016 Ledger
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -15,16 +20,6 @@
    See the License for the specific language governing permissions and
    limitations under the License. */
 
-#pragma once
-
-#include "parser_state.h"
-
-void tz_parse_num_state_init(tz_num_parser_buffer *, tz_num_parser_regs *);
-tz_parser_result tz_parse_num_step(tz_num_parser_buffer *,
-                                   tz_num_parser_regs *, uint8_t, bool);
-tz_parser_result tz_parse_int_step(tz_num_parser_buffer *,
-                                   tz_num_parser_regs *, uint8_t);
-tz_parser_result tz_parse_nat_step(tz_num_parser_buffer *,
-                                   tz_num_parser_regs *, uint8_t);
-
-bool tz_string_to_mutez(const char *, uint64_t *);
+#ifdef HAVE_SWAP
+void swap_check_validity(void);
+#endif  // HAVE_SWAP

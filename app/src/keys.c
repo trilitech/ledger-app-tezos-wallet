@@ -33,6 +33,9 @@
 #include "keys.h"
 #include "globals.h"
 
+static void public_key_hash(uint8_t *, size_t, cx_ecfp_public_key_t *,
+                            derivation_type_t, const cx_ecfp_public_key_t *);
+
 static cx_curve_t
 derivation_type_to_cx_curve(derivation_type_t derivation_type)
 {
@@ -88,9 +91,36 @@ generate_public_key(cx_ecfp_public_key_t *public_key,
     TZ_POSTAMBLE;
 }
 
+void
+derive_pkh(derivation_type_t derivation_type, const bip32_path_t *bip32_path,
+           char *buffer, size_t len)
+{
+    cx_ecfp_public_key_t pubkey = {0};
+    uint8_t              hash[21];
+    TZ_PREAMBLE(("buffer=%p, len=%u", buffer, len));
+
+    TZ_ASSERT_NOTNULL(buffer);
+    TZ_CHECK(generate_public_key(&pubkey, derivation_type, bip32_path));
+    TZ_CHECK(public_key_hash(hash + 1, 20, NULL, derivation_type, &pubkey));
+    // clang-format off
+    switch (derivation_type) {
+    case DERIVATION_TYPE_SECP256K1: hash[0] = 1; break;
+    case DERIVATION_TYPE_SECP256R1: hash[0] = 2; break;
+    case DERIVATION_TYPE_ED25519:
+    case DERIVATION_TYPE_BIP32_ED25519: hash[0] = 0; break;
+    default: TZ_FAIL(EXC_WRONG_PARAM); break;
+    }
+    // clang-format on
+
+    if (tz_format_pkh(hash, 21, buffer, len))
+        TZ_FAIL(EXC_UNKNOWN);
+
+    TZ_POSTAMBLE;
+}
+
 #define HASH_SIZE 20
 
-void
+static void
 public_key_hash(uint8_t *hash_out, size_t hash_out_size,
                 cx_ecfp_public_key_t       *compressed_out,
                 derivation_type_t           derivation_type,

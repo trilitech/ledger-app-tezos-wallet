@@ -1,0 +1,18 @@
+name: Swap feature tests
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+    - main
+  pull_request:
+
+jobs:
+  job_functional_tests:
+    uses: spalmer25/app-exchange/.github/workflows/reusable_swap_functional_tests.yml@palmer/functori/add-new-tezos-app-swap-tests
+    with:
+      repo_for_exchange: 'spalmer25/app-exchange'
+      branch_for_exchange: 'palmer/functori/add-new-tezos-app-swap-tests'
+      branch_for_tezos: ${{ github.ref }}
+      run_for_devices: '["nanos", "nanosp"]'
+      test_filter: '"tezos_new"'

@@ -40,6 +40,12 @@
 #include "parser/parser_state.h"
 #include "parser/operation_parser.h"
 
+#ifdef HAVE_SWAP
+#include <swap.h>
+
+#include "handle_swap.h"
+#endif  // HAVE_SWAP
+
 #ifdef HAVE_NBGL
 #include "nbgl_use_case.h"
 #endif
@@ -193,6 +199,7 @@ skip:
         break;
     case TZ_ERR_INVALID_TAG:
     case TZ_ERR_INVALID_OP:
+    case TZ_ERR_INVALID_DATA:
     case TZ_ERR_UNSUPPORTED:
     case TZ_ERR_TOO_LARGE:
     case TZ_ERR_TOO_DEEP:
@@ -222,6 +229,7 @@ send_cancel(void)
         break;
     case TZ_ERR_INVALID_TAG:
     case TZ_ERR_INVALID_OP:
+    case TZ_ERR_INVALID_DATA:
     case TZ_ERR_UNSUPPORTED:
     case TZ_ERR_TOO_LARGE:
     case TZ_ERR_TOO_DEEP:
@@ -241,7 +249,18 @@ stream_cb(tz_ui_cb_type_t type)
 
     // clang-format off
     switch (type) {
-    case TZ_UI_STREAM_CB_ACCEPT: return sign_packet();
+    case TZ_UI_STREAM_CB_ACCEPT:
+#ifdef HAVE_SWAP
+        if (G_called_from_swap) {
+            if (G_swap_response_ready)
+                os_sched_exit(-1);
+            else
+                G_swap_response_ready = true;
+
+            TZ_CHECK(swap_check_validity());
+        }
+#endif  // HAVE_SWAP
+        return sign_packet();
     case TZ_UI_STREAM_CB_REFILL: return refill();
     case TZ_UI_STREAM_CB_REJECT: return send_reject();
     case TZ_UI_STREAM_CB_CANCEL: return send_cancel();

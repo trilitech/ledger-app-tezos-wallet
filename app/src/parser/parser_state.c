@@ -37,6 +37,7 @@ tz_parser_result_name(tz_parser_result code)
     BLO_LABEL(IM_FULL);
     TZ_LABEL(ERR_INVALID_TAG);
     TZ_LABEL(ERR_INVALID_OP);
+    TZ_LABEL(ERR_INVALID_DATA);
     TZ_LABEL(ERR_UNSUPPORTED);
     TZ_LABEL(ERR_TOO_LARGE);
     TZ_LABEL(ERR_TOO_DEEP);
