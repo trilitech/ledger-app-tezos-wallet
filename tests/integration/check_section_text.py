@@ -30,7 +30,7 @@ class Screen:
     for l in self.text:
       l = device_alter_content(device, l)
       content = content.lstrip('\n')
-      if not content.startswith(l):
+      if len(l) == 0 or not content.startswith(l):
         return False
       content = content.removeprefix(l)
 
