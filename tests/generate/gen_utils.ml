@@ -16,7 +16,10 @@
 open Tezos_protocol_017_PtNairob
 open Tezos_micheline
 
-let random_state = Random.State.make_self_init ()
+let random_state =
+  match Sys.getenv_opt "RAND" with
+  | Some "1" -> Random.State.make_self_init ()
+  | _ -> Random.get_state ()
 
 let micheline_too_large_or_too_deep expr =
   try
