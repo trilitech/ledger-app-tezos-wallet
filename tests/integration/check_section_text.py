@@ -19,18 +19,21 @@ import requests
 from dataclasses import dataclass
 import time
 
-TIMEOUT = int(os.environ.get('TIMEOUT', '100'))
+TIMEOUT = int(os.environ.get('TIMEOUT', '5'))
 
 @dataclass
 class Screen:
   title: str
   text: list[str]
 
+  def __str__(self):
+    return f"title=\"{self.title}\" Text=\"{''.join(self.text)}\""
+
   def matches(self, content: str, content_lines: int, device) -> bool:
     for l in self.text:
       l = device_alter_content(device, l)
       content = content.lstrip('\n')
-      if not content.startswith(l):
+      if len(l) == 0 or not content.startswith(l):
         return False
       content = content.removeprefix(l)
 
@@ -86,8 +89,10 @@ def check_multi_screen(url, title, content, content_lines, device):
     """Assert that the screen contents across all screens with the given title match expected content."""
     while True:
       def check_screen(screen):
-        assert screen.title == title, f"expected section '{title}' but on '{screen.title}'"
-        assert screen.matches(content, content_lines, device), f"{screen} did not match {content}"
+        assert screen.title == title, \
+               f"expected section '{title}' but on '{screen.title}'"
+        assert screen.matches(content, content_lines, device), \
+               f"{screen} did not match {content[:10]}...{content[-10:]}"
         return screen
 
       on_screen = with_retry(url, check_screen)
