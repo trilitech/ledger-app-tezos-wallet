@@ -51,13 +51,17 @@ scan-build:	scan-build-nanos scan-build-nanosp	\
 app_%.tgz:	app/src/*.[ch]		\
 		app/src/parser/*.[ch]	\
 		app/Makefile
-	$(DOCKER_RUN_APP_BUILDER) bash -c \
-          'BOLOS_SDK=$$$(shell echo $(patsubst app_%.tgz,%,$@) | tr '[:lower:]' '[:upper:]')_SDK make -C app'
+	SDK=$(shell echo $@ | sed 's/app_\(.*\).tgz/\U\1/')_SDK;   \
+	$(DOCKER_RUN_APP_BUILDER) bash -c                          \
+            "BOLOS_SDK=\$$$$SDK make -C app"
 	$(DOCKER_RUN_APP_BUILDER) bash -c "cd app/bin/ && tar cz ." > $@
 
-app_%_dbg.tgz: app/src/*.[ch] app/src/parser/*.[ch] app/Makefile
-	$(DOCKER_RUN_APP_BUILDER) bash -c \
-          'BOLOS_SDK=$$$(shell echo $(patsubst app_%_dbg.tgz,%,$@) | tr '[:lower:]' '[:upper:]')_SDK make -C app DEBUG=1'
+app_%_dbg.tgz:	app/src/*.[ch]		\
+		app/src/parser/*.[ch]	\
+		app/Makefile
+	SDK=$(shell echo $@ | sed 's/app_\(.*\)_dbg.tgz/\U\1/')_SDK; \
+	$(DOCKER_RUN_APP_BUILDER) bash -c                            \
+            "BOLOS_SDK=\$$$$SDK make -C app DEBUG=1"
 	$(DOCKER_RUN_APP_BUILDER) bash -c "cd app/bin/ && tar cz ." > $@
 
 clean:
