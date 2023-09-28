@@ -19,7 +19,7 @@ import requests
 from dataclasses import dataclass
 import time
 
-TIMEOUT = int(os.environ.get('TIMEOUT', '100'))
+TIMEOUT = int(os.environ.get('TIMEOUT', '5'))
 
 @dataclass
 class Screen:
