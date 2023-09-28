@@ -80,27 +80,21 @@ tz_parse_nat_step(tz_num_parser_buffer *buffers, tz_num_parser_regs *regs,
 bool
 tz_string_to_mutez(const char *str, uint64_t *res)
 {
+    int c;
+
     if (str == NULL || res == NULL) {
         PRINTF("[ERROR] Null parameter\n");
-        goto error;
+        return false;
     }
 
-    memset(res, '\0', sizeof(uint64_t));
-    int  r = 0;
-    char c;
-
+    *res = 0;
     while ((c = *str++) != '\0') {
         if (c < '0' || c > '9') {
             PRINTF("[ERROR] Non-digit character: %c\n", c);
-            goto error;
+            return false;
         }
-        r    = r * 10 + (c - '0');
         *res = *res * 10 + (c - '0');
     }
 
     return true;
-
-error:
-    memset(res, '\0', sizeof(uint64_t));
-    return false;
 }

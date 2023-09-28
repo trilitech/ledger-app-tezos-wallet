@@ -50,7 +50,7 @@ const char *const tz_operation_parser_step_name[] = {"MAGIC",
 #endif
 
 const tz_operation_field_descriptor proposals_fields[] = {
-  // Name,           Kind,                        Req,  Skip,  None
+  // Name,       Kind,                      Req,  Skip,  None
     {"Source",   TZ_OPERATION_FIELD_PKH,    true, false, false},
     {"Period",   TZ_OPERATION_FIELD_INT32,  true, false, false},
     {"Proposal", TZ_OPERATION_FIELD_PROTOS, true, false, false},
@@ -58,7 +58,7 @@ const tz_operation_field_descriptor proposals_fields[] = {
 };
 
 const tz_operation_field_descriptor ballot_fields[] = {
-  // Name,           Kind,                        Req,  Skip,  None
+  // Name,       Kind,                      Req,  Skip,  None
     {"Source",   TZ_OPERATION_FIELD_PKH,    true, false, false},
     {"Period",   TZ_OPERATION_FIELD_INT32,  true, false, false},
     {"Proposal", TZ_OPERATION_FIELD_PROTO,  true, false, false},
@@ -67,13 +67,13 @@ const tz_operation_field_descriptor ballot_fields[] = {
 };
 
 const tz_operation_field_descriptor failing_noop_fields[] = {
-  // Name,           Kind,                        Req,  Skip,  None
+  // Name,      Kind,                      Req,  Skip,  None
     {"Message", TZ_OPERATION_FIELD_BINARY, true, false, false},
     {NULL,      0,                         0,    0,     0    }
 };
 
 const tz_operation_field_descriptor transaction_fields[] = {
-  // Name,           Kind,                        Req,  Skip,  None
+  // Name,            Kind,                           Req,   Skip,  None
     {"Source",        TZ_OPERATION_FIELD_SOURCE,      true,  true,  false},
     {"Fee",           TZ_OPERATION_FIELD_FEE,         true,  false, false},
     {"Counter",       TZ_OPERATION_FIELD_NAT,         true,  true,  false},
@@ -86,7 +86,7 @@ const tz_operation_field_descriptor transaction_fields[] = {
 };
 
 const tz_operation_field_descriptor reveal_fields[] = {
-  // Name,           Kind,                        Req,  Skip,  None
+  // Name,            Kind,                      Req,  Skip,  None
     {"Source",        TZ_OPERATION_FIELD_SOURCE, true, true,  false},
     {"Fee",           TZ_OPERATION_FIELD_FEE,    true, false, false},
     {"Counter",       TZ_OPERATION_FIELD_NAT,    true, true,  false},
@@ -108,7 +108,7 @@ const tz_operation_field_descriptor delegation_fields[] = {
 };
 
 const tz_operation_field_descriptor reg_glb_cst_fields[] = {
-  // Name,           Kind,                        Req,  Skip,  None
+  // Name,            Kind,                      Req,  Skip,  None
     {"Source",        TZ_OPERATION_FIELD_SOURCE, true, true,  false},
     {"Fee",           TZ_OPERATION_FIELD_FEE,    true, false, false},
     {"Counter",       TZ_OPERATION_FIELD_NAT,    true, true,  false},
@@ -119,7 +119,7 @@ const tz_operation_field_descriptor reg_glb_cst_fields[] = {
 };
 
 const tz_operation_field_descriptor set_deposit_fields[] = {
-  // Name,           Kind,                        Req,  Skip,  None
+  // Name,            Kind,                      Req,   Skip,  None
     {"Source",        TZ_OPERATION_FIELD_SOURCE, true,  true,  false},
     {"Fee",           TZ_OPERATION_FIELD_FEE,    true,  false, false},
     {"Counter",       TZ_OPERATION_FIELD_NAT,    true,  true,  false},
@@ -130,7 +130,7 @@ const tz_operation_field_descriptor set_deposit_fields[] = {
 };
 
 const tz_operation_field_descriptor inc_paid_stg_fields[] = {
-  // Name,           Kind,                        Req,  Skip,  None
+  // Name,            Kind,                           Req,  Skip,  None
     {"Source",        TZ_OPERATION_FIELD_SOURCE,      true, true,  false},
     {"Fee",           TZ_OPERATION_FIELD_FEE,         true, false, false},
     {"Counter",       TZ_OPERATION_FIELD_NAT,         true, true,  false},
@@ -142,7 +142,7 @@ const tz_operation_field_descriptor inc_paid_stg_fields[] = {
 };
 
 const tz_operation_field_descriptor update_ck_fields[] = {
-  // Name,           Kind,                        Req,  Skip,  None
+  // Name,            Kind,                      Req,  Skip,  None
     {"Source",        TZ_OPERATION_FIELD_SOURCE, true, true,  false},
     {"Fee",           TZ_OPERATION_FIELD_FEE,    true, false, false},
     {"Counter",       TZ_OPERATION_FIELD_NAT,    true, true,  false},
@@ -153,7 +153,7 @@ const tz_operation_field_descriptor update_ck_fields[] = {
 };
 
 const tz_operation_field_descriptor origination_fields[] = {
-  // Name,           Kind,                        Req,  Skip,  None
+  // Name,            Kind,                      Req,   Skip,  None
     {"Source",        TZ_OPERATION_FIELD_SOURCE, true,  true,  false},
     {"Fee",           TZ_OPERATION_FIELD_FEE,    true,  false, false},
     {"Counter",       TZ_OPERATION_FIELD_NAT,    true,  true,  false},
@@ -167,7 +167,7 @@ const tz_operation_field_descriptor origination_fields[] = {
 };
 
 const tz_operation_field_descriptor transfer_tck_fields[] = {
-  // Name,           Kind,                        Req,  Skip,  None
+  // Name,            Kind,                           Req,  Skip,  None
     {"Source",        TZ_OPERATION_FIELD_SOURCE,      true, true,  false},
     {"Fee",           TZ_OPERATION_FIELD_FEE,         true, false, false},
     {"Counter",       TZ_OPERATION_FIELD_NAT,         true, true,  false},
@@ -183,7 +183,7 @@ const tz_operation_field_descriptor transfer_tck_fields[] = {
 };
 
 const tz_operation_field_descriptor soru_add_msg_fields[] = {
-  // Name,           Kind,                        Req,  Skip,  None
+  // Name,            Kind,                             Req,  Skip,  None
     {"Source",        TZ_OPERATION_FIELD_SOURCE,        true, true,  false},
     {"Fee",           TZ_OPERATION_FIELD_FEE,           true, false, false},
     {"Counter",       TZ_OPERATION_FIELD_NAT,           true, true,  false},
@@ -194,7 +194,7 @@ const tz_operation_field_descriptor soru_add_msg_fields[] = {
 };
 
 const tz_operation_field_descriptor soru_exe_msg_fields[] = {
-  // Name,           Kind,                        Req,  Skip,  None
+  // Name,            Kind,                      Req,  Skip,  None
     {"Source",        TZ_OPERATION_FIELD_SOURCE, true, true,  false},
     {"Fee",           TZ_OPERATION_FIELD_FEE,    true, false, false},
     {"Counter",       TZ_OPERATION_FIELD_NAT,    true, true,  false},
@@ -207,7 +207,7 @@ const tz_operation_field_descriptor soru_exe_msg_fields[] = {
 };
 
 const tz_operation_field_descriptor soru_origin_fields[] = {
-  // Name,           Kind,                        Req,  Skip,  None
+  // Name,            Kind,                         Req,  Skip,  None
     {"Source",        TZ_OPERATION_FIELD_SOURCE,    true, true,  false},
     {"Fee",           TZ_OPERATION_FIELD_FEE,       true, false, false},
     {"Counter",       TZ_OPERATION_FIELD_NAT,       true, true,  false},

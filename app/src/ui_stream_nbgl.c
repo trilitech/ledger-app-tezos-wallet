@@ -148,7 +148,7 @@ tz_ui_current_screen(__attribute__((unused)) uint8_t pairIndex)
 }
 
 void
-tz_ui_stream_close()
+tz_ui_stream_close(void)
 {
     tz_ui_stream_t *s = &global.stream;
 

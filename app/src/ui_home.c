@@ -31,7 +31,7 @@ static void cb(tz_ui_cb_type_t);
 static void
 cb(tz_ui_cb_type_t type)
 {
-    FUNC_ENTER(("type=%u\n", type));
+    FUNC_ENTER(("type=%u", type));
 
     switch (type) {
     case SCREEN_BLIND_SIGN:

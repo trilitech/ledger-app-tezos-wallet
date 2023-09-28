@@ -64,7 +64,7 @@ tz_ui_stream_push_accept_reject(void)
 
 #ifdef HAVE_BAGL
 void
-tz_ui_stream_close()
+tz_ui_stream_close(void)
 {
     tz_ui_stream_t *s = &global.stream;
 
@@ -212,7 +212,7 @@ tz_ui_stream_get_type(void)
 
 #ifdef HAVE_BAGL
 static void
-pred()
+pred(void)
 {
     tz_ui_stream_t *s = &global.stream;
 
@@ -225,7 +225,7 @@ pred()
 }
 
 static void
-succ()
+succ(void)
 {
     tz_ui_stream_t *s = &global.stream;
 
@@ -287,7 +287,7 @@ find_icon(tz_ui_icon_t icon)
 }
 
 static void
-redisplay()
+redisplay(void)
 {
     bagl_element_t init[] = {
   //  {type, userid, x, y, width, height, stroke, radius,
@@ -371,7 +371,7 @@ redisplay()
 }
 
 static void
-change_screen_left()
+change_screen_left(void)
 {
     FUNC_ENTER(("void"));
     pred();
@@ -380,7 +380,7 @@ change_screen_left()
 }
 
 static void
-change_screen_right()
+change_screen_right(void)
 {
     tz_ui_stream_t *s = &global.stream;
 
@@ -408,7 +408,7 @@ tz_ui_stream_start(void)
 }
 
 void
-tz_ui_stream()
+tz_ui_stream(void)
 {
     FUNC_ENTER(("void"));
 

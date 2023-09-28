@@ -25,7 +25,8 @@
 #define SW_OK 0x9000
 
 // Standard APDU error codes:
-// https://www.eftlab.co.uk/index.php/site-map/knowledge-base/118-apdu-response-list
+// https://www.eftlab.com/knowledge-base/complete-list-of-apdu-responses
+// https://docs.zondax.ch/ledger-apps/starkware/APDU
 
 #define EXC_WRONG_PARAM               0x6B00
 #define EXC_WRONG_LENGTH              0x6C00
