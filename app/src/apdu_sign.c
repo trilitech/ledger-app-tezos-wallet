@@ -150,63 +150,79 @@ send_continue(void)
 }
 
 static void
-refill(void)
+refill_blo_im_full(void)
 {
-    size_t           wrote = 0;
     tz_parser_state *st    = &global.apdu.sign.u.clear.parser_state;
+    size_t           wrote = 0;
     TZ_PREAMBLE(("void"));
 
-skip:
-    while (!TZ_IS_BLOCKED(tz_operation_parser_step(st)))
-        ;
-    PRINTF("[DEBUG] refill(errno: %s) \n", tz_parser_result_name(st->errno));
-    switch (st->errno) {
-    case TZ_BLO_IM_FULL:
-    last_screen:
+    if (!global.apdu.sign.u.clear.skip_to_sign) {
         global.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
         wrote = tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, st->field_name,
                                   global.line_buf, TZ_UI_ICON_NONE);
-
-        tz_parser_flush_up_to(st, global.line_buf, TZ_UI_STREAM_CONTENTS_SIZE,
-                              wrote);
-
-        // Do as much parsing as we can in one go when skipping.
-        // TODO: perhaps when skipping we could only skip the current
-        //       operation, rather than the whole rest-of-batch
-        if (global.apdu.sign.u.clear.skip_to_sign)
-            goto skip;
-
-        break;
-    case TZ_BLO_FEED_ME:
-        TZ_CHECK(send_continue());
-        break;
-    case TZ_BLO_DONE:
-        TZ_ASSERT(EXC_UNEXPECTED_STATE,
-                  global.apdu.sign.received_last_msg && st->regs.ilen == 0);
-        if (st->regs.oofs != 0)
-            goto last_screen;
-        global.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
-        tz_ui_stream_push_accept_reject();
-        tz_ui_stream_close();
-        break;
-    case TZ_ERR_INVALID_STATE:
-        tz_ui_stream_push(TZ_UI_STREAM_CB_CANCEL, "Unknown error", "",
-                          TZ_UI_ICON_CROSS);
-        tz_ui_stream_close();
-        break;
-    case TZ_ERR_INVALID_TAG:
-    case TZ_ERR_INVALID_OP:
-    case TZ_ERR_INVALID_DATA:
-    case TZ_ERR_UNSUPPORTED:
-    case TZ_ERR_TOO_LARGE:
-    case TZ_ERR_TOO_DEEP:
-        tz_ui_stream_push(TZ_UI_STREAM_CB_CANCEL, "Parsing error",
-                          tz_parser_result_name(st->errno), TZ_UI_ICON_CROSS);
-        tz_ui_stream_close();
-        break;
-    default:
-        TZ_FAIL(EXC_UNEXPECTED_STATE);
+    } else {
+        global.apdu.sign.step = SIGN_ST_WAIT_DATA;
+        wrote                 = TZ_UI_STREAM_CONTENTS_SIZE;
     }
+    tz_parser_flush_up_to(st, global.line_buf, TZ_UI_STREAM_CONTENTS_SIZE,
+                          wrote);
+    TZ_POSTAMBLE;
+}
+
+static void
+refill_blo_done(void)
+{
+    tz_parser_state *st = &global.apdu.sign.u.clear.parser_state;
+    TZ_PREAMBLE(("void"));
+
+    TZ_ASSERT(EXC_UNEXPECTED_STATE,
+              global.apdu.sign.received_last_msg && st->regs.ilen == 0);
+    if (st->regs.oofs != 0) {
+        refill_blo_im_full();
+        TZ_SUCCEED();
+    }
+    global.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
+    tz_ui_stream_push_accept_reject();
+    tz_ui_stream_close();
+
+    TZ_POSTAMBLE;
+}
+
+static void
+refill_error(void)
+{
+    tz_parser_state *st = &global.apdu.sign.u.clear.parser_state;
+    TZ_PREAMBLE(("void"));
+
+    tz_ui_stream_push(TZ_UI_STREAM_CB_CANCEL, "Parsing error",
+                      tz_parser_result_name(st->errno), TZ_UI_ICON_CROSS);
+    tz_ui_stream_close();
+    TZ_POSTAMBLE;
+}
+
+static void
+refill(void)
+{
+    tz_parser_state *st  = &global.apdu.sign.u.clear.parser_state;
+    bool             s2s = global.apdu.sign.u.clear.skip_to_sign;
+    TZ_PREAMBLE(("void"));
+
+    do {
+        while (!TZ_IS_BLOCKED(tz_operation_parser_step(st)))
+            ;
+        PRINTF("[DEBUG] refill(errno: %s)\n",
+               tz_parser_result_name(st->errno));
+        // clang-format off
+	switch (st->errno) {
+	case TZ_BLO_IM_FULL: TZ_CHECK(refill_blo_im_full()); break;
+	case TZ_BLO_FEED_ME: TZ_CHECK(send_continue());      break;
+	case TZ_BLO_DONE:    TZ_CHECK(refill_blo_done());    break;
+	default:             TZ_CHECK(refill_error());       break;
+	}
+        // clang-format on
+    } while (s2s
+             && (st->errno == TZ_BLO_IM_FULL
+                 || (st->errno == TZ_BLO_DONE && st->regs.oofs > 0)));
 
     TZ_POSTAMBLE;
 }

@@ -43,7 +43,7 @@ tz_parser_result_name(tz_parser_result code)
     TZ_LABEL(ERR_TOO_DEEP);
     TZ_LABEL(ERR_INVALID_STATE);
     default:
-        return "???";
+        return "Unknown";
     }
     // clang-format on
 }
