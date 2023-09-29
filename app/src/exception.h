@@ -22,6 +22,8 @@
 
 #include <os.h>
 
+#include "handle_swap.h"
+
 #define SW_OK 0x9000
 
 // Standard APDU error codes:
@@ -96,7 +98,7 @@
     bail:                                             \
     if (_sw_ret_code) {                               \
         global.step = ST_ERROR;                       \
-        io_send_sw(_sw_ret_code);                     \
+        NOT_IN_SWAP(io_send_sw(_sw_ret_code));        \
     }                                                 \
     FUNC_LEAVE();
 
