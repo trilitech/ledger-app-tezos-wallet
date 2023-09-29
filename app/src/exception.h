@@ -58,6 +58,9 @@
  * can't return values, either, and do things the same way in both places.
  * Our mechanism is to set global.step == ST_ERROR after we get an error.
  *
+ * Our TZ_POSTAMBLE will, on error, send a response back as well
+ * as setting the global state to ST_ERROR.
+ *
  * Each function should begin with TZ_PREAMBLE() which takes a
  * bracketted list of PRINTF() arguments.  It also sets up all of
  * the variables necessary for the following macros.
@@ -65,6 +68,10 @@
  * Each function should end with TZ_POSTAMBLE which: sets up all of
  * labels to which the remaining macros jump; responds on error via
  * io_send_sw(); and sets global.step on error.
+ *
+ * TZ_SUCCEED() simply jumps to the TZ_POSTAMBLE successfully.  Note
+ * that it will not set any state that can be read upstream, it is
+ * the developer's responsibility to do this.
  *
  * TZ_CHECK() calls a function.  If global.step == ST_ERROR, it will
  * jump to the end after calling the function and let TZ_POSTAMBLE do
@@ -78,6 +85,10 @@
  *
  * CX_CHECK() is a macro provided by BOLOS, however, we catch it
  * with this framework, reply with io_send_sw() and return TZ_DONE.
+ *
+ * Keep in mind that these macros ONLY take care of errors.  If you
+ * have sent a continue, then ST_ERROR will NOT be set and you need
+ * to ensure that you understand that in the rest of your code.
  */
 
 #define TZ_PREAMBLE(_args)          \
