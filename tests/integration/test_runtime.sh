@@ -251,6 +251,15 @@ run_a_test() {
                     start_speculos "$seed"
                     PORT=$PORT python3 $CMD
                     ;;
+                *.hex)
+                    # We skip these...
+                    ;;
+                *)
+                    if [ -f "$CMD" ]; then
+                        echo Command "$CMD" ends in neither .sh nor .py >&2
+                        exit 1;
+                    fi
+                    ;;
             esac
         )
     ) > $OUTF 2> $ERRF
