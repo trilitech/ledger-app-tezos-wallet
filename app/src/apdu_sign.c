@@ -456,7 +456,7 @@ handle_data_apdu_blind(command_t *cmd)
         global.apdu.sign.u.blind.tag = cmd->data[0];
     if (!PKT_IS_LAST(cmd)) {
         io_send_sw(SW_OK);
-        goto end;
+        TZ_SUCCEED();
     }
 
     char        obuf[TZ_BASE58_BUFFER_SIZE(sizeof(FINAL_HASH))];
