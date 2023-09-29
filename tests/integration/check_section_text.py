@@ -30,14 +30,15 @@ class Screen:
     return f"title=\"{self.title}\" Text=\"{''.join(self.text)}\""
 
   def matches(self, content: str, content_lines: int, device) -> bool:
+    content = content.lstrip('\n')
     for l in self.text:
       l = device_alter_content(device, l)
-      content = content.lstrip('\n')
-      if len(l) == 0 or not content.startswith(l):
+      if not content.startswith(l):
         return False
       content = content.removeprefix(l)
+      content = content.lstrip('\n')
 
-    return True
+    return len(self.text) == content_lines or len(content) == 0
 
   def strip(self, content: str) -> str:
     for l in self.text:
@@ -130,7 +131,7 @@ def check_potential_remaining_screen(url, device, title, content):
 
 def device_content_lines(device: str) -> int:
   if device == "nanos":
-    return 2
+    return 1
   if device in ["nanosp", "nanox"]:
     return 4
 
