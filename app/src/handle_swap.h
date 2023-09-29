@@ -20,4 +20,24 @@
    See the License for the specific language governing permissions and
    limitations under the License. */
 
+#ifdef HAVE_SWAP
+#include <swap.h>
+
+#define AM_IN_SWAP(_x)            \
+    do {                          \
+        if (G_called_from_swap) { \
+            _x;                   \
+        }                         \
+    } while (0)
+#define NOT_IN_SWAP(_x)            \
+    do {                           \
+        if (!G_called_from_swap) { \
+            _x;                    \
+        }                          \
+    } while (0)
+#else
+#define AM_IN_SWAP(_x)
+#define NOT_IN_SWAP(_x) _x
+#endif
+
 void swap_check_validity(void);
