@@ -45,27 +45,20 @@
 #include "nbgl_use_case.h"
 #endif
 
-typedef struct {
-    command_t cmd;
-    bool      is_last;
-    bool      is_first;
-} packet_t;
-
 /* Prototypes */
 
-static void init_packet(packet_t *, command_t *);
 static void sign_packet(void);
 static void send_reject(void);
 static void send_continue(void);
 static void send_cancel(void);
 static void refill(void);
 static void stream_cb(tz_ui_cb_type_t);
-static void handle_first_apdu(packet_t *);
-static void handle_first_apdu_clear(packet_t *);
-static void handle_first_apdu_blind(packet_t *);
-static void handle_data_apdu(packet_t *);
-static void handle_data_apdu_clear(packet_t *);
-static void handle_data_apdu_blind(packet_t *);
+static void handle_first_apdu(command_t *);
+static void handle_first_apdu_clear(command_t *);
+static void handle_first_apdu_blind(command_t *);
+static void handle_data_apdu(command_t *);
+static void handle_data_apdu_clear(command_t *);
+static void handle_data_apdu_blind(command_t *);
 
 /* Macros */
 
@@ -74,24 +67,14 @@ static void handle_data_apdu_blind(packet_t *);
 #define P1_HASH_ONLY_NEXT 0x03  // You only need it once
 #define P1_LAST_MARKER    0x80
 
+#define PKT_IS_LAST(_cmd)  ((_cmd)->p1 & P1_LAST_MARKER)
+#define PKT_IS_FIRST(_cmd) (((_cmd)->p1 & ~P1_LAST_MARKER) == 0)
+
 #define TZ_UI_STREAM_CB_CANCEL 0xf0
 
 #define APDU_SIGN_ASSERT(_cond) TZ_ASSERT(EXC_UNEXPECTED_SIGN_STATE, (_cond))
 #define APDU_SIGN_ASSERT_STEP(x) \
     APDU_SIGN_ASSERT(global.apdu.sign.step == (x))
-
-static void
-init_packet(packet_t *pkt, command_t *cmd)
-{
-    pkt->cmd.cla  = cmd->cla;
-    pkt->cmd.ins  = cmd->ins;
-    pkt->cmd.p1   = cmd->p1;
-    pkt->cmd.p2   = cmd->p2;
-    pkt->cmd.lc   = cmd->lc;
-    pkt->cmd.data = cmd->data;
-    pkt->is_last  = cmd->p1 & P1_LAST_MARKER;
-    pkt->is_first = (cmd->p1 & ~P1_LAST_MARKER) == 0;
-}
 
 static void
 sign_packet(void)
@@ -274,16 +257,16 @@ stream_cb(tz_ui_cb_type_t type)
 }
 
 static void
-handle_first_apdu(packet_t *pkt)
+handle_first_apdu(command_t *cmd)
 {
-    TZ_PREAMBLE(("pkt=%p", pkt));
+    TZ_PREAMBLE(("cmd=%p", cmd));
 
-    TZ_ASSERT_NOTNULL(pkt);
+    TZ_ASSERT_NOTNULL(cmd);
     APDU_SIGN_ASSERT_STEP(SIGN_ST_IDLE);
 
-    TZ_CHECK(read_bip32_path(&global.path_with_curve.bip32_path,
-                             pkt->cmd.data, pkt->cmd.lc));
-    global.path_with_curve.derivation_type = pkt->cmd.p2;
+    TZ_CHECK(read_bip32_path(&global.path_with_curve.bip32_path, cmd->data,
+                             cmd->lc));
+    global.path_with_curve.derivation_type = cmd->p2;
     TZ_CHECK(check_derivation_type(global.path_with_curve.derivation_type));
     TZ_CHECK(cx_blake2b_init_no_throw(&global.apdu.hash.state,
                                       SIGN_HASH_SIZE * 8));
@@ -291,8 +274,8 @@ handle_first_apdu(packet_t *pkt)
 
     // clang-format off
     switch (global.step) {
-    case ST_CLEAR_SIGN: TZ_CHECK(handle_first_apdu_clear(pkt)); break;
-    case ST_BLIND_SIGN: TZ_CHECK(handle_first_apdu_blind(pkt)); break;
+    case ST_CLEAR_SIGN: TZ_CHECK(handle_first_apdu_clear(cmd)); break;
+    case ST_BLIND_SIGN: TZ_CHECK(handle_first_apdu_blind(cmd)); break;
     default:            TZ_FAIL(EXC_UNEXPECTED_STATE);
     }
     // clang-format on
@@ -304,7 +287,7 @@ handle_first_apdu(packet_t *pkt)
 }
 
 static void
-handle_first_apdu_clear(__attribute__((unused)) packet_t *pkt)
+handle_first_apdu_clear(__attribute__((unused)) command_t *cmd)
 {
     tz_parser_state *st = &global.apdu.sign.u.clear.parser_state;
 
@@ -314,7 +297,7 @@ handle_first_apdu_clear(__attribute__((unused)) packet_t *pkt)
 }
 
 static void
-handle_first_apdu_blind(__attribute__((unused)) packet_t *pkt)
+handle_first_apdu_blind(__attribute__((unused)) command_t *cmd)
 {
     /*
      * We set the tag to zero here which indicates that it is unset.
@@ -328,27 +311,27 @@ handle_first_apdu_blind(__attribute__((unused)) packet_t *pkt)
 }
 
 static void
-handle_data_apdu(packet_t *pkt)
+handle_data_apdu(command_t *cmd)
 {
-    TZ_PREAMBLE(("pkt=%p", pkt));
+    TZ_PREAMBLE(("cmd=%p", cmd));
 
     APDU_SIGN_ASSERT_STEP(SIGN_ST_WAIT_DATA);
-    TZ_ASSERT_NOTNULL(pkt);
+    TZ_ASSERT_NOTNULL(cmd);
 
     global.apdu.sign.packet_index++;  // XXX drop or check
 
     CX_CHECK(cx_hash_no_throw((cx_hash_t *)&global.apdu.hash.state,
-                              pkt->is_last ? CX_LAST : 0, pkt->cmd.data,
-                              pkt->cmd.lc, global.apdu.hash.final_hash,
+                              PKT_IS_LAST(cmd) ? CX_LAST : 0, cmd->data,
+                              cmd->lc, global.apdu.hash.final_hash,
                               sizeof(global.apdu.hash.final_hash)));
 
-    if (pkt->is_last)
+    if (PKT_IS_LAST(cmd))
         global.apdu.sign.received_last_msg = true;
 
     // clang-format off
     switch (global.step) {
-    case ST_CLEAR_SIGN: TZ_CHECK(handle_data_apdu_clear(pkt)); break;
-    case ST_BLIND_SIGN: TZ_CHECK(handle_data_apdu_blind(pkt)); break;
+    case ST_CLEAR_SIGN: TZ_CHECK(handle_data_apdu_clear(cmd)); break;
+    case ST_BLIND_SIGN: TZ_CHECK(handle_data_apdu_blind(cmd)); break;
     default:            TZ_FAIL(EXC_UNEXPECTED_STATE);         break;
     }
     // clang-format on
@@ -357,20 +340,20 @@ handle_data_apdu(packet_t *pkt)
 }
 
 static void
-handle_data_apdu_clear(packet_t *pkt)
+handle_data_apdu_clear(command_t *cmd)
 {
     tz_parser_state *st = &global.apdu.sign.u.clear.parser_state;
-    TZ_PREAMBLE(("pkt=0x%p", pkt));
+    TZ_PREAMBLE(("cmd=0x%p", cmd));
 
-    TZ_ASSERT_NOTNULL(pkt);
+    TZ_ASSERT_NOTNULL(cmd);
     if (st->regs.ilen > 0)
         // we asked for more input but did not consume what we already had
         TZ_FAIL(EXC_UNEXPECTED_SIGN_STATE);
 
-    global.apdu.sign.u.clear.total_length += pkt->cmd.lc;
+    global.apdu.sign.u.clear.total_length += cmd->lc;
 
-    tz_parser_refill(st, pkt->cmd.data, pkt->cmd.lc);
-    if (pkt->is_last)
+    tz_parser_refill(st, cmd->data, cmd->lc);
+    if (PKT_IS_LAST(cmd))
         tz_operation_parser_set_size(st,
                                      global.apdu.sign.u.clear.total_length);
     TZ_CHECK(refill());
@@ -464,14 +447,14 @@ continue_blindsign_cb(void)
 
 #define FINAL_HASH global.apdu.hash.final_hash
 static void
-handle_data_apdu_blind(packet_t *pkt)
+handle_data_apdu_blind(command_t *cmd)
 {
-    TZ_PREAMBLE(("pkt=0x%p", pkt));
+    TZ_PREAMBLE(("cmd=0x%p", cmd));
 
-    TZ_ASSERT_NOTNULL(pkt);
+    TZ_ASSERT_NOTNULL(cmd);
     if (!global.apdu.sign.u.blind.tag)
-        global.apdu.sign.u.blind.tag = pkt->cmd.data[0];
-    if (!pkt->is_last) {
+        global.apdu.sign.u.blind.tag = cmd->data[0];
+    if (!PKT_IS_LAST(cmd)) {
         io_send_sw(SW_OK);
         goto end;
     }
@@ -535,14 +518,12 @@ handle_data_apdu_blind(packet_t *pkt)
 void
 handle_apdu_sign(command_t *cmd)
 {
-    bool     return_hash = cmd->ins == INS_SIGN_WITH_HASH;
-    packet_t pkt;
+    bool return_hash = cmd->ins == INS_SIGN_WITH_HASH;
     TZ_PREAMBLE(("cmd=0x%p", cmd));
 
-    init_packet(&pkt, cmd);
-    TZ_ASSERT(EXC_WRONG_LENGTH_FOR_INS, pkt.cmd.lc <= MAX_APDU_SIZE);
+    TZ_ASSERT(EXC_WRONG_LENGTH_FOR_INS, cmd->lc <= MAX_APDU_SIZE);
 
-    if (pkt.is_first) {
+    if (PKT_IS_FIRST(cmd)) {
         TZ_ASSERT(EXC_UNEXPECTED_STATE, global.step == ST_IDLE);
 
         memset(&global.apdu, 0, sizeof(global.apdu));
@@ -556,7 +537,7 @@ handle_apdu_sign(command_t *cmd)
         }
         // clang-format on
 
-        TZ_CHECK(handle_first_apdu(&pkt));
+        TZ_CHECK(handle_first_apdu(cmd));
         global.apdu.sign.return_hash = return_hash;
         goto end;
     }
@@ -564,7 +545,7 @@ handle_apdu_sign(command_t *cmd)
     TZ_ASSERT(EXC_UNEXPECTED_STATE,
               global.step == ST_BLIND_SIGN || global.step == ST_CLEAR_SIGN);
     TZ_ASSERT(EXC_INVALID_INS, return_hash == global.apdu.sign.return_hash);
-    TZ_CHECK(handle_data_apdu(&pkt));
+    TZ_CHECK(handle_data_apdu(cmd));
 
     TZ_POSTAMBLE;
 }
