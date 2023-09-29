@@ -215,7 +215,7 @@ swap_check_validity(void)
 {
     tz_operation_state *op = &global.apdu.sign.u.clear.parser_state.operation;
     char                dstaddr[ADDRESS_MAX_SIZE];
-    TZ_PREAMBLE((""));
+    TZ_PREAMBLE(("void"));
 
     if (!G_called_from_swap)
         TZ_SUCCEED();
