@@ -1,6 +1,7 @@
 /* Tezos Ledger application - Dynamic UI to display a stream of pages
 
    Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
+   Copyright 2023 Functori <contact@functori.com>
    Copyright 2023 TriliTech <contact@trili.tech>
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -114,6 +115,7 @@ typedef struct {
     bool pressed_right;
 #ifdef HAVE_NBGL
     tz_ui_stream_display_t current_screen;
+    char                   verify_address[TZ_BASE58CHECK_BUFFER_SIZE(20, 3)];
 #endif  // HAVE_NBGL
 } tz_ui_stream_t;
 
