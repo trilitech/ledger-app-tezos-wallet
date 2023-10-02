@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Copyright 2023 Functori <contact@functori.com>
 # Copyright 2023 Trilitech <contact@trili.tech>
 
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,6 +16,9 @@
 
 from utils import *
 
+# "Show as QR" button position
+show_qr_position=(200, 275)
+
 if __name__ == "__main__":
     app = stax_app()
 
@@ -24,6 +28,12 @@ if __name__ == "__main__":
     app.assert_screen("screen_verify_address")
 
     app.provide_pk.tap()
+    app.assert_screen("screen_show_address_tz1_zebra")
+
+    app.provide_pk.client.finger_touch(*show_qr_position)
+    app.assert_screen("screen_show_address_tz1_zebra_qrcode")
+
+    app.provide_pk.exit_qr()
     app.assert_screen("screen_show_address_tz1_zebra")
 
     app.provide_pk.confirm()
