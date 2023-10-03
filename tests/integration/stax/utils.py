@@ -1,3 +1,4 @@
+# Copyright 2023 Functori <contact@functori.com>
 # Copyright 2023 Trilitech <contact@trili.tech>
 
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -66,7 +67,7 @@ class TezosAppScreen(metaclass=MetaScreen):
         """Expect hex-encoded response from the apdu"""
         response = self.__backend.receive().raw
         expected = bytes.fromhex(expected)
-        assert response == expected, f"Expected {expected}, received {response}"
+        assert response == expected, f"Expected {expected.hex()}, received {response.hex()}"
 
     def expect_apdu_failure(self, code):
         """Expect failure of 'code'"""
@@ -123,10 +124,13 @@ class TezosAppScreen(metaclass=MetaScreen):
         self.review.tap()
         self.welcome.client.resume_ticker()
 
-    def review_skip_to_signing(self):
-        self.welcome.client.finger_touch(BUTTON_LOWER_RIGHT.x, BUTTON_LOWER_RIGHT.y)
+    def review_skip_to_signing(self, with_loading=False):
+        self.review.client.finger_touch(BUTTON_LOWER_RIGHT.x, BUTTON_LOWER_RIGHT.y)
         self.assert_screen("skip_to_signing")
-        self.welcome.client.finger_touch(BUTTON_ABOVE_LOWER_MIDDLE.x, BUTTON_ABOVE_LOWER_MIDDLE.y)
+        self.review.client.pause_ticker()
+        self.review.client.finger_touch(BUTTON_ABOVE_LOWER_MIDDLE.x, BUTTON_ABOVE_LOWER_MIDDLE.y)
+        if with_loading: self.assert_screen("loading_operation")
+        self.review.client.resume_ticker()
 
 def stax_app() -> TezosAppScreen:
     port = os.environ["PORT"]
