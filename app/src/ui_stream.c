@@ -1,6 +1,7 @@
 /* Tezos Ledger application - Generic stream display
 
    Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
+   Copyright 2023 Functori <contact@functori.com>
    Copyright 2023 TriliTech <contact@trili.tech>
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -407,17 +408,17 @@ tz_ui_stream_start(void)
     FUNC_LEAVE();
 }
 
+#ifdef HAVE_BAGL
 void
 tz_ui_stream(void)
 {
     FUNC_ENTER(("void"));
 
-#ifdef HAVE_BAGL
     tz_ui_stream_t *s = &global.stream;
     if (s->pressed_right)
         succ();
 
     redisplay();
-#endif  // HAVE_BAGL
     FUNC_LEAVE();
 }
+#endif
