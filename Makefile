@@ -6,7 +6,7 @@ all: app_nanos.tgz app_nanosp.tgz app_nanox.tgz
 debug: app_nanos_dbg.tgz app_nanosp_dbg.tgz app_nanox_dbg.tgz
 
 .PHONY: clean all debug integration_tests unit_tests scan-build%	\
-	integration_tests_basic integration_tests_basic_%
+	integration_tests_basic integration_tests_basic_% docker_%
 
 DOCKER			= docker
 DOCKER_RUN		= $(DOCKER) run --rm -i -v "$(realpath .):/app"
