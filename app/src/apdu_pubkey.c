@@ -1,6 +1,7 @@
 /* Tezos Ledger application - Public key command handler (visual and silent)
 
    Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
+   Copyright 2023 Functori <contact@functori.com>
 
    With code excerpts from:
     - Legacy Tezos app, Copyright 2019 Obsidian Systems
@@ -134,11 +135,12 @@ confirmation_callback(bool confirm)
 static void
 verify_address(void)
 {
-    char buf[TZ_BASE58CHECK_BUFFER_SIZE(20, 3)];
     TZ_PREAMBLE(("void"));
 
-    TZ_CHECK(format_pkh(buf, sizeof(buf)));
-    nbgl_useCaseAddressConfirmation(buf, confirmation_callback);
+    TZ_CHECK(format_pkh(global.stream.verify_address,
+                        sizeof(global.stream.verify_address)));
+    nbgl_useCaseAddressConfirmation(global.stream.verify_address,
+                                    confirmation_callback);
     TZ_POSTAMBLE;
 }
 
