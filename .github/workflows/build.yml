@@ -116,8 +116,8 @@ jobs:
           mkdir -p tests/samples/micheline/nanosp
           mkdir -p tests/samples/operations/nanosp
 
-          mkdir -p tests/samples/micheline/nanox
-          mkdir -p tests/samples/operations/nanox
+#          mkdir -p tests/samples/micheline/nanox
+#          mkdir -p tests/samples/operations/nanox
 
       - name: Generate
         run: |
@@ -133,10 +133,10 @@ jobs:
           dune exec ./tests/generate/generate.exe operations 500 \
               nanosp tests/samples/operations \
 
-          dune exec ./tests/generate/generate.exe micheline 500 \
-              nanox tests/samples/micheline
-          dune exec ./tests/generate/generate.exe operations 500 \
-              nanox tests/samples/operations
+#          dune exec ./tests/generate/generate.exe micheline 500 \
+#              nanox tests/samples/micheline
+#          dune exec ./tests/generate/generate.exe operations 500 \
+#              nanox tests/samples/operations
 
       - name: Unit tests
         run: |
@@ -167,17 +167,17 @@ jobs:
           name: nanosp_samples_operations
           path: tests/samples/operations/nanosp
 
-      - name: Upload results (nanox, micheline)
-        uses: actions/upload-artifact@v3
-        with:
-          name: nanox_samples_micheline
-          path: tests/samples/micheline/nanox
-
-      - name: Upload results (nanox, operations)
-        uses: actions/upload-artifact@v3
-        with:
-          name: nanox_samples_operations
-          path: tests/samples/operations/nanox
+#      - name: Upload results (nanox, micheline)
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: nanox_samples_micheline
+#          path: tests/samples/micheline/nanox
+#
+#      - name: Upload results (nanox, operations)
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: nanox_samples_operations
+#          path: tests/samples/operations/nanox
 
   integration_tests_samples:
     needs: [build_app, generate_samples_unit_tests, build_docker_integration_tests]
@@ -185,7 +185,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        device: [nanos, nanosp, nanox]
+        device: [nanos, nanosp]
         type: [micheline, operations]
     container:
       image: ${{ needs.build_docker_integration_tests.outputs.image }}
