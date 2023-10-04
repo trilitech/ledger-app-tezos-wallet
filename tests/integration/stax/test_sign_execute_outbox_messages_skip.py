@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Copyright 2023 Functori <contact@functori.com>
 # Copyright 2023 Trilitech <contact@trili.tech>
 
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,7 +34,7 @@ if __name__ == "__main__":
     app.review.tap()
     app.assert_screen("operation_0_sr_outbox")
 
-    app.review_skip_to_signing()
+    app.review_skip_to_signing(with_loading=True)
 
     app.expect_apdu_return("9000")
     app.send_apdu("800f82004f63313162343430616334643334353564656462653465653064653135613861663632306434633836323437643964313332646531626236646132336435666639643864666664613232626139613834")

@@ -1,6 +1,7 @@
 /* Tezos Ledger application - Generic stream display
 
    Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
+   Copyright 2023 Functori <contact@functori.com>
    Copyright 2023 TriliTech <contact@trili.tech>
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -195,7 +196,15 @@ tz_ui_nav_cb(uint8_t page, nbgl_pageContent_t *content)
         tz_ui_continue();
     }
 
-    if (!s->full && !global.apdu.sign.u.clear.skip_to_sign) {
+    if (s->full) {
+        content->type                        = INFO_LONG_PRESS;
+        content->infoLongPress.icon          = &C_tezos;
+        content->infoLongPress.text          = "Sign";
+        content->infoLongPress.longPressText = "Sign";
+    } else if (page == LAST_PAGE_FOR_REVIEW) {
+        nbgl_useCaseSpinner("Loading operation");
+        return false;
+    } else {
         c->list.pairs             = NULL;
         c->list.callback          = tz_ui_current_screen;
         c->list.startIndex        = 0;
@@ -205,11 +214,6 @@ tz_ui_nav_cb(uint8_t page, nbgl_pageContent_t *content)
 
         content->type         = TAG_VALUE_LIST;
         content->tagValueList = c->list;
-    } else {
-        content->type                        = INFO_LONG_PRESS;
-        content->infoLongPress.icon          = &C_tezos;
-        content->infoLongPress.text          = "Sign";
-        content->infoLongPress.longPressText = "Sign";
     }
 
     FUNC_LEAVE();
