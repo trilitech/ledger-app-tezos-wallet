@@ -88,7 +88,7 @@ tz_ui_continue(void)
 }
 
 void
-tz_ui_start(void)
+tz_ui_stream(void)
 {
     FUNC_ENTER(("void"));
 
@@ -111,7 +111,7 @@ tz_ui_stream_init(void (*cb)(uint8_t))
     s->total   = -1;
 
     nbgl_useCaseReviewStart(&C_tezos, "Review request to sign operation",
-                            NULL, "Reject request", tz_ui_start,
+                            NULL, "Reject request", tz_ui_stream,
                             tz_reject_ui);
 
     FUNC_LEAVE();
@@ -161,7 +161,7 @@ tz_ui_stream_close(void)
     s->full = true;
 
     if (global.apdu.sign.u.clear.skip_to_sign) {
-        tz_ui_start();
+        tz_ui_stream();
     }
 
     FUNC_LEAVE();

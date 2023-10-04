@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Copyright 2023 Functori <contact@functori.com>
 # Copyright 2023 Trilitech <contact@trili.tech>
 
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -51,10 +52,9 @@ if __name__ == "__main__":
     app.send_apdu("800f82004f63313162343430616334643334353564656462653465653064653135613861663632306434633836323437643964313332646531626236646132336435666639643864666664613232626139613834")
 
     for i in range(7):
-        app.review.tap()
         app.assert_screen(f"operation_proof_396...834_{i}")
+        app.review.tap()
 
-    app.review.tap()
     app.assert_screen("operation_sign")
 
     expected_apdu = "c08f5e1a02d15b05c4066b43fc31aa1ccad30f6c7a18f44723e5af0b6584292236e919219e90793ef502e8883f5317206277607438695933fcb954f4ef451db19628a114880836193c755ddda4bf188b9764231975b2c5ecb64bc4bdc9c459039000"
