@@ -24,7 +24,7 @@ from ragger.firmware.stax.use_cases import UseCaseHomeExt, UseCaseSettings, UseC
 from ragger.firmware.stax.layouts import ChoiceList
 from ragger.firmware.stax.positions import BUTTON_LOWER_LEFT, BUTTON_LOWER_RIGHT, BUTTON_ABOVE_LOWER_MIDDLE
 
-MAX_ATTEMPTS = 100
+MAX_ATTEMPTS = 50
 
 SCREEN_HOME_DEFAULT = "home"
 SCREEN_INFO_PAGE = "info"
