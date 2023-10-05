@@ -47,12 +47,11 @@ class Screen:
     content = content.lstrip('\n')
     return content
 
-def with_retry(url, f, timeout=TIMEOUT):
+def with_retry(f, timeout=TIMEOUT):
     attempts = timeout / 0.5
     while True:
         try:
-            on_screen = get_screen(url)
-            return f(on_screen)
+            return f()
         except AssertionError as e:
             print('- retrying:', e)
             if attempts <= 0:
@@ -89,14 +88,15 @@ def press_left(url):
 def check_multi_screen(url, title, content, content_lines, device):
     """Assert that the screen contents across all screens with the given title match expected content."""
     while True:
-      def check_screen(screen):
+      def check_screen():
+        screen = get_screen(url)
         assert screen.title == title, f"expected section '{title}' but on '{screen.title}'"
         assert screen.matches(content, content_lines), \
                f"{screen} did not match {content[:10]}...{content[-10:]}"
 
         return screen.strip(content)
 
-      content = with_retry(url, check_screen)
+      content = with_retry(check_screen)
 
       if content == "":
         break
