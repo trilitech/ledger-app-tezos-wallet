@@ -47,12 +47,11 @@ class Screen:
     content = content.lstrip('\n')
     return content
 
-def with_retry(url, f, timeout=TIMEOUT):
+def with_retry(f, timeout=TIMEOUT):
     attempts = timeout / 0.5
     while True:
         try:
-            on_screen = get_screen(url)
-            return f(on_screen)
+            return f()
         except AssertionError as e:
             print('- retrying:', e)
             if attempts <= 0:
@@ -69,6 +68,27 @@ def get_screen(url):
     assert len(lines) > 0, "Unexpected empty screen. Speculos killed?"
 
     screen = Screen(title=lines[0], text=lines[1:])
+    print(f'- {screen} -')
+    return screen
+
+def find_last(lst, elm):
+  """Find the index of the last element in lst that matches elm"""
+  gen = (len(lst) - 1 - i for i, v in enumerate(reversed(lst)) if v == elm)
+  return next(gen, None)
+
+def get_titled_screen(url, title):
+    """Retrieve the screen until title"""
+    r = requests.get(f'{url}/events')
+    r.raise_for_status()
+    lines = [e["text"] for e in r.json()["events"]]
+
+    assert len(lines) > 0, "Unexpected empty screen. Speculos killed?"
+
+    assert title in lines, f"Title \"{title}\" no found"
+
+    title_index = find_last(lines, title)
+
+    screen = Screen(title=lines[title_index], text=lines[title_index+1:])
     print(f'- {screen} -')
     return screen
 
@@ -89,14 +109,23 @@ def press_left(url):
 def check_multi_screen(url, title, content, content_lines, device):
     """Assert that the screen contents across all screens with the given title match expected content."""
     while True:
-      def check_screen(screen):
-        assert screen.title == title, f"expected section '{title}' but on '{screen.title}'"
+      def check_screen():
+        if device in ["nanos", "nanosp"]:
+          screen = get_screen(url)
+          assert screen.title == title, f"expected section '{title}' but on '{screen.title}'"
+        # https://github.com/trilitech/ledger-app-tezos-wallet/issues/43
+        # Get screens contents with the 'events' service for nanox
+        # while the 'events?currentscreenonly=true' service does not
+        # work properly for nanox in the sha-6a34680 version of
+        # speculos
+        if device == "nanox":
+          screen = get_titled_screen(url, title)
         assert screen.matches(content, content_lines), \
                f"{screen} did not match {content[:10]}...{content[-10:]}"
 
         return screen.strip(content)
 
-      content = with_retry(url, check_screen)
+      content = with_retry(check_screen)
 
       if content == "":
         break
