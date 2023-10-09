@@ -356,13 +356,13 @@ redisplay(void)
     }
 
     /* If we aren't on the first screen, we can go back */
-    if (s->current > 0)
-        init[1].text = (const char *)&C_icon_go_left;
-
-    /* Unless we can't... */
-    if (s->current == s->total - TZ_UI_STREAM_HISTORY_SCREENS + 1)
-        init[1].text = (const char *)&C_icon_go_forbid;
-
+    if (s->current > 0) {
+        /* Unless we can't... */
+        if (s->current == s->total - TZ_UI_STREAM_HISTORY_SCREENS + 1)
+            init[1].text = (const char *)&C_icon_go_forbid;
+        else
+            init[1].text = (const char *)&C_icon_go_left;
+    }
     /* If we aren't full or aren't on the last page, we can go right */
     if (!s->full || s->current < s->total)
         init[2].text = (const char *)&C_icon_go_right;
