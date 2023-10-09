@@ -31,9 +31,6 @@
 #include "os.h"
 #include "os_io_seproxyhal.h"
 #include "cx.h"
-#if CX_APILEVEL < 8
-#error "Only compiles with API level 8 or higher; requires newer firmware"
-#endif
 #else
 #include <stdio.h>
 #define PIC(x) ((void *)x)
