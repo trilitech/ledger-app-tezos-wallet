@@ -265,6 +265,7 @@ run_a_test() {
                 *.py)
                     start_speculos "$seed"
 		    PORT=$PORT\
+			COMMIT_BYTES=$COMMIT_BYTES\
 			VERSION_BYTES=$VERSION_BYTES\
 			python3 $CMD
                     ;;
