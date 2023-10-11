@@ -53,11 +53,12 @@ class TezosAppScreen(metaclass=MetaScreen):
     __snapshotted = []
     __settings = None
 
-    def __init__(self, backend, firmware):
+    def __init__(self, backend, firmware, version):
         self.__backend = backend
         realpath = os.path.realpath(__file__)
         self.__stax = os.path.dirname(realpath)
         self.__settings = ChoiceList(backend, firmware)
+        self.version = version
 
     def send_apdu(self, data):
         """Send hex-encoded bytes to the apdu"""
@@ -134,9 +135,10 @@ class TezosAppScreen(metaclass=MetaScreen):
 
 def stax_app() -> TezosAppScreen:
     port = os.environ["PORT"]
+    version = os.environ["VERSION_BYTES"]
     golden = os.getenv("GOLDEN") != None
     backend = SpeculosBackend("__unused__", Firmware.STAX, port = port)
-    app = TezosAppScreen(backend, Firmware.STAX)
+    app = TezosAppScreen(backend, Firmware.STAX, version)
 
     if golden:
         app.make_golden()

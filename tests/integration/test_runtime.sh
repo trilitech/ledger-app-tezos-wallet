@@ -47,6 +47,12 @@
 seed="zebra`for i in $(seq 1 23) ; do echo -n ' zebra' ; done`"
 OUTPUT_BARS=$(for i in $(seq 1 $((COLUMNS-18))); do echo -n =; done)
 
+VERSION_WALLET_TAG="00"
+APPVERSION_M=3
+APPVERSION_N=0
+APPVERSION_P=0
+VERSION_BYTES=$(printf "%02x%02x%02x%02x" "$VERSION_WALLET_TAG" "$APPVERSION_M" "$APPVERSION_N" "$APPVERSION_P")
+
 attempts() {
     nb=$(( $TIMEOUT * 20 ))    # We use multiplication to avoid floats
     while (( nb > 0 )); do
@@ -255,7 +261,9 @@ run_a_test() {
                     ;;
                 *.py)
                     start_speculos "$seed"
-                    PORT=$PORT python3 $CMD
+		    PORT=$PORT\
+			VERSION_BYTES=$VERSION_BYTES\
+			python3 $CMD
                     ;;
                 *.hex)
                     # We skip these...
