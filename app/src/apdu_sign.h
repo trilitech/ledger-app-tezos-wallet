@@ -1,6 +1,7 @@
 /* Tezos Ledger application - Clear signing command handler
 
    Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
+   Copyright 2023 TriliTech <contact@trili.tech>
 
    With code excerpts from:
     - Legacy Tezos app, Copyright 2019 Obsidian Systems
@@ -39,6 +40,12 @@ typedef enum {
     SIGN_ST_WAIT_USER_INPUT
 } sign_step_t;
 
+typedef enum {
+    BLINDSIGN_ST_OPERATION,
+    BLINDSIGN_ST_HASH,
+    BLINDSIGN_ST_ACCEPT_REJECT,
+} blindsign_step_t;
+
 typedef struct {
     uint8_t packet_index;
 
@@ -53,7 +60,8 @@ typedef struct {
             bool            skip_to_sign;
         } clear;
         struct {
-            uint8_t tag;
+            uint8_t          tag;
+            blindsign_step_t step;
         } blind;
     } u;
 } apdu_sign_state_t;

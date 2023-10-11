@@ -255,6 +255,60 @@ stream_cb(tz_ui_cb_type_t type)
     TZ_POSTAMBLE;
 }
 
+#define FINAL_HASH global.apdu.hash.final_hash
+#ifdef HAVE_BAGL
+static void
+bs_push_next()
+{
+    char              obuf[TZ_BASE58_BUFFER_SIZE(sizeof(FINAL_HASH))];
+    blindsign_step_t *step = &global.apdu.sign.u.blind.step;
+
+    TZ_PREAMBLE(("void"));
+
+    switch (*step) {
+    case BLINDSIGN_ST_OPERATION:
+        *step = BLINDSIGN_ST_HASH;
+
+        if (tz_format_base58(FINAL_HASH, sizeof(FINAL_HASH), obuf,
+                             sizeof(obuf)))
+            TZ_FAIL(EXC_UNKNOWN);
+
+        tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Sign Hash", obuf,
+                              TZ_UI_ICON_NONE);
+        break;
+    case BLINDSIGN_ST_HASH:
+        *step = BLINDSIGN_ST_ACCEPT_REJECT;
+
+        tz_ui_stream_push_accept_reject();
+        tz_ui_stream_close();
+        break;
+    default:
+        PRINTF("Unexpected blindsign state: %d\n", (int)*step);
+        TZ_FAIL(EXC_UNEXPECTED_STATE);
+    };
+
+    TZ_POSTAMBLE;
+}
+
+static void
+bs_stream_cb(tz_ui_cb_type_t type)
+{
+    TZ_PREAMBLE(("type=%u", type));
+
+    // clang-format off
+    switch (type) {
+    case TZ_UI_STREAM_CB_ACCEPT: return sign_packet();
+    case TZ_UI_STREAM_CB_REFILL: return bs_push_next();
+    case TZ_UI_STREAM_CB_REJECT: return send_reject();
+    case TZ_UI_STREAM_CB_CANCEL: return send_cancel();
+    default:                     TZ_FAIL(EXC_UNKNOWN);
+    }
+    // clang-format on
+
+    TZ_POSTAMBLE;
+}
+#endif  // HAVE_BAGL
+
 static void
 handle_first_apdu(command_t *cmd)
 {
@@ -269,8 +323,6 @@ handle_first_apdu(command_t *cmd)
     TZ_CHECK(check_derivation_type(global.path_with_curve.derivation_type));
     TZ_CHECK(cx_blake2b_init_no_throw(&global.apdu.hash.state,
                                       SIGN_HASH_SIZE * 8));
-    tz_ui_stream_init(stream_cb);
-
     // clang-format off
     switch (global.step) {
     case ST_CLEAR_SIGN: TZ_CHECK(handle_first_apdu_clear(cmd)); break;
@@ -290,6 +342,8 @@ handle_first_apdu_clear(__attribute__((unused)) command_t *cmd)
 {
     tz_parser_state *st = &global.apdu.sign.u.clear.parser_state;
 
+    tz_ui_stream_init(stream_cb);
+
     tz_operation_parser_init(st, TZ_UNKNOWN_SIZE, false);
     tz_parser_refill(st, NULL, 0);
     tz_parser_flush(st, global.line_buf, TZ_UI_STREAM_CONTENTS_SIZE);
@@ -298,15 +352,18 @@ handle_first_apdu_clear(__attribute__((unused)) command_t *cmd)
 static void
 handle_first_apdu_blind(__attribute__((unused)) command_t *cmd)
 {
+#ifdef HAVE_BAGL
+    tz_ui_stream_init(bs_stream_cb);
+#elif HAVE_NBGL
+    nbgl_useCaseSpinner("Loading operation");
+#endif
+
     /*
      * We set the tag to zero here which indicates that it is unset.
      * The first data packet will set it to the first byte.
      */
-#ifdef HAVE_NBGL
-    nbgl_useCaseSpinner("Loading operation");
-#endif
-
-    global.apdu.sign.u.blind.tag = 0;
+    global.apdu.sign.u.blind.tag  = 0;
+    global.apdu.sign.u.blind.step = BLINDSIGN_ST_OPERATION;
 }
 
 static void
@@ -444,7 +501,6 @@ continue_blindsign_cb(void)
 
 #endif
 
-#define FINAL_HASH global.apdu.hash.final_hash
 static void
 handle_data_apdu_blind(command_t *cmd)
 {
@@ -458,14 +514,10 @@ handle_data_apdu_blind(command_t *cmd)
         TZ_SUCCEED();
     }
 
-    char        obuf[TZ_BASE58_BUFFER_SIZE(sizeof(FINAL_HASH))];
     const char *type = "unknown type";
 
     global.apdu.sign.received_last_msg = true;
     global.apdu.sign.step              = SIGN_ST_WAIT_USER_INPUT;
-
-    if (tz_format_base58(FINAL_HASH, sizeof(FINAL_HASH), obuf, sizeof(obuf)))
-        TZ_FAIL(EXC_UNKNOWN);
 
     // clang-format off
     switch(global.apdu.sign.u.blind.tag) {
@@ -482,13 +534,12 @@ handle_data_apdu_blind(command_t *cmd)
     tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Sign Hash", type,
                           TZ_UI_ICON_NONE);
 
-    tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Sign Hash", obuf,
-                          TZ_UI_ICON_NONE);
+    tz_ui_stream();
+#elif HAVE_NBGL
+    char obuf[TZ_BASE58_BUFFER_SIZE(sizeof(FINAL_HASH))];
+    if (tz_format_base58(FINAL_HASH, sizeof(FINAL_HASH), obuf, sizeof(obuf)))
+        TZ_FAIL(EXC_UNKNOWN);
 
-    tz_ui_stream_push_accept_reject();
-#endif
-
-#ifdef HAVE_NBGL
     char request[80];
     snprintf(request, sizeof(request), "Review request to blind\nsign %s",
              type);
@@ -499,9 +550,6 @@ handle_data_apdu_blind(command_t *cmd)
     nbgl_useCaseReviewStart(&C_tezos, request, NULL, "Reject request",
                             continue_blindsign_cb, reject_blindsign_cb);
 #endif
-
-    tz_ui_stream_close();
-    tz_ui_stream();
 
     /* XXXrcd: the logic here need analysis. */
     TZ_POSTAMBLE;
