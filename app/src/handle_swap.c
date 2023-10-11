@@ -23,9 +23,9 @@
 #ifdef HAVE_SWAP
 
 #include <format.h>
+#include <io.h>
 #include <swap.h>
 
-#include "compat.h"
 #include "handle_swap.h"
 #include "keys.h"
 #include "utils.h"

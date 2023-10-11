@@ -32,7 +32,6 @@
 
 #include "apdu.h"
 #include "apdu_sign.h"
-#include "compat.h"
 #include "globals.h"
 #include "handle_swap.h"
 #include "keys.h"
@@ -196,12 +195,12 @@ refill(void)
         PRINTF("[DEBUG] refill(errno: %s)\n",
                tz_parser_result_name(st->errno));
         // clang-format off
-	switch (st->errno) {
-	case TZ_BLO_IM_FULL: TZ_CHECK(refill_blo_im_full()); break;
-	case TZ_BLO_FEED_ME: TZ_CHECK(send_continue());      break;
-	case TZ_BLO_DONE:    TZ_CHECK(refill_blo_done());    break;
-	default:             TZ_CHECK(refill_error());       break;
-	}
+        switch (st->errno) {
+        case TZ_BLO_IM_FULL: TZ_CHECK(refill_blo_im_full()); break;
+        case TZ_BLO_FEED_ME: TZ_CHECK(send_continue());      break;
+        case TZ_BLO_DONE:    TZ_CHECK(refill_blo_done());    break;
+        default:             TZ_CHECK(refill_error());       break;
+        }
         // clang-format on
     } while (s2s
              && (st->errno == TZ_BLO_IM_FULL
