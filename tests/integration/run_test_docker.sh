@@ -17,6 +17,6 @@
 
 set -e
 
-docker run --rm -i -v "$(realpath .):/app"              	\
+docker run --user "$(id -u)":"$(id -g)" --rm -i -v "$(realpath .):/app"              	\
     --entrypoint=/bin/sh ledger-app-tezos-integration-tests	\
     -c "cd /app && ./tests/integration/run_test_local.sh -F -m $*"

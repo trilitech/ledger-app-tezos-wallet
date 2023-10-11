@@ -47,6 +47,9 @@
 seed="zebra`for i in $(seq 1 23) ; do echo -n ' zebra' ; done`"
 OUTPUT_BARS=$(for i in $(seq 1 $((COLUMNS-18))); do echo -n =; done)
 
+COMMIT=$(git describe --tags --abbrev=8 --always --long --dirty 2>/dev/null | sed 's/-dirty/*/')
+COMMIT_BYTES=$(printf '%s' "$COMMIT" | xxd -p -c 256)
+
 VERSION_WALLET_TAG="00"
 APPVERSION_M=3
 APPVERSION_N=0

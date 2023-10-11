@@ -70,6 +70,10 @@ jobs:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
     steps:
+      - name: Set Git Safe Directory
+        run: |
+          git config --global safe.directory "$GITHUB_WORKSPACE"
+
       - name: Checkout
         uses: actions/checkout@v3
 
