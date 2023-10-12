@@ -320,7 +320,8 @@ handle_first_apdu(command_t *cmd)
     TZ_CHECK(read_bip32_path(&global.path_with_curve.bip32_path, cmd->data,
                              cmd->lc));
     global.path_with_curve.derivation_type = cmd->p2;
-    TZ_CHECK(check_derivation_type(global.path_with_curve.derivation_type));
+    TZ_ASSERT(EXC_WRONG_PARAM,
+              check_derivation_type(global.path_with_curve.derivation_type));
     TZ_CHECK(cx_blake2b_init_no_throw(&global.apdu.hash.state,
                                       SIGN_HASH_SIZE * 8));
     // clang-format off
