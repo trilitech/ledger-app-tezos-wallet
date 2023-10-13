@@ -1,22 +1,27 @@
-#!/usr/bin/env bash
+#!/usr/bin/env python3
+# Copyright 2023 Functori <contact@functori.com>
 
-# Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
-# Copyright 2023 TriliTech <contact@trili.tech>
-#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 # http://www.apache.org/licenses/LICENSE-2.0
-#
+
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -e
+from utils import *
 
-docker run --user "$(id -u)":"$(id -g)" --rm -i -v "$(realpath .):/app"              	\
-    --entrypoint=/bin/sh ledger-app-tezos-integration-tests	\
-    -c "cd /app && ./tests/integration/run_test_local.sh -F -m $*"
+if __name__ == "__main__":
+    app = stax_app()
+
+    app.assert_screen(SCREEN_HOME_DEFAULT)
+
+    app.send_apdu("8002000011048000002c800006c18000000080000000")
+    app.expect_apdu_return("2102747884d9abdf16b3ab745158925f567e222f71225501826fa83347f6cbe9c3939000")
+
+    app.assert_screen(SCREEN_HOME_DEFAULT)
+    app.welcome.quit()
