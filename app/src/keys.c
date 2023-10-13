@@ -59,7 +59,10 @@ read_bip32_path(bip32_path_t *out, const uint8_t *in, size_t in_size)
     TZ_ASSERT(EXC_WRONG_LENGTH_FOR_INS,
               buffer_read_u8(&cdata, &out->length)
                   && buffer_read_bip32_path(
-                      &cdata, (uint32_t *)&out->components, out->length));
+                      &cdata, (uint32_t *)&out->components, out->length)
+                  // Assert entire bip32_path consumed
+                  && (sizeof(uint8_t) + sizeof(uint32_t) * out->length
+                      == cdata.offset));
     TZ_POSTAMBLE;
 }
 
