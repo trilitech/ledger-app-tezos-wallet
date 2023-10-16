@@ -30,9 +30,8 @@
 
 void tz_ui_home_redisplay(void);
 
-static const char *const infoTypes[] = {"Version", "Developer", "Copyright"};
-static const char *const infoContents[]
-    = {APPVERSION, "Tezos", "(c) 2023 <Tezos>"};
+static const char *const infoTypes[]    = {"Version", "Developer"};
+static const char *const infoContents[] = {APPVERSION, "Tezos"};
 
 enum {
     BLIND_SIGNING_TOKEN = FIRST_USER_TOKEN,
@@ -47,7 +46,7 @@ navigation_cb_wallet(__attribute__((unused)) uint8_t page,
     switch (page) {
     case 0:
         content->type                   = INFOS_LIST;
-        content->infosList.nbInfos      = 3;
+        content->infosList.nbInfos      = 2;
         content->infosList.infoTypes    = infoTypes;
         content->infosList.infoContents = infoContents;
         break;
