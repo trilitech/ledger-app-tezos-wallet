@@ -196,7 +196,11 @@ tz_ui_nav_cb(uint8_t page, nbgl_pageContent_t *content)
         tz_ui_continue();
     }
 
-    if (global.step != ST_CLEAR_SIGN && global.step != ST_BLIND_SIGN) {
+    if (global.step == ST_ERROR) {
+        global.step = ST_IDLE;
+        ui_home_init();
+        return false;
+    } else if (global.step != ST_CLEAR_SIGN && global.step != ST_BLIND_SIGN) {
         return false;
     } else if (s->full) {
         content->type                        = INFO_LONG_PRESS;

@@ -392,6 +392,11 @@ change_screen_right(void)
     if (s->current == s->total) {
         if (!s->full)
             s->cb(TZ_UI_STREAM_CB_REFILL);
+        if (global.step == ST_ERROR) {
+            global.step = ST_IDLE;
+            ui_home_init();
+            return;
+        }
     }
     // go back to the data screen
     succ();
