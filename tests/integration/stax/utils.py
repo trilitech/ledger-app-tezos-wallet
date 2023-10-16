@@ -16,6 +16,8 @@
 import os
 import time
 
+from contextlib import contextmanager
+
 from ragger.backend import SpeculosBackend
 from ragger.backend.interface import RaisePolicy
 from ragger.firmware import Firmware
@@ -133,6 +135,13 @@ class TezosAppScreen(metaclass=MetaScreen):
         self.review.client.finger_touch(BUTTON_ABOVE_LOWER_MIDDLE.x, BUTTON_ABOVE_LOWER_MIDDLE.y)
         if with_loading: self.assert_screen("loading_operation")
         self.review.client.resume_ticker()
+
+    @contextmanager
+    def review_parsing_error(self, parsing_error_screen):
+        self.welcome.client.pause_ticker()
+        yield
+        self.assert_screen(parsing_error_screen)
+        self.welcome.client.resume_ticker()
 
 def stax_app() -> TezosAppScreen:
     port = os.environ["PORT"]
