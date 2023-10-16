@@ -175,9 +175,18 @@ refill_error(void)
 {
     tz_parser_state *st = &global.apdu.sign.u.clear.parser_state;
     TZ_PREAMBLE(("void"));
+#ifdef HAVE_BAGL
 
     tz_ui_stream_push(TZ_UI_STREAM_CB_CANCEL, "Parsing error",
                       tz_parser_result_name(st->errno), TZ_UI_ICON_CROSS);
+#elif HAVE_NBGL
+    send_cancel();
+    global.step            = ST_IDLE;
+    char error_message[50] = "Parsing error\n";
+    strlcat(error_message, tz_parser_result_name(st->errno),
+            sizeof(error_message));
+    nbgl_useCaseStatus(error_message, false, ui_home_init);
+#endif
     tz_ui_stream_close();
     TZ_POSTAMBLE;
 }
@@ -215,7 +224,6 @@ send_cancel(void)
     tz_parser_state *st = &global.apdu.sign.u.clear.parser_state;
     TZ_PREAMBLE(("void"));
 
-    global.step           = ST_IDLE;
     global.apdu.sign.step = SIGN_ST_IDLE;
 
     switch (st->errno) {
