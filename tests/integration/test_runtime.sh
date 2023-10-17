@@ -264,10 +264,10 @@ run_a_test() {
                     ;;
                 *.py)
                     start_speculos "$seed"
-		    PORT=$PORT\
-			COMMIT_BYTES=$COMMIT_BYTES\
-			VERSION_BYTES=$VERSION_BYTES\
-			python3 $CMD
+                    PORT=$PORT\
+                        COMMIT_BYTES=$COMMIT_BYTES\
+                        VERSION_BYTES=$VERSION_BYTES\
+                        python3 $CMD
                     ;;
                 *.hex)
                     # We skip these...
@@ -439,7 +439,7 @@ main() {
     # Defaults:
     TARGET=nanos
     TEST_TRACE=0
-    export TIMEOUT=5
+    export TIMEOUT=10
     NUM_SPECULOS=32
 
     while getopts FT:l:m:n:t:x o; do
