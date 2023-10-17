@@ -112,6 +112,7 @@ static void
 cancel_callback(void)
 {
     stream_cb(TZ_UI_STREAM_CB_REJECT);
+    global.step = ST_IDLE;
     nbgl_useCaseStatus("Address rejected", false, ui_home_init);
 }
 

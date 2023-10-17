@@ -263,8 +263,10 @@ cb(unsigned int                         button_mask,
     case BUTTON_EVT_RELEASED | BUTTON_LEFT | BUTTON_RIGHT:
         if (type)
             s->cb(type);
-        if (type & TZ_UI_STREAM_CB_MAINMASK)
+        if (type & TZ_UI_STREAM_CB_MAINMASK) {
+            global.step = ST_IDLE;
             ui_home_init();
+        }
         break;
     default:
         break;

@@ -15,9 +15,7 @@
 
 from utils import *
 
-if __name__ == "__main__":
-    app = stax_app()
-
+def short_reject(app):
     app.assert_screen(SCREEN_HOME_DEFAULT)
 
     app.send_apdu("8003000011048000002c800006c18000000080000000")
@@ -28,8 +26,16 @@ if __name__ == "__main__":
 
     app.provide_pk.cancel()
     app.assert_screen("address_rejected")
+    app.expect_apdu_failure("6985")
 
-    app.provide_pk.tap()
     app.assert_screen(SCREEN_HOME_DEFAULT)
+
+if __name__ == "__main__":
+    app = stax_app()
+
+    short_reject(app)
+    # Ensure we can immediately send a new packet - the global state
+    # should have been reset correctly
+    short_reject(app)
 
     app.welcome.quit()
