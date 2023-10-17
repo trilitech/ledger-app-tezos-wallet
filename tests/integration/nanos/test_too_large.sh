@@ -8,7 +8,7 @@ expect_apdu_return 9000
 send_apdu 800f810028050092abf8e3d9e5f8cfd9ae8a9fe5f28ea1d5b5abf1af82dae8a4b68df3d1889eb6f988f5e8d31a
 expect_full_text 'Parsing error'
 press_button both
-expect_apdu_return 9405
+expect_apdu_return $ERR_PARSE_ERROR
 expect_full_text 'ready for' 'safe signing'
 press_button right
 expect_full_text 'Settings'

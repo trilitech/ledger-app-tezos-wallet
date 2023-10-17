@@ -12,7 +12,7 @@ expect_full_text 'Expression' '{{{{{{{{{{{{{{{{{{{'
 press_button right
 expect_full_text 'Parsing error'
 press_button both
-expect_apdu_return 9405
+expect_apdu_return $ERR_PARSE_ERROR
 expect_full_text 'ready for' 'safe signing'
 press_button right
 expect_full_text 'Settings'

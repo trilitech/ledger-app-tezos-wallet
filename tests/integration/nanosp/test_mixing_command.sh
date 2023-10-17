@@ -4,32 +4,32 @@ expect_full_text 'Tezos Wallet' 'ready for' 'safe signing'
 send_apdu 8004000011048000002c800006c18000000080000000
 expect_apdu_return 9000
 send_apdu 8000000000
-expect_apdu_return 9001
+expect_apdu_return $ERR_UNEXPECTED_STATE
 # INS_SIGN in INS_SIGN_WITH_HASH
 send_apdu 800f000011048000002c800006c18000000080000000
 expect_apdu_return 9000
 send_apdu 8004000011048000002c800006c18000000080000000
-expect_apdu_return 9001
+expect_apdu_return $ERR_UNEXPECTED_STATE
 # INS_SIGN_WITH_HASH in INS_SIGN
 send_apdu 8004000011048000002c800006c18000000080000000
 expect_apdu_return 9000
 send_apdu 800f000011048000002c800006c18000000080000000
-expect_apdu_return 9001
+expect_apdu_return $ERR_UNEXPECTED_STATE
 # INS_PROMPT_PUBLIC_KEY in INS_SIGN
 send_apdu 8004000011048000002c800006c18000000080000000
 expect_apdu_return 9000
 send_apdu 8003000011048000002c800006c18000000080000000
-expect_apdu_return 9001
+expect_apdu_return $ERR_UNEXPECTED_STATE
 # INS_GET_PUBLIC_KEY in INS_SIGN
 send_apdu 8004000011048000002c800006c18000000080000000
 expect_apdu_return 9000
 send_apdu 8002000011048000002c800006c18000000080000000
-expect_apdu_return 9001
+expect_apdu_return $ERR_UNEXPECTED_STATE
 # INS_GIT in INS_SIGN
 send_apdu 8004000011048000002c800006c18000000080000000
 expect_apdu_return 9000
 send_apdu 8009000000
-expect_apdu_return 9001
+expect_apdu_return $ERR_UNEXPECTED_STATE
 press_button right
 press_button right
 press_button both

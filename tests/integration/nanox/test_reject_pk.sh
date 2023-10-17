@@ -8,7 +8,7 @@ expect_full_text "Accept?" "Press both buttons to accept."
 press_button right
 expect_full_text "Reject?" "Press both buttons to reject."
 press_button both
-expect_apdu_return 6985
+expect_apdu_return $ERR_REJECT
 press_button right
 press_button right
 press_button both

@@ -10,13 +10,13 @@ expect_full_text 'Accept?' 'Press both buttons to accept.'
 press_button right
 expect_full_text 'Reject?' 'Press both buttons to reject.'
 press_button both
-expect_apdu_return 6985
+expect_apdu_return $ERR_REJECT
 
 # Reject a signing request
 expect_full_text 'Tezos Wallet' 'ready for' 'safe signing'
 send_async_apdus \
 	800f000011048000002c800006c18000000080000000 "expect_apdu_return 9000" \
-	800f81005e0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316 "expect_apdu_return 6985"
+	800f81005e0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316 "expect_apdu_return $ERR_REJECT"
 expect_full_text 'Operation (0)' 'Transaction'
 press_button right
 expect_full_text 'Fee' '0.05 tz'
