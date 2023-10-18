@@ -30,8 +30,9 @@
 
 void tz_ui_home_redisplay(void);
 
-static const char *const infoTypes[]    = {"Version", "Developer"};
-static const char *const infoContents[] = {APPVERSION, "Tezos"};
+static const char *const infoTypes[] = {"Version", "Developer"};
+static const char *const infoContents[]
+    = {APPVERSION, "Trilitech Kanvas Limited et al."};
 
 enum {
     BLIND_SIGNING_TOKEN = FIRST_USER_TOKEN,
