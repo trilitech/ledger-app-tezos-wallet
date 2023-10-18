@@ -316,6 +316,17 @@ check_tlv_signature() {
     fi
 }
 
+until_failure() {
+    echo " - until_failure $@"
+    (eval "$@")
+    res=$?
+    if [ "$res" == 0 ] ; then
+        (echo "FAILURE(until_failure)") >&2
+        exit 1
+    fi
+    echo " - until_failure succeeded"
+}
+
 start_speculos() {
     start_speculos_runner $DBG "$1"
     set -e
