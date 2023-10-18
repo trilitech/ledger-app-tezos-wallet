@@ -69,8 +69,8 @@ clean:
 	$(DOCKER_RUN_APP_BUILDER) make -C app mrproper
 	$(DOCKER_RUN_APP_OCAML) bash -c "make -C /app/tests/generate clean && cd /app && rm -rf _build"
 
-unit_tests:	test/samples/micheline/nanos/samples.hex	\
-		test/samples/operations/nanos/samples.hex	\
+unit_tests:	test/samples/micheline/nano/samples.hex	\
+		test/samples/operations/nano/samples.hex	\
 		tests/unit/*.ml*			\
 		tests/unit/*.[ch]			\
 		tests/unit/dune				\
@@ -79,11 +79,17 @@ unit_tests:	test/samples/micheline/nanos/samples.hex	\
 
 RUN_TEST_DOCKER = ./tests/integration/run_test_docker.sh
 
+integration_tests_basic_stax:	app_stax.tgz			\
+				app_stax_dbg.tgz		\
+				tests/integration/*		\
+				tests/integration/stax/*
+	$(RUN_TEST_DOCKER) stax tests/integration/stax
+
 integration_tests_basic_%:	app_%.tgz			\
 				app_%_dbg.tgz			\
 				tests/integration/*		\
-				tests/integration/%/*
-	$(RUN_TEST_DOCKER) $* tests/integration/$*
+				tests/integration/nano/*
+	$(RUN_TEST_DOCKER) $* tests/integration/nano
 
 integration_tests_basic:	integration_tests_basic_nanos	\
 				integration_tests_basic_nanosp	\
@@ -91,17 +97,18 @@ integration_tests_basic:	integration_tests_basic_nanos	\
 				integration_tests_basic_stax
 
 integration_tests_%:	integration_tests_basic_%		\
-			test/samples/operations/%/samples.hex	\
-			test/samples/micheline/%/samples.hex	\
+			test/samples/operations/nano/samples.hex	\
+			test/samples/micheline/nano/samples.hex	\
 			tests/integration/*.sh
 	$(RUN_TEST_DOCKER) $* 				\
-			tests/samples/micheline/$*	\
-			tests/samples/operations/$*
+			tests/samples/micheline/nano	\
+			tests/samples/operations/nano
 
 integration_tests: 	tests/integration/*.sh			\
 			integration_tests_nanos 		\
 			integration_tests_nanosp 		\
 			integration_tests_nanox 		\
+			integration_tests_basic_stax
 
 test/samples/micheline/%/samples.hex:	tests/generate/*.ml*	\
 					tests/generate/dune	\
