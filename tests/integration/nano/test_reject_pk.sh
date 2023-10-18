@@ -1,15 +1,12 @@
 start_speculos "$seed"
 sleep 0.2
-expect_full_text "Tezos Wallet" "ready for" "safe signing"
+expected_home
 send_apdu 8003000011048000002c800006c18000000080000000
 expect_full_text "Provide Key" 'tz1dyX3B1CFYa2DfdFLyPtiJCfQRUgPVME6E'
 press_button right
-expect_full_text "Accept?" "Press both buttons to accept."
+expected_accept
 press_button right
-expect_full_text "Reject?" "Press both buttons to reject."
+expected_reject
 press_button both
 expect_apdu_return $ERR_REJECT
-press_button right
-press_button right
-press_button both
-expect_exited
+quit_app

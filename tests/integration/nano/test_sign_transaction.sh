@@ -3,7 +3,7 @@
 # signer: tz1dyX3B1CFYa2DfdFLyPtiJCfQRUgPVME6E
 # path: m/44'/1729'/0'/0'
 start_speculos "$seed"
-expect_full_text 'Tezos Wallet' 'ready for' 'safe signing'
+expected_home
 send_async_apdus \
 	800f000011048000002c800006c18000000080000000 "expect_apdu_return 9000
 "\
@@ -23,6 +23,7 @@ expect_full_text 'Entrypoint' 'do'
 press_button right
 expect_section_content 'Parameter' 'CAR'
 press_button right
-expect_full_text 'Accept?' 'Press both buttons to accept.'
+expected_accept
 press_button both
 expect_async_apdus_sent
+quit_app

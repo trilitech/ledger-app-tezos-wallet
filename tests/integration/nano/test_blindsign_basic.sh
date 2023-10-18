@@ -8,6 +8,7 @@
 # Data: {pair "[" (pair "Z" (pair "Y" (pair "X" (pair "W" (pair "V" (pair "U" (pair "T" (pair "S" (pair "R" (pair "Q" (pair "P" (pair "O" (pair "N" (pair "M" (pair "L" (pair "K" (pair "J" (pair "I" (pair "H" (pair "G" (pair "F" (pair "E" (pair "D" (pair "C" (pair "B" {})))))))))))))))))))))))));pair 10 (pair 9 (pair 8 (pair 7 (pair 6 (pair 5 (pair 4 (pair 3 (pair 2 (pair 1 {})))))))))}
 # signer: tz1dyX3B1CFYa2DfdFLyPtiJCfQRUgPVME6E
 start_speculos "$seed"
+expected_home
 press_button right
 expect_full_text 'Settings'
 press_button both
@@ -17,9 +18,9 @@ expect_full_text 'Blind Signing' ENABLED
 press_button right
 expect_full_text Back
 press_button both
-expect_full_text 'Tezos Wallet' 'ready for' 'safe signing'
+expected_home
 press_button right
-expect_full_text 'Tezos Wallet' 'ready for' 'BLIND signing'
+expected_blind_home
 send_async_apdus \
 	800f000011048000002c800006c18000000080000000 "expect_apdu_return 9000" \
 	800f0100eb0300000000000000000000000000000000000000000000000000000000000000006c00ffdd6102321bc251e4a5190ad5b12b251069d9b4904e0203040001000000000000000000000000000000000000000000ff01000001070200000102076501000000015b076501000000015a0765010000000159076501000000015807650100000001570765010000000156076501000000015507650100000001540765010000000153076501000000015207650100000001510765010000000150076501000000014f076501000000014e076501000000014d076501000000014c076501000000014b0765010000 "expect_apdu_return 9000" \
@@ -28,6 +29,7 @@ expect_full_text 'Sign Hash' Manager operation
 press_button right
 expect_full_text 'Sign Hash' C1sLZPod7bawsWe4g8hVzUNuDJatgndQg97z8526hb2Q
 press_button right
-expect_full_text 'Accept?' 'Press both buttons to accept.'
+expected_accept
 press_button both
 expect_async_apdus_sent
+quit_blind_app

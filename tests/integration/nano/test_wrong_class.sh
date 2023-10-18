@@ -1,10 +1,8 @@
 start_speculos "$seed"
-expect_full_text "Tezos Wallet" "ready for" "safe signing"
+expected_home
 send_apdu 0000000000
 expect_apdu_return $ERR_CLASS
+expected_home
 send_apdu 8100000000
 expect_apdu_return $ERR_CLASS
-press_button right
-press_button right
-press_button both
-expect_exited
+quit_app

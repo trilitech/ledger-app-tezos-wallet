@@ -2,6 +2,7 @@
 # full output: {IF_NONE {{SWAP;IF {DIP {{DROP 1;PUSH unit Unit;PUSH bool True;PUSH string ";L\\S?p$-Fq)VDg\n]te\no4v0_8)\""}}} {{DROP 2;PUSH unit Unit;PUSH bool False;PUSH string "Li-%*edF6~?E[5Kmu?dyviwJ^2\"\\d$FyQ>>!>D$g(Qg";PUSH string "*Tx<E`SiG6Yf*A^kZ\\=7?H[mOlQ\n]Ehs"}}}} {IF_NONE {DUP} {{DROP 4;PUSH unit Unit;PUSH bool True;PUSH string "\"\\6_4\n$k%";PUSH string "c^1\"\\?Ey_1!EVb~9;EX;YU\n#Kj2ZT8h`U!X "}}};SIZE}
 # signer: tz1dyX3B1CFYa2DfdFLyPtiJCfQRUgPVME6E
 start_speculos "$seed"
+expected_home
 send_async_apdus \
         800f000011048000002c800006c18000000080000000 "expect_apdu_return 9000
 "\
@@ -15,6 +16,7 @@ expect_section_content \
                        '{IF_NONE {{SWAP;IF {DIP {{DROP 1;PUSH unit Unit;PUSH bool True;PUSH string ";L\\S?p$-Fq)VDg\n]te\no4v0_8)\""}}} {{DROP 2;PUSH unit Unit;PUSH bool False;PUSH string "Li-%*edF6~?E[5Kmu?dyviwJ^2\"\\d$FyQ>>!>D$g(Qg";PUSH string "*Tx<E`SiG6Yf*A^kZ\\=7?H[mOlQ\n]Ehs"}}}} {IF_NONE {DUP} {{DROP 4;PUSH unit Unit;PUSH bool True;PUSH string "\"\\6_4\n$k%";PUSH string "c^1\"\\?Ey_1!EVb~9;EX;YU\n#Kj2ZT8h`U!X "}}};SIZE}'
 
 press_button right
-expect_full_text 'Accept?' 'Press both buttons to accept.'
+expected_accept
 press_button both
 expect_async_apdus_sent
+quit_app

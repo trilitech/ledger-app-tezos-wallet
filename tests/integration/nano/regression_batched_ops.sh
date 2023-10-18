@@ -3,7 +3,7 @@
 # full input: 00000000000000000000000000000000000000000000000000000000000000006c001597c45b11b421bb806a0c56c5da5638bf4b1adbf0e617090006a09c010000bac799dfc7f6af2ff0b95f83d023e68c895020baffff086a65616e5f626f620000009a020000009507070200000000050800c6bab5ccc8d891cd8de4b6f7070707020000004b0704030b070702000000040505030b070705050a0000001503f01167865dc63dfee0e31251329ceab660d9460607070a000000150107b21fca96c5763f67b286752c7aaefc5931d15a030b050800a9df9fc1e7eaa7a9c1f7bd87a9ba9cadf5b5b2cd829deea2b7fef9070707020000000005050509030b6c01ee572f02e5be5d097ba17369789582882e8abb8790d627063202e0d403012b704944f5b5fd30eed2ab4385478488e09fe04a0000
 # signer: tz1dyX3B1CFYa2DfdFLyPtiJCfQRUgPVME6E
 start_speculos "$seed"
-expect_full_text 'Tezos Wallet' 'ready for' 'safe signing'
+expected_home
 send_async_apdus \
         800f000011048000002c800006c18000000080000000 "expect_apdu_return 9000
 "\
@@ -35,6 +35,7 @@ expect_section_content 'Amount' '0.06 tz'
 press_button right
 expect_section_content 'Destination' 'KT1CYT8oACUcCSNTu2qfgB4fj5bD7szYrpti'
 press_button right
-expect_full_text 'Accept?' 'Press both buttons to accept.'
+expected_accept
 press_button both
 expect_async_apdus_sent
+quit_app

@@ -167,6 +167,75 @@ press_button() {
     fi
 }
 
+expected_home() {
+    echo " - expected_home"
+    if [ "$TARGET" == "nanos" ]; then
+	expect_full_text 'ready for' 'safe signing'
+    else
+	expect_full_text 'Tezos Wallet' 'ready for' 'safe signing'
+    fi
+}
+
+expected_blind_home() {
+    echo " - expected_blind_home"
+    if [ "$TARGET" == "nanos" ]; then
+	expect_full_text 'ready for' 'BLIND signing'
+    else
+	expect_full_text 'Tezos Wallet' 'ready for' 'BLIND signing'
+    fi
+}
+
+quit_app() {
+    echo " - quit_app"
+    expected_home
+    press_button right
+    expect_full_text "Settings"
+    press_button right
+    expect_full_text "Quit?"
+    press_button both
+    expect_exited
+}
+
+quit_blind_app() {
+    echo " - quit_blind_app"
+    expected_home
+    press_button right
+    expected_blind_home
+    press_button right
+    expect_full_text "Settings"
+    press_button right
+    expect_full_text "Quit?"
+    press_button both
+    expect_exited
+}
+
+expected_accept() {
+    echo " - expected_accept"
+    if [ "$TARGET" == "nanos" ]; then
+	expect_full_text 'Accept?'
+    else
+	expect_full_text 'Accept?' 'Press both buttons to accept.'
+    fi
+}
+
+expected_reject() {
+    echo " - expected_reject"
+    if [ "$TARGET" == "nanos" ]; then
+	expect_full_text 'Reject?'
+    else
+	expect_full_text 'Reject?' 'Press both buttons to reject.'
+    fi
+}
+
+expected_parsing_error() {
+    echo " - expected_parsing_error $1"
+    if [ "$TARGET" == "nanos" ]; then
+	expect_full_text 'Parsing error'
+    else
+	expect_full_text 'Parsing error' $1
+    fi
+}
+
 send_apdu() {
     echo " - apdu $1"
     APDU=$DATA_DIR/apdu-$PORT

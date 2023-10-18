@@ -1,7 +1,7 @@
 # full input: 03000000000000000000000000000000000000000000000000000000000000000070027c252d3806e6519ed064026bdb98edf866117331e0d40304f80204ffa09c01
 # signer: tz1dyX3B1CFYa2DfdFLyPtiJCfQRUgPVME6E
 start_speculos "$seed"
-expect_full_text 'Tezos Wallet' 'ready for' 'safe signing'
+expected_home
 send_async_apdus \
 	800f000011048000002c800006c18000000080000000 "expect_apdu_return 9000
 "\
@@ -15,6 +15,7 @@ expect_section_content 'Storage limit' '4'
 press_button right
 expect_section_content 'Staking limit' '0.02 tz'
 press_button right
-expect_full_text 'Accept?' 'Press both buttons to accept.'
+expected_accept
 press_button both
 expect_async_apdus_sent
+quit_app
