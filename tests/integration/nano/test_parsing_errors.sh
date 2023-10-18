@@ -30,7 +30,7 @@ expect_full_text 'Storage limit' '45'
 press_button right
 expect_full_text 'Amount' '0.24 tz'
 press_button right
-expect_section_content nanox 'Destination' 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT'
+expect_section_content 'Destination' 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT'
 press_button right
 expect_full_text 'Entrypoint' 'default'
 press_button right
@@ -50,11 +50,11 @@ expect_full_text 'Storage limit' '45'
 press_button right
 expect_full_text 'Amount' '0.24 tz'
 press_button right
-expect_section_content nanox 'Destination' 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT'
+expect_section_content 'Destination' 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT'
 press_button right
 expect_full_text 'Entrypoint' 'do'
 press_button right
-expect_section_content nanox 'Parameter' 'CAR'
+expect_section_content 'Parameter' 'CAR'
 press_button right
 expect_full_text 'Parsing error' 'ERR_INVALID_TAG'
 press_button both
@@ -72,7 +72,7 @@ expect_full_text 'Storage limit' '45'
 press_button right
 expect_full_text 'Amount' '0.24 tz'
 press_button right
-expect_section_content nanox 'Destination' 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT'
+expect_section_content 'Destination' 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT'
 press_button right
 expect_full_text 'Parsing error' 'ERR_INVALID_TAG'
 press_button both
@@ -82,15 +82,15 @@ expect_apdu_return $ERR_PARSE_ERROR
 send_async_apdus \
 	800f000011048000002c800006c18000000080000000 "expect_apdu_return 9000" \
 	800f8100eb030000000000000000000000000000000000000000000000000000000000000000ce00ffdd6102321bc251e4a5190ad5b12b251069d9b4904e02030400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c63966303966323935326433343532386337333366393436313563666333396263353535363139666335353064643461363762613232303863653865383637616133643133613665663939646662653332633639373461613961323135306432316563613239633333343965353963313362393038316631 "expect_apdu_return $ERR_UNEXPECTED_SIGN_STATE"
-expect_section_content nanox 'Operation (0)' 'SR: execute outbox message'
+expect_section_content 'Operation (0)' 'SR: execute outbox message'
 press_button right
-expect_section_content nanox 'Fee' '0.01 tz'
+expect_section_content 'Fee' '0.01 tz'
 press_button right
-expect_section_content nanox 'Storage limit' '4'
+expect_section_content 'Storage limit' '4'
 press_button right
-expect_section_content nanox 'Rollup' 'sr163Lv22CdE8QagCwf48PWDTquk6isQwv57'
+expect_section_content 'Rollup' 'sr163Lv22CdE8QagCwf48PWDTquk6isQwv57'
 press_button right
-expect_section_content nanox 'Commitment' 'src12UJzB8mg7yU6nWPzicH7ofJbFjyJEbHvwtZdfRXi8DQHNp1LY8'
+expect_section_content 'Commitment' 'src12UJzB8mg7yU6nWPzicH7ofJbFjyJEbHvwtZdfRXi8DQHNp1LY8'
 press_button right
 expect_full_text 'Tezos Wallet' 'ready for' 'safe signing'
 expect_async_apdus_sent

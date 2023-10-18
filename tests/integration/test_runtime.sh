@@ -137,9 +137,9 @@ expect_full_text() {
 # One section of data can spill across multiple screens.
 # Collect all pages with the given title, and then compare at the end.
 expect_section_content() {
-    echo -n " - expect_section_content $2"
+    echo -n " - expect_section_content $1"
 
-    $(dirname $0)/check_section_text.py --device=$1 --url=$SPECULOS_URL --title="$2" --expected-content="$3"
+    $(dirname $0)/check_section_text.py --device=$TARGET --url=$SPECULOS_URL --title="$1" --expected-content="$2"
 
     res=$?
     set -e

@@ -21,7 +21,7 @@ expect_full_text 'Destination' 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT'
 press_button right
 expect_full_text 'Entrypoint' 'do'
 press_button right
-expect_section_content nanos 'Parameter' 'CAR'
+expect_section_content 'Parameter' 'CAR'
 press_button right
 expect_full_text 'Accept?' 'Press both buttons to accept.'
 press_button both

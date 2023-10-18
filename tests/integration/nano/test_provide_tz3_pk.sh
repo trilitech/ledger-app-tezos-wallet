@@ -2,7 +2,7 @@ start_speculos "$seed"
 sleep 0.2
 expect_full_text "Tezos Wallet" "ready for" "safe signing"
 send_apdu 8003000211048000002c800006c18000000080000000
-expect_section_content nanox \
+expect_section_content \
     "Provide Key" \
     'tz3UMNyvQeMj6mQSftW2aV2XaWd3afTAM1d5'
 press_button right
