@@ -1,6 +1,7 @@
 /* Tezos Ledger application - Application main loop
 
    Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
+   Copyright 2023 Functori <contact@functori.com>
    Copyright 2023 TriliTech <contact@trili.tech>
 
    With code excerpts from:
@@ -127,6 +128,7 @@ app_main(void)
     global.step = ST_ERROR;
 
     for (;;) {
+        TZ_PREAMBLE(("void"));
         if (global.step == ST_ERROR) {
             global.step = ST_IDLE;
             ui_home_init();
@@ -137,9 +139,11 @@ app_main(void)
 
         if (!apdu_parser(&cmd, G_io_apdu_buffer, rx)) {
             PRINTF("[ERROR] Bad length: %d\n", rx);
-            return;
+            TZ_FAIL(EXC_WRONG_LENGTH_FOR_INS);
         }
 
         dispatch(&cmd);
+
+        TZ_POSTAMBLE;
     }
 }
