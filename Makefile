@@ -88,8 +88,9 @@ integration_tests_basic_stax:	app_stax.tgz			\
 integration_tests_basic_%:	app_%.tgz			\
 				app_%_dbg.tgz			\
 				tests/integration/*		\
-				tests/integration/nano/*
-	$(RUN_TEST_DOCKER) $* tests/integration/nano
+				tests/integration/nano/*	\
+				tests/integration/%/*
+	$(RUN_TEST_DOCKER) $* tests/integration/nano tests/integration/$*
 
 integration_tests_basic:	integration_tests_basic_nanos	\
 				integration_tests_basic_nanosp	\

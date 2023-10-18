@@ -64,8 +64,6 @@ jobs:
       fail-fast: false
       matrix:
         device: [nanos, nanosp, nanox, stax]
-    env:
-      DEVICE_KIND: "${{ matrix.device }} === 'stax' ? 'stax' : 'nano'"
     container:
       image: ${{ needs.build_docker_integration_tests.outputs.image }}
       credentials:
@@ -91,8 +89,13 @@ jobs:
 
       - name: Run test
         run: |
-          ./tests/integration/run_test_local.sh -F -m ${{ matrix.device }} \
-            ./tests/integration/$DEVICE_KIND
+          if [ "${{ matrix.device }}" = "stax" ]; then
+            ./tests/integration/run_test_local.sh -F -m ${{ matrix.device }} \
+              ./tests/integration/${{ matrix.device }}
+          else
+            ./tests/integration/run_test_local.sh -F -m ${{ matrix.device }} \
+              ./tests/integration/nano ./tests/integration/${{ matrix.device }}
+          fi
 
       - name: Upload results
         uses: actions/upload-artifact@v3
