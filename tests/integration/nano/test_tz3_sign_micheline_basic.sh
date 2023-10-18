@@ -4,7 +4,7 @@ expected_home
 send_apdu 800f000211048000002c800006c18000000080000000
 expect_apdu_return 9000
 send_apdu 800f81022305020000001d0100000004434143410100000004504f504f0100000006424f5544494e
-expect_section_content Expression '{"CACA";"POPO";"BOUDIN"}'
+expect_section_content 'Expression' '{"CACA";"POPO";"BOUDIN"}'
 press_button right
 expected_accept
 press_button both

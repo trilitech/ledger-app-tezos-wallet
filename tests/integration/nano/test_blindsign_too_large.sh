@@ -6,11 +6,11 @@ expected_home
 press_button right
 expect_full_text 'Settings'
 press_button both
-expect_full_text 'Blind Signing' DISABLED
+expect_full_text 'Blind Signing' 'DISABLED'
 press_button both
-expect_full_text 'Blind Signing' ENABLED
+expect_full_text 'Blind Signing' 'ENABLED'
 press_button right
-expect_full_text Back
+expect_full_text 'Back'
 press_button both
 expected_home
 press_button right
@@ -18,9 +18,11 @@ expected_blind_home
 send_async_apdus \
         800f000011048000002c800006c18000000080000000 "expect_apdu_return 9000" \
         800f810028050092abf8e3d9e5f8cfd9ae8a9fe5f28ea1d5b5abf1af82dae8a4b68df3d1889eb6f988f5e8d31a "expect_apdu_return ef565fa445d815cd77518a4d14ce90b7a536627455f0930c9dbfa22a75d478d83e2bcb333ba0d639dd28c1b77c5860e552ab02092a50a57f1424f573278230ab8ba81d8a40956415278a27e3f28cae64d1f1f13bf613e6e9a57035e9e14511029000"
-expect_full_text 'Sign Hash' Micheline expression
+expect_section_content 'Sign Hash' \
+'Micheline
+expression'
 press_button right
-expect_full_text 'Sign Hash' H7Gq5omPmhFhDPeyywQsSb5Mmt2fiBwsgwvuNXzu18Xq
+expect_section_content 'Sign Hash' 'H7Gq5omPmhFhDPeyywQsSb5Mmt2fiBwsgwvuNXzu18Xq'
 press_button right
 expected_accept
 press_button both
