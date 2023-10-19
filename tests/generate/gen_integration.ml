@@ -53,19 +53,19 @@ let send_apdu ppf packet =
   Format.fprintf ppf "send_apdu %a@." pp_hex_bytes packet
 
 let expect_apdu_return ppf ans =
-  Format.fprintf ppf "expect_apdu_return %a@." pp_hex_bytes ans
+  Format.fprintf ppf "expect_apdu_return %a" pp_hex_bytes ans
 
 type async_apdu = { packet : bytes; check : Format.formatter -> unit -> unit }
 
 let send_async_apdus ppf async_apdus =
-  let pp_dash_break_line ppf () = Format.fprintf ppf "\\@\n\t" in
+  let pp_dash_break_line ppf () = Format.fprintf ppf " \\@\n\t" in
   let pp_async_apdu ppf { packet; check } =
     Format.fprintf ppf "%a \"%a\"" pp_hex_bytes packet check ()
   in
   let pp_async_apdus =
     Format.pp_print_list ~pp_sep:pp_dash_break_line pp_async_apdu
   in
-  Format.fprintf ppf "send_async_apdus %a%a@." pp_dash_break_line ()
+  Format.fprintf ppf "send_async_apdus%a%a@." pp_dash_break_line ()
     pp_async_apdus async_apdus
 
 let expect_async_apdus_sent ppf () =
@@ -76,7 +76,7 @@ let expect_exited ppf () = Format.fprintf ppf "expect_exited@."
 let quit_app ppf () = Format.fprintf ppf "quit_app@."
 
 let check_tlv_signature ppf ~prefix ~suffix pk message =
-  Format.fprintf ppf "check_tlv_signature %a %a %a %a@." pp_hex_bytes prefix
+  Format.fprintf ppf "check_tlv_signature %a %a %a %a" pp_hex_bytes prefix
     pp_hex_bytes suffix Tezos_crypto.Signature.Public_key.pp pk pp_hex_bytes
     message
 
