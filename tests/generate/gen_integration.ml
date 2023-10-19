@@ -30,29 +30,14 @@ let start_speculos ppf mnemonic =
   Format.fprintf ppf "start_speculos \"%a\"@." Tezos_client_base.Bip39.pp
     mnemonic
 
-module Device = struct
-  type t = Nanos | Nanosp | Nanox
-
-  let of_string_exn = function
-    | "nanos" -> Nanos
-    | "nanosp" -> Nanosp
-    | "nanox" -> Nanox
-    | d -> failwith @@ Format.sprintf "invalid device %s" d
-
-  let to_string = function
-    | Nanos -> "nanos"
-    | Nanosp -> "nanosp"
-    | Nanox -> "nanox"
-end
-
 let expect_full_text ppf l =
   let pp_space ppf () = Format.fprintf ppf " " in
   let pp_args = Format.pp_print_list ~pp_sep:pp_space shell_escape in
   Format.fprintf ppf "expect_full_text %a@." pp_args l
 
-let expect_section_content ppf ~device ~title content =
-  Format.fprintf ppf "expect_section_content %s %a %a@."
-    (Device.to_string device) shell_escape title shell_escape content
+let expect_section_content ppf ~title content =
+  Format.fprintf ppf "expect_section_content %a %a@." shell_escape title
+    shell_escape content
 
 module Button = struct
   type t = Both | Right | Left
@@ -86,7 +71,9 @@ let send_async_apdus ppf async_apdus =
 let expect_async_apdus_sent ppf () =
   Format.fprintf ppf "expect_async_apdus_sent@."
 
+let expected_home ppf () = Format.fprintf ppf "expected_home@."
 let expect_exited ppf () = Format.fprintf ppf "expect_exited@."
+let quit_app ppf () = Format.fprintf ppf "quit_app@."
 
 let check_tlv_signature ppf ~prefix ~suffix pk message =
   Format.fprintf ppf "check_tlv_signature %a %a %a %a@." pp_hex_bytes prefix
@@ -95,46 +82,28 @@ let check_tlv_signature ppf ~prefix ~suffix pk message =
 
 (** Specific *)
 
-let home ppf = function
-  | Device.Nanos -> expect_full_text ppf [ "ready for"; "safe signing" ]
-  | Device.Nanosp | Device.Nanox ->
-      expect_full_text ppf [ "Tezos Wallet"; "ready for"; "safe signing" ]
+let expect_accept ppf () = Format.fprintf ppf "expected_accept@."
+let expect_reject ppf () = Format.fprintf ppf "expected_reject@."
 
-let expect_accept ppf = function
-  | Device.Nanos -> expect_full_text ppf [ "Accept?" ]
-  | Device.Nanosp | Device.Nanox ->
-      expect_full_text ppf [ "Accept?"; "Press both buttons to accept." ]
-
-let expect_reject ppf = function
-  | Device.Nanos -> expect_full_text ppf [ "Reject?" ]
-  | Device.Nanosp | Device.Nanox ->
-      expect_full_text ppf [ "Accept?"; "Press both buttons to reject." ]
-
-let expect_quit ppf () = expect_full_text ppf [ "Quit?" ]
-
-let accept ppf device =
-  expect_accept ppf device;
+let accept ppf () =
+  expect_accept ppf ();
   Button.(press ppf Both)
 
-let reject ppf device =
-  expect_reject ppf device;
-  Button.(press ppf Both)
-
-let quit ppf () =
-  expect_quit ppf ();
+let reject ppf () =
+  expect_reject ppf ();
   Button.(press ppf Both)
 
 type screen = { title : string; contents : string }
 
 let make_screen ~title contents = { title; contents }
 
-let expected_screen ppf ~device { title; contents } =
-  expect_section_content ppf ~device ~title contents
+let expected_screen ppf { title; contents } =
+  expect_section_content ppf ~title contents
 
-let go_through_screens ppf ~device screens =
+let go_through_screens ppf screens =
   List.iter
     (fun screen ->
-      expected_screen ppf ~device screen;
+      expected_screen ppf screen;
       Button.(press ppf Right))
     screens
 
@@ -521,31 +490,30 @@ let tz3_signers =
 
 let gen_signer = QCheck2.Gen.oneofl (tz1_signers @ tz2_signers @ tz3_signers)
 
-let gen_expect_test_sign ppf ~device ~watermark bin screens =
+let gen_expect_test_sign ppf ~watermark bin screens =
   Format.fprintf ppf "# full input: %a@." pp_hex_bytes bin;
   let signer = QCheck2.Gen.generate1 ~rand:Gen_utils.random_state gen_signer in
   Format.fprintf ppf "# signer: %a@." Tezos_crypto.Signature.Public_key_hash.pp
     signer.pkh;
   Format.fprintf ppf "# path: %a@." Apdu.Path.pp signer.path;
   start_speculos ppf signer.mnemonic;
-  home ppf device;
+  expected_home ppf ();
   sign ppf ~signer ~watermark bin;
-  go_through_screens ppf ~device screens;
-  accept ppf device;
-  expect_async_apdus_sent ppf ()
+  go_through_screens ppf screens;
+  accept ppf ();
+  expect_async_apdus_sent ppf ();
+  quit_app ppf ()
 
-let gen_expect_test_sign_micheline_data ~device ppf bin =
+let gen_expect_test_sign_micheline_data ppf bin =
   let screens =
     let node = Gen_micheline.decode bin in
     node_to_screens ~title:"Expression" ppf (Micheline.root node)
   in
-  gen_expect_test_sign ppf ~device ~watermark:Gen_micheline.watermark bin
-    screens
+  gen_expect_test_sign ppf ~watermark:Gen_micheline.watermark bin screens
 
-let gen_expect_test_sign_operation ~device ppf bin =
+let gen_expect_test_sign_operation ppf bin =
   let screens =
     let op = Gen_operations.decode bin in
     operation_to_screens op
   in
-  gen_expect_test_sign ppf ~device ~watermark:Gen_operations.watermark bin
-    screens
+  gen_expect_test_sign ppf ~watermark:Gen_operations.watermark bin screens

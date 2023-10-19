@@ -1,7 +1,5 @@
-.PHONY: nanos nanosp nanox
-nanos:
-nanosp:
-nanox:
+.PHONY: nano stax
+nano:
 
 ../samples/micheline/%/samples.hex: % *.ml* dune Makefile
 	mkdir -p ../samples/micheline/$<

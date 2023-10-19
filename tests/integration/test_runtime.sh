@@ -137,9 +137,9 @@ expect_full_text() {
 # One section of data can spill across multiple screens.
 # Collect all pages with the given title, and then compare at the end.
 expect_section_content() {
-    echo -n " - expect_section_content $2"
+    echo -n " - expect_section_content $1"
 
-    $(dirname $0)/check_section_text.py --device=$1 --url=$SPECULOS_URL --title="$2" --expected-content="$3"
+    $(dirname $0)/check_section_text.py --device=$TARGET --url=$SPECULOS_URL --title="$1" --expected-content="$2"
 
     res=$?
     set -e
@@ -164,6 +164,75 @@ press_button() {
     if [ "$res" != 0 ] && [ "$res" != 52 ] ; then
         echo "FAILURE(press_buttton($1)): error code $res" >&2
         exit 1
+    fi
+}
+
+expected_home() {
+    echo " - expected_home"
+    if [ "$TARGET" == "nanos" ]; then
+	expect_full_text 'ready for' 'safe signing'
+    else
+	expect_full_text 'Tezos Wallet' 'ready for' 'safe signing'
+    fi
+}
+
+expected_blind_home() {
+    echo " - expected_blind_home"
+    if [ "$TARGET" == "nanos" ]; then
+	expect_full_text 'ready for' 'BLIND signing'
+    else
+	expect_full_text 'Tezos Wallet' 'ready for' 'BLIND signing'
+    fi
+}
+
+quit_app() {
+    echo " - quit_app"
+    expected_home
+    press_button right
+    expect_full_text "Settings"
+    press_button right
+    expect_full_text "Quit?"
+    press_button both
+    expect_exited
+}
+
+quit_blind_app() {
+    echo " - quit_blind_app"
+    expected_home
+    press_button right
+    expected_blind_home
+    press_button right
+    expect_full_text "Settings"
+    press_button right
+    expect_full_text "Quit?"
+    press_button both
+    expect_exited
+}
+
+expected_accept() {
+    echo " - expected_accept"
+    if [ "$TARGET" == "nanos" ]; then
+	expect_full_text 'Accept?'
+    else
+	expect_full_text 'Accept?' 'Press both buttons to accept.'
+    fi
+}
+
+expected_reject() {
+    echo " - expected_reject"
+    if [ "$TARGET" == "nanos" ]; then
+	expect_full_text 'Reject?'
+    else
+	expect_full_text 'Reject?' 'Press both buttons to reject.'
+    fi
+}
+
+expected_parsing_error() {
+    echo " - expected_parsing_error $1"
+    if [ "$TARGET" == "nanos" ]; then
+	expect_full_text 'Parsing error'
+    else
+	expect_full_text 'Parsing error' $1
     fi
 }
 
@@ -245,6 +314,17 @@ check_tlv_signature() {
          echo "  Check: check_tlv_signature.py $@ $result") >&2
         exit 1
     fi
+}
+
+until_failure() {
+    echo " - until_failure $@"
+    (eval "$@")
+    res=$?
+    if [ "$res" == 0 ] ; then
+        (echo "FAILURE(until_failure)") >&2
+        exit 1
+    fi
+    echo " - until_failure succeeded"
 }
 
 start_speculos() {

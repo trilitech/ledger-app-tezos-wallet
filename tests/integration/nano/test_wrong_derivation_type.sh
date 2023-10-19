@@ -1,0 +1,18 @@
+start_speculos "$seed"
+# INS_GET_PUBLIC_KEY
+expected_home
+send_apdu 8002000411048000002c800006c18000000080000000
+expect_apdu_return $ERR_WRONG_PARAM
+# INS_PROMPT_PUBLIC_KEY
+expected_home
+send_apdu 8003000411048000002c800006c18000000080000000
+expect_apdu_return $ERR_WRONG_PARAM
+# INS_SIGN
+expected_home
+send_apdu 8004000411048000002c800006c18000000080000000
+expect_apdu_return $ERR_WRONG_PARAM
+# INS_SIGN_WITH_HASH
+expected_home
+send_apdu 800f000411048000002c800006c18000000080000000
+expect_apdu_return $ERR_WRONG_PARAM
+quit_app

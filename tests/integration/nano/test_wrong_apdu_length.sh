@@ -1,0 +1,8 @@
+start_speculos "$seed"
+expected_home
+send_apdu 800000000000
+expect_apdu_return $ERR_WRONG_LENGTH_FOR_INS
+expected_home
+send_apdu 8000000001
+expect_apdu_return $ERR_WRONG_LENGTH_FOR_INS
+quit_app
