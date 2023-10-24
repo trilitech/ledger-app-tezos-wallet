@@ -41,19 +41,26 @@
 
 static char g_address[43];
 
-static void confirm_address_rejection(void) {
+static void
+confirm_address_rejection(void)
+{
     // display a status page and go back to main
     validate_pubkey(false);
-    nbgl_useCaseStatus("Address verification\ncancelled", false, ui_menu_main);
+    nbgl_useCaseStatus("Address verification\ncancelled", false,
+                       ui_menu_main);
 }
 
-static void confirm_address_approval(void) {
+static void
+confirm_address_approval(void)
+{
     // display a success status page and go back to main
     validate_pubkey(true);
     nbgl_useCaseStatus("ADDRESS\nVERIFIED", true, ui_menu_main);
 }
 
-static void review_choice(bool confirm) {
+static void
+review_choice(bool confirm)
+{
     if (confirm) {
         confirm_address_approval();
     } else {
@@ -61,36 +68,38 @@ static void review_choice(bool confirm) {
     }
 }
 
-static void continue_review(void) {
+static void
+continue_review(void)
+{
     nbgl_useCaseAddressConfirmation(g_address, review_choice);
 }
 
-int ui_display_address() {
-    if (G_context.req_type != CONFIRM_ADDRESS || G_context.state != STATE_NONE) {
+int
+ui_display_address()
+{
+    if (G_context.req_type != CONFIRM_ADDRESS
+        || G_context.state != STATE_NONE) {
         G_context.state = STATE_NONE;
         return io_send_sw(SW_BAD_STATE);
     }
 
     char bip32_path[60] = {0};
-    if (!bip32_path_format(G_context.bip32_path,
-                           G_context.bip32_path_len,
-                           bip32_path,
-                           sizeof(bip32_path))) {
+    if (!bip32_path_format(G_context.bip32_path, G_context.bip32_path_len,
+                           bip32_path, sizeof(bip32_path))) {
         return io_send_sw(SW_DISPLAY_BIP32_PATH_FAIL);
     }
 
     memset(g_address, 0, sizeof(g_address));
     uint8_t address[ADDRESS_LEN] = {0};
-    if (!address_from_pubkey(G_context.pk_info.raw_public_key, address, sizeof(address))) {
+    if (!address_from_pubkey(G_context.pk_info.raw_public_key, address,
+                             sizeof(address))) {
         return io_send_sw(SW_DISPLAY_ADDRESS_FAIL);
     }
-    snprintf(g_address, sizeof(g_address), "0x%.*H", sizeof(address), address);
+    snprintf(g_address, sizeof(g_address), "0x%.*H", sizeof(address),
+             address);
 
-    nbgl_useCaseReviewStart(&C_app_boilerplate_64px,
-                            "Verify BOL address",
-                            NULL,
-                            "Cancel",
-                            continue_review,
+    nbgl_useCaseReviewStart(&C_app_boilerplate_64px, "Verify BOL address",
+                            NULL, "Cancel", continue_review,
                             confirm_address_rejection);
     return 0;
 }

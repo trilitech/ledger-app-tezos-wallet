@@ -33,7 +33,5 @@ bool transaction_utils_check_encoding(const uint8_t *memo, uint64_t memo_len);
  * @return true if success, false otherwise.
  *
  */
-bool transaction_utils_format_memo(const uint8_t *memo,
-                                   uint64_t memo_len,
-                                   char *dst,
-                                   uint64_t dst_len);
+bool transaction_utils_format_memo(const uint8_t *memo, uint64_t memo_len,
+                                   char *dst, uint64_t dst_len);

@@ -20,7 +20,9 @@
 #include "utils.h"
 #include "types.h"
 
-parser_status_e transaction_deserialize(buffer_t *buf, transaction_t *tx) {
+parser_status_e
+transaction_deserialize(buffer_t *buf, transaction_t *tx)
+{
     if (buf->size > MAX_TX_LEN) {
         return WRONG_LENGTH_ERROR;
     }
@@ -30,7 +32,7 @@ parser_status_e transaction_deserialize(buffer_t *buf, transaction_t *tx) {
         return NONCE_PARSING_ERROR;
     }
 
-    tx->to = (uint8_t *) (buf->ptr + buf->offset);
+    tx->to = (uint8_t *)(buf->ptr + buf->offset);
 
     // TO address
     if (!buffer_seek_cur(buf, ADDRESS_LEN)) {
@@ -43,12 +45,13 @@ parser_status_e transaction_deserialize(buffer_t *buf, transaction_t *tx) {
     }
 
     // length of memo
-    if (!buffer_read_varint(buf, &tx->memo_len) && tx->memo_len > MAX_MEMO_LEN) {
+    if (!buffer_read_varint(buf, &tx->memo_len)
+        && tx->memo_len > MAX_MEMO_LEN) {
         return MEMO_LENGTH_ERROR;
     }
 
     // memo
-    tx->memo = (uint8_t *) (buf->ptr + buf->offset);
+    tx->memo = (uint8_t *)(buf->ptr + buf->offset);
 
     if (!buffer_seek_cur(buf, tx->memo_len)) {
         return MEMO_PARSING_ERROR;

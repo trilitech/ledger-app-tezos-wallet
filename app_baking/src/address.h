@@ -11,8 +11,8 @@
  *
  * @param[in]  public_key
  *   Pointer to byte buffer with public key.
- *   The public key is represented as 65 bytes with 1 byte for format and 32 bytes for
- *   each coordinate.
+ *   The public key is represented as 65 bytes with 1 byte for format and 32
+ * bytes for each coordinate.
  * @param[out] out
  *   Pointer to output byte buffer for address.
  * @param[in]  out_len
@@ -21,4 +21,5 @@
  * @return true if success, false otherwise.
  *
  */
-bool address_from_pubkey(const uint8_t public_key[static 65], uint8_t *out, size_t out_len);
+bool address_from_pubkey(const uint8_t public_key[static 65], uint8_t *out,
+                         size_t out_len);

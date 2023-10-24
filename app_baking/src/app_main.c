@@ -35,7 +35,9 @@ const internal_storage_t N_storage_real;
 /**
  * Handle APDU command received and send back APDU response using handlers.
  */
-void app_main() {
+void
+app_main()
+{
     // Length of APDU command received in G_io_apdu_buffer
     int input_len = 0;
     // Structured APDU command
@@ -53,8 +55,8 @@ void app_main() {
         internal_storage_t storage;
         storage.dummy1_allowed = 0x00;
         storage.dummy2_allowed = 0x00;
-        storage.initialized = 0x01;
-        nvm_write((void *) &N_storage, &storage, sizeof(internal_storage_t));
+        storage.initialized    = 0x01;
+        nvm_write((void *)&N_storage, &storage, sizeof(internal_storage_t));
     }
 
     for (;;) {
@@ -71,14 +73,10 @@ void app_main() {
             continue;
         }
 
-        PRINTF("=> CLA=%02X | INS=%02X | P1=%02X | P2=%02X | Lc=%02X | CData=%.*H\n",
-               cmd.cla,
-               cmd.ins,
-               cmd.p1,
-               cmd.p2,
-               cmd.lc,
-               cmd.lc,
-               cmd.data);
+        PRINTF(
+            "=> CLA=%02X | INS=%02X | P1=%02X | P2=%02X | Lc=%02X | "
+            "CData=%.*H\n",
+            cmd.cla, cmd.ins, cmd.p1, cmd.p2, cmd.lc, cmd.lc, cmd.data);
 
         // Dispatch structured APDU command to handler
         if (apdu_dispatcher(&cmd) < 0) {

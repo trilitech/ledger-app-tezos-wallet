@@ -25,10 +25,13 @@
 
 #include "serialize.h"
 
-int transaction_serialize(const transaction_t *tx, uint8_t *out, size_t out_len) {
+int
+transaction_serialize(const transaction_t *tx, uint8_t *out, size_t out_len)
+{
     size_t offset = 0;
 
-    if (8 + ADDRESS_LEN + 8 + varint_size(tx->memo_len) + tx->memo_len > out_len) {
+    if (8 + ADDRESS_LEN + 8 + varint_size(tx->memo_len) + tx->memo_len
+        > out_len) {
         return -1;
     }
 
@@ -55,5 +58,5 @@ int transaction_serialize(const transaction_t *tx, uint8_t *out, size_t out_len)
     memmove(out + offset, tx->memo, tx->memo_len);
     offset += tx->memo_len;
 
-    return (int) offset;
+    return (int)offset;
 }

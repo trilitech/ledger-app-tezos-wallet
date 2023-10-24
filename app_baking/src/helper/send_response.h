@@ -6,7 +6,7 @@
 /**
  * Length of public key.
  */
-#define PUBKEY_LEN (MEMBER_SIZE(pubkey_ctx_t, raw_public_key))
+#define PUBKEY_LEN    (MEMBER_SIZE(pubkey_ctx_t, raw_public_key))
 /**
  * Length of chain code.
  */

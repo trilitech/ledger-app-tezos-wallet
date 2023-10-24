@@ -19,7 +19,8 @@ extern uint8_t G_io_seproxyhal_spi_buffer[IO_SEPROXYHAL_BUFFER_SIZE_B];
 extern ux_state_t G_ux;
 
 /**
- * Global structure with the parameters to exchange with the BOLOS UX application.
+ * Global structure with the parameters to exchange with the BOLOS UX
+ * application.
  */
 extern bolos_ux_params_t G_ux_params;
 
@@ -38,4 +39,4 @@ typedef struct internal_storage_t {
 } internal_storage_t;
 
 extern const internal_storage_t N_storage_real;
-#define N_storage (*(volatile internal_storage_t *) PIC(&N_storage_real))
+#define N_storage (*(volatile internal_storage_t *)PIC(&N_storage_real))

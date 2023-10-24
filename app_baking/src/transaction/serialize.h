@@ -19,4 +19,5 @@
  * @return number of bytes written if success, -1 otherwise.
  *
  */
-int transaction_serialize(const transaction_t *tx, uint8_t *out, size_t out_len);
+int transaction_serialize(const transaction_t *tx, uint8_t *out,
+                          size_t out_len);

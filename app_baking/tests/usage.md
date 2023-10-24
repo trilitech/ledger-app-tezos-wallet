@@ -61,7 +61,7 @@ Standard useful pytest options
     -s              enable logs for successful tests, on Speculos it will enable app logs if compiled with DEBUG=1
     -k <testname>   only run the tests that contain <testname> in their names
     --tb=short      in case of errors, formats the test traceback in a readable way
-``` 
+```
 
 Custom pytest options
 ```
@@ -70,5 +70,4 @@ Custom pytest options
     --display                   on Speculos, enables the display of the app screen using QT
     --golden_run                on Speculos, screen comparison functions will save the current screen instead of comparing
     --log_apdu_file <filepath>  log all apdu exchanges to the file in parameter. The previous file content is erased
-``` 
-
+```

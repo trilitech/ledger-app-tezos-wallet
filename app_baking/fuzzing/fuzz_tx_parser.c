@@ -8,14 +8,16 @@
 #include "transaction/types.h"
 #include "format.h"
 
-int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
-    buffer_t buf = {.ptr = data, .size = size, .offset = 0};
-    transaction_t tx;
+int
+LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
+{
+    buffer_t        buf = {.ptr = data, .size = size, .offset = 0};
+    transaction_t   tx;
     parser_status_e status;
-    char nonce[21] = {0};
-    char address[21] = {0};
-    char amount[21] = {0};
-    char tx_memo[466] = {0};
+    char            nonce[21]    = {0};
+    char            address[21]  = {0};
+    char            amount[21]   = {0};
+    char            tx_memo[466] = {0};
 
     memset(&tx, 0, sizeof(tx));
 
@@ -26,9 +28,11 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
         printf("nonce: %s\n", nonce);
         format_hex(tx.to, ADDRESS_LEN, address, sizeof(address));
         printf("address: %s\n", address);
-        format_fpu64(amount, sizeof(amount), tx.value, 3);  // exponent of smallest unit is 3
+        format_fpu64(amount, sizeof(amount), tx.value,
+                     3);  // exponent of smallest unit is 3
         printf("amount: %s\n", amount);
-        transaction_utils_format_memo(tx.memo, tx.memo_len, tx_memo, sizeof(tx_memo));
+        transaction_utils_format_memo(tx.memo, tx.memo_len, tx_memo,
+                                      sizeof(tx_memo));
         printf("memo: %s\n", tx_memo);
     }
 
