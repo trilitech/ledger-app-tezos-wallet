@@ -161,9 +161,33 @@ expected_blind_home() {
     fi
 }
 
+expected_version() {
+    echo " - expected_version"
+    expect_full_text 'Version' $APPVERSION
+}
+
+set_blind_signing() {
+    echo " - set_blind_signing"
+    expected_home
+    press_button right
+    expected_version
+    press_button right
+    expect_full_text "Settings"
+    press_button both
+    expect_full_text 'Blind Signing' 'DISABLED'
+    press_button both
+    expect_full_text 'Blind Signing' 'ENABLED'
+    press_button right
+    expect_full_text 'Back'
+    press_button both
+    expected_home
+}
+
 quit_app() {
     echo " - quit_app"
     expected_home
+    press_button right
+    expected_version
     press_button right
     expect_full_text "Settings"
     press_button right
@@ -177,6 +201,8 @@ quit_blind_app() {
     expected_home
     press_button right
     expected_blind_home
+    press_button right
+    expected_version
     press_button right
     expect_full_text "Settings"
     press_button right

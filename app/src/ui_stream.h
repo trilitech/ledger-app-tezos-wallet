@@ -44,7 +44,7 @@
 #include <stdbool.h>
 
 #ifdef TARGET_NANOS
-#define TZ_UI_STREAM_HISTORY_SCREENS 4
+#define TZ_UI_STREAM_HISTORY_SCREENS 5
 #else
 #define TZ_UI_STREAM_HISTORY_SCREENS 8
 #endif  // TARGET_NANOS

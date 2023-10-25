@@ -56,6 +56,7 @@ void toggle_blindsigning(void);
 typedef enum {
     SCREEN_CLEAR_SIGN = 0,
     SCREEN_BLIND_SIGN,
+    SCREEN_VERSION,
     SCREEN_SETTINGS,
     SCREEN_QUIT,
 } screen_t;
