@@ -25,7 +25,7 @@ include $(BOLOS_SDK)/Makefile.defines
 #        Mandatory configuration       #
 ########################################
 # Application name
-APPNAME = "Boilerplate"
+APPNAME = "Tezos Baking"
 
 # Application version
 APPVERSION_M = 2
@@ -47,7 +47,7 @@ ICON_STAX = icons/stax_tezos.gif
 # Possibles curves are: secp256k1, secp256r1, ed25519 and bls12381g1
 # If your app needs it, you can specify multiple curves by using:
 # `CURVE_APP_LOAD_PARAMS = <curve1> <curve2>`
-CURVE_APP_LOAD_PARAMS = secp256k1
+CURVE_APP_LOAD_PARAMS = ed25519 secp256k1 secp256r1
 
 # Application allowed derivation paths.
 # You should request a specific path for your app.
@@ -56,7 +56,7 @@ CURVE_APP_LOAD_PARAMS = secp256k1
 # and SLIP-0044 standards.
 # If your app needs it, you can specify multiple path by using:
 # `PATH_APP_LOAD_PARAMS = "44'/1'" "45'/1'"`
-PATH_APP_LOAD_PARAMS = "44'/1'"   # purpose=coin(44) / coin_type=Testnet(1)
+PATH_APP_LOAD_PARAMS = "44'/1729'"
 
 # Setting to allow building variant applications
 # - <VARIANT_PARAM> is the name of the parameter which should be set
@@ -64,8 +64,8 @@ PATH_APP_LOAD_PARAMS = "44'/1'"   # purpose=coin(44) / coin_type=Testnet(1)
 # - <VARIANT_VALUES> a list of variant that can be build using this app code.
 #   * It must at least contains one value.
 #   * Values can be the app ticker or anything else but should be unique.
-VARIANT_PARAM = COIN
-VARIANT_VALUES = BOL
+VARIANT_PARAM = APP_TYPE
+VARIANT_VALUES = tezos_baking
 
 # Enabling DEBUG flag will enable PRINTF and disable optimizations
 #DEBUG = 1
@@ -74,10 +74,11 @@ VARIANT_VALUES = BOL
 #     Application custom permissions   #
 ########################################
 # See SDK `include/appflags.h` for the purpose of each permission
-#HAVE_APPLICATION_FLAG_DERIVE_MASTER = 1
-#HAVE_APPLICATION_FLAG_GLOBAL_PIN = 1
-#HAVE_APPLICATION_FLAG_BOLOS_SETTINGS = 1
-#HAVE_APPLICATION_FLAG_LIBRARY = 1
+ifneq ($(TARGET_NAME), TARGET_NANOS)
+HAVE_APPLICATION_FLAG_GLOBAL_PIN = 1
+HAVE_APPLICATION_FLAG_BOLOS_SETTINGS = 1
+endif
+HAVE_APPLICATION_FLAG_LIBRARY = 1
 
 ########################################
 # Application communication interfaces #
