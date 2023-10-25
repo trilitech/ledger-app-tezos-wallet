@@ -55,7 +55,7 @@ navigation_cb_wallet(__attribute__((unused)) uint8_t page,
         switches[0] = (nbgl_layoutSwitch_t){
             .initState = N_settings.blindsigning ? ON_STATE : OFF_STATE,
             .text      = "Blind signing",
-            .subText   = "Enable blindsigning",
+            .subText   = "Enable transaction blind signing",
             .token     = BLIND_SIGNING_TOKEN,
             .tuneId    = TUNE_TAP_CASUAL};
 
