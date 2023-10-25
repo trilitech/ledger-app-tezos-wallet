@@ -98,9 +98,8 @@ ui_display_address()
     snprintf(g_address, sizeof(g_address), "0x%.*H", sizeof(address),
              address);
 
-    nbgl_useCaseReviewStart(&C_app_boilerplate_64px, "Verify BOL address",
-                            NULL, "Cancel", continue_review,
-                            confirm_address_rejection);
+    nbgl_useCaseReviewStart(&C_tezos, "Verify BOL address", NULL, "Cancel",
+                            continue_review, confirm_address_rejection);
     return 0;
 }
 

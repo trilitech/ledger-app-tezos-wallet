@@ -46,8 +46,8 @@ ui_menu_main(void)
 // parameters related to the operation of the application.
 #define SETTINGS_BUTTON_ENABLED (true)
 
-    nbgl_useCaseHome(APPNAME, &C_app_boilerplate_64px, NULL,
-                     SETTINGS_BUTTON_ENABLED, ui_menu_settings, app_quit);
+    nbgl_useCaseHome(APPNAME, &C_tezos, NULL, SETTINGS_BUTTON_ENABLED,
+                     ui_menu_settings, app_quit);
 }
 
 //  -----------------------------------------------------------

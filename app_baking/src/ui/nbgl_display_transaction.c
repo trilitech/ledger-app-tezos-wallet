@@ -95,7 +95,7 @@ review_continue(void)
     pairList.pairs              = pairs;
 
     // Info long press
-    infoLongPress.icon          = &C_app_boilerplate_64px;
+    infoLongPress.icon          = &C_tezos;
     infoLongPress.text          = "Sign transaction\nto send BOL";
     infoLongPress.longPressText = "Hold to sign";
 
@@ -130,8 +130,7 @@ ui_display_transaction()
              G_context.tx_info.transaction.to);
 
     // Start review
-    nbgl_useCaseReviewStart(&C_app_boilerplate_64px,
-                            "Review transaction\nto send BOL", NULL,
+    nbgl_useCaseReviewStart(&C_tezos, "Review transaction\nto send BOL", NULL,
                             "Reject transaction", review_continue,
                             ask_transaction_rejection_confirmation);
     return 0;
