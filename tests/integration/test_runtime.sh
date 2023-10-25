@@ -1,5 +1,6 @@
 # Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
 # Copyright 2023 Trilitech <contact@trili.tech>
+# Copyright 2023 Functori <contact@functori.com>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -47,32 +48,7 @@
 seed="zebra`for i in $(seq 1 23) ; do echo -n ' zebra' ; done`"
 OUTPUT_BARS=$(for i in $(seq 1 $((COLUMNS-18))); do echo -n =; done)
 
-COMMIT=$(git describe --tags --abbrev=8 --always --long --dirty 2>/dev/null | sed 's/-dirty/*/')
-COMMIT_BYTES=$(printf '%s' "$COMMIT" | xxd -p -c 256)
-
-VERSION_WALLET_TAG="00"
-APPVERSION_M=3
-APPVERSION_N=0
-APPVERSION_P=0
-VERSION_BYTES=$(printf "%02x%02x%02x%02x" "$VERSION_WALLET_TAG" "$APPVERSION_M" "$APPVERSION_N" "$APPVERSION_P")
-
-## Error code
-ERR_WRONG_PARAM=6b00
-ERR_WRONG_LENGTH=6c00
-ERR_INVALID_INS=6d00
-ERR_WRONG_LENGTH_FOR_INS=917e
-ERR_REJECT=6985
-ERR_PARSE_ERROR=9405
-ERR_REFERENCED_DATA_NOT_FOUND=6a88
-ERR_WRONG_VALUES=6a80
-ERR_SECURITY=6982
-ERR_HID_REQUIRED=6983
-ERR_CLASS=6e00
-ERR_MEMORY_ERROR=9200
-ERR_UNEXPECTED_STATE=9001
-ERR_UNEXPECTED_SIGN_STATE=9002
-ERR_UNKNOWN_CX_ERR=9003
-ERR_UNKNOWN=90ff
+. "`dirname $0`/app_vars.sh"
 
 attempts() {
     nb=$(( $TIMEOUT * 20 ))    # We use multiplication to avoid floats
