@@ -107,13 +107,18 @@ ui_toggle_clear_blind(void)
     tz_ui_home_redisplay();
 }
 
+#define CLEAR_SIGN_HOME_TEXT \
+    "This app enables signing transactions on the Tezos Network"
+#define BLIND_SIGN_HOME_TEXT \
+    "Ready for blind signing operations on the Tezos Network"
+
 void
 tz_ui_home_redisplay(void)
 {
     FUNC_ENTER(("void"));
 
     if (!N_settings.blindsigning) {
-        nbgl_useCaseHome("Tezos Wallet", &C_tezos, "Ready for signing", true,
+        nbgl_useCaseHome("Tezos Wallet", &C_tezos, CLEAR_SIGN_HOME_TEXT, true,
                          ui_menu_about_wallet, app_exit);
     } else {
         const char *button_text;
@@ -121,11 +126,11 @@ tz_ui_home_redisplay(void)
 
         switch (global.home_screen) {
         case SCREEN_CLEAR_SIGN:
-            tagline     = "Ready for clear signing";
+            tagline     = CLEAR_SIGN_HOME_TEXT;
             button_text = "blind sign";
             break;
         case SCREEN_BLIND_SIGN:
-            tagline     = "Ready for blind signing";
+            tagline     = BLIND_SIGN_HOME_TEXT;
             button_text = "clear sign";
             break;
         default:
