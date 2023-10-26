@@ -3,6 +3,9 @@
 /app/bin
 /app/build
 /app/debug
+/app_baking/bin
+/app_baking/build
+/app_baking/debug
 /app/dep
 /app/obj
 /app/output-scan-build/

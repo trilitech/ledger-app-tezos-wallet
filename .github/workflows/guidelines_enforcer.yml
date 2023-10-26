@@ -19,6 +19,9 @@ on:
 jobs:
   guidelines_enforcer:
     name: Call Ledger guidelines_enforcer
+    strategy:
+      matrix:
+        app_directory: [app, app_baking]
     uses: LedgerHQ/ledger-app-workflows/.github/workflows/reusable_guidelines_enforcer.yml@v1
     with:
-      relative_app_directory: app
+      relative_app_directory: ${{ matrix.app_directory }}

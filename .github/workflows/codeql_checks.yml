@@ -17,6 +17,7 @@ jobs:
     name: Analyse
     strategy:
       matrix:
+        app_directory: [app, app_baking]
         sdk: [ "$NANOS_SDK", "$NANOX_SDK", "$NANOSP_SDK", "$STAX_SDK" ]
         #'cpp' covers C and C++
         language: [ 'cpp' ]
@@ -37,8 +38,8 @@ jobs:
       # CodeQL will create the database during the compilation
       - name: Build
         run: |
-          make BOLOS_SDK=${{ matrix.sdk }} -C app
-          make BOLOS_SDK=${{ matrix.sdk }} -C app DEBUG=1
+          make BOLOS_SDK=${{ matrix.sdk }} -C ${{ matrix.app_directory }}
+          make BOLOS_SDK=${{ matrix.sdk }} -C ${{ matrix.app_directory }} DEBUG=1
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2

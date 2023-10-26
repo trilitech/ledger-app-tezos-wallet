@@ -2,8 +2,14 @@
 # Makefile
 #
 
-all: app_nanos.tgz app_nanosp.tgz app_nanox.tgz
-debug: app_nanos_dbg.tgz app_nanosp_dbg.tgz app_nanox_dbg.tgz
+all: wallet baking
+debug: wallet_debug baking_debug
+
+wallet: app_nanos.tgz app_nanosp.tgz app_nanox.tgz app_stax.tgz
+wallet_debug: app_nanos_dbg.tgz app_nanosp_dbg.tgz app_nanox_dbg.tgz app_stax_dbg.tgz
+
+baking: app_baking_nanos.tgz app_baking_nanosp.tgz app_baking_nanox.tgz app_baking_stax.tgz
+baking_debug: app_baking_nanos_dbg.tgz app_baking_nanosp_dbg.tgz app_baking_nanox_dbg.tgz app_baking_stax_dbg.tgz
 
 .PHONY: clean all debug integration_tests unit_tests scan-build%	\
 	integration_tests_basic integration_tests_basic_% docker_%
@@ -45,8 +51,18 @@ scan-build-%:
 	$(DOCKER_RUN_APP_BUILDER) bash -c				\
 	  "BOLOS_SDK=\$$$$SDK make -C app scan-build"
 
-scan-build:	scan-build-nanos scan-build-nanosp	\
-		scan-build-nanox scan-build-stax
+scan-build_baking-%:
+	SDK=$(shell echo $@ | sed 's/scan-build_baking-\(.*\)/\U\1/')_SDK;	\
+	$(DOCKER_RUN_APP_BUILDER) bash -c				\
+	  "BOLOS_SDK=\$$$$SDK make -C app_baking scan-build"
+
+scan-build_wallet:	scan-build-nanos scan-build-nanosp	\
+			scan-build-nanox scan-build-stax
+
+scan-build_baking:	scan-build_baking-nanos scan-build_baking-nanosp	\
+			scan-build_baking-nanox scan-build_baking-stax
+
+scan-build: scan-build_wallet scan-build_baking
 
 app_%.tgz:	app/src/*.[ch]		\
 		app/src/parser/*.[ch]	\
@@ -56,6 +72,13 @@ app_%.tgz:	app/src/*.[ch]		\
             "BOLOS_SDK=\$$$$SDK make -C app"
 	$(DOCKER_RUN_APP_BUILDER) bash -c "cd app/bin/ && tar cz ." > $@
 
+app_baking_%.tgz:	app_baking/src/*.[ch]		\
+			app_baking/Makefile
+	SDK=$(shell echo $@ | sed 's/app_baking_\(.*\).tgz/\U\1/')_SDK;   \
+	$(DOCKER_RUN_APP_BUILDER) bash -c                          \
+            "BOLOS_SDK=\$$$$SDK make -C app_baking"
+	$(DOCKER_RUN_APP_BUILDER) bash -c "cd app_baking/bin/ && tar cz ." > $@
+
 app_%_dbg.tgz:	app/src/*.[ch]		\
 		app/src/parser/*.[ch]	\
 		app/Makefile
@@ -64,9 +87,17 @@ app_%_dbg.tgz:	app/src/*.[ch]		\
             "BOLOS_SDK=\$$$$SDK make -C app DEBUG=1"
 	$(DOCKER_RUN_APP_BUILDER) bash -c "cd app/bin/ && tar cz ." > $@
 
+app_baking_%_dbg.tgz:	app_baking/src/*.[ch]		\
+			app_baking/Makefile
+	SDK=$(shell echo $@ | sed 's/app_baking_\(.*\)_dbg.tgz/\U\1/')_SDK; \
+	$(DOCKER_RUN_APP_BUILDER) bash -c                            \
+            "BOLOS_SDK=\$$$$SDK make -C app_baking DEBUG=1"
+	$(DOCKER_RUN_APP_BUILDER) bash -c "cd app_baking/bin/ && tar cz ." > $@
+
 clean:
 	rm -rf bin app_*.tgz
 	$(DOCKER_RUN_APP_BUILDER) make -C app mrproper
+	$(DOCKER_RUN_APP_BUILDER) make -C app_baking clean
 	$(DOCKER_RUN_APP_OCAML) bash -c "make -C /app/tests/generate clean && cd /app && rm -rf _build"
 
 unit_tests:	test/samples/micheline/nano/samples.hex	\

@@ -44,6 +44,35 @@ jobs:
           path: app_${{ matrix.device }}_dbg.tgz
           name: app_${{ matrix.device }}_dbg.tgz
 
+  baking_build_app:
+    name: Build baking application
+    strategy:
+      matrix:
+        device: [nanos, nanosp, nanox, stax]
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder:3.8.0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Build
+        run: |
+          DEVICE_SDK="$(echo ${{ matrix.device }} | tr a-z A-Z)_SDK"
+          bash -c "make -C app_baking BOLOS_SDK=\$${DEVICE_SDK}"
+          tar -C app_baking/bin -czf app_baking_${{ matrix.device }}.tgz .
+          bash -c "make -C app_baking BOLOS_SDK=\$${DEVICE_SDK} DEBUG=1"
+          tar -C app_baking/bin -czf app_baking_${{ matrix.device }}_dbg.tgz .
+      - name: Upload
+        uses: actions/upload-artifact@v3
+        with:
+          path: app_baking_${{ matrix.device }}.tgz
+          name: app_baking_${{ matrix.device }}.tgz
+      - name: Upload (dbg)
+        uses: actions/upload-artifact@v3
+        with:
+          path: app_baking_${{ matrix.device }}_dbg.tgz
+          name: app_baking_${{ matrix.device }}_dbg.tgz
+
   build_docker_integration_tests:
     uses: ./.github/workflows/docker.yml
     secrets: inherit
