@@ -2,17 +2,7 @@
 # full output: {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{42}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}
 # signer: tz1dyX3B1CFYa2DfdFLyPtiJCfQRUgPVME6E
 start_speculos "$seed"
-expected_home
-press_button right
-expect_full_text 'Settings'
-press_button both
-expect_full_text 'Blind Signing' 'DISABLED'
-press_button both
-expect_full_text 'Blind Signing' 'ENABLED'
-press_button right
-expect_full_text 'Back'
-press_button both
-expected_home
+set_blind_signing
 press_button right
 expected_blind_home
 send_async_apdus \

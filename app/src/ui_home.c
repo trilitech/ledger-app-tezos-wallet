@@ -36,6 +36,7 @@ cb(tz_ui_cb_type_t type)
     switch (type) {
     case SCREEN_BLIND_SIGN:
     case SCREEN_CLEAR_SIGN:
+    case SCREEN_VERSION:
         break;
     case SCREEN_SETTINGS:
         ui_settings_init();
@@ -87,6 +88,7 @@ ui_home_init(void)
     clear_sign_screen();
     if (N_settings.blindsigning)
         blind_sign_screen();
+    tz_ui_stream_push(SCREEN_VERSION, "Version", APPVERSION, TZ_UI_ICON_NONE);
     tz_ui_stream_push(SCREEN_SETTINGS, "Settings", "", TZ_UI_ICON_SETTINGS);
     tz_ui_stream_push(SCREEN_QUIT, "Quit?", "", TZ_UI_ICON_DASHBOARD);
     tz_ui_stream_close();
