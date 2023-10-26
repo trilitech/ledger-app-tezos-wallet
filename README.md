@@ -136,20 +136,22 @@ To generate/reset the snapshots, you can do so for individual tests.
 First, start a container for running individual tests:
 
 ```sh
-docker run --rm -it --entrypoint /bin/bash -v $(pwd)/tests/integration:/tests --network host \
+docker run --rm -it --entrypoint /bin/bash -v $(pwd):/app --network host \
   ledger-app-tezos-integration-tests
 
-cd /tests/stax
+cd /app/tests/integration/stax
 export PORT=5000
+
+git config --global --add safe.directory /app
+. ../app_vars.sh
 ```
 
 Before running the test, start the app in a separate container (as each test will quit the app):
 
 ```sh
 make app_stax_dbg.tgz
-seed="zebra`for i in $(seq 1 23) ; do echo -n ' zebra' ; done`"
-docker run --rm -it -v $(pwd)/app/bin:/speculos/apps -v $(pwd)/tests/integration:/tests --network host \
-   ledger-app-tezos-integration-tests --display=headless --vnc-port 41000 --seed "$seed" -m stax apps/app.elf
+
+TARGET=stax ./scripts/run_app.sh
 ```
 
 You can view/interact with the app using a vnc client on port `41000`.
