@@ -284,6 +284,7 @@ find_icon(tz_ui_icon_t icon)
     case TZ_UI_ICON_CROSS:      return (const char *)&C_icon_crossmark;
     case TZ_UI_ICON_DASHBOARD:  return (const char *)&C_icon_dashboard_x;
     case TZ_UI_ICON_SETTINGS:   return (const char *)&C_icon_settings;
+    case TZ_UI_ICON_BACK:       return (const char *)&C_icon_back_x;
     default:                    return NULL;
     }
     // clang-format on

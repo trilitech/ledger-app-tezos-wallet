@@ -54,7 +54,7 @@ ui_settings_init(void)
     tz_ui_stream_init(cb);
     tz_ui_stream_push(BLIND_SIGNING, "Blind Signing", bsigning,
                       TZ_UI_ICON_NONE);
-    tz_ui_stream_push(BACK, "Back", "", TZ_UI_ICON_DASHBOARD);
+    tz_ui_stream_push(BACK, "Back", "", TZ_UI_ICON_BACK);
     tz_ui_stream_close();
     tz_ui_stream_start();
     FUNC_LEAVE();
