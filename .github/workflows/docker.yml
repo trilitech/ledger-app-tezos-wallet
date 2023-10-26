@@ -56,6 +56,8 @@ jobs:
         run: |
           if [ ! -z ${{ steps.branches.outputs.target }} ]; then
             git fetch origin ${GITHUB_BASE_REF}
+          else
+            git fetch origin ${{ github.event.before }}
           fi
       - name: Container tag
         id: container_tag
@@ -66,11 +68,20 @@ jobs:
             echo "prev_tag=$BASE:${{ steps.branches.outputs.target }}" >> $GITHUB_OUTPUT
           else
             echo "tag=$BASE:${{ steps.branches.outputs.branch }}" >> $GITHUB_OUTPUT
+            echo "prev_tag=$BASE:${{ steps.branches.outputs.branch }}" >> $GITHUB_OUTPUT
           fi
       - name: Dockerfile changed
         id: dockerfile
         run: |
-          if [ -n "$(git diff --name-only HEAD origin/${GITHUB_BASE_REF} -- ${{ inputs.dockerfile }})" ];
+          DIFF=""
+
+          if [ -z "${GITHUB_BASE_REF}" ]; then
+            DIFF="${{ github.event.before }}"
+          else
+            DIFF="origin/${GITHUB_BASE_REF}"
+          fi
+
+          if [ -n "$(git diff --name-only HEAD $DIFF -- ${{ inputs.dockerfile }})" ];
           then
             echo 'changed=True' >> $GITHUB_OUTPUT
           fi
