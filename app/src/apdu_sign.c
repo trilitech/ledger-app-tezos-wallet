@@ -73,6 +73,19 @@ static void handle_data_apdu_blind(command_t *);
 #define APDU_SIGN_ASSERT_STEP(x) \
     APDU_SIGN_ASSERT(global.apdu.sign.step == (x))
 
+#ifdef HAVE_BAGL
+void
+tz_ui_stream_push_accept_reject(void)
+{
+    FUNC_ENTER(("void"));
+    tz_ui_stream_push(TZ_UI_STREAM_CB_ACCEPT, "Accept?",
+                      "Press both buttons to accept.", TZ_UI_ICON_TICK);
+    tz_ui_stream_push(TZ_UI_STREAM_CB_REJECT, "Reject?",
+                      "Press both buttons to reject.", TZ_UI_ICON_CROSS);
+    FUNC_LEAVE();
+}
+#endif
+
 static void
 sign_packet(void)
 {
@@ -162,7 +175,9 @@ refill_blo_done(void)
         TZ_SUCCEED();
     }
     global.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
+#ifdef HAVE_BAGL
     tz_ui_stream_push_accept_reject();
+#endif
     tz_ui_stream_close();
 
     TZ_POSTAMBLE;

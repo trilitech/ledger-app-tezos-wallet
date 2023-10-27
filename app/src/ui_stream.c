@@ -50,19 +50,6 @@ tz_ui_stream_init(void (*cb)(uint8_t))
 }
 #endif
 
-void
-tz_ui_stream_push_accept_reject(void)
-{
-    FUNC_ENTER(("void"));
-#ifdef HAVE_BAGL
-    tz_ui_stream_push(TZ_UI_STREAM_CB_ACCEPT, "Accept?",
-                      "Press both buttons to accept.", TZ_UI_ICON_TICK);
-    tz_ui_stream_push(TZ_UI_STREAM_CB_REJECT, "Reject?",
-                      "Press both buttons to reject.", TZ_UI_ICON_CROSS);
-#endif
-    FUNC_LEAVE();
-}
-
 #ifdef HAVE_BAGL
 void
 tz_ui_stream_close(void)
