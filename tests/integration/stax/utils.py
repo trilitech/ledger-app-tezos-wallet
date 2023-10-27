@@ -24,7 +24,7 @@ from ragger.firmware import Firmware
 from ragger.firmware.stax.screen import MetaScreen
 from ragger.firmware.stax.use_cases import UseCaseHomeExt, UseCaseSettings, UseCaseAddressConfirmation, UseCaseReview
 from ragger.firmware.stax.layouts import ChoiceList
-from ragger.firmware.stax.positions import BUTTON_LOWER_LEFT, BUTTON_LOWER_RIGHT, BUTTON_ABOVE_LOWER_MIDDLE
+from ragger.firmware.stax.positions import BUTTON_LOWER_LEFT, BUTTON_LOWER_RIGHT, BUTTON_ABOVE_LOWER_MIDDLE, BUTTON_LOWER_MIDDLE
 
 MAX_ATTEMPTS = 50
 
@@ -121,12 +121,18 @@ class TezosAppScreen(metaclass=MetaScreen):
         self.review.tap()
         self.expect_apdu_return(expected_apdu)
 
-    def review_reject_signing(self):
-        self.welcome.client.pause_ticker()
+    def review_reject_signing(self, confirmRejection = True):
         self.welcome.client.finger_touch(BUTTON_LOWER_LEFT.x, BUTTON_LOWER_RIGHT.y)
-        self.assert_screen("reject_review")
-        self.review.tap()
-        self.welcome.client.resume_ticker()
+        # Rejection confirmation page
+        self.assert_screen("confirm_rejection")
+        if confirmRejection:
+            self.welcome.client.pause_ticker()
+            self.welcome.client.finger_touch(BUTTON_ABOVE_LOWER_MIDDLE.x, BUTTON_ABOVE_LOWER_MIDDLE.y)
+            self.assert_screen("reject_review")
+            self.review.tap()
+            self.welcome.client.resume_ticker()
+        else:
+            self.welcome.client.finger_touch(BUTTON_LOWER_MIDDLE.x, BUTTON_LOWER_MIDDLE.y)
 
     def review_skip_to_signing(self, with_loading=False):
         self.review.client.finger_touch(BUTTON_LOWER_RIGHT.x, BUTTON_LOWER_RIGHT.y)
