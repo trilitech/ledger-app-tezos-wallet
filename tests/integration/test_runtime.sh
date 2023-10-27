@@ -212,6 +212,15 @@ quit_blind_app() {
 expected_accept() {
     echo " - expected_accept"
     if [ "$TARGET" == "nanos" ]; then
+	expect_full_text 'Accept and send'
+    else
+	expect_full_text 'Accept' 'and send'
+    fi
+}
+
+expected_accept_public_key() {
+    echo " - expected_accept_public_key"
+    if [ "$TARGET" == "nanos" ]; then
 	expect_full_text 'Accept?'
     else
 	expect_full_text 'Accept?' 'Press both buttons to accept.'
