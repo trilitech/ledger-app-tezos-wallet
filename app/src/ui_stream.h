@@ -123,6 +123,7 @@ typedef struct {
 #ifdef HAVE_NBGL
     tz_ui_stream_display_t current_screen;
     char                   verify_address[TZ_BASE58CHECK_BUFFER_SIZE(20, 3)];
+    nbgl_callback_t        stream_cb;
 #endif  // HAVE_NBGL
 } tz_ui_stream_t;
 

@@ -111,14 +111,39 @@ tz_ui_continue(void)
 }
 
 void
-tz_ui_stream(void)
+tz_ui_stream_cb(void)
 {
     FUNC_ENTER(("void"));
 
     nbgl_useCaseForwardOnlyReview("Reject", NULL, tz_ui_nav_cb, tz_choice_ui);
 
     FUNC_LEAVE();
+}
+
+void
+tz_ui_stream(void)
+{
+    tz_ui_stream_t *s = &global.stream;
+    FUNC_ENTER(("void"));
+
+    if (s->stream_cb)
+        s->stream_cb();
+
+    FUNC_LEAVE();
     return;
+}
+
+void
+tz_ui_review_start()
+{
+    tz_ui_stream_t *s = &global.stream;
+
+    FUNC_ENTER(("void"));
+
+    s->stream_cb = &tz_ui_stream_cb;
+    tz_ui_stream();
+
+    FUNC_LEAVE();
 }
 
 void
@@ -134,7 +159,7 @@ tz_ui_stream_init(void (*cb)(uint8_t))
     s->total   = -1;
 
     nbgl_useCaseReviewStart(&C_tezos, "Review request to sign operation",
-                            NULL, "Reject request", tz_ui_stream,
+                            NULL, "Reject request", tz_ui_review_start,
                             tz_reject_ui);
 
     FUNC_LEAVE();
