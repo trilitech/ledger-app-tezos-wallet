@@ -290,11 +290,10 @@ find_icon(tz_ui_icon_t icon)
     // clang-format on
 }
 
-#define BLACK       0x000000
-#define WHITE       0xFFFFFF
-#define REGULAR     BAGL_FONT_OPEN_SANS_REGULAR_11px | BAGL_FONT_ALIGNMENT_CENTER
-#define BOLD        BAGL_FONT_OPEN_SANS_EXTRABOLD_11px | BAGL_FONT_ALIGNMENT_CENTER
-#define TEXT_HEIGHT 11
+#define BLACK   0x000000
+#define WHITE   0xFFFFFF
+#define REGULAR BAGL_FONT_OPEN_SANS_REGULAR_11px | BAGL_FONT_ALIGNMENT_CENTER
+#define BOLD    BAGL_FONT_OPEN_SANS_EXTRABOLD_11px | BAGL_FONT_ALIGNMENT_CENTER
 
 static void
 redisplay(void)
@@ -359,9 +358,9 @@ redisplay(void)
           .type    = BAGL_LABELINE,
           .userid  = 0x02,
           .x       = 8, // left_icon.x + left_icon.width
-          .y       = 8,
+          .y       = FONT_BASELINE,
           .width   = 112, // right_icon.width - right_icon.y - line0.x
-          .height  = TEXT_HEIGHT,
+          .height  = FONT_HEIGHT,
           .stroke  = 0,
           .radius  = 0,
           .fill    = 0,
@@ -378,9 +377,9 @@ redisplay(void)
           .type    = BAGL_LABELINE,
           .userid  = 0x02,
           .x       = 0,
-          .y       = 19, // line0.y + 11
+          .y       = FONT_BASELINE + 1 * FONT_HEIGHT, // line0.y + FONT_HEIGHT
           .width   = BAGL_WIDTH,
-          .height  = TEXT_HEIGHT,
+          .height  = FONT_HEIGHT,
           .stroke  = 0,
           .radius  = 0,
           .fill    = 0,
@@ -415,9 +414,9 @@ redisplay(void)
           .type    = BAGL_LABELINE,
           .userid  = 0x02,
           .x       = 0,
-          .y       = 21, // line0.y + 11 + 2 padding
+          .y       = FONT_BASELINE + 1 * (FONT_HEIGHT + 1), // line0.y + FONT_HEIGHT + 1 padding
           .width   = BAGL_WIDTH,
-          .height  = TEXT_HEIGHT,
+          .height  = FONT_HEIGHT,
           .stroke  = 0,
           .radius  = 0,
           .fill    = 0,
@@ -433,9 +432,9 @@ redisplay(void)
           .type    = BAGL_LABELINE,
           .userid  = 0x02,
           .x       = 0,
-          .y       = 34, // line1.y + 11 + 2 padding
+          .y       = FONT_BASELINE + 2 * (FONT_HEIGHT + 1), // line1.y + FONT_HEIGHT + 1 padding
           .width   = BAGL_WIDTH,
-          .height  = TEXT_HEIGHT,
+          .height  = FONT_HEIGHT,
           .stroke  = 0,
           .radius  = 0,
           .fill     = 0,
@@ -451,9 +450,9 @@ redisplay(void)
           .type    = BAGL_LABELINE,
           .userid  = 0x02,
           .x       = 0,
-          .y       = 47, // line2.y + 11 + 2 padding
+          .y       = FONT_BASELINE + 3 * (FONT_HEIGHT + 1), // line2.y + FONT_HEIGHT + 1 padding
           .width   = BAGL_WIDTH,
-          .height  = TEXT_HEIGHT,
+          .height  = FONT_HEIGHT,
           .stroke  = 0,
           .radius  = 0,
           .fill    = 0,
@@ -469,9 +468,9 @@ redisplay(void)
           .type    = BAGL_LABELINE,
           .userid  = 0x02,
           .x       = 0,
-          .y       = 60, // line3.y + 11 + 2 padding
+          .y       = FONT_BASELINE + 4 * (FONT_HEIGHT + 1), // line3.y + FONT_HEIGHT + 1 padding
           .width   = BAGL_WIDTH,
-          .height  = TEXT_HEIGHT,
+          .height  = FONT_HEIGHT,
           .stroke  = 0,
           .radius  = 0,
           .fill    = 0,
