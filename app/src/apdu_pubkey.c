@@ -90,6 +90,13 @@ prompt_address(void)
     global.step = ST_PROMPT;
     tz_ui_stream_init(stream_cb);
     TZ_CHECK(format_pkh(&global.keys.pubkey, buf, sizeof(buf)));
+#ifdef TARGET_NANOS
+    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Verify address", "",
+                      TZ_UI_LAYOUT_BP, TZ_UI_ICON_EYE);
+#else
+    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Verify", "address",
+                      TZ_UI_LAYOUT_BP, TZ_UI_ICON_EYE);
+#endif
     tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Provide Key", buf,
                           TZ_UI_LAYOUT_BNP, TZ_UI_ICON_NONE);
     tz_ui_stream_push(TZ_UI_STREAM_CB_ACCEPT, "Accept?",

@@ -4,7 +4,9 @@ expected_home
 send_apdu 8003000311048000002c800006c18000000080000000
 # bip25519 derivations take longer to compute, especially on CI platform.
 # Thus, additional TIMEOUT is needed.
-TIMEOUT=80 expect_section_content "Provide Key" 'tz1VKyZ3RFDwTkrz5LKcTc6fcYqZj6pvsyA7'
+TIMEOUT=80 expected_verify_address
+press_button right
+expect_section_content "Provide Key" 'tz1VKyZ3RFDwTkrz5LKcTc6fcYqZj6pvsyA7'
 press_button right
 expected_accept_public_key
 press_button both

@@ -107,6 +107,7 @@ typedef uint8_t tz_ui_icon_t;
 #define TZ_UI_ICON_DASHBOARD 0x03
 #define TZ_UI_ICON_SETTINGS  0x04
 #define TZ_UI_ICON_BACK      0x05
+#define TZ_UI_ICON_EYE       0x06
 
 typedef struct {
     tz_ui_icon_t        icon;

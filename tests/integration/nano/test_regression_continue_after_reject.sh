@@ -4,6 +4,8 @@ sleep 0.2
 # Reject a prompt pk request
 expected_home
 send_apdu 8003000011048000002c800006c18000000080000000
+expected_verify_address
+press_button right
 expect_section_content "Provide Key" \
                              'tz1dyX3B1CFYa2DfdFLyPtiJCfQRUgPVME6E'
 press_button right

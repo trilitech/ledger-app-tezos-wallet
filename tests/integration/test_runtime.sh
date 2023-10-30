@@ -164,6 +164,15 @@ expected_version() {
     expect_full_text 'Version' $APPVERSION
 }
 
+expected_verify_address() {
+    echo " - expected_verify_address"
+    if [ "$TARGET" == "nanos" ]; then
+	expect_full_text 'Verify address'
+    else
+	expect_full_text 'Verify' 'address'
+    fi
+}
+
 set_blind_signing() {
     echo " - set_blind_signing"
     expected_home
