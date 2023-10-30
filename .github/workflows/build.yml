@@ -125,6 +125,7 @@ jobs:
       - name: Generate
         run: |
           export PATH=/home/opam/.opam/4.14/bin:$PATH
+          cp ./app/src/parser/[!g]*.[ch] ./tests/unit
 
           dune exec ./tests/generate/generate.exe micheline 500 \
               nano tests/samples/micheline

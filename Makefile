@@ -18,6 +18,8 @@ DOCKER_RUN_APP_OCAML	= $(DOCKER_RUN) ledger-app-tezos-ocaml:latest
 
 LEDGERHQ=ghcr.io/ledgerhq
 
+CPU = $(shell uname -m)
+
 docker_speculos:
 	$(DOCKER) pull $(LEDGERHQ)/speculos
 	$(DOCKER) image tag $(LEDGERHQ)/speculos speculos
@@ -29,39 +31,40 @@ docker_ledger_app_builder:
 
 docker_ledger_app_ocaml:
 	$(DOCKER) build -t ledger-app-tezos-ocaml \
-			-f docker/Dockerfile.ocaml docker
+			-f docker/Dockerfile.ocaml docker --platform linux/$(CPU)
 
 docker_ledger_app_integration_tests:
 	$(DOCKER) build -t ledger-app-tezos-integration-tests \
-			-f docker/Dockerfile.integration-tests docker
+			-f docker/Dockerfile.integration-tests docker --platform linux/$(CPU)
 
-docker_images:	docker_speculos			\
-		docker_ledger_app_builder	\
-		docker_ledger_app_ocaml		\
-		docker_ledger_app_integration_tests
+docker_images: docker_speculos		\
+	docker_ledger_app_builder	\
+	docker_ledger_app_ocaml		\
+	docker_ledger_app_integration_tests
 
 scan-build-%:
-	SDK=$(shell echo $@ | sed 's/scan-build-\(.*\)/\U\1/')_SDK;	\
-	$(DOCKER_RUN_APP_BUILDER) bash -c				\
+	SDK=$(shell echo $* | tr "[:lower:]" "[:upper:]")_SDK;	\
+	$(DOCKER_RUN_APP_BUILDER) bash -c			\
 	  "BOLOS_SDK=\$$$$SDK make -C app scan-build"
 
 scan-build:	scan-build-nanos scan-build-nanosp	\
-		scan-build-nanox scan-build-stax
+	scan-build-nanox scan-build-stax
+
+app_%_dbg.tgz:	app/src/*.[ch]	\
+	app/src/parser/*.[ch]	\
+	app/Makefile
+	SDK=$(shell echo $* | tr "[:lower:]" "[:upper:]")_SDK;	\
+	$(DOCKER_RUN_APP_BUILDER) bash -c						\
+		"BOLOS_SDK=\$$$$SDK make -C app DEBUG=1"
+	$(DOCKER_RUN_APP_BUILDER) bash -c "cd app/bin/ && tar cz ." > $@
+
 
 app_%.tgz:	app/src/*.[ch]		\
 		app/src/parser/*.[ch]	\
 		app/Makefile
-	SDK=$(shell echo $@ | sed 's/app_\(.*\).tgz/\U\1/')_SDK;   \
-	$(DOCKER_RUN_APP_BUILDER) bash -c                          \
-            "BOLOS_SDK=\$$$$SDK make -C app"
-	$(DOCKER_RUN_APP_BUILDER) bash -c "cd app/bin/ && tar cz ." > $@
-
-app_%_dbg.tgz:	app/src/*.[ch]		\
-		app/src/parser/*.[ch]	\
-		app/Makefile
-	SDK=$(shell echo $@ | sed 's/app_\(.*\)_dbg.tgz/\U\1/')_SDK; \
-	$(DOCKER_RUN_APP_BUILDER) bash -c                            \
-            "BOLOS_SDK=\$$$$SDK make -C app DEBUG=1"
+	SDK=$(shell echo $* | tr "[:lower:]" "[:upper:]")_SDK;	\
+	$(DOCKER_RUN_APP_BUILDER) bash -c						\
+		"BOLOS_SDK=\$$$$SDK make -C app"
 	$(DOCKER_RUN_APP_BUILDER) bash -c "cd app/bin/ && tar cz ." > $@
 
 clean:
@@ -70,18 +73,20 @@ clean:
 	$(DOCKER_RUN_APP_OCAML) bash -c "make -C /app/tests/generate clean && cd /app && rm -rf _build"
 
 unit_tests:	test/samples/micheline/nano/samples.hex	\
-		test/samples/operations/nano/samples.hex	\
+		test/samples/operations/nano/samples.hex\
 		tests/unit/*.ml*			\
 		tests/unit/*.[ch]			\
 		tests/unit/dune				\
 		tests/unit/Makefile
+	@cp app/src/parser/[!g]*.[ch] tests/unit
+
 	$(DOCKER_RUN_APP_OCAML) make -C /app/tests/unit
 
 RUN_TEST_DOCKER = ./tests/integration/run_test_docker.sh
 
-integration_tests_basic_stax:	app_stax.tgz			\
-				app_stax_dbg.tgz		\
-				tests/integration/*		\
+integration_tests_basic_stax:	app_stax.tgz		\
+				app_stax_dbg.tgz	\
+				tests/integration/*	\
 				tests/integration/stax/*
 	$(RUN_TEST_DOCKER) stax tests/integration/stax
 
@@ -98,7 +103,7 @@ integration_tests_basic:	integration_tests_basic_nanos	\
 				integration_tests_basic_stax
 
 integration_tests_%:	integration_tests_basic_%		\
-			test/samples/operations/nano/samples.hex	\
+			test/samples/operations/nano/samples.hex\
 			test/samples/micheline/nano/samples.hex	\
 			tests/integration/*.sh
 	$(RUN_TEST_DOCKER) $* 				\

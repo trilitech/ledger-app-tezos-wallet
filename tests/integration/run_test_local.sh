@@ -17,6 +17,11 @@
 
 set -e
 
+if [[ -z "${COMMIT_BYTES}" ]]; then
+  . "`dirname $0`/app_vars.sh"
+  . "`dirname $0`/err_codes.sh"
+fi
+
 . "`dirname $0`/test_runtime.sh"
 
 start_speculos_runner() {
