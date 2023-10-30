@@ -290,203 +290,215 @@ find_icon(tz_ui_icon_t icon)
     // clang-format on
 }
 
+#define BLACK       0x000000
+#define WHITE       0xFFFFFF
+#define REGULAR     BAGL_FONT_OPEN_SANS_REGULAR_11px | BAGL_FONT_ALIGNMENT_CENTER
+#define BOLD        BAGL_FONT_OPEN_SANS_EXTRABOLD_11px | BAGL_FONT_ALIGNMENT_CENTER
+#define TEXT_HEIGHT 11
+
 static void
 redisplay(void)
 {
     bagl_element_t init[] = {
-      {
+      { // background
         .component = {
           .type    = BAGL_RECTANGLE,
           .userid  = 0x00,
           .x       = 0,
           .y       = 0,
-          .width   = 128,
-          .height  = BAGL_HEIGHT,
+          .width   = BAGL_WIDTH, // = 128
+          .height  = BAGL_HEIGHT, // = 32 nanos, = 64 nano(sp/x)
           .stroke  = 0,
           .radius  = 0,
           .fill    = BAGL_FILL,
-          .fgcolor = 0x000000,
-          .bgcolor = 0xFFFFFF,
+          .fgcolor = BLACK,
+          .bgcolor = WHITE,
           .font_id = 0,
           .icon_id = BAGL_GLYPH_NOGLYPH,
         },
         .text = NULL,
       },
-      {
+      { // left_icon
         .component = {
           .type    = BAGL_ICON,
           .userid  = 0x00,
-          .x       = 1,
-          .y       = 1,
-          .width   = 7,
-          .height  = 7,
+          .x       = 1, // 1 padding
+          .y       = 1, // 1 padding
+          .width   = 7, // = C_icon_go_left.width = C_icon_go_forbid.width
+          .height  = 7, // = C_icon_go_left.height = C_icon_go_forbid.height
           .stroke  = 0,
           .radius  = 0,
           .fill    = 0,
-          .fgcolor = 0xFFFFFF,
-          .bgcolor = 0x000000,
+          .fgcolor = WHITE,
+          .bgcolor = BLACK,
           .font_id = 0,
           .icon_id = BAGL_GLYPH_NOGLYPH,
         },
         .text = (const char *)&C_icon_rien,
       },
-      {
+      { // right_icon
         .component = {
           .type    = BAGL_ICON,
-          .userid  = 0x00,
-          .x       = 120,
-          .y       = 1,
-          .width   = 7,
-          .height  = 7,
+          .userid  = 0x00, // ?
+          .x       = BAGL_WIDTH - 7 - 1, // 1 padding
+          .y       = 1, // 1 padding
+          .width   = 7, // = C_icon_go_right.width
+          .height  = 7, // = C_icon_go_right.height
           .stroke  = 0,
           .radius  = 0,
           .fill    = 0,
-          .fgcolor = 0xFFFFFF,
-          .bgcolor = 0x000000,
+          .fgcolor = WHITE,
+          .bgcolor = BLACK,
           .font_id = 0,
           .icon_id = BAGL_GLYPH_NOGLYPH,
         },
         .text = (const char *)&C_icon_rien,
       },
-      {
+      { // line0
         .component = {
           .type    = BAGL_LABELINE,
           .userid  = 0x02,
-          .x       = 8,
+          .x       = 8, // left_icon.x + left_icon.width
           .y       = 8,
-          .width   = 112,
-          .height  = 11,
+          .width   = 112, // right_icon.width - right_icon.y - line0.x
+          .height  = TEXT_HEIGHT,
           .stroke  = 0,
           .radius  = 0,
           .fill    = 0,
-          .fgcolor = 0xFFFFFF,
-          .bgcolor = 0x000000,
+          .fgcolor = WHITE,
+          .bgcolor = BLACK,
           .font_id = BOLD,
           .icon_id = 0,
         },
         .text = global.ux.lines[0],
       },
 #ifdef TARGET_NANOS
-      {    .component = {
+      { // line1
+        .component = {
           .type    = BAGL_LABELINE,
           .userid  = 0x02,
           .x       = 0,
-          .y       = 19,
-          .width   = 128,
-          .height  = 11,
+          .y       = 19, // line0.y + 11
+          .width   = BAGL_WIDTH,
+          .height  = TEXT_HEIGHT,
           .stroke  = 0,
           .radius  = 0,
           .fill    = 0,
-          .fgcolor = 0xFFFFFF,
-          .bgcolor = 0x000000,
+          .fgcolor = WHITE,
+          .bgcolor = BLACK,
           .font_id = REGULAR,
           .icon_id = 0,
         },
-           .text = global.ux.lines[1],
+        .text = global.ux.lines[1],
       },
-      {
+      { // main_icon
         .component = {
           .type    = BAGL_ICON,
           .userid  = 0x00,
-          .x       = 56,
-          .y       = 14,
+          .x       = (BAGL_WIDTH - 16) / 2, // middle
+          .y       = BAGL_HEIGHT - 16 - 2, // 2 padding
           .width   = 16,
           .height  = 16,
           .stroke  = 0,
           .radius  = 0,
           .fill    = 0,
-          .fgcolor = 0xFFFFFF,
-          .bgcolor = 0x000000,
+          .fgcolor = WHITE,
+          .bgcolor = BLACK,
           .font_id = 0,
           .icon_id = BAGL_GLYPH_NOGLYPH,
         },
         .text = (const char *)&C_icon_rien,
       },
 #else
-      {    .component = {
+      { // line1
+        .component = {
           .type    = BAGL_LABELINE,
           .userid  = 0x02,
           .x       = 0,
-          .y       = 21,
-          .width   = 128,
-          .height  = 11,
+          .y       = 21, // line0.y + 11 + 2 padding
+          .width   = BAGL_WIDTH,
+          .height  = TEXT_HEIGHT,
           .stroke  = 0,
           .radius  = 0,
           .fill    = 0,
-          .fgcolor = 0xFFFFFF,
-          .bgcolor = 0x000000,
+          .fgcolor = WHITE,
+          .bgcolor = BLACK,
           .font_id = REGULAR,
           .icon_id = 0,
         },
-           .text = global.ux.lines[1],
+        .text = global.ux.lines[1],
       },
-      {    .component = {
+      { // line2
+        .component = {
           .type    = BAGL_LABELINE,
           .userid  = 0x02,
           .x       = 0,
-          .y       = 34,
-          .width   = 128,
-          .height  = 11,
+          .y       = 34, // line1.y + 11 + 2 padding
+          .width   = BAGL_WIDTH,
+          .height  = TEXT_HEIGHT,
           .stroke  = 0,
           .radius  = 0,
-          .fill    = 0,
-          .fgcolor = 0xFFFFFF,
-          .bgcolor = 0x000000,
+          .fill     = 0,
+          .fgcolor = WHITE,
+          .bgcolor = BLACK,
           .font_id = REGULAR,
           .icon_id = 0,
         },
-           .text = global.ux.lines[2],
+        .text = global.ux.lines[2],
       },
-      {   .component = {
+      { // line3
+        .component = {
           .type    = BAGL_LABELINE,
           .userid  = 0x02,
           .x       = 0,
-          .y       = 47,
-          .width   = 128,
-          .height  = 11,
+          .y       = 47, // line2.y + 11 + 2 padding
+          .width   = BAGL_WIDTH,
+          .height  = TEXT_HEIGHT,
           .stroke  = 0,
           .radius  = 0,
           .fill    = 0,
-          .fgcolor = 0xFFFFFF,
-          .bgcolor = 0x000000,
+          .fgcolor = WHITE,
+          .bgcolor = BLACK,
           .font_id = REGULAR,
           .icon_id = 0,
         },
-          .text = global.ux.lines[3],
+        .text = global.ux.lines[3],
       },
-      {   .component = {
+      { // line4
+        .component = {
           .type    = BAGL_LABELINE,
           .userid  = 0x02,
           .x       = 0,
-          .y       = 60,
-          .width   = 128,
-          .height  = 11,
+          .y       = 60, // line3.y + 11 + 2 padding
+          .width   = BAGL_WIDTH,
+          .height  = TEXT_HEIGHT,
           .stroke  = 0,
           .radius  = 0,
           .fill    = 0,
-          .fgcolor = 0xFFFFFF,
-          .bgcolor = 0x000000,
+          .fgcolor = WHITE,
+          .bgcolor = BLACK,
           .font_id = REGULAR,
           .icon_id = 0,
         },
-          .text = global.ux.lines[4],
+        .text = global.ux.lines[4],
       },
-      {   .component = {
+      { // main_icon
+        .component = {
           .type    = BAGL_ICON,
           .userid  = 0x00,
-          .x       = 56,
-          .y       = 47,
+          .x       = (BAGL_WIDTH - 16) / 2, // middle
+          .y       = BAGL_HEIGHT - 16 - 1, // 1 padding
           .width   = 16,
           .height  = 16,
           .stroke  = 0,
           .radius  = 0,
           .fill    = 0,
-          .fgcolor = 0xFFFFFF,
-          .bgcolor = 0x000000,
+          .fgcolor = WHITE,
+          .bgcolor = BLACK,
           .font_id = 0,
           .icon_id = BAGL_GLYPH_NOGLYPH,
         },
-          .text = (const char *)&C_icon_rien,
+        .text = (const char *)&C_icon_rien,
       },
 #endif
     };

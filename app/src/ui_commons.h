@@ -35,7 +35,4 @@
     G_ux.stack[0].screen_before_element_display_callback = NULL;     \
     UX_WAKE_UP();                                                    \
     UX_REDISPLAY();
-
-#define REGULAR BAGL_FONT_OPEN_SANS_REGULAR_11px | BAGL_FONT_ALIGNMENT_CENTER
-#define BOLD    BAGL_FONT_OPEN_SANS_EXTRABOLD_11px | BAGL_FONT_ALIGNMENT_CENTER
 #endif  // HAVE_BAGL
