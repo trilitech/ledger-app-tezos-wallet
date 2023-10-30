@@ -79,6 +79,7 @@ typedef uint8_t tz_ui_cb_type_t;
 #define TZ_UI_STREAM_CB_NOCB     0x00
 #define TZ_UI_STREAM_CB_REFILL   0xef
 #define TZ_UI_STREAM_CB_MAINMASK 0xf0
+#define TZ_UI_STREAM_CB_CANCEL   0xfd
 #define TZ_UI_STREAM_CB_REJECT   0xfe
 #define TZ_UI_STREAM_CB_ACCEPT   0xff
 

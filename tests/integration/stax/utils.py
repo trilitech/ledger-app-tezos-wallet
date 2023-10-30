@@ -141,6 +141,7 @@ class TezosAppScreen(metaclass=MetaScreen):
         self.welcome.client.pause_ticker()
         yield
         self.assert_screen(parsing_error_screen)
+        self.review.tap() # Exit status screen quickly, rather than waiting for ticket event
         self.welcome.client.resume_ticker()
 
 def stax_app() -> TezosAppScreen:

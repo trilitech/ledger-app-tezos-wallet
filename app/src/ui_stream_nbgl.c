@@ -22,8 +22,31 @@
 #include <ux.h>
 
 #include "globals.h"
+#include "ui_stream.h"
 
+void change_screen_right(void);
 bool tz_ui_nav_cb(uint8_t, nbgl_pageContent_t *);
+
+void
+tz_cancel_ui(void)
+{
+    tz_ui_stream_t *s                 = &global.stream;
+    char            error_message[50] = "";
+
+    FUNC_ENTER(("void"));
+
+    size_t bucket = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
+    STRLCPY(error_message, s->screens[bucket].title);
+    strlcat(error_message, "\n", sizeof(error_message));
+    strlcat(error_message, s->screens[bucket].body[0], sizeof(error_message));
+
+    s->cb(TZ_UI_STREAM_CB_CANCEL);
+
+    global.step = ST_IDLE;
+    nbgl_useCaseStatus(error_message, false, ui_home_init);
+
+    FUNC_LEAVE();
+}
 
 void
 tz_reject_ui(void)
@@ -107,7 +130,7 @@ tz_ui_stream_init(void (*cb)(uint8_t))
     memset(s, 0x0, sizeof(*s));
     s->cb      = cb;
     s->full    = false;
-    s->current = 0;
+    s->current = -1;
     s->total   = -1;
 
     nbgl_useCaseReviewStart(&C_tezos, "Review request to sign operation",
@@ -128,7 +151,6 @@ tz_ui_current_screen(__attribute__((unused)) uint8_t pairIndex)
     PRINTF("[DEBUG] pressed_right=%d\n", s->pressed_right);
 
     if (s->current < s->total && s->pressed_right) {
-        s->current++;
         s->pressed_right = false;
     }
 
@@ -179,11 +201,9 @@ tz_ui_nav_cb(uint8_t page, nbgl_pageContent_t *content)
         return false;
     }
 
-    if (page > 0 && !s->pressed_right) {
-        s->pressed_right = true;
-    }
+    change_screen_right();
 
-    PRINTF("pressed_right=%d, current=%d, total=%d, full=%d\n",
+    PRINTF("[DEBUG]: pressed_right=%d, current=%d, total=%d, full=%d\n",
            s->pressed_right, s->current, s->total, s->full);
 
     if (page == LAST_PAGE_FOR_REVIEW) {
@@ -192,24 +212,29 @@ tz_ui_nav_cb(uint8_t page, nbgl_pageContent_t *content)
         global.apdu.sign.u.clear.skip_to_sign = true;
         tz_ui_continue();
     }
-    if ((s->current == s->total) && !s->full) {
-        tz_ui_continue();
-    }
 
+    bool result = true;
     if (global.step == ST_ERROR) {
+        // TODO: this is handled by change_screen_right except we disable it
+        // to use it here. We should make ui_stream fully compatible with
+        // exception.h
         global.step = ST_IDLE;
         ui_home_init();
-        return false;
+        result = false;
     } else if (global.step != ST_CLEAR_SIGN && global.step != ST_BLIND_SIGN) {
-        return false;
-    } else if (s->full) {
+        result = false;
+    } else if (tz_ui_stream_get_type() == TZ_UI_STREAM_CB_CANCEL) {
+        // We hit an error in the parsing workflow...
+        tz_cancel_ui();
+        result = false;
+    } else if ((s->current == s->total) && s->full) {
         content->type                        = INFO_LONG_PRESS;
         content->infoLongPress.icon          = &C_tezos;
         content->infoLongPress.text          = "Sign";
         content->infoLongPress.longPressText = "Sign";
     } else if (page == LAST_PAGE_FOR_REVIEW) {
         nbgl_useCaseSpinner("Loading operation");
-        return false;
+        result = false;
     } else {
         c->list.pairs             = NULL;
         c->list.callback          = tz_ui_current_screen;
@@ -220,11 +245,11 @@ tz_ui_nav_cb(uint8_t page, nbgl_pageContent_t *content)
 
         content->type         = TAG_VALUE_LIST;
         content->tagValueList = c->list;
+        result                = true;
     }
 
     FUNC_LEAVE();
-
-    return true;
+    return result;
 }
 
 #endif
