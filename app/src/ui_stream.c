@@ -99,7 +99,7 @@ tz_ui_max_line_chars(const char *value, int length)
 }
 
 size_t
-tz_ui_stream_push_all(tz_ui_cb_type_t type, const char *title,
+tz_ui_stream_push_all(tz_ui_cb_type_t cb_type, const char *title,
                       const char *value, tz_ui_icon_t icon)
 {
     size_t obuflen;
@@ -107,22 +107,22 @@ tz_ui_stream_push_all(tz_ui_cb_type_t type, const char *title,
 
     obuflen = strlen(value);
     do {
-        i += tz_ui_stream_push(type, title, value + i, icon);
+        i += tz_ui_stream_push(cb_type, title, value + i, icon);
     } while (i < obuflen);
 
     return i;
 }
 
 size_t
-tz_ui_stream_push(tz_ui_cb_type_t type, const char *title, const char *value,
-                  tz_ui_icon_t icon)
+tz_ui_stream_push(tz_ui_cb_type_t cb_type, const char *title,
+                  const char *value, tz_ui_icon_t icon)
 {
-    return tz_ui_stream_pushl(type, title, value, -1, icon);
+    return tz_ui_stream_pushl(cb_type, title, value, -1, icon);
 }
 
 size_t
-tz_ui_stream_pushl(tz_ui_cb_type_t type, const char *title, const char *value,
-                   ssize_t max, tz_ui_icon_t icon)
+tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
+                   const char *value, ssize_t max, tz_ui_icon_t icon)
 {
     tz_ui_stream_t *s = &global.stream;
     size_t          i;
@@ -151,8 +151,8 @@ tz_ui_stream_pushl(tz_ui_cb_type_t type, const char *title, const char *value,
     if (max != -1)
         length = MIN(length, (size_t)max);
 
-    s->screens[bucket].type = type;
-    s->screens[bucket].icon = icon;
+    s->screens[bucket].cb_type = cb_type;
+    s->screens[bucket].icon    = icon;
 
     int line = 0;
     while (offset < length && line < TZ_UI_STREAM_CONTENTS_LINES) {
@@ -190,12 +190,12 @@ tz_ui_stream_pushl(tz_ui_cb_type_t type, const char *title, const char *value,
 }
 
 tz_ui_cb_type_t
-tz_ui_stream_get_type(void)
+tz_ui_stream_get_cb_type(void)
 {
     tz_ui_stream_t *s      = &global.stream;
     size_t          bucket = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
 
-    return s->screens[bucket].type;
+    return s->screens[bucket].cb_type;
 }
 
 #ifdef HAVE_BAGL
@@ -233,9 +233,9 @@ static unsigned int
 cb(unsigned int                         button_mask,
    __attribute__((unused)) unsigned int button_mask_counter)
 {
-    tz_ui_stream_t *s      = &global.stream;
-    size_t          bucket = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
-    uint8_t         type   = s->screens[bucket].type;
+    tz_ui_stream_t *s       = &global.stream;
+    size_t          bucket  = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
+    uint8_t         cb_type = s->screens[bucket].cb_type;
 
     FUNC_ENTER(("button_mask=%d, button_mask_counter=%d", button_mask,
                 button_mask_counter));
@@ -248,9 +248,9 @@ cb(unsigned int                         button_mask,
         change_screen_right();
         break;
     case BUTTON_EVT_RELEASED | BUTTON_LEFT | BUTTON_RIGHT:
-        if (type)
-            s->cb(type);
-        if (type & TZ_UI_STREAM_CB_MAINMASK) {
+        if (cb_type)
+            s->cb(cb_type);
+        if (cb_type & TZ_UI_STREAM_CB_MAINMASK) {
             global.step = ST_IDLE;
             ui_home_init();
         }

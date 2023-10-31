@@ -68,12 +68,12 @@ format_pkh(char *buffer, size_t len)
 }
 
 static void
-stream_cb(tz_ui_cb_type_t type)
+stream_cb(tz_ui_cb_type_t cb_type)
 {
-    TZ_PREAMBLE(("type=%u", type));
+    TZ_PREAMBLE(("cb_type=%u", cb_type));
 
     // clang-format off
-    switch (type) {
+    switch (cb_type) {
     case TZ_UI_STREAM_CB_ACCEPT: TZ_CHECK(provide_pubkey()); break;
     case TZ_UI_STREAM_CB_REFILL:                             break;
     case TZ_UI_STREAM_CB_REJECT: TZ_FAIL(EXC_REJECT);        break;

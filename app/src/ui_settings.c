@@ -27,10 +27,10 @@ static void cb(tz_ui_cb_type_t);
 #define BACK          0x02
 
 static void
-cb(tz_ui_cb_type_t type)
+cb(tz_ui_cb_type_t cb_type)
 {
-    FUNC_ENTER(("type=%u", type));
-    switch (type) {
+    FUNC_ENTER(("cb_type=%u", cb_type));
+    switch (cb_type) {
     case BLIND_SIGNING:
         toggle_blindsigning();
         ui_settings_init();

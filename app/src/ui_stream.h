@@ -63,14 +63,14 @@
     (TZ_UI_STREAM_CONTENTS_WIDTH * TZ_UI_STREAM_CONTENTS_LINES)
 
 /*
- * In the following structure, "type" is passed to our callback and
+ * In the following structure, "cb_type" is passed to our callback and
  * it can be used to determine which screen was displayed when both
  * buttons were pressed.
  *
  * If TZ_UI_STREAM_SCREEN_NOCB is specified, no callback will be called
  * when both buttons are pressed.
  *
- * If (type | TZ_UI_STREAM_SCREEN_MAINMASK) > 0 then we will return
+ * If (cb_type | TZ_UI_STREAM_SCREEN_MAINMASK) > 0 then we will return
  * to the main menu after the callback has been processed.  Developers
  * can use this in their own definitions.
  */
@@ -97,7 +97,7 @@ typedef uint8_t tz_ui_icon_t;
 
 typedef struct {
     tz_ui_icon_t    icon;
-    tz_ui_cb_type_t type;
+    tz_ui_cb_type_t cb_type;
     char            title[TZ_UI_STREAM_TITLE_WIDTH + 1];
     char body[TZ_UI_STREAM_CONTENTS_LINES][TZ_UI_STREAM_CONTENTS_WIDTH + 1];
 } tz_ui_stream_screen_t;
@@ -142,4 +142,4 @@ size_t tz_ui_stream_push_all(tz_ui_cb_type_t, const char *, const char *,
 void   tz_ui_stream_close(void);
 void   tz_ui_stream(void);
 void   tz_ui_stream_start(void);
-tz_ui_cb_type_t tz_ui_stream_get_type(void);
+tz_ui_cb_type_t tz_ui_stream_get_cb_type(void);

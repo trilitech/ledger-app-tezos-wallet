@@ -256,12 +256,12 @@ send_cancel(void)
 }
 
 static void
-stream_cb(tz_ui_cb_type_t type)
+stream_cb(tz_ui_cb_type_t cb_type)
 {
-    TZ_PREAMBLE(("type=%u", type));
+    TZ_PREAMBLE(("cb_type=%u", cb_type));
 
     // clang-format off
-    switch (type) {
+    switch (cb_type) {
     case TZ_UI_STREAM_CB_ACCEPT: return sign_packet();
     case TZ_UI_STREAM_CB_REFILL: return refill();
     case TZ_UI_STREAM_CB_REJECT: return send_reject();
@@ -309,12 +309,12 @@ bs_push_next()
 }
 
 static void
-bs_stream_cb(tz_ui_cb_type_t type)
+bs_stream_cb(tz_ui_cb_type_t cb_type)
 {
-    TZ_PREAMBLE(("type=%u", type));
+    TZ_PREAMBLE(("cb_type=%u", cb_type));
 
     // clang-format off
-    switch (type) {
+    switch (cb_type) {
     case TZ_UI_STREAM_CB_ACCEPT: return sign_packet();
     case TZ_UI_STREAM_CB_REFILL: return bs_push_next();
     case TZ_UI_STREAM_CB_REJECT: return send_reject();
@@ -576,7 +576,7 @@ handle_data_apdu_blind(command_t *cmd)
 #undef FINAL_HASH
 
 #ifdef HAVE_BAGL
-#define GET_HOME_SCREEN() tz_ui_stream_get_type()
+#define GET_HOME_SCREEN() tz_ui_stream_get_cb_type()
 #elif HAVE_NBGL
 #define GET_HOME_SCREEN() global.home_screen
 #endif

@@ -29,11 +29,11 @@
 static void cb(tz_ui_cb_type_t);
 
 static void
-cb(tz_ui_cb_type_t type)
+cb(tz_ui_cb_type_t cb_type)
 {
-    FUNC_ENTER(("type=%u", type));
+    FUNC_ENTER(("cb_type=%u", cb_type));
 
-    switch (type) {
+    switch (cb_type) {
     case SCREEN_BLIND_SIGN:
     case SCREEN_CLEAR_SIGN:
     case SCREEN_VERSION:
