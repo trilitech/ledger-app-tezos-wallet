@@ -69,8 +69,6 @@ static void handle_data_apdu_blind(command_t *);
 #define PKT_IS_LAST(_cmd)  ((_cmd)->p1 & P1_LAST_MARKER)
 #define PKT_IS_FIRST(_cmd) (((_cmd)->p1 & ~P1_LAST_MARKER) == 0)
 
-#define TZ_UI_STREAM_CB_CANCEL 0xf0
-
 #define APDU_SIGN_ASSERT(_cond) TZ_ASSERT(EXC_UNEXPECTED_SIGN_STATE, (_cond))
 #define APDU_SIGN_ASSERT_STEP(x) \
     APDU_SIGN_ASSERT(global.apdu.sign.step == (x))
@@ -175,18 +173,10 @@ refill_error(void)
 {
     tz_parser_state *st = &global.apdu.sign.u.clear.parser_state;
     TZ_PREAMBLE(("void"));
-#ifdef HAVE_BAGL
 
     tz_ui_stream_push(TZ_UI_STREAM_CB_CANCEL, "Parsing error",
                       tz_parser_result_name(st->errno), TZ_UI_ICON_CROSS);
-#elif HAVE_NBGL
-    send_cancel();
-    global.step            = ST_IDLE;
-    char error_message[50] = "Parsing error\n";
-    strlcat(error_message, tz_parser_result_name(st->errno),
-            sizeof(error_message));
-    nbgl_useCaseStatus(error_message, false, ui_home_init);
-#endif
+
     tz_ui_stream_close();
     TZ_POSTAMBLE;
 }

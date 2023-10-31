@@ -224,6 +224,7 @@ pred(void)
     }
     FUNC_LEAVE();
 }
+#endif  // HAVE_BAGL
 
 static void
 succ(void)
@@ -237,7 +238,6 @@ succ(void)
     }
     FUNC_LEAVE();
 }
-#endif  // HAVE_BAGL
 
 // View
 
@@ -382,8 +382,9 @@ change_screen_left(void)
     redisplay();
     FUNC_LEAVE();
 }
+#endif  // HAVE_BAGL
 
-static void
+void
 change_screen_right(void)
 {
     tz_ui_stream_t *s = &global.stream;
@@ -393,18 +394,22 @@ change_screen_right(void)
     if (s->current == s->total) {
         if (!s->full)
             s->cb(TZ_UI_STREAM_CB_REFILL);
+#ifdef HAVE_BAGL
         if (global.step == ST_ERROR) {
             global.step = ST_IDLE;
             ui_home_init();
             return;
         }
+#endif
     }
     // go back to the data screen
     succ();
+
+#ifdef HAVE_BAGL
     redisplay();
+#endif
     FUNC_LEAVE();
 }
-#endif  // HAVE_BAGL
 
 void
 tz_ui_stream_start(void)
