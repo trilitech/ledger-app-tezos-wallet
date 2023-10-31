@@ -17,6 +17,17 @@
 
 set -e
 
+. "`dirname $0`/app_vars.sh"
+
 docker run --user "$(id -u)":"$(id -g)" --rm -i -v "$(realpath .):/app"              	\
+       --env-file "`dirname $0`/err_codes.sh"           \
+       -e VERSION_BYTES=$VERSION_BYTES                  \
+       -e COMMIT_BYTES=$COMMIT_BYTES                    \
+       -e VERSION_WALLET_TAG=$VERSION_WALLET_TAG        \
+       -e APPVERSION_M=$APPVERSION_M                    \
+       -e APPVERSION_N=$APPVERSION_N                    \
+       -e APPVERSION_P=$APPVERSION_P                    \
+       -e APPVERSION=$APPVERSION                        \
+       -e VERSION_BYTES=$VERSION_BYTES                  \
     --entrypoint=/bin/sh ledger-app-tezos-integration-tests	\
     -c "cd /app && ./tests/integration/run_test_local.sh -F -m $*"

@@ -10,6 +10,8 @@ We compile and test using docker containers to obtain a reasonably
 predictable environment despite some level of heterogeny in the build
 setups of existing and potential developers.
 
+Please use bash shell for uniformity in build environment.
+
 The docker images can be built using the provided Makefile:
 
 ```
