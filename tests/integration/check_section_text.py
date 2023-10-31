@@ -47,8 +47,7 @@ class Screen:
     content = content.lstrip('\n')
     return content
 
-def with_retry(f, timeout=TIMEOUT):
-    attempts = timeout / 0.5
+def with_retry(f, attempts= (2 * TIMEOUT)):
     while True:
         try:
             return f()
