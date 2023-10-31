@@ -17,6 +17,7 @@
    limitations under the License. */
 
 #include "globals.h"
+#include "exception.h"
 
 /* Prototypes */
 
@@ -100,14 +101,15 @@ tz_ui_max_line_chars(const char *value, int length)
 
 size_t
 tz_ui_stream_push_all(tz_ui_cb_type_t cb_type, const char *title,
-                      const char *value, tz_ui_icon_t icon)
+                      const char *value, tz_ui_layout_type_t layout_type,
+                      tz_ui_icon_t icon)
 {
     size_t obuflen;
     size_t i = 0;
 
     obuflen = strlen(value);
     do {
-        i += tz_ui_stream_push(cb_type, title, value + i, icon);
+        i += tz_ui_stream_push(cb_type, title, value + i, layout_type, icon);
     } while (i < obuflen);
 
     return i;
@@ -115,14 +117,16 @@ tz_ui_stream_push_all(tz_ui_cb_type_t cb_type, const char *title,
 
 size_t
 tz_ui_stream_push(tz_ui_cb_type_t cb_type, const char *title,
-                  const char *value, tz_ui_icon_t icon)
+                  const char *value, tz_ui_layout_type_t layout_type,
+                  tz_ui_icon_t icon)
 {
-    return tz_ui_stream_pushl(cb_type, title, value, -1, icon);
+    return tz_ui_stream_pushl(cb_type, title, value, -1, layout_type, icon);
 }
 
 size_t
 tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
-                   const char *value, ssize_t max, tz_ui_icon_t icon)
+                   const char *value, ssize_t max,
+                   tz_ui_layout_type_t layout_type, tz_ui_icon_t icon)
 {
     tz_ui_stream_t *s = &global.stream;
     size_t          i;
@@ -151,8 +155,9 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
     if (max != -1)
         length = MIN(length, (size_t)max);
 
-    s->screens[bucket].cb_type = cb_type;
-    s->screens[bucket].icon    = icon;
+    s->screens[bucket].cb_type     = cb_type;
+    s->screens[bucket].layout_type = layout_type;
+    s->screens[bucket].icon        = icon;
 
     int line = 0;
     while (offset < length && line < TZ_UI_STREAM_CONTENTS_LINES) {
@@ -278,7 +283,7 @@ find_icon(tz_ui_icon_t icon)
 }
 
 static void
-redisplay(void)
+redisplay_bnp(void)
 {
     bagl_element_t init[] = {
   //  {type, userid, x, y, width, height, stroke, radius,
@@ -359,6 +364,23 @@ redisplay(void)
 
     DISPLAY(init, cb);
     FUNC_LEAVE();
+}
+
+static void
+redisplay(void)
+{
+    TZ_PREAMBLE(("void"));
+
+    tz_ui_stream_t *s      = &global.stream;
+    size_t          bucket = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
+
+    // clang-format off
+    switch (s->screens[bucket].layout_type) {
+    case TZ_UI_LAYOUT_BNP: redisplay_bnp(); break;
+    default: TZ_FAIL(EXC_UNKNOWN);
+    }
+    // clang-format on
+    TZ_POSTAMBLE;
 }
 
 static void

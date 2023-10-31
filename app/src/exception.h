@@ -21,6 +21,7 @@
 #pragma once
 
 #include <os.h>
+#include <io.h>
 
 #define SW_OK 0x9000
 

@@ -83,6 +83,14 @@ typedef uint8_t tz_ui_cb_type_t;
 #define TZ_UI_STREAM_CB_REJECT   0xfe
 #define TZ_UI_STREAM_CB_ACCEPT   0xff
 
+typedef uint8_t tz_ui_layout_type_t;
+/*
+ * Bold
+ * Non bold
+ * Icon
+ */
+#define TZ_UI_LAYOUT_BNP 0x00
+
 /*
  * The icons we used are generalised to allow for seamless Stax support
  */
@@ -96,9 +104,10 @@ typedef uint8_t tz_ui_icon_t;
 #define TZ_UI_ICON_BACK      0x05
 
 typedef struct {
-    tz_ui_icon_t    icon;
-    tz_ui_cb_type_t cb_type;
-    char            title[TZ_UI_STREAM_TITLE_WIDTH + 1];
+    tz_ui_icon_t        icon;
+    tz_ui_layout_type_t layout_type;
+    tz_ui_cb_type_t     cb_type;
+    char                title[TZ_UI_STREAM_TITLE_WIDTH + 1];
     char body[TZ_UI_STREAM_CONTENTS_LINES][TZ_UI_STREAM_CONTENTS_WIDTH + 1];
 } tz_ui_stream_screen_t;
 
@@ -134,11 +143,11 @@ void tz_ui_stream_init(void (*)(tz_ui_cb_type_t));
  * bytes of content written.
  */
 size_t tz_ui_stream_push(tz_ui_cb_type_t, const char *, const char *,
-                         tz_ui_icon_t);
+                         tz_ui_layout_type_t, tz_ui_icon_t);
 size_t tz_ui_stream_pushl(tz_ui_cb_type_t, const char *, const char *,
-                          ssize_t, tz_ui_icon_t);
+                          ssize_t, tz_ui_layout_type_t, tz_ui_icon_t);
 size_t tz_ui_stream_push_all(tz_ui_cb_type_t, const char *, const char *,
-                             tz_ui_icon_t);
+                             tz_ui_layout_type_t, tz_ui_icon_t);
 void   tz_ui_stream_close(void);
 void   tz_ui_stream(void);
 void   tz_ui_stream_start(void);

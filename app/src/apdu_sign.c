@@ -80,13 +80,14 @@ tz_ui_stream_push_accept_reject(void)
     FUNC_ENTER(("void"));
 #ifdef TARGET_NANOS
     tz_ui_stream_push(TZ_UI_STREAM_CB_ACCEPT, "Accept and send", "",
-                      TZ_UI_ICON_TICK);
+                      TZ_UI_LAYOUT_BNP, TZ_UI_ICON_TICK);
 #else
     tz_ui_stream_push(TZ_UI_STREAM_CB_ACCEPT, "Accept", "and send",
-                      TZ_UI_ICON_TICK);
+                      TZ_UI_LAYOUT_BNP, TZ_UI_ICON_TICK);
 #endif
     tz_ui_stream_push(TZ_UI_STREAM_CB_REJECT, "Reject?",
-                      "Press both buttons to reject.", TZ_UI_ICON_CROSS);
+                      "Press both buttons to reject.", TZ_UI_LAYOUT_BNP,
+                      TZ_UI_ICON_CROSS);
     FUNC_LEAVE();
 }
 #endif
@@ -157,7 +158,8 @@ refill_blo_im_full(void)
     if (!global.apdu.sign.u.clear.skip_to_sign) {
         global.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
         wrote = tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, st->field_name,
-                                  global.line_buf, TZ_UI_ICON_NONE);
+                                  global.line_buf, TZ_UI_LAYOUT_BNP,
+                                  TZ_UI_ICON_NONE);
     } else {
         global.apdu.sign.step = SIGN_ST_WAIT_DATA;
         wrote                 = TZ_UI_STREAM_CONTENTS_SIZE;
@@ -195,7 +197,8 @@ refill_error(void)
     TZ_PREAMBLE(("void"));
 
     tz_ui_stream_push(TZ_UI_STREAM_CB_CANCEL, "Parsing error",
-                      tz_parser_result_name(st->errno), TZ_UI_ICON_CROSS);
+                      tz_parser_result_name(st->errno), TZ_UI_LAYOUT_BNP,
+                      TZ_UI_ICON_CROSS);
 
     tz_ui_stream_close();
     TZ_POSTAMBLE;
@@ -292,7 +295,7 @@ bs_push_next()
             TZ_FAIL(EXC_UNKNOWN);
 
         tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Sign Hash", obuf,
-                              TZ_UI_ICON_NONE);
+                              TZ_UI_LAYOUT_BNP, TZ_UI_ICON_NONE);
         break;
     case BLINDSIGN_ST_HASH:
         *step = BLINDSIGN_ST_ACCEPT_REJECT;
@@ -551,7 +554,7 @@ handle_data_apdu_blind(command_t *cmd)
 
 #ifdef HAVE_BAGL
     tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Sign Hash", type,
-                          TZ_UI_ICON_NONE);
+                          TZ_UI_LAYOUT_BNP, TZ_UI_ICON_NONE);
 
     tz_ui_stream();
 #elif HAVE_NBGL
