@@ -1,0 +1,12 @@
+start_speculos "$seed"
+sleep 0.2
+expected_home
+send_apdu 800f000311048000002c800006c18000000080000000
+expect_apdu_return 9000
+send_apdu 800f81032305020000001d0100000004434143410100000004504f504f0100000006424f5544494e
+expect_section_content 'Expression' '{"CACA";"POPO";"BOUDIN"}'
+press_button right
+expected_accept
+press_button both
+expect_apdu_return 84e475e38707140e725019e91f036e341fa4a2c8752b7828f37bbf91061b0e0af54b3f3d3a4f5e35584f4d206ee4648ad808c9d119f789112b7e1aec61f156eb48eacec419313bef6f7d3f63b614abe709be6b939f155ea9efa688816fe123029000
+quit_app
