@@ -46,9 +46,6 @@ provide_pubkey(void)
     cx_ecfp_public_key_t pubkey;
     TZ_PREAMBLE(("void"));
 
-    // Application could be PIN-locked, and pubkey->W_len would then be 0,
-    // so throwing an error rather than returning an empty key
-    TZ_ASSERT(EXC_SECURITY, os_global_pin_is_validated() == BOLOS_UX_OK);
     TZ_CHECK(derive_pk(&pubkey, global.path_with_curve.derivation_type,
                        &global.path_with_curve.bip32_path));
 
