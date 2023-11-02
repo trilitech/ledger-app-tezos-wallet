@@ -90,6 +90,11 @@ typedef uint8_t tz_ui_layout_type_t;
  * Icon
  */
 #define TZ_UI_LAYOUT_BNP 0x00
+/*
+ * Bold
+ * Icon
+ */
+#define TZ_UI_LAYOUT_BP  0x01
 
 /*
  * The icons we used are generalised to allow for seamless Stax support
