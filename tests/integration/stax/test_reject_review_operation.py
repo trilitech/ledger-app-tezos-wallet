@@ -30,9 +30,11 @@ def short_reject(app):
 
     app.assert_screen("review_request_sign_operation")
 
-    app.review_reject_signing()
+    app.review_reject_signing(confirmRejection = False)
+    # Cancelling rejection lands us back on the same page
+    app.assert_screen("review_request_sign_operation")
+    app.review_reject_signing(confirmRejection = True)
 
-    app.review.tap()
     app.assert_screen(SCREEN_HOME_DEFAULT)
     app.expect_apdu_failure("6985")
 

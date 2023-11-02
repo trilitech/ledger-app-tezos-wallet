@@ -49,7 +49,7 @@ tz_cancel_ui(void)
 }
 
 void
-tz_reject_ui(void)
+tz_reject(void)
 {
     tz_ui_stream_t *s = &global.stream;
 
@@ -63,6 +63,17 @@ tz_reject_ui(void)
 
     global.step = ST_IDLE;
     nbgl_useCaseStatus("Rejected", false, ui_home_init);
+
+    FUNC_LEAVE();
+}
+
+void
+tz_reject_ui(void)
+{
+    FUNC_ENTER(("void"));
+
+    nbgl_useCaseConfirm("Reject transaction?", NULL, "Yes, Reject",
+                        "Go back to transaction", tz_reject);
 
     FUNC_LEAVE();
 }
