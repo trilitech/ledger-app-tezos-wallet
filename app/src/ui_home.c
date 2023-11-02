@@ -92,9 +92,9 @@ ui_home_init(void)
         blind_sign_screen();
     tz_ui_stream_push(SCREEN_VERSION, "Version", APPVERSION, TZ_UI_LAYOUT_BNP,
                       TZ_UI_ICON_NONE);
-    tz_ui_stream_push(SCREEN_SETTINGS, "Settings", "", TZ_UI_LAYOUT_BNP,
+    tz_ui_stream_push(SCREEN_SETTINGS, "Settings", "", TZ_UI_LAYOUT_BP,
                       TZ_UI_ICON_SETTINGS);
-    tz_ui_stream_push(SCREEN_QUIT, "Quit?", "", TZ_UI_LAYOUT_BNP,
+    tz_ui_stream_push(SCREEN_QUIT, "Quit?", "", TZ_UI_LAYOUT_BP,
                       TZ_UI_ICON_DASHBOARD);
     tz_ui_stream_close();
     tz_ui_stream_start();
