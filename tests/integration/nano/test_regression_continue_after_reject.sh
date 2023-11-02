@@ -7,7 +7,7 @@ send_apdu 8003000011048000002c800006c18000000080000000
 expect_section_content "Provide Key" \
                              'tz1dyX3B1CFYa2DfdFLyPtiJCfQRUgPVME6E'
 press_button right
-expected_accept
+expected_accept_public_key
 press_button right
 expected_reject
 press_button both

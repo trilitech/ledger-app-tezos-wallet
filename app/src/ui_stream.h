@@ -63,14 +63,14 @@
     (TZ_UI_STREAM_CONTENTS_WIDTH * TZ_UI_STREAM_CONTENTS_LINES)
 
 /*
- * In the following structure, "type" is passed to our callback and
+ * In the following structure, "cb_type" is passed to our callback and
  * it can be used to determine which screen was displayed when both
  * buttons were pressed.
  *
  * If TZ_UI_STREAM_SCREEN_NOCB is specified, no callback will be called
  * when both buttons are pressed.
  *
- * If (type | TZ_UI_STREAM_SCREEN_MAINMASK) > 0 then we will return
+ * If (cb_type | TZ_UI_STREAM_SCREEN_MAINMASK) > 0 then we will return
  * to the main menu after the callback has been processed.  Developers
  * can use this in their own definitions.
  */
@@ -82,6 +82,19 @@ typedef uint8_t tz_ui_cb_type_t;
 #define TZ_UI_STREAM_CB_CANCEL   0xfd
 #define TZ_UI_STREAM_CB_REJECT   0xfe
 #define TZ_UI_STREAM_CB_ACCEPT   0xff
+
+typedef uint8_t tz_ui_layout_type_t;
+/*
+ * Bold
+ * Non bold
+ * Icon
+ */
+#define TZ_UI_LAYOUT_BNP 0x00
+/*
+ * Bold
+ * Icon
+ */
+#define TZ_UI_LAYOUT_BP  0x01
 
 /*
  * The icons we used are generalised to allow for seamless Stax support
@@ -96,9 +109,10 @@ typedef uint8_t tz_ui_icon_t;
 #define TZ_UI_ICON_BACK      0x05
 
 typedef struct {
-    tz_ui_icon_t    icon;
-    tz_ui_cb_type_t type;
-    char            title[TZ_UI_STREAM_TITLE_WIDTH + 1];
+    tz_ui_icon_t        icon;
+    tz_ui_layout_type_t layout_type;
+    tz_ui_cb_type_t     cb_type;
+    char                title[TZ_UI_STREAM_TITLE_WIDTH + 1];
     char body[TZ_UI_STREAM_CONTENTS_LINES][TZ_UI_STREAM_CONTENTS_WIDTH + 1];
 } tz_ui_stream_screen_t;
 
@@ -134,13 +148,12 @@ void tz_ui_stream_init(void (*)(tz_ui_cb_type_t));
  * bytes of content written.
  */
 size_t tz_ui_stream_push(tz_ui_cb_type_t, const char *, const char *,
-                         tz_ui_icon_t);
+                         tz_ui_layout_type_t, tz_ui_icon_t);
 size_t tz_ui_stream_pushl(tz_ui_cb_type_t, const char *, const char *,
-                          ssize_t, tz_ui_icon_t);
+                          ssize_t, tz_ui_layout_type_t, tz_ui_icon_t);
 size_t tz_ui_stream_push_all(tz_ui_cb_type_t, const char *, const char *,
-                             tz_ui_icon_t);
-void   tz_ui_stream_push_accept_reject(void);
+                             tz_ui_layout_type_t, tz_ui_icon_t);
 void   tz_ui_stream_close(void);
 void   tz_ui_stream(void);
 void   tz_ui_stream_start(void);
-tz_ui_cb_type_t tz_ui_stream_get_type(void);
+tz_ui_cb_type_t tz_ui_stream_get_cb_type(void);

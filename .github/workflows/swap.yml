@@ -9,7 +9,7 @@ on:
 
 jobs:
   job_functional_tests:
-    uses: spalmer25/app-exchange/.github/workflows/reusable_swap_functional_tests.yml@987035363878dd55e9da2336891a666b36bce6a2
+    uses: spalmer25/app-exchange/.github/workflows/reusable_swap_functional_tests.yml@c277b70c9e5db1f0a1a64192c6d7ef5758e4a3e4
     with:
       repo_for_exchange: 'spalmer25/app-exchange'
       branch_for_exchange: 'palmer/functori/add-new-tezos-app-swap-tests'

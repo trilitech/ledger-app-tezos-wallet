@@ -74,7 +74,7 @@ dispatch(command_t *cmd)
     if (cmd->cla != CLA)
         TZ_FAIL(EXC_CLASS);
 
-    switch (tz_ui_stream_get_type()) {
+    switch (tz_ui_stream_get_cb_type()) {
     case SCREEN_QUIT:
         PRINTF("[ERROR] received instruction whilst on Quit screen\n");
         TZ_FAIL(EXC_UNEXPECTED_STATE);

@@ -259,7 +259,7 @@ tz_ui_nav_cb(uint8_t page, nbgl_pageContent_t *content)
         result = false;
     } else if (global.step != ST_CLEAR_SIGN && global.step != ST_BLIND_SIGN) {
         result = false;
-    } else if (tz_ui_stream_get_type() == TZ_UI_STREAM_CB_CANCEL) {
+    } else if (tz_ui_stream_get_cb_type() == TZ_UI_STREAM_CB_CANCEL) {
         // We hit an error in the parsing workflow...
         tz_cancel_ui();
         result = false;

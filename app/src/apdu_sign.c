@@ -73,6 +73,25 @@ static void handle_data_apdu_blind(command_t *);
 #define APDU_SIGN_ASSERT_STEP(x) \
     APDU_SIGN_ASSERT(global.apdu.sign.step == (x))
 
+#ifdef HAVE_BAGL
+void
+tz_ui_stream_push_accept_reject(void)
+{
+    FUNC_ENTER(("void"));
+#ifdef TARGET_NANOS
+    tz_ui_stream_push(TZ_UI_STREAM_CB_ACCEPT, "Accept and send", "",
+                      TZ_UI_LAYOUT_BP, TZ_UI_ICON_TICK);
+#else
+    tz_ui_stream_push(TZ_UI_STREAM_CB_ACCEPT, "Accept", "and send",
+                      TZ_UI_LAYOUT_BP, TZ_UI_ICON_TICK);
+#endif
+    tz_ui_stream_push(TZ_UI_STREAM_CB_REJECT, "Reject?",
+                      "Press both buttons to reject.", TZ_UI_LAYOUT_BNP,
+                      TZ_UI_ICON_CROSS);
+    FUNC_LEAVE();
+}
+#endif
+
 static void
 sign_packet(void)
 {
@@ -139,7 +158,8 @@ refill_blo_im_full(void)
     if (!global.apdu.sign.u.clear.skip_to_sign) {
         global.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
         wrote = tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, st->field_name,
-                                  global.line_buf, TZ_UI_ICON_NONE);
+                                  global.line_buf, TZ_UI_LAYOUT_BNP,
+                                  TZ_UI_ICON_NONE);
     } else {
         global.apdu.sign.step = SIGN_ST_WAIT_DATA;
         wrote                 = TZ_UI_STREAM_CONTENTS_SIZE;
@@ -162,7 +182,9 @@ refill_blo_done(void)
         TZ_SUCCEED();
     }
     global.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
+#ifdef HAVE_BAGL
     tz_ui_stream_push_accept_reject();
+#endif
     tz_ui_stream_close();
 
     TZ_POSTAMBLE;
@@ -175,7 +197,8 @@ refill_error(void)
     TZ_PREAMBLE(("void"));
 
     tz_ui_stream_push(TZ_UI_STREAM_CB_CANCEL, "Parsing error",
-                      tz_parser_result_name(st->errno), TZ_UI_ICON_CROSS);
+                      tz_parser_result_name(st->errno), TZ_UI_LAYOUT_BNP,
+                      TZ_UI_ICON_CROSS);
 
     tz_ui_stream_close();
     TZ_POSTAMBLE;
@@ -236,12 +259,12 @@ send_cancel(void)
 }
 
 static void
-stream_cb(tz_ui_cb_type_t type)
+stream_cb(tz_ui_cb_type_t cb_type)
 {
-    TZ_PREAMBLE(("type=%u", type));
+    TZ_PREAMBLE(("cb_type=%u", cb_type));
 
     // clang-format off
-    switch (type) {
+    switch (cb_type) {
     case TZ_UI_STREAM_CB_ACCEPT: return sign_packet();
     case TZ_UI_STREAM_CB_REFILL: return refill();
     case TZ_UI_STREAM_CB_REJECT: return send_reject();
@@ -272,7 +295,7 @@ bs_push_next()
             TZ_FAIL(EXC_UNKNOWN);
 
         tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Sign Hash", obuf,
-                              TZ_UI_ICON_NONE);
+                              TZ_UI_LAYOUT_BNP, TZ_UI_ICON_NONE);
         break;
     case BLINDSIGN_ST_HASH:
         *step = BLINDSIGN_ST_ACCEPT_REJECT;
@@ -289,12 +312,12 @@ bs_push_next()
 }
 
 static void
-bs_stream_cb(tz_ui_cb_type_t type)
+bs_stream_cb(tz_ui_cb_type_t cb_type)
 {
-    TZ_PREAMBLE(("type=%u", type));
+    TZ_PREAMBLE(("cb_type=%u", cb_type));
 
     // clang-format off
-    switch (type) {
+    switch (cb_type) {
     case TZ_UI_STREAM_CB_ACCEPT: return sign_packet();
     case TZ_UI_STREAM_CB_REFILL: return bs_push_next();
     case TZ_UI_STREAM_CB_REJECT: return send_reject();
@@ -531,7 +554,7 @@ handle_data_apdu_blind(command_t *cmd)
 
 #ifdef HAVE_BAGL
     tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Sign Hash", type,
-                          TZ_UI_ICON_NONE);
+                          TZ_UI_LAYOUT_BNP, TZ_UI_ICON_NONE);
 
     tz_ui_stream();
 #elif HAVE_NBGL
@@ -556,7 +579,7 @@ handle_data_apdu_blind(command_t *cmd)
 #undef FINAL_HASH
 
 #ifdef HAVE_BAGL
-#define GET_HOME_SCREEN() tz_ui_stream_get_type()
+#define GET_HOME_SCREEN() tz_ui_stream_get_cb_type()
 #elif HAVE_NBGL
 #define GET_HOME_SCREEN() global.home_screen
 #endif

@@ -27,10 +27,10 @@ static void cb(tz_ui_cb_type_t);
 #define BACK          0x02
 
 static void
-cb(tz_ui_cb_type_t type)
+cb(tz_ui_cb_type_t cb_type)
 {
-    FUNC_ENTER(("type=%u", type));
-    switch (type) {
+    FUNC_ENTER(("cb_type=%u", cb_type));
+    switch (cb_type) {
     case BLIND_SIGNING:
         toggle_blindsigning();
         ui_settings_init();
@@ -53,8 +53,8 @@ ui_settings_init(void)
 
     tz_ui_stream_init(cb);
     tz_ui_stream_push(BLIND_SIGNING, "Blind Signing", bsigning,
-                      TZ_UI_ICON_NONE);
-    tz_ui_stream_push(BACK, "Back", "", TZ_UI_ICON_BACK);
+                      TZ_UI_LAYOUT_BNP, TZ_UI_ICON_NONE);
+    tz_ui_stream_push(BACK, "Back", "", TZ_UI_LAYOUT_BP, TZ_UI_ICON_BACK);
     tz_ui_stream_close();
     tz_ui_stream_start();
     FUNC_LEAVE();

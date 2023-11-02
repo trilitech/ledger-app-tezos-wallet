@@ -68,12 +68,12 @@ format_pkh(char *buffer, size_t len)
 }
 
 static void
-stream_cb(tz_ui_cb_type_t type)
+stream_cb(tz_ui_cb_type_t cb_type)
 {
-    TZ_PREAMBLE(("type=%u", type));
+    TZ_PREAMBLE(("cb_type=%u", cb_type));
 
     // clang-format off
-    switch (type) {
+    switch (cb_type) {
     case TZ_UI_STREAM_CB_ACCEPT: TZ_CHECK(provide_pubkey()); break;
     case TZ_UI_STREAM_CB_REFILL:                             break;
     case TZ_UI_STREAM_CB_REJECT: TZ_FAIL(EXC_REJECT);        break;
@@ -94,8 +94,13 @@ prompt_address(void)
     tz_ui_stream_init(stream_cb);
     TZ_CHECK(format_pkh(buf, sizeof(buf)));
     tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Provide Key", buf,
-                          TZ_UI_ICON_NONE);
-    tz_ui_stream_push_accept_reject();
+                          TZ_UI_LAYOUT_BNP, TZ_UI_ICON_NONE);
+    tz_ui_stream_push(TZ_UI_STREAM_CB_ACCEPT, "Accept?",
+                      "Press both buttons to accept.", TZ_UI_LAYOUT_BNP,
+                      TZ_UI_ICON_TICK);
+    tz_ui_stream_push(TZ_UI_STREAM_CB_REJECT, "Reject?",
+                      "Press both buttons to reject.", TZ_UI_LAYOUT_BNP,
+                      TZ_UI_ICON_CROSS);
     tz_ui_stream_close();
     tz_ui_stream();
 
