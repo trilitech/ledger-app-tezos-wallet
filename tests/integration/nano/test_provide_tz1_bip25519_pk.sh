@@ -8,5 +8,5 @@ TIMEOUT=80 expect_section_content "Provide Key" 'tz1VKyZ3RFDwTkrz5LKcTc6fcYqZj6p
 press_button right
 expected_accept_public_key
 press_button both
-TIMEOUT=100 expect_apdu_return 210293c6b359964a4332bf1355579d665b753343f7b0a42567978cea1671f7b89f479000
+expect_apdu_return 210293c6b359964a4332bf1355579d665b753343f7b0a42567978cea1671f7b89f479000
 quit_app

@@ -74,10 +74,18 @@ typedef struct {
     main_step_t             step;
     tz_ui_stream_t          stream;
     bip32_path_with_curve_t path_with_curve;
-    struct {
-        apdu_hash_state_t hash;
-        apdu_sign_state_t sign;
-    } apdu;
+    union {
+        struct {
+            apdu_hash_state_t hash;
+            apdu_sign_state_t sign;
+        } apdu;
+        /** Warning: Use this pubkey only when apdu-hash/sign
+         * is not being used.
+         * Only being used in apdu_pubkey.c : handle_apdu_get_public_key
+         * currently.
+         * */
+        cx_ecfp_public_key_t pubkey;
+    } keys;
     char line_buf[TZ_UI_STREAM_CONTENTS_SIZE + 1];
 #ifdef HAVE_BAGL
     struct {

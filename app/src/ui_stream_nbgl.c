@@ -56,8 +56,8 @@ tz_reject(void)
     FUNC_ENTER(("void"));
 
     // Stax can reject early
-    global.apdu.sign.step              = SIGN_ST_WAIT_USER_INPUT;
-    global.apdu.sign.received_last_msg = true;
+    global.keys.apdu.sign.step              = SIGN_ST_WAIT_USER_INPUT;
+    global.keys.apdu.sign.received_last_msg = true;
 
     s->cb(TZ_UI_STREAM_CB_REJECT);
 
@@ -85,7 +85,7 @@ tz_accept_ui(void)
 
     FUNC_ENTER(("void"));
 
-    global.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
+    global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
     s->cb(TZ_UI_STREAM_CB_ACCEPT);
 
     nbgl_useCaseStatus("SIGNING\nSUCCESSFUL", true, ui_home_init);
@@ -218,7 +218,7 @@ tz_ui_stream_close(void)
     }
     s->full = true;
 
-    if (global.apdu.sign.u.clear.skip_to_sign) {
+    if (global.keys.apdu.sign.u.clear.skip_to_sign) {
         tz_ui_stream();
     }
 
@@ -245,7 +245,7 @@ tz_ui_nav_cb(uint8_t page, nbgl_pageContent_t *content)
     if (page == LAST_PAGE_FOR_REVIEW) {
         // skipped
         PRINTF("Skip requested");
-        global.apdu.sign.u.clear.skip_to_sign = true;
+        global.keys.apdu.sign.u.clear.skip_to_sign = true;
         tz_ui_continue();
     }
 
