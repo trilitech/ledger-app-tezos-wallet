@@ -21,6 +21,8 @@
 
 #pragma once
 
+#include <memory.h>
+#include <string.h>
 #include <bolos_target.h>
 
 #define TZ_SCREEN_WITDH_FULL_REGULAR_11PX       19

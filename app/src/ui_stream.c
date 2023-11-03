@@ -17,6 +17,7 @@
    limitations under the License. */
 
 #include "globals.h"
+#include "ui_strings.h"
 
 /* Prototypes */
 
