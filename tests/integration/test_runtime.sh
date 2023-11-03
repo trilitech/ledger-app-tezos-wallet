@@ -229,11 +229,7 @@ expected_accept_public_key() {
 
 expected_reject() {
     echo " - expected_reject"
-    if [ "$TARGET" == "nanos" ]; then
-	expect_full_text 'Reject?'
-    else
-	expect_full_text 'Reject?' 'Press both buttons to reject.'
-    fi
+    expect_full_text 'Reject'
 }
 
 expected_parsing_error() {
