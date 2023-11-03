@@ -20,8 +20,8 @@
 
 #pragma once
 
-#include <os.h>
 #include <io.h>
+#include <os.h>
 
 #define SW_OK 0x9000
 

@@ -18,6 +18,7 @@
 
 #include "globals.h"
 #include "exception.h"
+#include "ui_strings.h"
 
 /* Prototypes */
 
