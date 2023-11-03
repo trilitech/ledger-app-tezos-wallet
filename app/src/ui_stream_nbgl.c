@@ -166,8 +166,11 @@ tz_ui_stream_init(void (*cb)(uint8_t))
     memset(s, 0x0, sizeof(*s));
     s->cb      = cb;
     s->full    = false;
+    s->last    = 0;
     s->current = -1;
     s->total   = -1;
+
+    ui_strings_init();
 
     nbgl_useCaseReviewStart(&C_tezos, "Review request to sign operation",
                             NULL, "Reject request", tz_ui_review_start,

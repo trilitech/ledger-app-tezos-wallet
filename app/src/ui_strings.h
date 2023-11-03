@@ -35,7 +35,12 @@
    `tz_ui_stream_push`, calling `tz_ui_stream_close`, and launching
    with a `refill` callback set to NULL. */
 
+#ifdef TARGET_NANOS
 #define BUFF_LEN 128
+#else
+#define BUFF_LEN 256
+#endif
+
 typedef struct {
     char   buffer[BUFF_LEN];
     char  *start;

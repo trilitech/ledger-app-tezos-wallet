@@ -43,6 +43,8 @@
 
 #include <stdbool.h>
 
+#include "ui_strings.h"
+
 #ifdef TARGET_NANOS
 #define TZ_UI_STREAM_HISTORY_SCREENS 5
 #else
@@ -113,8 +115,8 @@ typedef struct {
     tz_ui_icon_t        icon;
     tz_ui_layout_type_t layout_type;
     tz_ui_cb_type_t     cb_type;
-    char                title[TZ_UI_STREAM_TITLE_WIDTH + 1];
-    char body[TZ_UI_STREAM_CONTENTS_LINES][TZ_UI_STREAM_CONTENTS_WIDTH + 1];
+    char               *title;
+    char               *body[TZ_UI_STREAM_CONTENTS_LINES];
 } tz_ui_stream_screen_t;
 
 #ifdef HAVE_NBGL
@@ -129,8 +131,10 @@ typedef struct {
 typedef struct {
     void (*cb)(tz_ui_cb_type_t);
     tz_ui_stream_screen_t screens[TZ_UI_STREAM_HISTORY_SCREENS];
+    tz_ui_strings_t       strings;
     int16_t               current;
     int16_t               total;
+    int16_t               last;
     bool                  full;
     // FIXME: workaround for issue with non-local control flow. Remove once
     // fixed see !66
