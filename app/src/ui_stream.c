@@ -47,6 +47,9 @@ tz_ui_stream_init(void (*cb)(uint8_t))
     s->full    = false;
     s->current = 0;
     s->total   = -1;
+
+    ui_strings_init();
+
     FUNC_LEAVE();
 }
 #endif
@@ -154,9 +157,17 @@ tz_ui_stream_pushl(tz_ui_cb_type_t type, const char *title, const char *value,
     s->total++;
     int bucket = s->total % TZ_UI_STREAM_HISTORY_SCREENS;
 
-    STRLCPY(s->screens[bucket].title, title);
-    for (i = 0; i < TZ_UI_STREAM_CONTENTS_LINES; i++)
-        s->screens[bucket].body[i][0] = '\0';
+    /* FIXME: we should only override previous screen if we're not displaying it!! */
+    /*        (if we update the ux struct to point directly here that is) */
+
+    /* drop the previous screen text in our bucket */
+    if (s->screens[bucket].title)
+      ui_strings_drop(s->screens[bucket].title);
+    for (i = 0; i < TZ_UI_STREAM_CONTENTS_LINES && *s->screens[bucket].body[i]; i++) {
+      ui_strings_drop(*s->screens[bucket].body[i]);
+    } 
+
+    ui_strings_push(title, strlen(title), s->screens[bucket].title);
 
     // Ensure things fit on one line
     size_t length = strlen(value);
@@ -182,7 +193,8 @@ tz_ui_stream_pushl(tz_ui_cb_type_t type, const char *title, const char *value,
             "offset: %d)\n",
             &value[offset], will_fit, line, offset);
 
-        strlcpy(s->screens[bucket].body[line], &value[offset], will_fit + 1);
+        /* strlcpy(s->screens[bucket].body[line], &value[offset], will_fit + 1); */
+        ui_strings_push(&value[offset], will_fit, *s->screens[bucket].body[line]);
 
         offset += will_fit;
 
@@ -194,7 +206,7 @@ tz_ui_stream_pushl(tz_ui_cb_type_t type, const char *title, const char *value,
     PRINTF("[DEBUG]        title:     \"%s\"\n", s->screens[bucket].title);
     for (line = 0; line < TZ_UI_STREAM_CONTENTS_LINES; line++)
         PRINTF("[DEBUG]        value[%d]: \"%s\"\n", line,
-               s->screens[bucket].body[line]);
+               *s->screens[bucket].body[line]);
     PRINTF("[DEBUG]        total:     %d -> %d\n", prev_total, s->total);
     PRINTF("[DEBUG]        current:   %d -> %d\n", prev_current, s->current);
     PRINTF("[DEBUG]        offset:    %d\n", offset);
@@ -347,7 +359,8 @@ redisplay(void)
 
     STRLCPY(global.ux.lines[0], s->screens[bucket].title);
     for (i = 0; i < TZ_UI_STREAM_CONTENTS_LINES; i++) {
-        STRLCPY(global.ux.lines[i + 1], s->screens[bucket].body[i]);
+      if (*s->screens[bucket].body[i])
+        STRLCPY(global.ux.lines[i + 1], *s->screens[bucket].body[i]);
     }
 
     tz_ui_icon_t icon = s->screens[bucket].icon;

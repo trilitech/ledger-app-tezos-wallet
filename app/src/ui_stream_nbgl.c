@@ -27,6 +27,10 @@
 void change_screen_right(void);
 bool tz_ui_nav_cb(uint8_t, nbgl_pageContent_t *);
 
+enum {
+    TZ_UI_DETAILS_EXPAND = FIRST_USER_TOKEN,
+};
+
 void
 tz_cancel_ui(void)
 {
@@ -122,11 +126,40 @@ tz_ui_continue(void)
 }
 
 void
+tz_ui_stream_controls_cb(int token, __attribute__((unused)) uint8_t index)
+{
+    FUNC_ENTER(("token=%d, index=%d", token, index));
+
+    if (token == TZ_UI_DETAILS_EXPAND) {
+        char *title = "something";
+        char *body
+            = "cOMPLETELYMADEUPcOMPLETELYMADEUPcOMPLETELYMADEUPcOMPLETELYMADE"
+              "UPcOMPLETELYMADEUPcOMPLETELYMADEUPcOMPLETELYMADEUPcOMPLETELYMA"
+              "DEUPcOMPLETELYMADEUPcOMPLETELYMADEUPcOMPLETELYMADEUPcOMPLETELY"
+              "MADEUPcOMPLETELYMADEUPcOMPLETELYMADEUPcOMPLETELYMADEUPcOMPLETE"
+              "LYMADEUPcOMPLETELYMADEUPcOMPLETELYMADEUPcOMPLETELYMADEUPcOMPLE"
+              "TELYMADEUPcOMPLETELYMADEUPcOMPLETELYMADEUPcOMPLETELYMADEUPcOMP"
+              "LETELYMADEUPcOMPLETELYMADEUPcOMPLETELYMADEUPcOMPLETELYMADEUPcO"
+              "MPLETELYMADEUPcOMPLETELYMADEUPcOMPLETELYMADEUPcOMPLETELYMADEUP"
+              "cOMPLETELYMADEUPcOMPLETELYMADEUPcOMPLETELYMADEUPcOMPLETELYMADE"
+              "UPcOMPLETELYMADEUPcOMPLETELYMADEUPcOMPLETELYMADEUPcOMPLETELYMA"
+              "DEUPcOMPLETELYMADEUP";
+
+        nbgl_useCaseViewDetails(title, body, false);
+    }
+
+    FUNC_LEAVE();
+}
+
+void
 tz_ui_stream_cb(void)
 {
     FUNC_ENTER(("void"));
 
-    nbgl_useCaseForwardOnlyReview("Reject", NULL, tz_ui_nav_cb, tz_choice_ui);
+    nbgl_useCaseRegularReview(0, /* init-page */
+                              0, /* num pages, zero for no progress */
+                              "Reject", tz_ui_stream_controls_cb,
+                              tz_ui_nav_cb, tz_choice_ui);
 
     FUNC_LEAVE();
 }
@@ -193,12 +226,22 @@ tz_ui_current_screen(__attribute__((unused)) uint8_t pairIndex)
     c->title[0] = 0;
     c->body[0]  = 0;
 
+    char *body
+        = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBB"
+          "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+          "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+          "BBBBBBBBBBBBBBF";
+
     size_t bucket = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
     STRLCPY(c->title, s->screens[bucket].title);
     STRLCPY(c->body, s->screens[bucket].body[0]);
 
-    c->pair.item  = c->title;
-    c->pair.value = c->body;
+    c->pair.item = c->title;
+    /* c->pair.value = c->body; */
+    c->pair.value = body;
 
     PRINTF("show title=%s, body=%s from bucket=%d\n", c->title, c->body,
            bucket);
@@ -278,10 +321,21 @@ tz_ui_nav_cb(uint8_t page, nbgl_pageContent_t *content)
         c->list.nbPairs           = 1;
         c->list.smallCaseForValue = false;
         c->list.wrapping          = false;
+        /* content->type         = TAG_VALUE_LIST; */
+        /* content->tagValueList = c->list; */
 
-        content->type         = TAG_VALUE_LIST;
-        content->tagValueList = c->list;
-        result                = true;
+        content->type                               = TAG_VALUE_DETAILS;
+        content->tagValueDetails.detailsButtonText  = "More";
+        content->tagValueDetails.detailsButtonIcon  = NULL;
+        content->tagValueDetails.detailsButtonToken = TZ_UI_DETAILS_EXPAND;
+        content->tagValueDetails.tagValueList.nbMaxLinesForValue
+            = NB_MAX_LINES_IN_REVIEW;
+        content->tagValueDetails.tagValueList.nbPairs = 1;
+        content->tagValueDetails.tagValueList.pairs = tz_ui_current_screen(0);
+        /* content->tagValueDetails.tagValueList.callback =
+         * tz_ui_current_screen; */
+
+        result = true;
     }
 
     FUNC_LEAVE();

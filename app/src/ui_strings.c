@@ -20,19 +20,24 @@
 #include "globals.h"
 #include "ui_strings.h"
 
-#define BUFF_LEN 512
-static char buff[BUFF_LEN] = {0};
-#define BUFF_START ((char *)&buff)
-#define BUFF_END   ((char *)(&buff + BUFF_LEN))
-static char  *start        = BUFF_START;
-static char  *end          = BUFF_START;
-static char  *internal_end = BUFF_START;
-static size_t count        = 0;
+#define BUFF_START ((char *)(s->buffer))
+#define BUFF_END   ((char *)(s->buffer) + BUFF_LEN)
+
+void ui_strings_init(void) {
+  tz_ui_strings_t *s = &global.stream.strings;
+
+  memset(s->buffer, BUFF_LEN, '\0');
+  s->start = BUFF_START;
+  s->end = BUFF_END;
+  s->internal_end = BUFF_START;
+  s->count = 0;
+}
 
 /* Prototypes */
 void ui_strings_push(const char *str, size_t len, char *out);
 void ui_strings_drop(char *str);
 void ui_strings_fit_up_to(size_t len, char *write_start, char *write_end);
+void ui_strings_can_fit(size_t len, bool *can_fit);
 bool ui_strings_is_empty();
 
 /* Definitions */
@@ -45,39 +50,40 @@ bool ui_strings_is_empty();
 void
 ui_strings_fit_up_to(size_t len, char *write_start, char *write_end)
 {
-    TZ_PREAMBLE(("len=%d, start=%p, end=%p", len, start, end));
+    tz_ui_strings_t *s = &global.stream.strings;
+    TZ_PREAMBLE(("len=%d, start=%p, end=%p", len, s->start, s->end));
 
     /* Preconditions */
     TZ_ASSERT(EXC_MEMORY_ERROR, (write_start == NULL && write_end == NULL));
     TZ_ASSERT(EXC_MEMORY_ERROR, (len > 0));
     /* Internal checks */
-    TZ_ASSERT(EXC_MEMORY_ERROR, (end <= internal_end));
+    TZ_ASSERT(EXC_MEMORY_ERROR, (s->end <= s->internal_end));
 
     if (ui_strings_is_empty()) {
         TZ_ASSERT(EXC_MEMORY_ERROR, (len < BUFF_LEN));
 
-        write_start = start;
-        write_end   = start + len;
+        write_start = s->start;
+        write_end   = s->start + len;
 
         TZ_SUCCEED();
     }
 
     /* Buffer not empty */
 
-    if (start >= end) {
-        write_start = end;
-        write_end   = start - 1;
+    if (s->start >= s->end) {
+        write_start = s->end;
+        write_end   = s->start - 1;
 
         TZ_SUCCEED();
     }
 
     /* start < end */
-    size_t bytes_at_start = (start - BUFF_START);
-    size_t bytes_at_end   = (BUFF_END - end);
+    size_t bytes_at_start = (s->start - BUFF_START);
+    size_t bytes_at_end   = (BUFF_END - s->end);
 
     if (bytes_at_end > len || bytes_at_end >= bytes_at_start) {
-        write_start = end;
-        write_end   = end + len;
+        write_start = s->end;
+        write_end   = s->end + len;
     } else {
         write_start = BUFF_START;
         write_end   = BUFF_START + bytes_at_start - 1;
@@ -112,7 +118,8 @@ ui_strings_can_fit(size_t len, bool *can_fit)
 void
 ui_strings_push(const char *in, size_t len, char *out)
 {
-    TZ_PREAMBLE(("in=%p, len=%d, start=%p, end=%p", in, len, start, end));
+    tz_ui_strings_t *s = &global.stream.strings;
+    TZ_PREAMBLE(("in=%p, len=%d, start=%p, end=%p", in, len, s->start, s->end));
 
     /* Preconditions */
     TZ_ASSERT(EXC_MEMORY_ERROR, (out == NULL));
@@ -120,7 +127,7 @@ ui_strings_push(const char *in, size_t len, char *out)
     TZ_ASSERT(EXC_MEMORY_ERROR, (len > 0));
     /* Internal checks */
     /* TZ_ASSERT(EXC_MEMORY_ERROR, (start < internal_end && count > 0)); */
-    TZ_ASSERT(EXC_MEMORY_ERROR, (end <= internal_end));
+    TZ_ASSERT(EXC_MEMORY_ERROR, (s->end <= s->internal_end));
 
     char *ws = NULL;
     char *we = NULL;
@@ -129,11 +136,12 @@ ui_strings_push(const char *in, size_t len, char *out)
     TZ_ASSERT(EXC_MEMORY_ERROR, (we - ws >= (int)len));
 
     strlcpy(ws, in, we - ws + 1);
+    s->count++;
 
-    end = we + 1;
+    s->end = we + 1;
 
-    if (end > internal_end)
-        internal_end = end;
+    if (s->end > s->internal_end)
+        s->internal_end = s->end;
 
     TZ_POSTAMBLE;
 }
@@ -141,42 +149,43 @@ ui_strings_push(const char *in, size_t len, char *out)
 void
 ui_strings_drop(char *in)
 {
-    TZ_PREAMBLE(("in=%p, start=%p, end=%p", in, start, end));
+    tz_ui_strings_t *s = &global.stream.strings;
+    TZ_PREAMBLE(("in=%p, start=%p, end=%p", in, s->start, s->end));
 
     /* argument checks */
-    TZ_ASSERT(EXC_MEMORY_ERROR, (in == start));
+    TZ_ASSERT(EXC_MEMORY_ERROR, (in == s->start));
     TZ_ASSERT(EXC_MEMORY_ERROR, (!ui_strings_is_empty()));
     /* Internal checks */
-    TZ_ASSERT(EXC_MEMORY_ERROR, (start < internal_end));
-    TZ_ASSERT(EXC_MEMORY_ERROR, (end <= internal_end));
+    TZ_ASSERT(EXC_MEMORY_ERROR, (s->start < s->internal_end));
+    TZ_ASSERT(EXC_MEMORY_ERROR, (s->end <= s->internal_end));
 
     size_t len = strlen(in);
     TZ_ASSERT(EXC_MEMORY_ERROR, (len > 0));
 
     char *new = in + len + 1;
-    TZ_ASSERT(EXC_MEMORY_ERROR, (new <= internal_end));
+    TZ_ASSERT(EXC_MEMORY_ERROR, (new <= s->internal_end));
 
     in = NULL;
-    count--;
-    memset(start, len, '\0');
+    s->count--;
+    memset(s->start, len, '\0');
 
-    if (new < internal_end) {
+    if (new < s->internal_end) {
         TZ_ASSERT(EXC_MEMORY_ERROR, (*new != '\0'));
-        start = new;
+        s->start = new;
         TZ_SUCCEED();
     }
 
     /* This was the last string in the region */
 
-    start = BUFF_START;
+    s->start = BUFF_START;
 
-    if (end == internal_end) {
+    if (s->end == s->internal_end) {
         /* This was the last string in the ring buffer */
-        end = BUFF_START;
+        s->end = BUFF_START;
         TZ_ASSERT(EXC_MEMORY_ERROR, (ui_strings_is_empty()));
     }
 
-    internal_end = end;
+    s->internal_end = s->end;
 
     TZ_POSTAMBLE;
 }
@@ -184,5 +193,6 @@ ui_strings_drop(char *in)
 bool
 ui_strings_is_empty()
 {
-    return start == end && count == 0; /* check COUNT is zero! */
+    tz_ui_strings_t *s = &global.stream.strings;
+    return s->start == s->end && s->count == 0; /* check COUNT is zero! */
 }

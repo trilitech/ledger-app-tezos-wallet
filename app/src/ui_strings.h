@@ -35,6 +35,17 @@
    `tz_ui_stream_push`, calling `tz_ui_stream_close`, and launching
    with a `refill` callback set to NULL. */
 
-void tz_ui_push(const char *, size_t, char *);
-void tz_ui_drop(char *);
-void ui_strings_fit_up_to(size_t, char *, char *);
+#define BUFF_LEN 128
+typedef struct {
+  char   buffer[BUFF_LEN];
+  char*  start;
+  char*  end;
+  char*  internal_end;
+  size_t count;
+} tz_ui_strings_t;
+
+void ui_strings_init(void);
+void ui_strings_push(const char *, size_t, char *);
+void ui_strings_drop(char *);
+void ui_strings_can_fit(size_t, bool *);
+
