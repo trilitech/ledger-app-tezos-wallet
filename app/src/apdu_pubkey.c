@@ -35,25 +35,21 @@
 
 static void provide_pubkey(void);
 static void prompt_address(void);
-static void format_pkh(char *, size_t);
+static void format_pkh(cx_ecfp_public_key_t *, char *, size_t);
 static void stream_cb(tz_ui_cb_type_t);
 
 static void
 provide_pubkey(void)
 {
-    buffer_t             bufs[2] = {0};
-    uint8_t              byte;
-    cx_ecfp_public_key_t pubkey;
+    buffer_t bufs[2] = {0};
+    uint8_t  byte;
     TZ_PREAMBLE(("void"));
 
-    TZ_CHECK(derive_pk(&pubkey, global.path_with_curve.derivation_type,
-                       &global.path_with_curve.bip32_path));
-
-    byte         = pubkey.W_len;
+    byte         = global.keys.pubkey.W_len;
     bufs[0].ptr  = &byte;
     bufs[0].size = 1;
-    bufs[1].ptr  = pubkey.W;
-    bufs[1].size = pubkey.W_len;
+    bufs[1].ptr  = global.keys.pubkey.W;
+    bufs[1].size = global.keys.pubkey.W_len;
     io_send_response_buffers(bufs, 2, SW_OK);
     global.step = ST_IDLE;
 
@@ -61,10 +57,9 @@ provide_pubkey(void)
 }
 
 static void
-format_pkh(char *buffer, size_t len)
+format_pkh(cx_ecfp_public_key_t *pubkey, char *buffer, size_t len)
 {
-    derive_pkh(global.path_with_curve.derivation_type,
-               &global.path_with_curve.bip32_path, buffer, len);
+    derive_pkh(pubkey, global.path_with_curve.derivation_type, buffer, len);
 }
 
 static void
@@ -80,6 +75,8 @@ stream_cb(tz_ui_cb_type_t cb_type)
     }
     // clang-format on
 
+    // clear the public key from global storage after operation.
+    memset(&global.keys, 0, sizeof(global.keys));
     TZ_POSTAMBLE;
 }
 
@@ -92,7 +89,7 @@ prompt_address(void)
 
     global.step = ST_PROMPT;
     tz_ui_stream_init(stream_cb);
-    TZ_CHECK(format_pkh(buf, sizeof(buf)));
+    TZ_CHECK(format_pkh(&global.keys.pubkey, buf, sizeof(buf)));
     tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Provide Key", buf,
                           TZ_UI_LAYOUT_BNP, TZ_UI_ICON_NONE);
     tz_ui_stream_push(TZ_UI_STREAM_CB_ACCEPT, "Accept?",
@@ -139,7 +136,7 @@ verify_address(void)
 {
     TZ_PREAMBLE(("void"));
 
-    TZ_CHECK(format_pkh(global.stream.verify_address,
+    TZ_CHECK(format_pkh(&global.keys.pubkey, global.stream.verify_address,
                         sizeof(global.stream.verify_address)));
     nbgl_useCaseAddressConfirmation(global.stream.verify_address,
                                     confirmation_callback);
@@ -177,6 +174,12 @@ handle_apdu_get_public_key(command_t *cmd)
               check_derivation_type(global.path_with_curve.derivation_type));
     TZ_CHECK(read_bip32_path(&global.path_with_curve.bip32_path, cmd->data,
                              cmd->lc));
+
+    // Derive public key and store it on global.keys.pubkey
+
+    TZ_CHECK(derive_pk(&global.keys.pubkey,
+                       global.path_with_curve.derivation_type,
+                       &global.path_with_curve.bip32_path));
     if (prompt)
         prompt_address();
     else

@@ -94,16 +94,13 @@ derive_pk(cx_ecfp_public_key_t *public_key, derivation_type_t derivation_type,
 }
 
 void
-derive_pkh(derivation_type_t derivation_type, const bip32_path_t *bip32_path,
+derive_pkh(cx_ecfp_public_key_t *pubkey, derivation_type_t derivation_type,
            char *buffer, size_t len)
 {
-    cx_ecfp_public_key_t pubkey = {0};
-    uint8_t              hash[21];
+    uint8_t hash[21];
     TZ_PREAMBLE(("buffer=%p, len=%u", buffer, len));
-
     TZ_ASSERT_NOTNULL(buffer);
-    TZ_CHECK(derive_pk(&pubkey, derivation_type, bip32_path));
-    TZ_CHECK(public_key_hash(hash + 1, 20, NULL, derivation_type, &pubkey));
+    TZ_CHECK(public_key_hash(hash + 1, 20, NULL, derivation_type, pubkey));
     // clang-format off
     switch (derivation_type) {
     case DERIVATION_TYPE_SECP256K1: hash[0] = 1; break;

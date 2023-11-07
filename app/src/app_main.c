@@ -44,8 +44,10 @@ print_memory_layout(void)
     PRINTF("[PTR]    G_io_apdu_buffer: 0x%p\n", G_io_apdu_buffer);
     PRINTF("[PTR]    global: 0x%p\n", &global);
     PRINTF("[SIZEOF] global: %d\n", sizeof(global));
-    PRINTF("[SIZEOF] global.apdu.sign: %d\n", sizeof(global.apdu.sign));
-    PRINTF("[SIZEOF] global.apdu.hash: %d\n", sizeof(global.apdu.hash));
+    PRINTF("[SIZEOF] global.keys.apdu.sign: %d\n",
+           sizeof(global.keys.apdu.sign));
+    PRINTF("[SIZEOF] global.keys.apdu.hash: %d\n",
+           sizeof(global.keys.apdu.hash));
     PRINTF("[SIZEOF] global.stream: %d\n", sizeof(global.stream));
     PRINTF("[PTR]    G_io_apdu_buffer: 0x%p\n", G_io_apdu_buffer);
     PRINTF("[SIZEOF] G_io_apdu_buffer: %u\n", sizeof(G_io_apdu_buffer));

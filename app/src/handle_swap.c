@@ -75,10 +75,9 @@ swap_handle_check_address(check_address_parameters_t *params)
 
     TZ_CHECK(read_bip32_path(&bip32_path, params->address_parameters,
                              params->address_parameters_length));
-
-    TZ_CHECK(
-        derive_pkh(derivation_type, &bip32_path, address, sizeof(address)));
-
+    cx_ecfp_public_key_t pubkey;
+    TZ_CHECK(derive_pk(&pubkey, derivation_type, &bip32_path));
+    TZ_CHECK(derive_pkh(&pubkey, derivation_type, address, sizeof(address)));
     if (strcmp(params->address_to_check, address) != 0) {
         PRINTF("[ERROR] Check address fail: %s !=  %s\n",
                params->address_to_check, address);
@@ -213,8 +212,9 @@ error:
 void
 swap_check_validity(void)
 {
-    tz_operation_state *op = &global.apdu.sign.u.clear.parser_state.operation;
-    char                dstaddr[ADDRESS_MAX_SIZE];
+    tz_operation_state *op
+        = &global.keys.apdu.sign.u.clear.parser_state.operation;
+    char dstaddr[ADDRESS_MAX_SIZE];
     TZ_PREAMBLE((""));
 
     if (!G_called_from_swap)
