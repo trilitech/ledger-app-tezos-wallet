@@ -10,3 +10,12 @@ repos:
       - id: end-of-file-fixer
       - id: check-yaml
       - id: check-added-large-files
+  - repo: local
+    hooks:
+      - id: clang-format
+        name: clang-format
+        description: Run `clang-format` on C/C++/CUDA files.
+        entry: clang-format-15 -i
+        language: system
+        files: ^app/src
+        types: [file, c]
