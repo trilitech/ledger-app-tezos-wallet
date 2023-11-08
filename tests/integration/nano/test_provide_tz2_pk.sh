@@ -2,6 +2,8 @@ start_speculos "$seed"
 sleep 0.2
 expected_home
 send_apdu 8003000111048000002c800006c18000000080000000
+expected_verify_address
+press_button right
 expect_section_content "Provide Key" 'tz2GB5YHqF4UzQ8GP5yUqdhY9oVWRXCY2hPU'
 press_button right
 expected_accept_public_key

@@ -164,6 +164,15 @@ expected_version() {
     expect_full_text 'Version' $APPVERSION
 }
 
+expected_verify_address() {
+    echo " - expected_verify_address"
+    if [ "$TARGET" == "nanos" ]; then
+	expect_full_text 'Verify address'
+    else
+	expect_full_text 'Verify' 'address'
+    fi
+}
+
 set_blind_signing() {
     echo " - set_blind_signing"
     expected_home
@@ -220,11 +229,7 @@ expected_accept() {
 
 expected_accept_public_key() {
     echo " - expected_accept_public_key"
-    if [ "$TARGET" == "nanos" ]; then
-	expect_full_text 'Accept?'
-    else
-	expect_full_text 'Accept?' 'Press both buttons to accept.'
-    fi
+    expect_full_text 'Approve'
 }
 
 expected_reject() {
