@@ -121,9 +121,7 @@ typedef struct {
 
 #ifdef HAVE_NBGL
 typedef struct {
-    char                      title[TZ_UI_STREAM_TITLE_WIDTH + 1];
-    char                      body[TZ_UI_STREAM_CONTENTS_WIDTH + 1];
-    nbgl_layoutTagValue_t     pair;
+    nbgl_layoutTagValue_t     pairs[1];
     nbgl_layoutTagValueList_t list;
 } tz_ui_stream_display_t;
 #endif  // HAVE_NBGL

@@ -179,36 +179,6 @@ tz_ui_stream_init(void (*cb)(uint8_t))
     FUNC_LEAVE();
 }
 
-static nbgl_layoutTagValue_t *
-tz_ui_current_screen(__attribute__((unused)) uint8_t pairIndex)
-{
-    FUNC_ENTER(("pairIndex=%d", pairIndex));
-
-    tz_ui_stream_t         *s = &global.stream;
-    tz_ui_stream_display_t *c = &s->current_screen;
-
-    PRINTF("[DEBUG] pressed_right=%d\n", s->pressed_right);
-
-    if (s->current < s->total && s->pressed_right) {
-        s->pressed_right = false;
-    }
-
-    c->title[0] = 0;
-    c->body[0]  = 0;
-
-    size_t bucket = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
-    STRLCPY(c->title, s->screens[bucket].title);
-    STRLCPY(c->body, s->screens[bucket].body[0]);
-
-    c->pair.item  = c->title;
-    c->pair.value = c->body;
-
-    PRINTF("show title=%s, body=%s from bucket=%d\n", c->title, c->body,
-           bucket);
-    FUNC_LEAVE();
-    return &c->pair;
-}
-
 void
 tz_ui_stream_close(void)
 {
@@ -275,8 +245,16 @@ tz_ui_nav_cb(uint8_t page, nbgl_pageContent_t *content)
         nbgl_useCaseSpinner("Loading operation");
         result = false;
     } else {
-        c->list.pairs             = NULL;
-        c->list.callback          = tz_ui_current_screen;
+        if (s->current < s->total && s->pressed_right) {
+            s->pressed_right = false;
+        }
+
+        size_t bucket     = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
+        c->pairs[0].item  = s->screens[bucket].title;
+        c->pairs[0].value = s->screens[bucket].body[0];
+
+        c->list.pairs             = c->pairs;
+        c->list.callback          = NULL;
         c->list.startIndex        = 0;
         c->list.nbPairs           = 1;
         c->list.smallCaseForValue = false;
