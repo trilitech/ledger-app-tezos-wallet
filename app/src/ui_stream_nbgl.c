@@ -36,9 +36,10 @@ tz_cancel_ui(void)
     FUNC_ENTER(("void"));
 
     size_t bucket = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
-    STRLCPY(error_message, s->screens[bucket].title);
+    STRLCPY(error_message, s->screens[bucket].pairs[0].item);
     strlcat(error_message, "\n", sizeof(error_message));
-    strlcat(error_message, s->screens[bucket].body[0], sizeof(error_message));
+    strlcat(error_message, s->screens[bucket].pairs[0].value,
+            sizeof(error_message));
 
     s->cb(TZ_UI_STREAM_CB_CANCEL);
 
@@ -249,14 +250,12 @@ tz_ui_nav_cb(uint8_t page, nbgl_pageContent_t *content)
             s->pressed_right = false;
         }
 
-        size_t bucket     = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
-        c->pairs[0].item  = s->screens[bucket].title;
-        c->pairs[0].value = s->screens[bucket].body[0];
+        size_t bucket = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
 
-        c->list.pairs             = c->pairs;
+        c->list.pairs             = s->screens[bucket].pairs;
         c->list.callback          = NULL;
         c->list.startIndex        = 0;
-        c->list.nbPairs           = 1;
+        c->list.nbPairs           = s->screens[bucket].nb_pairs;
         c->list.smallCaseForValue = false;
         c->list.wrapping          = false;
 

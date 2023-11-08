@@ -163,7 +163,12 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
     if (s->total > 0 && bucket == (s->last % TZ_UI_STREAM_HISTORY_SCREENS))
         drop_last_screen();
 
+#ifdef HAVE_BAGL
     push_str(title, strlen(title), &s->screens[bucket].title);
+#else
+    push_str(title, strlen(title),
+             (char **)&s->screens[bucket].pairs[0].item);
+#endif
 
     // Ensure things fit on one line
     size_t length = strlen(value);
@@ -190,7 +195,13 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
             "offset: %d)\n",
             &value[offset], will_fit, line, offset);
 
+#ifdef HAVE_BAGL
         push_str(&value[offset], will_fit, &s->screens[bucket].body[line]);
+#else
+        push_str(&value[offset], will_fit,
+                 (char **)&s->screens[bucket].pairs[0].value);
+        s->screens[bucket].nb_pairs = 1;
+#endif
 
         offset += will_fit;
 
@@ -199,6 +210,7 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
 
     PRINTF("[DEBUG] tz_ui_stream_pushl(%s, %s, %u)\n", title, value, max);
     PRINTF("[DEBUG]        bucket     %d\n", bucket);
+#ifdef HAVE_BAGL
     PRINTF("[DEBUG]        title:     \"%s\"\n", s->screens[bucket].title);
     for (line = 0; line < TZ_UI_STREAM_CONTENTS_LINES; line++)
         if (s->screens[bucket].body[line]) {
@@ -207,6 +219,12 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
         } else {
             PRINTF("[DEBUG]        value[%d]:  \"\"\n", line);
         }
+#else
+    PRINTF("[DEBUG]        title:     \"%s\"\n",
+           s->screens[bucket].pairs[0].item);
+    PRINTF("[DEBUG]        value[%d]:  \"\"\n",
+           s->screens[bucket].pairs[0].value);
+#endif
     PRINTF("[DEBUG]        total:     %d -> %d\n", prev_total, s->total);
     PRINTF("[DEBUG]        current:   %d -> %d\n", prev_current, s->current);
     PRINTF("[DEBUG]        last:      %d -> %d\n", prev_last, s->last);
@@ -541,10 +559,11 @@ drop_last_screen(void)
 {
     tz_ui_stream_t *s      = &global.stream;
     size_t          bucket = s->last % TZ_UI_STREAM_HISTORY_SCREENS;
-    size_t          i;
 
     TZ_PREAMBLE(("last: %d", s->last));
 
+#ifdef HAVE_BAGL
+    size_t i;
     if (s->screens[bucket].title)
         TZ_CHECK(ui_strings_drop(&s->screens[bucket].title));
     for (i = 0; i < TZ_UI_STREAM_CONTENTS_LINES; i++) {
@@ -552,7 +571,13 @@ drop_last_screen(void)
             TZ_CHECK(ui_strings_drop(&s->screens[bucket].body[i]));
         }
     }
-
+#else
+    if (s->screens[bucket].pairs[0].item)
+        TZ_CHECK(ui_strings_drop((char **)&s->screens[bucket].pairs[0].item));
+    if (s->screens[bucket].pairs[0].value)
+        TZ_CHECK(
+            ui_strings_drop((char **)&s->screens[bucket].pairs[0].value));
+#endif
     s->last++;
 
     TZ_POSTAMBLE;

@@ -115,13 +115,18 @@ typedef struct {
     tz_ui_icon_t        icon;
     tz_ui_layout_type_t layout_type;
     tz_ui_cb_type_t     cb_type;
-    char               *title;
-    char               *body[TZ_UI_STREAM_CONTENTS_LINES];
+#ifdef HAVE_BAGL
+    char *title;
+    char *body[TZ_UI_STREAM_CONTENTS_LINES];
+#else
+    /* NB_MAX_DISPLAYED_PAIRS_IN_REVIEW]; */
+    nbgl_layoutTagValue_t pairs[TZ_UI_STREAM_CONTENTS_LINES];
+    uint8_t               nb_pairs;
+#endif
 } tz_ui_stream_screen_t;
 
 #ifdef HAVE_NBGL
 typedef struct {
-    nbgl_layoutTagValue_t     pairs[1];
     nbgl_layoutTagValueList_t list;
 } tz_ui_stream_display_t;
 #endif  // HAVE_NBGL
