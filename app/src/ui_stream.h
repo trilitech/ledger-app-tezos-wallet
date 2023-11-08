@@ -119,8 +119,7 @@ typedef struct {
     char *title;
     char *body[TZ_UI_STREAM_CONTENTS_LINES];
 #else
-    /* NB_MAX_DISPLAYED_PAIRS_IN_REVIEW]; */
-    nbgl_layoutTagValue_t pairs[TZ_UI_STREAM_CONTENTS_LINES];
+    nbgl_layoutTagValue_t pairs[NB_MAX_DISPLAYED_PAIRS_IN_REVIEW];
     uint8_t               nb_pairs;
 #endif
 } tz_ui_stream_screen_t;

@@ -27,6 +27,9 @@
 void change_screen_right(void);
 bool tz_ui_nav_cb(uint8_t, nbgl_pageContent_t *);
 
+void drop_last_screen(void);
+void push_str(const char *, size_t, char **);
+
 void
 tz_cancel_ui(void)
 {
@@ -266,6 +269,121 @@ tz_ui_nav_cb(uint8_t page, nbgl_pageContent_t *content)
 
     FUNC_LEAVE();
     return result;
+}
+
+/* pushl mechanism */
+uint8_t
+tz_ui_max_line_chars(const char *value, int length)
+{
+    uint8_t will_fit = MIN(TZ_UI_STREAM_CONTENTS_WIDTH, length);
+
+    FUNC_ENTER(("value=\"%s\", length=%d", value, length));
+
+    /* Wrap on newline */
+    const char *tmp = memchr(value, '\n', will_fit);
+    if (tmp && (tmp - value) <= will_fit)
+        will_fit = (tmp - value);
+
+    FUNC_LEAVE();
+    return will_fit;
+}
+
+size_t
+tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
+                   const char *value, ssize_t max,
+                   tz_ui_layout_type_t layout_type, tz_ui_icon_t icon)
+{
+    tz_ui_stream_t *s = &global.stream;
+
+    FUNC_ENTER(("title=%s, value=%s", title, value));
+    if (s->full) {
+        PRINTF("trying to push in already closed stream display");
+        THROW(EXC_UNKNOWN);
+    }
+#ifdef TEZOS_DEBUG
+    int    prev_total   = s->total;
+    int    prev_current = s->current;
+    int    prev_last    = s->last;
+    size_t i;
+#endif
+
+    s->total++;
+    int bucket = s->total % TZ_UI_STREAM_HISTORY_SCREENS;
+
+    if (s->total >= 0
+        && (s->current % TZ_UI_STREAM_HISTORY_SCREENS) == bucket) {
+        PRINTF(
+            "[ERROR] PANIC!!!! Overwriting current screen, some bad things "
+            "are happening\n");
+    }
+
+    /* drop the previous screen text in our bucket */
+    if (s->total > 0 && bucket == (s->last % TZ_UI_STREAM_HISTORY_SCREENS))
+        drop_last_screen();
+
+    push_str(title, strlen(title),
+             (char **)&s->screens[bucket].pairs[0].item);
+
+    // Ensure things fit on one line
+    size_t length = strlen(value);
+    size_t offset = 0;
+
+    if (max != -1)
+        length = MIN(length, (size_t)max);
+
+    s->screens[bucket].cb_type     = cb_type;
+    s->screens[bucket].layout_type = layout_type;
+    s->screens[bucket].icon        = icon;
+
+    push_str(&value[offset], length,
+             (char **)&s->screens[bucket].pairs[0].value);
+
+    s->screens[bucket].nb_pairs = 1;
+    offset                      = length; /* FIXME */
+
+#ifdef TEZOS_DEBUG
+    PRINTF("[DEBUG] tz_ui_stream_pushl(%s, %s, %u)\n", title, value, max);
+    PRINTF("[DEBUG]        bucket     %d\n", bucket);
+
+    for (i = 0; i < s->screens[bucket].nb_pairs; i++) {
+        PRINTF("[DEBUG]        item[%d]:     \"%s\"\n", i,
+               s->screens[bucket].pairs[i].item);
+        PRINTF("[DEBUG]        value[%d]:  \"%s\"\n", i,
+               s->screens[bucket].pairs[i].value);
+    }
+    PRINTF("[DEBUG]        total:     %d -> %d\n", prev_total, s->total);
+    PRINTF("[DEBUG]        current:   %d -> %d\n", prev_current, s->current);
+    PRINTF("[DEBUG]        last:      %d -> %d\n", prev_last, s->last);
+    PRINTF("[DEBUG]        offset:    %d\n", offset);
+#endif  // TEZOS_DEBUG
+
+    FUNC_LEAVE();
+
+    return length;
+}
+
+void
+drop_last_screen(void)
+{
+    tz_ui_stream_t *s      = &global.stream;
+    size_t          bucket = s->last % TZ_UI_STREAM_HISTORY_SCREENS;
+    size_t          i;
+
+    TZ_PREAMBLE(("last: %d", s->last));
+
+    for (i = 0; i < s->screens[bucket].nb_pairs; i++) {
+        if (s->screens[bucket].pairs[i].item)
+            TZ_CHECK(
+                ui_strings_drop((char **)&s->screens[bucket].pairs[i].item));
+        if (s->screens[bucket].pairs[i].value)
+            TZ_CHECK(
+                ui_strings_drop((char **)&s->screens[bucket].pairs[i].value));
+    }
+    s->screens[bucket].nb_pairs = 0;
+
+    s->last++;
+
+    TZ_POSTAMBLE;
 }
 
 #endif
