@@ -141,7 +141,8 @@ send_continue(void)
                      || global.keys.apdu.sign.step == SIGN_ST_WAIT_DATA);
     APDU_SIGN_ASSERT(!global.keys.apdu.sign.received_last_msg);
 
-    io_send_sw(SW_OK);
+    if (global.keys.apdu.sign.step != SIGN_ST_WAIT_DATA)
+        io_send_sw(SW_OK);
     global.keys.apdu.sign.step = SIGN_ST_WAIT_DATA;
 
     TZ_POSTAMBLE;
@@ -195,9 +196,9 @@ refill_error(void)
     tz_parser_state *st = &global.keys.apdu.sign.u.clear.parser_state;
     TZ_PREAMBLE(("void"));
 
-    tz_ui_stream_push(TZ_UI_STREAM_CB_CANCEL, "Parsing error",
-                      tz_parser_result_name(st->errno), TZ_UI_LAYOUT_BNP,
-                      TZ_UI_ICON_CROSS);
+    tz_ui_stream_push_all(TZ_UI_STREAM_CB_CANCEL, "Parsing error",
+                          tz_parser_result_name(st->errno), TZ_UI_LAYOUT_BNP,
+                          TZ_UI_ICON_CROSS);
 
     tz_ui_stream_close();
     TZ_POSTAMBLE;
@@ -264,11 +265,11 @@ stream_cb(tz_ui_cb_type_t cb_type)
 
     // clang-format off
     switch (cb_type) {
-    case TZ_UI_STREAM_CB_ACCEPT: return sign_packet();
-    case TZ_UI_STREAM_CB_REFILL: return refill();
-    case TZ_UI_STREAM_CB_REJECT: return send_reject();
-    case TZ_UI_STREAM_CB_CANCEL: return send_cancel();
-    default:                     TZ_FAIL(EXC_UNKNOWN);
+    case TZ_UI_STREAM_CB_ACCEPT: TZ_CHECK(sign_packet()); break;
+    case TZ_UI_STREAM_CB_REFILL: TZ_CHECK(refill());      break;
+    case TZ_UI_STREAM_CB_REJECT: send_reject(); break;
+    case TZ_UI_STREAM_CB_CANCEL: TZ_CHECK(send_cancel()); break;
+    default:                     TZ_FAIL(EXC_UNKNOWN);    break;
     }
     // clang-format on
 

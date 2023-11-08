@@ -24,8 +24,8 @@
 #include "globals.h"
 #include "ui_stream.h"
 
-void change_screen_right(void);
 bool tz_ui_nav_cb(uint8_t, nbgl_pageContent_t *);
+bool has_final_screen(void);
 
 void drop_last_screen(void);
 void push_str(const char *, size_t, char **);
@@ -114,15 +114,16 @@ tz_choice_ui(bool accept)
 void
 tz_ui_continue(void)
 {
-    FUNC_ENTER(("void"));
-
     tz_ui_stream_t *s = &global.stream;
 
-    if (!s->full)
-        s->cb(TZ_UI_STREAM_CB_REFILL);
+    TZ_PREAMBLE(("void"));
 
-    FUNC_LEAVE();
-    return;
+    if (!s->full) {
+        TZ_CHECK(s->cb(TZ_UI_STREAM_CB_REFILL));
+        PRINTF("[DEBUG] total=%d\n", s->total);
+    }
+
+    TZ_POSTAMBLE;
 }
 
 void
@@ -188,7 +189,7 @@ tz_ui_stream_close(void)
 {
     tz_ui_stream_t *s = &global.stream;
 
-    FUNC_ENTER(("void"));
+    FUNC_ENTER(("full=%d", s->full));
     if (s->full) {
         PRINTF("trying to close already closed stream display");
         THROW(EXC_UNKNOWN);
@@ -207,26 +208,39 @@ tz_ui_nav_cb(uint8_t page, nbgl_pageContent_t *content)
 {
     FUNC_ENTER(("page=%d, content=%p", page, content));
 
-    tz_ui_stream_t         *s = &global.stream;
-    tz_ui_stream_display_t *c = &s->current_screen;
+    tz_ui_stream_t         *s      = &global.stream;
+    tz_ui_stream_display_t *c      = &s->current_screen;
+    bool                    result = true;
 
-    if (s->total < 0) {
-        return false;
-    }
-
-    change_screen_right();
-
-    PRINTF("[DEBUG]: pressed_right=%d, current=%d, total=%d, full=%d\n",
+    PRINTF("[DEBUG] pressed_right=%d, current=%d, total=%d, full=%d\n",
            s->pressed_right, s->current, s->total, s->full);
+
+    while (s->total < 0 || (s->current == s->total && !s->full)) {
+        PRINTF("tz_ui_nav_cb: Looping...\n");
+        tz_ui_continue();
+        if (global.step == ST_ERROR) {
+            break;
+        } else if (global.keys.apdu.sign.step == SIGN_ST_WAIT_DATA) {
+            result = false;
+            break;
+        }
+    }
 
     if (page == LAST_PAGE_FOR_REVIEW) {
         // skipped
-        PRINTF("Skip requested");
         global.keys.apdu.sign.u.clear.skip_to_sign = true;
-        tz_ui_continue();
+
+        nbgl_useCaseSpinner("Loading operation");
+        if (!s->full)
+            tz_ui_continue();
+
+    } else if (s->full && has_final_screen()) {
+        s->total++;
     }
 
-    bool result = true;
+    PRINTF("[DEBUG] pressed_right=%d, current=%d, total=%d, full=%d\n",
+           s->pressed_right, s->current, s->total, s->full);
+
     if (global.step == ST_ERROR) {
         // TODO: this is handled by change_screen_right except we disable it
         // to use it here. We should make ui_stream fully compatible with
@@ -236,70 +250,78 @@ tz_ui_nav_cb(uint8_t page, nbgl_pageContent_t *content)
         result = false;
     } else if (global.step != ST_CLEAR_SIGN && global.step != ST_BLIND_SIGN) {
         result = false;
-    } else if (tz_ui_stream_get_cb_type() == TZ_UI_STREAM_CB_CANCEL) {
-        // We hit an error in the parsing workflow...
-        tz_cancel_ui();
-        result = false;
     } else if ((s->current == s->total) && s->full) {
+        PRINTF("[DEBUG] signing...\n");
         content->type                        = INFO_LONG_PRESS;
         content->infoLongPress.icon          = &C_tezos;
         content->infoLongPress.text          = "Sign";
         content->infoLongPress.longPressText = "Sign";
     } else if (page == LAST_PAGE_FOR_REVIEW) {
-        nbgl_useCaseSpinner("Loading operation");
-        result = false;
-    } else {
-        if (s->current < s->total && s->pressed_right) {
-            s->pressed_right = false;
+        s->current = s->total;
+        result     = false;
+    } else if (s->total >= 0) {
+        PRINTF("[DEBUG] Display: curr=%d total=%d pr=%d\n", s->current,
+               s->total, s->pressed_right);
+
+        if (s->current < s->total) {
+            s->current++;
         }
 
-        size_t bucket = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
+        if (tz_ui_stream_get_cb_type() == TZ_UI_STREAM_CB_CANCEL) {
+            // We hit an error in the parsing workflow...
+            tz_cancel_ui();
+            result = false;
+        } else {
+            size_t bucket = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
 
-        c->list.pairs             = s->screens[bucket].pairs;
-        c->list.callback          = NULL;
-        c->list.startIndex        = 0;
-        c->list.nbPairs           = s->screens[bucket].nb_pairs;
-        c->list.smallCaseForValue = false;
-        c->list.wrapping          = false;
+            c->list.pairs             = s->screens[bucket].pairs;
+            c->list.callback          = NULL;
+            c->list.startIndex        = 0;
+            c->list.nbPairs           = s->screens[bucket].nb_pairs;
+            c->list.smallCaseForValue = false;
+            c->list.wrapping          = false; /* XXX: should wrap */
 
-        content->type         = TAG_VALUE_LIST;
-        content->tagValueList = c->list;
-        result                = true;
+            content->type         = TAG_VALUE_LIST;
+            content->tagValueList = c->list;
+            result                = true;
+        }
     }
 
     FUNC_LEAVE();
     return result;
 }
 
-/* pushl mechanism */
-uint8_t
-tz_ui_max_line_chars(const char *value, int length)
+bool
+has_final_screen(void)
 {
-    uint8_t will_fit = MIN(TZ_UI_STREAM_CONTENTS_WIDTH, length);
-
-    FUNC_ENTER(("value=\"%s\", length=%d", value, length));
-
-    /* Wrap on newline */
-    const char *tmp = memchr(value, '\n', will_fit);
-    if (tmp && (tmp - value) <= will_fit)
-        will_fit = (tmp - value);
-
-    FUNC_LEAVE();
-    return will_fit;
+    tz_ui_stream_t *s  = &global.stream;
+    size_t last_bucket = (s->total + 1) % TZ_UI_STREAM_HISTORY_SCREENS;
+    return s->screens[last_bucket].nb_pairs > 0;
 }
 
+/* pushl mechanism
+ * We use s->total differently to other devices
+ * s->total     points to the last completed screen
+ * s->total + 1 points to the screen under construction
+ */
 size_t
 tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
                    const char *value, ssize_t max,
-                   tz_ui_layout_type_t layout_type, tz_ui_icon_t icon)
+                   __attribute__((unused)) tz_ui_layout_type_t layout_type,
+                   __attribute__((unused)) tz_ui_icon_t        icon)
 {
     tz_ui_stream_t *s = &global.stream;
+    bool            push_to_next;
+    size_t          max_pairs = (cb_type == TZ_UI_STREAM_CB_CANCEL)
+                                    ? 1
+                                    : NB_MAX_DISPLAYED_PAIRS_IN_REVIEW;
 
     FUNC_ENTER(("title=%s, value=%s", title, value));
     if (s->full) {
         PRINTF("trying to push in already closed stream display");
         THROW(EXC_UNKNOWN);
     }
+
 #ifdef TEZOS_DEBUG
     int    prev_total   = s->total;
     int    prev_current = s->current;
@@ -307,8 +329,10 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
     size_t i;
 #endif
 
-    s->total++;
-    int bucket = s->total % TZ_UI_STREAM_HISTORY_SCREENS;
+    int    bucket = (s->total + 1) % TZ_UI_STREAM_HISTORY_SCREENS;
+    size_t idx    = s->screens[bucket].nb_pairs;
+    size_t offset = 0;
+    size_t length = strlen(value);
 
     if (s->total >= 0
         && (s->current % TZ_UI_STREAM_HISTORY_SCREENS) == bucket) {
@@ -317,36 +341,71 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
             "are happening\n");
     }
 
-    /* drop the previous screen text in our bucket */
-    if (s->total > 0 && bucket == (s->last % TZ_UI_STREAM_HISTORY_SCREENS))
-        drop_last_screen();
+    if (cb_type == TZ_UI_STREAM_CB_CANCEL && idx > 0) {
+        push_to_next = true;
+    } else {
+        /* Are we continuing to construct or starting from scratch? */
+        if (idx == NB_MAX_DISPLAYED_PAIRS_IN_REVIEW) {
+            PRINTF("[ERROR] PANIC!!! we pushing to a screen that's full");
+        }
 
-    push_str(title, strlen(title),
-             (char **)&s->screens[bucket].pairs[0].item);
+        push_str(title, strlen(title),
+                 (char **)&s->screens[bucket].pairs[idx].item);
 
-    // Ensure things fit on one line
-    size_t length = strlen(value);
-    size_t offset = 0;
+        if (max != -1)
+            length = MIN(length, (size_t)max);
 
-    if (max != -1)
-        length = MIN(length, (size_t)max);
+        s->screens[bucket].cb_type = cb_type;
 
-    s->screens[bucket].cb_type     = cb_type;
-    s->screens[bucket].layout_type = layout_type;
-    s->screens[bucket].icon        = icon;
+        push_str(&value[offset], length,
+                 (char **)&s->screens[bucket].pairs[idx].value);
 
-    push_str(&value[offset], length,
-             (char **)&s->screens[bucket].pairs[0].value);
+        offset = length;
 
-    s->screens[bucket].nb_pairs = 1;
-    offset                      = length; /* FIXME */
+        /* Check that the whole screen fits on the page
+         * if it doesn't, we need to pop this pair, and move
+         * to the next screen.
+         */
+        nbgl_layoutTagValueList_t l = {.nbPairs = idx,
+                                       .pairs   = s->screens[bucket].pairs,
+                                       .smallCaseForValue = false,
+                                       .wrapping          = false};
+
+        /* This returns the number that can fit. Potentially we could
+         * optimistically push all 4 rows, and then try?
+         */
+        uint8_t fit = nbgl_useCaseGetNbTagValuesInPage((uint8_t)(idx + 1), &l,
+                                                       0, &push_to_next);
+        PRINTF("[DEBUG] idx=%d fit=%d push_to_next=%d\n", idx, fit,
+               push_to_next);
+        push_to_next |= fit <= (uint8_t)idx;
+
+        if (push_to_next) {
+            /* We need to move to the next screen, retry */
+            ui_strings_drop_last(
+                (char **)&s->screens[bucket].pairs[idx].value);
+            ui_strings_drop_last(
+                (char **)&s->screens[bucket].pairs[idx].item);
+            offset = 0;
+        }
+    }
+
+    if (push_to_next || ++(s->screens[bucket].nb_pairs) == max_pairs) {
+        s->total++;
+        if (s->total > 0
+            && s->total % TZ_UI_STREAM_HISTORY_SCREENS
+                   == s->last % TZ_UI_STREAM_HISTORY_SCREENS) {
+            drop_last_screen();
+        }
+    }
 
 #ifdef TEZOS_DEBUG
     PRINTF("[DEBUG] tz_ui_stream_pushl(%s, %s, %u)\n", title, value, max);
     PRINTF("[DEBUG]        bucket     %d\n", bucket);
+    PRINTF("[DEBUG]        nb_pairs   %d\n", s->screens[bucket].nb_pairs);
 
     for (i = 0; i < s->screens[bucket].nb_pairs; i++) {
-        PRINTF("[DEBUG]        item[%d]:     \"%s\"\n", i,
+        PRINTF("[DEBUG]        item[%d]:   \"%s\"\n", i,
                s->screens[bucket].pairs[i].item);
         PRINTF("[DEBUG]        value[%d]:  \"%s\"\n", i,
                s->screens[bucket].pairs[i].value);
@@ -359,7 +418,7 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
 
     FUNC_LEAVE();
 
-    return length;
+    return offset;
 }
 
 void

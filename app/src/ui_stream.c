@@ -83,11 +83,15 @@ tz_ui_stream_push_all(tz_ui_cb_type_t cb_type, const char *title,
     size_t obuflen;
     size_t i = 0;
 
+    FUNC_ENTER(("cb_type=%d title=%s value=%s", cb_type, title, value));
+
     obuflen = strlen(value);
     do {
         i += tz_ui_stream_push(cb_type, title, value + i, layout_type, icon);
+        PRINTF("[DEBUG] pushed %d in total\n", i);
     } while (i < obuflen);
 
+    FUNC_LEAVE();
     return i;
 }
 
@@ -120,14 +124,13 @@ pred(void)
     }
     FUNC_LEAVE();
 }
-#endif  // HAVE_BAGL
 
 static void
 succ(void)
 {
     tz_ui_stream_t *s = &global.stream;
 
-    FUNC_ENTER(("void"));
+    FUNC_ENTER(("current=%d total=%d", s->current, s->total));
     if (s->current < s->total) {
         s->pressed_right = false;
         s->current++;
@@ -137,7 +140,6 @@ succ(void)
 
 // View
 
-#ifdef HAVE_BAGL
 static unsigned int
 cb(unsigned int                         button_mask,
    __attribute__((unused)) unsigned int button_mask_counter)
@@ -365,34 +367,32 @@ change_screen_left(void)
     redisplay();
     FUNC_LEAVE();
 }
-#endif  // HAVE_BAGL
 
 void
 change_screen_right(void)
 {
     tz_ui_stream_t *s = &global.stream;
 
-    FUNC_ENTER(("void"));
+    TZ_PREAMBLE(("void"));
     s->pressed_right = true;
-    if (s->current == s->total) {
-        if (!s->full)
-            s->cb(TZ_UI_STREAM_CB_REFILL);
-#ifdef HAVE_BAGL
+    if (!s->full && s->current == s->total) {
+        PRINTF("[DEBUG] Looping in change_screen_right\n");
+        s->cb(TZ_UI_STREAM_CB_REFILL);
+        PRINTF("[DEBUG] step=%d\n", global.keys.apdu.sign.step);
+
         if (global.step == ST_ERROR) {
             global.step = ST_IDLE;
             ui_home_init();
             return;
         }
-#endif
     }
     // go back to the data screen
     succ();
 
-#ifdef HAVE_BAGL
     redisplay();
-#endif
-    FUNC_LEAVE();
+    TZ_POSTAMBLE;
 }
+#endif  // HAVE_BAGL
 
 void
 tz_ui_stream_start(void)

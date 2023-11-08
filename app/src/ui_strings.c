@@ -69,7 +69,6 @@ ui_strings_fit_up_to(size_t len, char **write_start)
     size_t           out_len = 0;
     TZ_PREAMBLE(
         ("len=%d, start=%p, end=%p", len, s->start, s->end, s->internal_end));
-    PRINT_STRINGS;
 
     /* Preconditions */
     TZ_ASSERT(EXC_MEMORY_ERROR, (*write_start == NULL));
@@ -217,6 +216,43 @@ ui_strings_drop(char **in)
 
     s->internal_end = s->end;
 
+    TZ_POSTAMBLE;
+    PRINT_STRINGS;
+}
+
+void
+ui_strings_drop_last(char **in)
+{
+    tz_ui_strings_t *s = UI_STRINGS;
+    TZ_PREAMBLE(("in=%p, start=%p, end=%p", *in, s->start, s->end));
+    PRINT_STRINGS;
+
+    /* argument checks */
+    TZ_ASSERT_NOTNULL(*in);
+
+    size_t len = strlen(*in);
+    TZ_ASSERT(EXC_MEMORY_ERROR, (len > 0));
+    TZ_ASSERT(EXC_MEMORY_ERROR, (!ui_strings_is_empty()));
+    TZ_ASSERT(EXC_MEMORY_ERROR, (*in + len == s->end - 1));
+    /* Internal checks */
+    TZ_ASSERT(EXC_MEMORY_ERROR, (s->start < s->internal_end));
+    TZ_ASSERT(EXC_MEMORY_ERROR, (s->end <= s->internal_end));
+
+    PRINTF("[DEBUG] zeroing %p (%d) (%s)\n", *in, len, *in);
+    memset(*in, '\0', len);
+    s->count--;
+
+    s->end = *in;
+
+    *in = NULL;
+
+    if (s->end == BUFF_START && !ui_strings_is_empty()) {
+        s->end = s->internal_end;
+    } else if (s->start <= s->end) {
+        s->internal_end = s->end;
+    }
+
+    PRINTF("[DEBUG] s=%p e=%p ie=%p", s->start, s->end, s->internal_end);
     TZ_POSTAMBLE;
     PRINT_STRINGS;
 }

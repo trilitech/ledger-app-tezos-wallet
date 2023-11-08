@@ -33,25 +33,10 @@ if __name__ == "__main__":
     app.send_apdu("800f81005e0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316");
 
     app.review.tap()
-    app.assert_screen("operation_0_transaction")
+    app.assert_screen(f"tst_review_001")
 
     app.review.tap()
-    app.assert_screen("operation_fee_0.05")
-
-    app.review.tap()
-    app.assert_screen("operation_storage_limit_45")
-
-    app.review.tap()
-    app.assert_screen("operation_amount_0.24tz")
-
-    app.review.tap()
-    app.assert_screen("operation_destination_kt18am...rHT");
-
-    app.review.tap()
-    app.assert_screen("operation_entrypoint_do")
-
-    app.review.tap()
-    app.assert_screen("operation_parameter_CAR")
+    app.assert_screen("tst_review_002")
 
     app.review.tap()
     app.assert_screen("operation_sign")

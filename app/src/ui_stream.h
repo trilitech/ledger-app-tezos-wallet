@@ -112,12 +112,12 @@ typedef uint8_t tz_ui_icon_t;
 #define TZ_UI_ICON_EYE       0x06
 
 typedef struct {
+    tz_ui_cb_type_t cb_type;
+#ifdef HAVE_BAGL
     tz_ui_icon_t        icon;
     tz_ui_layout_type_t layout_type;
-    tz_ui_cb_type_t     cb_type;
-#ifdef HAVE_BAGL
-    char *title;
-    char *body[TZ_UI_STREAM_CONTENTS_LINES];
+    char               *title;
+    char               *body[TZ_UI_STREAM_CONTENTS_LINES];
 #else
     nbgl_layoutTagValue_t pairs[NB_MAX_DISPLAYED_PAIRS_IN_REVIEW];
     uint8_t               nb_pairs;
