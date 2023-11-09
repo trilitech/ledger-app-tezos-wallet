@@ -33,6 +33,7 @@ file_path=os.path.abspath(__file__)
 dir_path=os.path.dirname(file_path)
 sys.path.append(dir_path)
 
+import check_tlv_signature
 from apdu import *
 
 MAX_ATTEMPTS = 50
@@ -187,6 +188,12 @@ class TezosAppScreen():
         assert data == signature, \
             f"Expected signature {signature.hex()} but got {data.hex()}"
 
+    def check_tlv_signature(self,
+                            message: str,
+                            pk: str,
+                            data: bytes) -> None:
+        check_tlv_signature.check_signature(data, pk, message)
+
     def sign_with_hash(self,
                        account: Account,
                        message: Union[str, bytes],
@@ -205,6 +212,18 @@ class TezosAppScreen():
 
         assert data == hash + signature, \
             f"Expected hash {hash.hex()} and signature {signature.hex()} but got {data.hex()}"
+
+    def check_tlv_signature_with_hash(self,
+                                      hash: Union[str, bytes],
+                                      message: str,
+                                      pk: str,
+                                      data: bytes) -> None:
+        if isinstance(hash, str): hash = bytes.fromhex(hash)
+
+        assert data.startswith(hash), \
+            f"Expected start with hash {hash.hex()} but got {data.hex()}"
+        data = data[len(hash):]
+        check_tlv_signature.check_signature(data.hex(), pk, message)
 
 FIRMWARES = [
     Firmware.NANOS,

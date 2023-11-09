@@ -52,6 +52,15 @@ def signature_of_hex_tlv(hex_string):
     tlv[0] &= ~0x01
     return signature_of_tlv(tlv)
 
+def check_signature(hex_tlv, pk, message):
+    sig = signature_of_hex_tlv(hex_tlv)
+
+    sig_prefix = bytes.fromhex("04822b") # sig(96)
+    signature = base58.b58encode_check(sig_prefix + sig)
+
+    ctxt = pytezos.using(key=pk)
+    assert ctxt.key.verify(signature, message)
+
 def check_between(prefix, suffix, v):
     if v.startswith(prefix) and v.endswith(suffix):
         return v[len(prefix) : -len(suffix)]
@@ -71,10 +80,4 @@ if __name__ == "__main__":
 
     hex_tlv = check_between(prefix, suffix, hex_string)
 
-    sig = signature_of_hex_tlv(hex_tlv)
-
-    sig_prefix = bytes.fromhex("04822b") # sig(96)
-    signature = base58.b58encode_check(sig_prefix + sig)
-
-    pytezos = pytezos.using(key=pk)
-    assert pytezos.key.verify(signature, message)
+    check_signature(hex_tlv, pk, message)
