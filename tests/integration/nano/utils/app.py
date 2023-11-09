@@ -291,18 +291,58 @@ class TezosAppScreen():
         data = data[len(hash):]
         check_tlv_signature.check_signature(data.hex(), pk, message)
 
+    def _failing_signing(self,
+                         account: Account,
+                         message: Union[str, bytes],
+                         with_hash: bool,
+                         text: str,
+                         status_code: StatusCode,
+                         path: Union[str, Path]) -> None:
+        sign = self.backend.sign_with_hash if with_hash else self.backend.sign
+
+        self._failing_send(
+            send=(lambda: sign(account, message)),
+            text=text,
+            status_code=status_code,
+            path=path)
+
     def reject_signing(self,
                        account: Account,
                        message: Union[str, bytes],
                        with_hash: bool,
                        path: Union[str, Path]) -> None:
-        sign = self.backend.sign_with_hash if with_hash else self.backend.sign
-
-        self._failing_send(
-            send=(lambda: sign(account, message)),
+        self._failing_signing(
+            account,
+            message,
+            with_hash,
             text="Reject",
             status_code=StatusCode.REJECT,
             path=path)
+
+    def hard_failing_signing(self,
+                             account: Account,
+                             message: Union[str, bytes],
+                             with_hash: bool,
+                             status_code: StatusCode,
+                             path: Union[str, Path]) -> None:
+        self._failing_signing(account,
+                              message,
+                              with_hash,
+                              "ready for",
+                              status_code,
+                              path)
+
+    def parsing_error_signing(self,
+                              account: Account,
+                              message: Union[str, bytes],
+                              with_hash: bool,
+                              path: Union[str, Path]) -> None:
+        self._failing_signing(account,
+                              message,
+                              with_hash,
+                              "Parsing error",
+                              StatusCode.PARSE_ERROR,
+                              path)
 
 FIRMWARES = [
     Firmware.NANOS,
