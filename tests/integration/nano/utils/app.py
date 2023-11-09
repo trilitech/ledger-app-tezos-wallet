@@ -40,8 +40,12 @@ MAX_ATTEMPTS = 50
 
 class Screen(str, Enum):
     Home = "home"
+    Blind_home = "blind_home"
     Version = "version"
     Settings = "settings"
+    Settings_blind_disabled = "settings_blind_signing_disabled"
+    Settings_blind_enabled = "settings_blind_signing_enabled"
+    Settings_back = "back"
     Quit = "quit"
 
 def with_retry(f, attempts=MAX_ATTEMPTS):
@@ -128,6 +132,23 @@ class TezosAppScreen():
         with_retry(check)
         self.backend._last_screenshot = path
 
+    def setup_blind_signing(self) -> None:
+        self.assert_screen(Screen.Home)
+        self.backend.right_click()
+        self.assert_screen(Screen.Version)
+        self.backend.right_click()
+        self.assert_screen(Screen.Settings)
+        self.backend.both_click()
+        self.assert_screen(Screen.Settings_blind_disabled)
+        self.backend.both_click()
+        self.assert_screen(Screen.Settings_blind_enabled)
+        self.backend.right_click()
+        self.assert_screen(Screen.Settings_back)
+        self.backend.both_click()
+        self.assert_screen(Screen.Home)
+        self.backend.right_click()
+        self.assert_screen(Screen.Blind_home)
+
     def _quit(self) -> None:
         self.assert_screen(Screen.Quit)
         try:
@@ -138,6 +159,17 @@ class TezosAppScreen():
 
     def quit(self) -> None:
         self.assert_screen(Screen.Home)
+        self.backend.right_click()
+        self.assert_screen(Screen.Version)
+        self.backend.right_click()
+        self.assert_screen(Screen.Settings)
+        self.backend.right_click()
+        self._quit()
+
+    def quit_blind(self) -> None:
+        self.assert_screen(Screen.Home)
+        self.backend.right_click()
+        self.assert_screen(Screen.Blind_home)
         self.backend.right_click()
         self.assert_screen(Screen.Version)
         self.backend.right_click()
