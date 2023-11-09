@@ -170,6 +170,42 @@ class TezosAppScreen():
         assert data == public_key, \
             f"Expected public key {public_key.hex()} but got {data.hex()}"
 
+    def sign(self,
+             account: Account,
+             message: Union[str, bytes],
+             path: Union[str, Path]) -> bytes:
+
+        return send_and_navigate(
+            send=(lambda: self.backend.sign(account, message)),
+            navigate=(lambda: self.navigate_until_text("Accept", path)))
+
+    def check_signature(self,
+                        signature: Union[str, bytes],
+                        data: bytes) -> None:
+        if isinstance(signature, str): signature = bytes.fromhex(signature)
+
+        assert data == signature, \
+            f"Expected signature {signature.hex()} but got {data.hex()}"
+
+    def sign_with_hash(self,
+                       account: Account,
+                       message: Union[str, bytes],
+                       path: Union[str, Path]) -> bytes:
+
+        return send_and_navigate(
+            send=(lambda: self.backend.sign_with_hash(account, message)),
+            navigate=(lambda: self.navigate_until_text("Accept", path)))
+
+    def check_signature_with_hash(self,
+                                 hash: Union[str, bytes],
+                                 signature: Union[str, bytes],
+                                 data: bytes) -> None:
+        if isinstance(hash, str): hash = bytes.fromhex(hash)
+        if isinstance(signature, str): signature = bytes.fromhex(signature)
+
+        assert data == hash + signature, \
+            f"Expected hash {hash.hex()} and signature {signature.hex()} but got {data.hex()}"
+
 FIRMWARES = [
     Firmware.NANOS,
     Firmware.NANOSP,
@@ -177,6 +213,8 @@ FIRMWARES = [
 ]
 
 DEFAULT_SEED = ('zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra')
+
+DEFAULT_ACCOUNT = Account("m/44'/1729'/0'/0'", SIGNATURE_TYPE.ED25519)
 
 @contextmanager
 def nano_app() -> Generator[TezosAppScreen, None, None]:
