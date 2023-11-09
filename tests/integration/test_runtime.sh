@@ -144,18 +144,18 @@ press_button() {
 expected_home() {
     echo " - expected_home"
     if [ "$TARGET" == "nanos" ]; then
-	expect_full_text 'ready for' 'safe signing'
+        expect_full_text 'ready for' 'safe signing'
     else
-	expect_full_text 'Tezos Wallet' 'ready for' 'safe signing'
+        expect_full_text 'Tezos Wallet' 'ready for' 'safe signing'
     fi
 }
 
 expected_blind_home() {
     echo " - expected_blind_home"
     if [ "$TARGET" == "nanos" ]; then
-	expect_full_text 'ready for' 'BLIND signing'
+        expect_full_text 'ready for' 'BLIND signing'
     else
-	expect_full_text 'Tezos Wallet' 'ready for' 'BLIND signing'
+        expect_full_text 'Tezos Wallet' 'ready for' 'BLIND signing'
     fi
 }
 
@@ -167,9 +167,9 @@ expected_version() {
 expected_verify_address() {
     echo " - expected_verify_address"
     if [ "$TARGET" == "nanos" ]; then
-	expect_full_text 'Verify address'
+        expect_full_text 'Verify address'
     else
-	expect_full_text 'Verify' 'address'
+        expect_full_text 'Verify' 'address'
     fi
 }
 
@@ -221,9 +221,9 @@ quit_blind_app() {
 expected_accept() {
     echo " - expected_accept"
     if [ "$TARGET" == "nanos" ]; then
-	expect_full_text 'Accept and send'
+        expect_full_text 'Accept and send'
     else
-	expect_full_text 'Accept' 'and send'
+        expect_full_text 'Accept' 'and send'
     fi
 }
 
@@ -240,9 +240,9 @@ expected_reject() {
 expected_parsing_error() {
     echo " - expected_parsing_error $1"
     if [ "$TARGET" == "nanos" ]; then
-	expect_full_text 'Parsing error'
+        expect_full_text 'Parsing error'
     else
-	expect_full_text 'Parsing error' $1
+        expect_full_text 'Parsing error' $1
     fi
 }
 
@@ -371,11 +371,27 @@ run_a_test() {
                     . $CMD
                     ;;
                 *.py)
-                    start_speculos "$seed"
-                    PORT=$PORT\
-                        COMMIT_BYTES=$COMMIT_BYTES\
-                        VERSION_BYTES=$VERSION_BYTES\
-                        python3 $CMD
+                    if [ "$TARGET" == "stax" ]; then
+                        start_speculos "$seed"
+                        PORT=$PORT\
+                            COMMIT_BYTES=$COMMIT_BYTES\
+                            VERSION_BYTES=$VERSION_BYTES\
+                            python3 $CMD
+                    else
+                        if [ "$DBG" = "DEBUG" ]; then
+                            tgz=$DTGZ
+                        else
+                            tgz=$TGZ
+                        fi
+                        app_dir="$(mktemp -d $DATA_DIR/appdir-XXXXXX)"
+                        tar xfz "$tgz" -C $app_dir
+                        python3 $CMD\
+                                -d $TARGET\
+                                -p $PORT\
+                                --commit $COMMIT_BYTES\
+                                --version $VERSION_BYTES\
+                                $app_dir/app.elf
+                    fi
                     ;;
                 *.hex)
                     # We skip these...
