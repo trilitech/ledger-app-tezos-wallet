@@ -13,8 +13,10 @@
 # limitations under the License.
 
 from enum import IntEnum
+from typing import Union
 
 from ragger.backend.interface import BackendInterface, RAPDU
+from ragger.bip import pack_derivation_path
 from ragger.error import ExceptionRAPDU
 
 class CLA(IntEnum):
@@ -73,6 +75,13 @@ class VERSION_TAG(IntEnum):
     WALLET = 0x00
     BAKING = 0x01
 
+class Account:
+    def __init__(self, path: Union[str, bytes], sig_type: SIGNATURE_TYPE):
+        self.path: bytes = \
+            pack_derivation_path(path) if isinstance(path, str) \
+            else path
+        self.sig_type: SIGNATURE_TYPE = sig_type
+
 MAX_APDU_SIZE: int = 235
 
 class TezosBackend(BackendInterface):
@@ -101,3 +110,13 @@ class TezosBackend(BackendInterface):
 
     def version(self) -> bytes:
         return self._exchange(INS.VERSION)
+
+    def get_public_key(self, account: Account) -> bytes:
+        return self._exchange(INS.GET_PUBLIC_KEY,
+                              sig_type=account.sig_type,
+                              payload=account.path)
+
+    def prompt_public_key(self, account: Account) -> bytes:
+        return self._exchange(INS.PROMPT_PUBLIC_KEY,
+                              sig_type=account.sig_type,
+                              payload=account.path)

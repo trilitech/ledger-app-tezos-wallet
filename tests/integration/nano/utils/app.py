@@ -20,12 +20,14 @@ import time
 
 from contextlib import contextmanager
 from enum import Enum
+from multiprocessing import Process, Queue
 from pathlib import Path
 from requests.exceptions import ConnectionError
-from typing import Generator, List, Union
+from typing import Callable, Generator, List, Union
 
 from ragger.backend import SpeculosBackend
 from ragger.firmware import Firmware
+from ragger.navigator import NavInsID, NanoNavigator
 
 file_path=os.path.abspath(__file__)
 dir_path=os.path.dirname(file_path)
@@ -53,6 +55,29 @@ def with_retry(f, attempts=MAX_ATTEMPTS):
         # Give plenty of time for speculos to update - can take a long time on CI machines
         time.sleep(0.5)
 
+def run_simultaneously(processes: List[Process]) -> None:
+
+    for process in processes:
+        process.start()
+
+    for process in processes:
+        process.join()
+        assert process.exitcode == 0, "Should have terminate successfully"
+
+def send_and_navigate(send: Callable[[], bytes], navigate: Callable[[], None]) -> bytes:
+
+    def _send(result_queue: Queue) -> None:
+        res = send()
+        result_queue.put(res)
+
+    result_queue: Queue = Queue()
+    navigate_process = Process(target=navigate)
+    send_process = Process(target=_send, args=(result_queue,))
+
+    run_simultaneously([navigate_process, send_process])
+
+    return result_queue.get()
+
 class SpeculosTezosBackend(TezosBackend, SpeculosBackend):
     pass
 
@@ -75,6 +100,7 @@ class TezosAppScreen():
         self.commit = bytes.fromhex(commit + "00")
         self.version = bytes.fromhex(version)
         self.golden_run = golden_run
+        self.navigator = NanoNavigator(backend, backend.firmware, golden_run)
 
     def __enter__(self) -> "TezosAppScreen":
         self.backend.__enter__()
@@ -117,6 +143,32 @@ class TezosAppScreen():
         self.assert_screen(Screen.Settings)
         self.backend.right_click()
         self._quit()
+
+    def navigate_until_text(self, text: str, path: Union[str, Path]) -> None:
+        if isinstance(path, str): path = Path(path)
+        self.navigator.\
+            navigate_until_text_and_compare(NavInsID.RIGHT_CLICK,
+                                            [NavInsID.BOTH_CLICK],
+                                            text,
+                                            path=self.path,
+                                            test_case_name=path,
+                                            screen_change_after_last_instruction=False)
+
+    def provide_public_key(self,
+                          account: Account,
+                          path: Union[str, Path]) -> bytes:
+
+        return send_and_navigate(
+            send=(lambda: self.backend.prompt_public_key(account)),
+            navigate=(lambda: self.navigate_until_text("Approve", path)))
+
+    def check_public_key(self,
+                         public_key: Union[str, bytes],
+                         data: bytes) -> None:
+        if isinstance(public_key, str): public_key = bytes.fromhex(public_key)
+
+        assert data == public_key, \
+            f"Expected public key {public_key.hex()} but got {data.hex()}"
 
 FIRMWARES = [
     Firmware.NANOS,
