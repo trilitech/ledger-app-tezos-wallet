@@ -31,6 +31,7 @@ if __name__ == "__main__":
         app.parsing_error_signing(DEFAULT_ACCOUNT,
                                   "0100000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316",
                                   with_hash=True,
+                                  text="INVALID_TAG",
                                   path=make_path("unknown_magic_bytes"))
 
         app.assert_screen(Screen.Home)
@@ -38,6 +39,7 @@ if __name__ == "__main__":
         app.parsing_error_signing(DEFAULT_ACCOUNT,
                                   "03000000000000000000000000000000000000000000000000000000000000000001016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316",
                                   with_hash=True,
+                                  text="INVALID_TAG",
                                   path=make_path("unknown_operation"))
 
         app.assert_screen(Screen.Home)
@@ -45,6 +47,7 @@ if __name__ == "__main__":
         app.parsing_error_signing(DEFAULT_ACCOUNT,
                                   "0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e010000000000000000000000000000000000000000ff02000000020316",
                                   with_hash=True,
+                                  text="INVALID_TAG",
                                   path=make_path("one_byte_removed_inside"))
 
         app.assert_screen(Screen.Home)
@@ -52,6 +55,7 @@ if __name__ == "__main__":
         app.parsing_error_signing(DEFAULT_ACCOUNT,
                                   "0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff0200000002031645",
                                   with_hash=True,
+                                  text="INVALID_TAG",
                                   path=make_path("one_byte_added_at_the_end"))
 
         app.assert_screen(Screen.Home)
@@ -59,6 +63,7 @@ if __name__ == "__main__":
         app.parsing_error_signing(DEFAULT_ACCOUNT,
                                   "0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e0100000000000000000000000000000000000000000000ff02000000020316",
                                   with_hash=True,
+                                  text="INVALID_TAG",
                                   path=make_path("one_byte_added_inside"))
 
         app.assert_screen(Screen.Home)
@@ -66,6 +71,7 @@ if __name__ == "__main__":
         app.parsing_error_signing(DEFAULT_ACCOUNT,
                                   "0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e0100000000000000000000000000000000000000000000ff02000000020316",
                                   with_hash=True,
+                                  text="INVALID_TAG",
                                   path=make_path("one_byte_added_inside"))
 
         app.assert_screen(Screen.Home)
