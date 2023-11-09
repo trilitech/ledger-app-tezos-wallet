@@ -14,6 +14,8 @@
 # limitations under the License.
 
 import argparse
+import os
+import sys
 import time
 
 from contextlib import contextmanager
@@ -24,6 +26,12 @@ from typing import Generator, List, Union
 
 from ragger.backend import SpeculosBackend
 from ragger.firmware import Firmware
+
+file_path=os.path.abspath(__file__)
+dir_path=os.path.dirname(file_path)
+sys.path.append(dir_path)
+
+from apdu import *
 
 MAX_ATTEMPTS = 50
 
@@ -45,10 +53,13 @@ def with_retry(f, attempts=MAX_ATTEMPTS):
         # Give plenty of time for speculos to update - can take a long time on CI machines
         time.sleep(0.5)
 
+class SpeculosTezosBackend(TezosBackend, SpeculosBackend):
+    pass
+
 class TezosAppScreen():
 
     def __init__(self,
-                 backend: SpeculosBackend,
+                 backend: SpeculosTezosBackend,
                  commit: str,
                  version: str,
                  golden_run: bool):
@@ -98,6 +109,15 @@ class TezosAppScreen():
         except ConnectionError:
             pass
 
+    def quit(self) -> None:
+        self.assert_screen(Screen.Home)
+        self.backend.right_click()
+        self.assert_screen(Screen.Version)
+        self.backend.right_click()
+        self.assert_screen(Screen.Settings)
+        self.backend.right_click()
+        self._quit()
+
 FIRMWARES = [
     Firmware.NANOS,
     Firmware.NANOSP,
@@ -145,9 +165,9 @@ def nano_app() -> Generator[TezosAppScreen, None, None]:
                       "--apdu-port", "0",
                       "--api-port", f"{args.port}",
                       "--seed", DEFAULT_SEED]
-    backend = SpeculosBackend(args.app,
-                              firmware,
-                              port=args.port,
-                              args=speculos_args)
+    backend = SpeculosTezosBackend(args.app,
+                                   firmware,
+                                   port=args.port,
+                                   args=speculos_args)
     with TezosAppScreen(backend, args.commit, args.version, args.golden_run) as app:
         yield app
