@@ -94,7 +94,7 @@ jobs:
               ./tests/integration/${{ matrix.device }}
           else
             ./tests/integration/run_test_local.sh -F -m ${{ matrix.device }} \
-              ./tests/integration/nano ./tests/integration/${{ matrix.device }}
+              ./tests/integration/nano ./tests/integration/nano/${{ matrix.device }}
           fi
 
       - name: Upload results
