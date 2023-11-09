@@ -236,7 +236,7 @@ DEFAULT_SEED = ('zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zeb
 DEFAULT_ACCOUNT = Account("m/44'/1729'/0'/0'", SIGNATURE_TYPE.ED25519)
 
 @contextmanager
-def nano_app() -> Generator[TezosAppScreen, None, None]:
+def nano_app(seed: str = DEFAULT_SEED) -> Generator[TezosAppScreen, None, None]:
     parser = argparse.ArgumentParser(description="Launch a nano speculos backend for the tezos app")
     parser.add_argument("-d", "--device",
                         type=str,
@@ -273,7 +273,7 @@ def nano_app() -> Generator[TezosAppScreen, None, None]:
     speculos_args = [ "--display", args.display,
                       "--apdu-port", "0",
                       "--api-port", f"{args.port}",
-                      "--seed", DEFAULT_SEED]
+                      "--seed", seed]
     backend = SpeculosTezosBackend(args.app,
                                    firmware,
                                    port=args.port,
