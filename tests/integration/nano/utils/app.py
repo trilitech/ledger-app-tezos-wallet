@@ -26,6 +26,7 @@ from requests.exceptions import ConnectionError
 from typing import Callable, Generator, List, Union
 
 from ragger.backend import SpeculosBackend
+from ragger.error import ExceptionRAPDU
 from ragger.firmware import Firmware
 from ragger.navigator import NavInsID, NanoNavigator
 
@@ -187,6 +188,29 @@ class TezosAppScreen():
                                             test_case_name=path,
                                             screen_change_after_last_instruction=False)
 
+    @contextmanager
+    def expect_apdu_failure(self, code: StatusCode) -> Generator[None, None, None]:
+        try:
+            yield
+            assert False, f"Expect fail with { code } but succeed"
+        except ExceptionRAPDU as e:
+            failing_code = StatusCode(e.status)
+            assert code == failing_code, f"Expect fail with { code } but fail with { failing_code }"
+
+    def _failing_send(self,
+                      send: Callable[[], bytes],
+                      text: str,
+                      status_code: StatusCode,
+                      path: Union[str, Path]) -> None:
+        def expected_failure_send() -> bytes:
+            with self.expect_apdu_failure(status_code):
+                send()
+            return b''
+
+        send_and_navigate(
+            send=expected_failure_send,
+            navigate=(lambda: self.navigate_until_text(text, path)))
+
     def provide_public_key(self,
                           account: Account,
                           path: Union[str, Path]) -> bytes:
@@ -202,6 +226,16 @@ class TezosAppScreen():
 
         assert data == public_key, \
             f"Expected public key {public_key.hex()} but got {data.hex()}"
+
+    def reject_public_key(self,
+                          account: Account,
+                          path: Union[str, Path]) -> None:
+
+        self._failing_send(
+            send=(lambda: self.backend.prompt_public_key(account)),
+            text="Reject",
+            status_code=StatusCode.REJECT,
+            path=path)
 
     def sign(self,
              account: Account,
@@ -256,6 +290,19 @@ class TezosAppScreen():
             f"Expected start with hash {hash.hex()} but got {data.hex()}"
         data = data[len(hash):]
         check_tlv_signature.check_signature(data.hex(), pk, message)
+
+    def reject_signing(self,
+                       account: Account,
+                       message: Union[str, bytes],
+                       with_hash: bool,
+                       path: Union[str, Path]) -> None:
+        sign = self.backend.sign_with_hash if with_hash else self.backend.sign
+
+        self._failing_send(
+            send=(lambda: sign(account, message)),
+            text="Reject",
+            status_code=StatusCode.REJECT,
+            path=path)
 
 FIRMWARES = [
     Firmware.NANOS,
