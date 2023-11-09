@@ -32,7 +32,7 @@ def send_second(app, apdu):
     app.assert_screen("review_request_sign_operation");
 
 if __name__ == "__main__":
-    app = stax_app()
+    app = stax_app(__file__)
 
     app.assert_screen(SCREEN_HOME_DEFAULT)
 
