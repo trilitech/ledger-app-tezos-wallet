@@ -26,4 +26,4 @@ if __name__ == "__main__":
     app.info.multi_page_exit()
     app.assert_screen(SCREEN_HOME_DEFAULT)
 
-    app.welcome.quit()
+    app.quit()

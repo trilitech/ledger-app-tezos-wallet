@@ -24,4 +24,4 @@ if __name__ == "__main__":
     app.expect_apdu_return(app.commit+"00"+"9000")
 
     app.assert_screen(SCREEN_HOME_DEFAULT)
-    app.welcome.quit()
+    app.quit()

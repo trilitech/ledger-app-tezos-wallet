@@ -56,4 +56,4 @@ if __name__ == "__main__":
     app.review_confirm_signing(expected_apdu)
 
     app.assert_screen("home_bs_enabled_blindsign")
-    app.welcome.quit()
+    app.quit()

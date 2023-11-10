@@ -26,4 +26,4 @@ if __name__ == "__main__":
     app.expect_apdu_failure("917e")
 
     app.assert_screen(SCREEN_HOME_DEFAULT)
-    app.welcome.quit()
+    app.quit()

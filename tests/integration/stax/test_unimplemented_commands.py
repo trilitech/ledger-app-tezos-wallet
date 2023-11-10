@@ -65,4 +65,4 @@ if __name__ == "__main__":
     app.expect_apdu_failure("6d00")
 
     app.assert_screen(SCREEN_HOME_DEFAULT)
-    app.welcome.quit()
+    app.quit()

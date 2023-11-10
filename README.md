@@ -216,6 +216,10 @@ You can reset/set goldimages using the following:
 GOLDEN=1 ./<test_name>.py
 ```
 
+If you are resetting goldimages for multiple tests, you can also use `export NOQUIT=1` to keep the app
+open at the end of a test.
+
+
 You will be requested to press enter to take each snapshot in term.
 **NB** make sure that the screen has updated to the screen you want to snapshot each time. It's also a good idea to
 re-run the test normally afterwards, to ensure the snapshots have been set correctly.

@@ -38,4 +38,4 @@ if __name__ == "__main__":
     # should have been reset correctly
     short_reject(app)
 
-    app.welcome.quit()
+    app.quit()

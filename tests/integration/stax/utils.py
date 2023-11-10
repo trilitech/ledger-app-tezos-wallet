@@ -99,6 +99,12 @@ class TezosAppScreen(metaclass=MetaScreen):
     def make_golden(self):
         self.__golden = True
 
+    def quit(self):
+        if os.getenv("NOQUIT") == None:
+            self.welcome.quit()
+        else:
+            input(f"PRESS ENTER to continue next test\n- You may need to reset to home")
+
     def settings_toggle_blindsigning(self):
         self.__settings.choose(1)
 
