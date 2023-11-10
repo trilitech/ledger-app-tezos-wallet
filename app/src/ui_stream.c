@@ -23,7 +23,7 @@
 
 #ifdef HAVE_BAGL
 static unsigned int cb(unsigned int, unsigned int);
-static const char  *find_icon(tz_ui_icon_t);
+static const char  * find_icon(tz_ui_icon_t);
 static void         pred(void);
 static void         succ(void);
 static void         change_screen_left(void);
