@@ -21,11 +21,11 @@ if __name__ == "__main__":
 
         app.assert_screen(Screen.Home)
 
-        account = Account("m/44'/1729'/0'/0'", SIGNATURE_TYPE.BIP32_ED25519)
+        account = Account("m/44'/1729'/0'/0'",
+                          SIGNATURE_TYPE.BIP32_ED25519,
+                          "edpkumJgSsSxkpiB5hmTq6eZcrmc6BsJtLAhYceFTiziFqje4mongz")
         data = app.backend.get_public_key(account)
 
-        app.check_public_key(
-            public_key="210293c6b359964a4332bf1355579d665b753343f7b0a42567978cea1671f7b89f47",
-            data=data)
+        app.check_public_key(account, data)
 
         app.quit()

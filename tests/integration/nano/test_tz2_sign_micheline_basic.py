@@ -22,7 +22,9 @@ if __name__ == "__main__":
     test_name = Path(__file__).stem
     with nano_app() as app:
 
-        account = Account("m/44'/1729'/0'/0'", SIGNATURE_TYPE.SECP256K1)
+        account = Account("m/44'/1729'/0'/0'",
+                          SIGNATURE_TYPE.SECP256K1,
+                          "sppk7bVy617DmGvXsMqcwsiLtnedTN2trUi5ugXcNig7en4rHJyunK1")
         message="05020000001d0100000004434143410100000004504f504f0100000006424f5544494e"
         data = app.sign_with_hash(account,
                                   message,

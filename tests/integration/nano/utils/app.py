@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import argparse
+import base58
 import os
 import sys
 import time
@@ -220,9 +221,41 @@ class TezosAppScreen():
             navigate=(lambda: self.navigate_until_text("Approve", path)))
 
     def check_public_key(self,
-                         public_key: Union[str, bytes],
+                         account: Account,
                          data: bytes) -> None:
-        if isinstance(public_key, str): public_key = bytes.fromhex(public_key)
+
+        # Get the public_key without prefix
+        public_key = base58.b58decode_check(account.public_key)
+        if account.sig_type in [SIGNATURE_TYPE.ED25519, SIGNATURE_TYPE.BIP32_ED25519]:
+            prefix = bytes.fromhex("0d0f25d9") # edpk(54)
+        elif account.sig_type == SIGNATURE_TYPE.SECP256K1:
+            prefix = bytes.fromhex("03fee256") # sppk(55)
+        elif account.sig_type == SIGNATURE_TYPE.SECP256R1:
+            prefix = bytes.fromhex("03b28b7f") # p2pk(55)
+        else:
+            assert False, \
+                "Account do not have a right signature type: {account.sig_type}"
+        assert public_key.startswith(prefix), \
+            "Expected prefix {prefix.hex()} but got {public_key.hex()}"
+        public_key = public_key[len(prefix):]
+        if account.sig_type in [SIGNATURE_TYPE.SECP256K1, SIGNATURE_TYPE.SECP256R1]:
+            assert public_key[0] in [0x02, 0x03], \
+                "Expected a prefix kind of 0x02 or 0x03 but got {public_key[0]}"
+            public_key = public_key[1:]
+
+        # `data` should be:
+        # length + kind + pk
+        # kind : 02=odd, 03=even, 04=uncompressed
+        # pk length = 32 for compressed, 64 for uncompressed
+        assert len(data) == data[0] + 1
+        if data[1] == 0x04: # public key uncompressed
+            assert data[0] == 1 + 32 + 32
+        elif data[1] in [0x02, 0x03]: # public key even or odd (compressed)
+            assert data[0] == 1 + 32
+        else:
+            assert False, \
+                "Expected a prefix kind of 0x02, 0x03 or 0x04 but got {data[1]}"
+        data = data[2:2+32]
 
         assert data == public_key, \
             f"Expected public key {public_key.hex()} but got {data.hex()}"
@@ -356,7 +389,9 @@ FIRMWARES = [
 
 DEFAULT_SEED = ('zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra')
 
-DEFAULT_ACCOUNT = Account("m/44'/1729'/0'/0'", SIGNATURE_TYPE.ED25519)
+DEFAULT_ACCOUNT = Account("m/44'/1729'/0'/0'",
+                          SIGNATURE_TYPE.ED25519,
+                          "edpkuXX2VdkdXzkN11oLCb8Aurdo1BTAtQiK8ZY9UPj2YMt3AHEpcY")
 
 @contextmanager
 def nano_app(seed: str = DEFAULT_SEED) -> Generator[TezosAppScreen, None, None]:

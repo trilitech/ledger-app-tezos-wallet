@@ -37,8 +37,6 @@ if __name__ == "__main__":
 
         data = app.backend.get_public_key(DEFAULT_ACCOUNT)
 
-        app.check_public_key(
-            public_key="2102747884d9abdf16b3ab745158925f567e222f71225501826fa83347f6cbe9c393",
-            data=data)
+        app.check_public_key(DEFAULT_ACCOUNT, data)
 
         app.quit()

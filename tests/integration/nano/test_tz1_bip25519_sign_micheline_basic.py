@@ -24,7 +24,9 @@ if __name__ == "__main__":
 
         app.assert_screen(Screen.Home)
 
-        account = Account("m/44'/1729'/0'/0'", SIGNATURE_TYPE.BIP32_ED25519)
+        account = Account("m/44'/1729'/0'/0'",
+                          SIGNATURE_TYPE.BIP32_ED25519,
+                          "edpkumJgSsSxkpiB5hmTq6eZcrmc6BsJtLAhYceFTiziFqje4mongz")
         data = app.sign_with_hash(account,
                                   "05020000001d0100000004434143410100000004504f504f0100000006424f5544494e",
                                   path=test_name)

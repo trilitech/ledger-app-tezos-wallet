@@ -76,11 +76,15 @@ class VERSION_TAG(IntEnum):
     BAKING = 0x01
 
 class Account:
-    def __init__(self, path: Union[str, bytes], sig_type: SIGNATURE_TYPE):
+    def __init__(self,
+                 path: Union[str, bytes],
+                 sig_type: SIGNATURE_TYPE,
+                 public_key: str):
         self.path: bytes = \
             pack_derivation_path(path) if isinstance(path, str) \
             else path
         self.sig_type: SIGNATURE_TYPE = sig_type
+        self.public_key: str = public_key
 
 MAX_APDU_SIZE: int = 235
 

@@ -21,11 +21,11 @@ if __name__ == "__main__":
 
         app.assert_screen(Screen.Home)
 
-        account = Account("m/44'/1729'/0'/0'", SIGNATURE_TYPE.SECP256R1)
+        account = Account("m/44'/1729'/0'/0'",
+                          SIGNATURE_TYPE.SECP256R1,
+                          "p2pk67fq5pzuMMABZ9RDrooYbLrgmnQbLt8z7PTGM9mskf7LXS5tdBG")
         data = app.backend.get_public_key(account)
 
-        app.check_public_key(
-            public_key="410497f4d381101d2908a13669313faec5dbf6693985584f96268ea2c25178199ddd1aad041e7564795eb4b9a4f379e8cdc0c8391f7b2880613771fff76e6a6b05cf",
-            data=data)
+        app.check_public_key(account, data)
 
         app.quit()

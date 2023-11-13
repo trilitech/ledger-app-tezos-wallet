@@ -17,7 +17,7 @@ from utils.apdu import *
 from utils.app import *
 
 if __name__ == "__main__":
-    account = Account("m/44'/1729'/0'/0'", 0x04)
+    account = Account("m/44'/1729'/0'/0'", 0x04, "__unused__")
     with nano_app() as app:
 
         for sender in [app.backend.get_public_key,

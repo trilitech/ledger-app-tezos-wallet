@@ -19,13 +19,16 @@ from utils.app import *
 if __name__ == "__main__":
     wrong_number_index_account = Account(
         bytes.fromhex("058000002c800006c18000000080000000"),
-        SIGNATURE_TYPE.ED25519)
+        SIGNATURE_TYPE.ED25519,
+        "__unused__")
     wrong_length_account = Account(
         bytes.fromhex("048000002c800006c180000000800000"),
-        SIGNATURE_TYPE.ED25519)
+        SIGNATURE_TYPE.ED25519,
+        "__unused__")
     too_much_index_account = Account(
         bytes.fromhex("0b8000002c800006c1800000008000000080000000800000008000000080000000800000008000000080000000"),
-        SIGNATURE_TYPE.ED25519)
+        SIGNATURE_TYPE.ED25519,
+        "__unused__")
     with nano_app() as app:
 
         for account in [wrong_number_index_account,
