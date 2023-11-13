@@ -15,6 +15,7 @@
 
 import argparse
 import base58
+import git
 import os
 import sys
 import time
@@ -24,7 +25,7 @@ from enum import Enum
 from multiprocessing import Process, Queue
 from pathlib import Path
 from requests.exceptions import ConnectionError
-from typing import Callable, Generator, List, Union
+from typing import Callable, Generator, List, Tuple, Union
 
 from ragger.backend import SpeculosBackend
 from ragger.error import ExceptionRAPDU
@@ -88,14 +89,16 @@ def send_and_navigate(send: Callable[[], bytes], navigate: Callable[[], None]) -
 class SpeculosTezosBackend(TezosBackend, SpeculosBackend):
     pass
 
+version: Tuple[int, int, int] = (3, 0, 0)
+
 class TezosAppScreen():
 
     def __init__(self,
                  backend: SpeculosTezosBackend,
-                 commit: str,
-                 version: str,
+                 version_tag: VERSION_TAG,
                  golden_run: bool):
         self.backend = backend
+
         self.path: Path = Path(__file__).resolve().parent.parent
         self.snapshots_dir: Path = self.path / "snapshots" / backend.firmware.name
         self.tmp_snapshots_dir: Path = self.path / "snapshots-tmp" / backend.firmware.name
@@ -104,8 +107,17 @@ class TezosAppScreen():
         if not self.tmp_snapshots_dir.is_dir():
             self.tmp_snapshots_dir.mkdir(parents=True)
         self.snapshotted: List[str] = []
-        self.commit = bytes.fromhex(commit + "00")
-        self.version = bytes.fromhex(version)
+
+        repo = git.Repo(".")
+        commit = repo.head.commit.hexsha[:8]
+        if repo.is_dirty(): commit += "*"
+        self.commit = bytes.fromhex(commit.encode('utf-8').hex() + "00")
+        self.version = \
+            version_tag.to_bytes(1, byteorder='big') + \
+            version[0].to_bytes(1, byteorder='big') + \
+            version[1].to_bytes(1, byteorder='big') + \
+            version[2].to_bytes(1, byteorder='big')
+
         self.golden_run = golden_run
         self.navigator = NanoNavigator(backend, backend.firmware, golden_run)
 
@@ -405,14 +417,6 @@ def nano_app(seed: str = DEFAULT_SEED) -> Generator[TezosAppScreen, None, None]:
                         type=int,
                         default=5000,
                         help="Port")
-    parser.add_argument("--commit",
-                        type=str,
-                        help="Commit",
-                        required=True)
-    parser.add_argument("--version",
-                        type=str,
-                        help="Version",
-                        required=True)
     parser.add_argument("--display",
                         type=str,
                         default="headless",
@@ -436,5 +440,5 @@ def nano_app(seed: str = DEFAULT_SEED) -> Generator[TezosAppScreen, None, None]:
                                    firmware,
                                    port=args.port,
                                    args=speculos_args)
-    with TezosAppScreen(backend, args.commit, args.version, args.golden_run) as app:
+    with TezosAppScreen(backend, VERSION_TAG.WALLET, args.golden_run) as app:
         yield app

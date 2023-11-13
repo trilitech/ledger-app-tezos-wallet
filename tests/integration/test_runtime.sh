@@ -386,10 +386,8 @@ run_a_test() {
                         app_dir="$(mktemp -d $DATA_DIR/appdir-XXXXXX)"
                         tar xfz "$tgz" -C $app_dir
                         python3 $CMD\
-                                -d $TARGET\
-                                -p $PORT\
-                                --commit $COMMIT_BYTES\
-                                --version $VERSION_BYTES\
+                                --device $TARGET\
+                                --port $PORT\
                                 $app_dir/app.elf
                     fi
                     ;;
