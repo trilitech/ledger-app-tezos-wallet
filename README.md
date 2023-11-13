@@ -94,8 +94,8 @@ and
 :; make integration-tests
 ```
 
-NOTE: the full integration tests are [currently] only available for the Nano S. The basic tests can be run for all
-devices with:
+NOTE: the full integration tests are [currently] only available for
+the Nano device. The basic tests can be run for all devices with:
 
 ```
 :; make integration_tests_basic
@@ -127,11 +127,53 @@ Both of these commands take the following arguments:
 -x
 : executes the tests with shell tracing (-x)
 
-### STAX
-
-The stax tests rely on gold-images, rather than OCR. They are stored under [snapshots](./tests/integration/stax/snapshots).
+Basic tests rely on gold-images, rather than OCR. They are stored under [nano/snapshots](./tests/integration/nano/snapshots) and [stax/snapshots](./tests/integration/stax/snapshots).
 
 To generate/reset the snapshots, you can do so for individual tests.
+
+### Nano
+
+#### Preparation
+
+First, start a container for running individual tests:
+
+```sh
+docker run --rm -it --entrypoint /bin/bash -v $(pwd):/app --network host \
+  ledger-app-tezos-integration-tests
+
+cd /app
+
+git config --global --add safe.directory /app
+```
+
+Before running the test, build the nano app you want to test, for example the nanox app:
+
+```sh
+make app_nanox_dbg.tgz
+```
+
+#### Running
+
+You can run an individual test from the test container. You should see the app progress on the vnc viewer.
+
+```sh
+./tests/integration/nano/<test_name>.py \
+   --device $DEVICE \
+   --port $PORT \
+   --display headless \
+   --vnc-port 41000 \
+   --app app/bin/app.elf
+```
+
+#### Setting goldimages
+
+You can reset/set goldimages using the `--golden-run` option:
+
+You will be requested to press enter to take snapshots in term.
+**NB** make sure that the screen has updated to the screen you want to snapshot each time. It's also a good idea to
+re-run the test normally afterwards, to ensure the snapshots have been set correctly.
+
+### STAX
 
 #### Preparation
 
