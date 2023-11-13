@@ -385,10 +385,12 @@ run_a_test() {
                         fi
                         app_dir="$(mktemp -d $DATA_DIR/appdir-XXXXXX)"
                         tar xfz "$tgz" -C $app_dir
-                        python3 $CMD\
-                                --device $TARGET\
-                                --port $PORT\
-                                $app_dir/app.elf
+                        python3 $CMD \
+                                --device $TARGET \
+                                --port $PORT \
+                                --display headless \
+                                --apdu-port 0 \
+                                --app $app_dir/app.elf
                     fi
                     ;;
                 *.hex)
