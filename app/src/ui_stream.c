@@ -18,6 +18,7 @@
 
 #include "globals.h"
 #include "exception.h"
+#include "ui_strings.h"
 
 /* Prototypes */
 
@@ -33,6 +34,9 @@ static void         redisplay(void);
 const bagl_icon_details_t C_icon_rien = {0, 0, 1, NULL, NULL};
 #endif  // HAVE_BAGL
 
+static void drop_last_screen(void);
+static void push_str(const char *, size_t, char **);
+
 // Model
 
 #ifdef HAVE_BAGL
@@ -47,6 +51,10 @@ tz_ui_stream_init(void (*cb)(uint8_t))
     s->full    = false;
     s->current = 0;
     s->total   = -1;
+    s->last    = 0;
+
+    ui_strings_init();
+
     FUNC_LEAVE();
 }
 #endif
@@ -129,7 +137,6 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
                    tz_ui_layout_type_t layout_type, tz_ui_icon_t icon)
 {
     tz_ui_stream_t *s = &global.stream;
-    size_t          i;
 
     FUNC_ENTER(("title=%s, value=%s", title, value));
     if (s->full) {
@@ -139,14 +146,24 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
 #ifdef TEZOS_DEBUG
     int prev_total   = s->total;
     int prev_current = s->current;
+    int prev_last    = s->last;
 #endif
 
     s->total++;
     int bucket = s->total % TZ_UI_STREAM_HISTORY_SCREENS;
 
-    STRLCPY(s->screens[bucket].title, title);
-    for (i = 0; i < TZ_UI_STREAM_CONTENTS_LINES; i++)
-        s->screens[bucket].body[i][0] = '\0';
+    if (s->total >= 0
+        && (s->current % TZ_UI_STREAM_HISTORY_SCREENS) == bucket) {
+        PRINTF(
+            "[ERROR] PANIC!!!! Overwriting current screen, some bad things "
+            "are happening\n");
+    }
+
+    /* drop the previous screen text in our bucket */
+    if (s->total > 0 && bucket == (s->last % TZ_UI_STREAM_HISTORY_SCREENS))
+        drop_last_screen();
+
+    push_str(title, strlen(title), &s->screens[bucket].title);
 
     // Ensure things fit on one line
     size_t length = strlen(value);
@@ -173,7 +190,7 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
             "offset: %d)\n",
             &value[offset], will_fit, line, offset);
 
-        strlcpy(s->screens[bucket].body[line], &value[offset], will_fit + 1);
+        push_str(&value[offset], will_fit, &s->screens[bucket].body[line]);
 
         offset += will_fit;
 
@@ -184,10 +201,15 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
     PRINTF("[DEBUG]        bucket     %d\n", bucket);
     PRINTF("[DEBUG]        title:     \"%s\"\n", s->screens[bucket].title);
     for (line = 0; line < TZ_UI_STREAM_CONTENTS_LINES; line++)
-        PRINTF("[DEBUG]        value[%d]: \"%s\"\n", line,
-               s->screens[bucket].body[line]);
+        if (s->screens[bucket].body[line]) {
+            PRINTF("[DEBUG]        value[%d]:  \"%s\"\n", line,
+                   s->screens[bucket].body[line]);
+        } else {
+            PRINTF("[DEBUG]        value[%d]:  \"\"\n", line);
+        }
     PRINTF("[DEBUG]        total:     %d -> %d\n", prev_total, s->total);
     PRINTF("[DEBUG]        current:   %d -> %d\n", prev_current, s->current);
+    PRINTF("[DEBUG]        last:      %d -> %d\n", prev_last, s->last);
     PRINTF("[DEBUG]        offset:    %d\n", offset);
     FUNC_LEAVE();
 
@@ -210,8 +232,7 @@ pred(void)
     tz_ui_stream_t *s = &global.stream;
 
     FUNC_ENTER(("void"));
-    if (s->current >= 1
-        && s->current >= s->total - TZ_UI_STREAM_HISTORY_SCREENS + 2) {
+    if (s->current >= 1 && s->current > s->last) {
         s->current--;
     }
     FUNC_LEAVE();
@@ -286,6 +307,13 @@ find_icon(tz_ui_icon_t icon)
 static void
 redisplay_bnp(void)
 {
+    tz_ui_stream_t *s = &global.stream;
+    size_t          bucket;
+
+    FUNC_ENTER(("void"));
+
+    bucket = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
+
     bagl_element_t init[] = {
   //  {type, userid, x, y, width, height, stroke, radius,
   //   fill, fgcolor, bgcolor, font_id, icon_id}, text/icon
@@ -300,52 +328,37 @@ redisplay_bnp(void)
          (const char *)&C_icon_rien},
         {{BAGL_LABELINE, 0x02, 8, 8, 112, 11, 0, 0, 0, 0xFFFFFF, 0x000000,
           BOLD, 0},
-         global.ux.lines[0]        },
+         s->screens[bucket].title  },
 #ifdef TARGET_NANOS
         {{BAGL_LABELINE, 0x02, 0, 19, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000,
           REGULAR, 0},
-         global.ux.lines[1]        },
+         s->screens[bucket].body[0]},
         {{BAGL_ICON, 0x00, 56, 14, 16, 16, 0, 0, 0, 0xFFFFFF, 0x000000, 0,
           BAGL_GLYPH_NOGLYPH},
          (const char *)&C_icon_rien},
 #else
         {{BAGL_LABELINE, 0x02, 0, 21, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000,
           REGULAR, 0},
-         global.ux.lines[1]},
+         s->screens[bucket].body[0]},
         {{BAGL_LABELINE, 0x02, 0, 34, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000,
           REGULAR, 0},
-         global.ux.lines[2]},
+         s->screens[bucket].body[1]},
         {{BAGL_LABELINE, 0x02, 0, 47, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000,
           REGULAR, 0},
-         global.ux.lines[3]},
+         s->screens[bucket].body[2]},
         {{BAGL_LABELINE, 0x02, 0, 60, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000,
           REGULAR, 0},
-         global.ux.lines[4]},
+         s->screens[bucket].body[3]},
         {{BAGL_ICON, 0x00, 56, 47, 16, 16, 0, 0, 0, 0xFFFFFF, 0x000000, 0,
           BAGL_GLYPH_NOGLYPH},
          (const char *)&C_icon_rien},
 #endif
     };
 
-    tz_ui_stream_t *s = &global.stream;
-    size_t          bucket, i;
-
-    FUNC_ENTER(("void"));
-
-    for (i = 0; i < TZ_SCREEN_LINES_11PX; i++)
-        global.ux.lines[i][0] = 0;
-
-    bucket = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
-
-    STRLCPY(global.ux.lines[0], s->screens[bucket].title);
-    for (i = 0; i < TZ_UI_STREAM_CONTENTS_LINES; i++) {
-        STRLCPY(global.ux.lines[i + 1], s->screens[bucket].body[i]);
-    }
-
     tz_ui_icon_t icon = s->screens[bucket].icon;
     if (icon) {
 #ifdef TARGET_NANOS
-        global.ux.lines[1][0] = 0;
+        init[sizeof(init) / sizeof(bagl_element_t) - 2].text = NULL;
 #endif
         init[sizeof(init) / sizeof(bagl_element_t) - 1].text
             = find_icon(icon);
@@ -370,6 +383,13 @@ redisplay_bnp(void)
 static void
 redisplay_bp(void)
 {
+    tz_ui_stream_t *s = &global.stream;
+    size_t          bucket;
+
+    FUNC_ENTER(("void"));
+
+    bucket = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
+
     bagl_element_t init[] = {
   //  {type, userid, x, y, width, height, stroke, radius,
   //   fill, fgcolor, bgcolor, font_id, icon_id}, text/icon
@@ -384,52 +404,37 @@ redisplay_bp(void)
          (const char *)&C_icon_rien},
         {{BAGL_LABELINE, 0x02, 8, 8, 112, 11, 0, 0, 0, 0xFFFFFF, 0x000000,
           BOLD, 0},
-         global.ux.lines[0]        },
+         s->screens[bucket].title  },
 #ifdef TARGET_NANOS
         {{BAGL_LABELINE, 0x02, 0, 19, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000,
           BOLD, 0},
-         global.ux.lines[1]        },
+         s->screens[bucket].body[0]},
         {{BAGL_ICON, 0x00, 56, 14, 16, 16, 0, 0, 0, 0xFFFFFF, 0x000000, 0,
           BAGL_GLYPH_NOGLYPH},
          (const char *)&C_icon_rien},
 #else
         {{BAGL_LABELINE, 0x02, 0, 21, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000,
           BOLD, 0},
-         global.ux.lines[1]},
+         s->screens[bucket].body[0]},
         {{BAGL_LABELINE, 0x02, 0, 34, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000,
           BOLD, 0},
-         global.ux.lines[2]},
+         s->screens[bucket].body[1]},
         {{BAGL_LABELINE, 0x02, 0, 47, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000,
           BOLD, 0},
-         global.ux.lines[3]},
+         s->screens[bucket].body[2]},
         {{BAGL_LABELINE, 0x02, 0, 60, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000,
           BOLD, 0},
-         global.ux.lines[4]},
+         s->screens[bucket].body[3]},
         {{BAGL_ICON, 0x00, 56, 47, 16, 16, 0, 0, 0, 0xFFFFFF, 0x000000, 0,
           BAGL_GLYPH_NOGLYPH},
          (const char *)&C_icon_rien},
 #endif
     };
 
-    tz_ui_stream_t *s = &global.stream;
-    size_t          bucket, i;
-
-    FUNC_ENTER(("void"));
-
-    for (i = 0; i < TZ_SCREEN_LINES_11PX; i++)
-        global.ux.lines[i][0] = 0;
-
-    bucket = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
-
-    STRLCPY(global.ux.lines[0], s->screens[bucket].title);
-    for (i = 0; i < TZ_UI_STREAM_CONTENTS_LINES; i++) {
-        STRLCPY(global.ux.lines[i + 1], s->screens[bucket].body[i]);
-    }
-
     tz_ui_icon_t icon = s->screens[bucket].icon;
     if (icon) {
 #ifdef TARGET_NANOS
-        global.ux.lines[1][0] = 0;
+        init[sizeof(init) / sizeof(bagl_element_t) - 2].text = NULL;
 #endif
         init[sizeof(init) / sizeof(bagl_element_t) - 1].text
             = find_icon(icon);
@@ -438,7 +443,7 @@ redisplay_bp(void)
     /* If we aren't on the first screen, we can go back */
     if (s->current > 0) {
         /* Unless we can't... */
-        if (s->current == s->total - TZ_UI_STREAM_HISTORY_SCREENS + 1)
+        if (s->current == s->last)
             init[1].text = (const char *)&C_icon_go_forbid;
         else
             init[1].text = (const char *)&C_icon_go_left;
@@ -530,3 +535,48 @@ tz_ui_stream(void)
     FUNC_LEAVE();
 }
 #endif
+
+void
+drop_last_screen(void)
+{
+    tz_ui_stream_t *s      = &global.stream;
+    size_t          bucket = s->last % TZ_UI_STREAM_HISTORY_SCREENS;
+    size_t          i;
+
+    TZ_PREAMBLE(("last: %d", s->last));
+
+    if (s->screens[bucket].title)
+        TZ_CHECK(ui_strings_drop(&s->screens[bucket].title));
+    for (i = 0; i < TZ_UI_STREAM_CONTENTS_LINES; i++) {
+        if (s->screens[bucket].body[i]) {
+            TZ_CHECK(ui_strings_drop(&s->screens[bucket].body[i]));
+        }
+    }
+
+    s->last++;
+
+    TZ_POSTAMBLE;
+}
+
+void
+push_str(const char *text, size_t len, char **out)
+{
+    bool can_fit = false;
+
+    TZ_PREAMBLE(("%s", text));
+
+    if (len == 0) {
+        *out = NULL;
+        TZ_SUCCEED();
+    }
+
+    TZ_CHECK(ui_strings_can_fit(len, &can_fit));
+    while (!can_fit) {
+        TZ_CHECK(drop_last_screen());
+        TZ_CHECK(ui_strings_can_fit(len, &can_fit));
+    }
+
+    TZ_CHECK(ui_strings_push(text, len, out));
+
+    TZ_POSTAMBLE;
+}
