@@ -122,7 +122,7 @@ class TezosAppScreen():
         self.navigator = NanoNavigator(backend, backend.firmware, golden_run)
 
     def __enter__(self) -> "TezosAppScreen":
-        self.backend.__enter__()
+        with_retry(self.backend.__enter__, attempts=3)
         return self
 
     def __exit__(self, *args):
