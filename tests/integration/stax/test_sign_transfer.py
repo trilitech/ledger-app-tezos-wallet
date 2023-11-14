@@ -21,7 +21,7 @@ from utils import *
 # path: m/44'/1729'/0'/0'
 
 if __name__ == "__main__":
-    app = stax_app()
+    app = stax_app(__file__)
 
     app.assert_screen(SCREEN_HOME_DEFAULT)
 
@@ -60,4 +60,4 @@ if __name__ == "__main__":
     app.review_confirm_signing(expected_apdu)
 
     app.assert_screen(SCREEN_HOME_DEFAULT)
-    app.welcome.quit()
+    app.quit()

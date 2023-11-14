@@ -16,7 +16,7 @@
 from utils import *
 
 if __name__ == "__main__":
-    app = stax_app()
+    app = stax_app(__file__)
 
     app.assert_screen(SCREEN_HOME_DEFAULT)
 
@@ -26,4 +26,4 @@ if __name__ == "__main__":
     app.info.multi_page_exit()
     app.assert_screen(SCREEN_HOME_DEFAULT)
 
-    app.welcome.quit()
+    app.quit()

@@ -39,11 +39,11 @@ def short_reject(app):
     app.expect_apdu_failure("6985")
 
 if __name__ == "__main__":
-    app = stax_app()
+    app = stax_app(__file__)
 
     short_reject(app)
     # Ensure we can immediately send a new packet - the global state
     # should have been reset correctly
     short_reject(app)
 
-    app.welcome.quit()
+    app.quit()

@@ -16,6 +16,7 @@
 import os
 import time
 
+from pathlib import Path
 from contextlib import contextmanager
 
 from ragger.backend import SpeculosBackend
@@ -55,10 +56,10 @@ class TezosAppScreen(metaclass=MetaScreen):
     __snapshotted = []
     __settings = None
 
-    def __init__(self, backend, firmware, commit, version):
+    def __init__(self, backend, firmware, commit, version, snapshot_prefix):
         self.__backend = backend
         realpath = os.path.realpath(__file__)
-        self.__stax = os.path.dirname(realpath)
+        self.__stax = f"{os.path.dirname(realpath)}/snapshots/{Path(snapshot_prefix).stem}"
         self.__settings = ChoiceList(backend, firmware)
         self.commit = commit
         self.version = version
@@ -89,7 +90,7 @@ class TezosAppScreen(metaclass=MetaScreen):
             self.__snapshotted = self.__snapshotted + [screen]
             input(f"Press ENTER to snapshot {screen}")
 
-        path = f'{self.__stax}/snapshots/{screen}.png'
+        path = f'{self.__stax}/{screen}.png'
         def check():
             print(f"- Expecting {screen} -")
             assert self.__backend.compare_screen_with_snapshot(path, golden_run = golden)
@@ -98,6 +99,17 @@ class TezosAppScreen(metaclass=MetaScreen):
 
     def make_golden(self):
         self.__golden = True
+        path = f"{self.__stax}/"
+        Path(path).mkdir(parents=True, exist_ok=True)
+        for filename in os.listdir(path):
+            os.remove(os.path.join(path, filename))
+
+
+    def quit(self):
+        if os.getenv("NOQUIT") == None:
+            self.welcome.quit()
+        else:
+            input(f"PRESS ENTER to continue next test\n- You may need to reset to home")
 
     def settings_toggle_blindsigning(self):
         self.__settings.choose(1)
@@ -150,13 +162,13 @@ class TezosAppScreen(metaclass=MetaScreen):
         self.review.tap() # Exit status screen quickly, rather than waiting for ticket event
         self.welcome.client.resume_ticker()
 
-def stax_app() -> TezosAppScreen:
+def stax_app(prefix) -> TezosAppScreen:
     port = os.environ["PORT"]
     commit = os.environ["COMMIT_BYTES"]
     version = os.environ["VERSION_BYTES"]
     golden = os.getenv("GOLDEN") != None
     backend = SpeculosBackend("__unused__", Firmware.STAX, port = port)
-    app = TezosAppScreen(backend, Firmware.STAX, commit, version)
+    app = TezosAppScreen(backend, Firmware.STAX, commit, version, prefix)
 
     if golden:
         app.make_golden()

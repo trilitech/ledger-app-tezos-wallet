@@ -16,7 +16,7 @@
 from utils import *
 
 if __name__ == "__main__":
-    app = stax_app()
+    app = stax_app(__file__)
 
     # Switch to blindsign mode
     app.assert_screen(SCREEN_HOME_DEFAULT)
@@ -56,4 +56,4 @@ if __name__ == "__main__":
     app.review_confirm_signing(expected_apdu)
 
     app.assert_screen("home_bs_enabled_blindsign")
-    app.welcome.quit()
+    app.quit()

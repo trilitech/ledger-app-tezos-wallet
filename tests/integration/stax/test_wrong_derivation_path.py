@@ -16,7 +16,7 @@
 from utils import *
 
 if __name__ == "__main__":
-    app = stax_app()
+    app = stax_app(__file__)
 
     app.assert_screen(SCREEN_HOME_DEFAULT)
 
@@ -52,4 +52,4 @@ if __name__ == "__main__":
     app.send_apdu("800f0000110b8000002c800006c1800000008000000080000000800000008000000080000000800000008000000080000000")
 
     app.assert_screen(SCREEN_HOME_DEFAULT)
-    app.welcome.quit()
+    app.quit()

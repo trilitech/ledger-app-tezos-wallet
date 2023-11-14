@@ -31,11 +31,11 @@ def short_reject(app):
     app.assert_screen(SCREEN_HOME_DEFAULT)
 
 if __name__ == "__main__":
-    app = stax_app()
+    app = stax_app(__file__)
 
     short_reject(app)
     # Ensure we can immediately send a new packet - the global state
     # should have been reset correctly
     short_reject(app)
 
-    app.welcome.quit()
+    app.quit()
