@@ -173,6 +173,15 @@ expected_verify_address() {
     fi
 }
 
+expected_review_operation() {
+    echo " - expected_review_operation"
+    if [ "$TARGET" == "nanos" ]; then
+        expect_full_text 'Review operation'
+    else
+        expect_full_text 'Review' 'operation'
+    fi
+}
+
 set_blind_signing() {
     echo " - set_blind_signing"
     expected_home

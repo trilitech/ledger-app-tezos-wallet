@@ -359,12 +359,31 @@ handle_first_apdu(command_t *cmd)
     TZ_POSTAMBLE;
 }
 
+#ifdef HAVE_BAGL
+static void
+tz_ui_stream_push_initial_screen(void)
+{
+    FUNC_ENTER(("void"));
+#ifdef TARGET_NANOS
+    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Review operation", "",
+                      TZ_UI_LAYOUT_BP, TZ_UI_ICON_EYE);
+#else
+    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Review", "operation",
+                      TZ_UI_LAYOUT_BP, TZ_UI_ICON_EYE);
+#endif
+    FUNC_LEAVE();
+}
+#endif
+
 static void
 handle_first_apdu_clear(__attribute__((unused)) command_t *cmd)
 {
     tz_parser_state *st = &global.keys.apdu.sign.u.clear.parser_state;
 
     tz_ui_stream_init(stream_cb);
+#ifdef HAVE_BAGL
+    tz_ui_stream_push_initial_screen();
+#endif
 
     tz_operation_parser_init(st, TZ_UNKNOWN_SIZE, false);
     tz_parser_refill(st, NULL, 0);
@@ -376,6 +395,7 @@ handle_first_apdu_blind(__attribute__((unused)) command_t *cmd)
 {
 #ifdef HAVE_BAGL
     tz_ui_stream_init(bs_stream_cb);
+    tz_ui_stream_push_initial_screen();
 #elif HAVE_NBGL
     nbgl_useCaseSpinner("Loading operation");
 #endif

@@ -39,6 +39,9 @@ let expect_section_content ppf ~title content =
   Format.fprintf ppf "expect_section_content %a %a@." shell_escape title
     shell_escape content
 
+let expected_review_operation ppf () =
+  Format.fprintf ppf "expected_review_operation@."
+
 module Button = struct
   type t = Both | Right | Left
 
@@ -499,6 +502,8 @@ let gen_expect_test_sign ppf ~watermark bin screens =
   start_speculos ppf signer.mnemonic;
   expected_home ppf ();
   sign ppf ~signer ~watermark bin;
+  expected_review_operation ppf ();
+  Button.(press ppf Right);
   go_through_screens ppf screens;
   accept ppf ();
   expect_async_apdus_sent ppf ();
