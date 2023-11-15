@@ -59,22 +59,10 @@ if __name__ == "__main__":
     send_second(app, "800f81005d0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e010000000000000000000000000000000000000000ff02000000020316")
 
     app.review.tap()
-    app.assert_screen("operation_0_transaction")
+    app.assert_screen("tpe_review_0_01")
 
     app.review.tap()
-    app.assert_screen("operation_fee_0.05")
-
-    app.review.tap()
-    app.assert_screen("operation_storage_limit_45")
-
-    app.review.tap()
-    app.assert_screen("operation_amount_0.24tz")
-
-    app.review.tap()
-    app.assert_screen("operation_destination_kt18am...rHT")
-
-    app.review.tap()
-    app.assert_screen("operation_entrypoint_default")
+    app.assert_screen("tpe_review_0_02_partial")
 
     with app.review_parsing_error("invalid_tag"):
         app.review.tap()
@@ -85,25 +73,10 @@ if __name__ == "__main__":
     send_second(app, "800f81005f0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff0200000002031645")
 
     app.review.tap()
-    app.assert_screen("operation_0_transaction")
+    app.assert_screen("tpe_review_0_01")
 
     app.review.tap()
-    app.assert_screen("operation_fee_0.05")
-
-    app.review.tap()
-    app.assert_screen("operation_storage_limit_45")
-
-    app.review.tap()
-    app.assert_screen("operation_amount_0.24tz")
-
-    app.review.tap()
-    app.assert_screen("operation_destination_kt18am...rHT")
-
-    app.review.tap()
-    app.assert_screen("operation_entrypoint_do")
-
-    app.review.tap()
-    app.assert_screen("operation_parameter_CAR")
+    app.assert_screen("tpe_review_0_02_full")
 
     with app.review_parsing_error("invalid_tag"):
         app.review.tap()
@@ -114,19 +87,10 @@ if __name__ == "__main__":
     send_second(app, "800f81005f0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e0100000000000000000000000000000000000000000000ff02000000020316")
 
     app.review.tap()
-    app.assert_screen("operation_0_transaction")
+    app.assert_screen("tpe_review_0_01")
 
     app.review.tap()
-    app.assert_screen("operation_fee_0.05")
-
-    app.review.tap()
-    app.assert_screen("operation_storage_limit_45")
-
-    app.review.tap()
-    app.assert_screen("operation_amount_0.24tz")
-
-    app.review.tap()
-    app.assert_screen("operation_destination_kt18am...rHT")
+    app.assert_screen("tpe_review_0_02_dest_only")
 
     with app.review_parsing_error("invalid_tag"):
         app.review.tap()
@@ -153,19 +117,7 @@ if __name__ == "__main__":
     send_second(app, "800f8100eb030000000000000000000000000000000000000000000000000000000000000000ce00ffdd6102321bc251e4a5190ad5b12b251069d9b4904e02030400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c63966303966323935326433343532386337333366393436313563666333396263353535363139666335353064643461363762613232303863653865383637616133643133613665663939646662653332633639373461613961323135306432316563613239633333343965353963313362393038316631")
 
     app.review.tap()
-    app.assert_screen("operation_0_sr_outbox")
-
-    app.review.tap()
-    app.assert_screen("operation_fee_0.01")
-
-    app.review.tap()
-    app.assert_screen("operation_storage_limit_4")
-
-    app.review.tap()
-    app.assert_screen("operation_rollup_sr163L...v57")
-
-    app.review.tap()
-    app.assert_screen("operation_commitment_src12UJ...LY8")
+    app.assert_screen("tpe_review_1_01")
 
     # No error screen <- issue with packet framing protocol
     app.review.tap()

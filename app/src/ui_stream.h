@@ -112,18 +112,20 @@ typedef uint8_t tz_ui_icon_t;
 #define TZ_UI_ICON_EYE       0x06
 
 typedef struct {
+    tz_ui_cb_type_t cb_type;
+#ifdef HAVE_BAGL
     tz_ui_icon_t        icon;
     tz_ui_layout_type_t layout_type;
-    tz_ui_cb_type_t     cb_type;
     char               *title;
     char               *body[TZ_UI_STREAM_CONTENTS_LINES];
+#else
+    nbgl_layoutTagValue_t pairs[NB_MAX_DISPLAYED_PAIRS_IN_REVIEW];
+    uint8_t               nb_pairs;
+#endif
 } tz_ui_stream_screen_t;
 
 #ifdef HAVE_NBGL
 typedef struct {
-    char                      title[TZ_UI_STREAM_TITLE_WIDTH + 1];
-    char                      body[TZ_UI_STREAM_CONTENTS_WIDTH + 1];
-    nbgl_layoutTagValue_t     pair;
     nbgl_layoutTagValueList_t list;
 } tz_ui_stream_display_t;
 #endif  // HAVE_NBGL

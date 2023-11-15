@@ -34,8 +34,8 @@ static void         redisplay(void);
 const bagl_icon_details_t C_icon_rien = {0, 0, 1, NULL, NULL};
 #endif  // HAVE_BAGL
 
-static void drop_last_screen(void);
-static void push_str(const char *, size_t, char **);
+void drop_last_screen(void);
+void push_str(const char *, size_t, char **);
 
 // Model
 
@@ -75,38 +75,6 @@ tz_ui_stream_close(void)
 }
 #endif  // HAVE_BAGL
 
-uint8_t
-tz_ui_max_line_chars(const char *value, int length)
-{
-    uint8_t will_fit = MIN(TZ_UI_STREAM_CONTENTS_WIDTH, length);
-
-    FUNC_ENTER(("value=\"%s\", length=%d", value, length));
-
-    /* Wrap on newline */
-    const char *tmp = memchr(value, '\n', will_fit);
-    if (tmp && (tmp - value) <= will_fit)
-        will_fit = (tmp - value);
-
-#ifdef TARGET_NANOS
-    will_fit = se_get_cropped_length(value, will_fit, BAGL_WIDTH,
-                                     BAGL_ENCODING_LATIN1);
-#elif defined(HAVE_BAGL)
-    uint8_t width;
-    will_fit++;
-    do {
-        width = bagl_compute_line_width(BAGL_FONT_OPEN_SANS_REGULAR_11px, 0,
-                                        value, --will_fit,
-                                        BAGL_ENCODING_LATIN1);
-    } while (width >= BAGL_WIDTH);
-
-    PRINTF("[DEBUG] max_line_width(value: \"%s\", width: %d, will_fit: %d)\n",
-           value, width, will_fit);
-#endif
-
-    FUNC_LEAVE();
-    return will_fit;
-}
-
 size_t
 tz_ui_stream_push_all(tz_ui_cb_type_t cb_type, const char *title,
                       const char *value, tz_ui_layout_type_t layout_type,
@@ -115,11 +83,15 @@ tz_ui_stream_push_all(tz_ui_cb_type_t cb_type, const char *title,
     size_t obuflen;
     size_t i = 0;
 
+    FUNC_ENTER(("cb_type=%d title=%s value=%s", cb_type, title, value));
+
     obuflen = strlen(value);
     do {
         i += tz_ui_stream_push(cb_type, title, value + i, layout_type, icon);
+        PRINTF("[DEBUG] pushed %d in total\n", i);
     } while (i < obuflen);
 
+    FUNC_LEAVE();
     return i;
 }
 
@@ -129,91 +101,6 @@ tz_ui_stream_push(tz_ui_cb_type_t cb_type, const char *title,
                   tz_ui_icon_t icon)
 {
     return tz_ui_stream_pushl(cb_type, title, value, -1, layout_type, icon);
-}
-
-size_t
-tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
-                   const char *value, ssize_t max,
-                   tz_ui_layout_type_t layout_type, tz_ui_icon_t icon)
-{
-    tz_ui_stream_t *s = &global.stream;
-
-    FUNC_ENTER(("title=%s, value=%s", title, value));
-    if (s->full) {
-        PRINTF("trying to push in already closed stream display");
-        THROW(EXC_UNKNOWN);
-    }
-#ifdef TEZOS_DEBUG
-    int prev_total   = s->total;
-    int prev_current = s->current;
-    int prev_last    = s->last;
-#endif
-
-    s->total++;
-    int bucket = s->total % TZ_UI_STREAM_HISTORY_SCREENS;
-
-    if (s->total >= 0
-        && (s->current % TZ_UI_STREAM_HISTORY_SCREENS) == bucket) {
-        PRINTF(
-            "[ERROR] PANIC!!!! Overwriting current screen, some bad things "
-            "are happening\n");
-    }
-
-    /* drop the previous screen text in our bucket */
-    if (s->total > 0 && bucket == (s->last % TZ_UI_STREAM_HISTORY_SCREENS))
-        drop_last_screen();
-
-    push_str(title, strlen(title), &s->screens[bucket].title);
-
-    // Ensure things fit on one line
-    size_t length = strlen(value);
-    size_t offset = 0;
-
-    if (max != -1)
-        length = MIN(length, (size_t)max);
-
-    s->screens[bucket].cb_type     = cb_type;
-    s->screens[bucket].layout_type = layout_type;
-    s->screens[bucket].icon        = icon;
-
-    int line = 0;
-    while (offset < length && line < TZ_UI_STREAM_CONTENTS_LINES) {
-        uint8_t will_fit;
-
-        if (value[offset] == '\n')
-            offset++;
-
-        will_fit = tz_ui_max_line_chars(&value[offset], length - offset);
-
-        PRINTF(
-            "[DEBUG] split(value: \"%s\", will_fit: %d, line: %d, "
-            "offset: %d)\n",
-            &value[offset], will_fit, line, offset);
-
-        push_str(&value[offset], will_fit, &s->screens[bucket].body[line]);
-
-        offset += will_fit;
-
-        line++;
-    }
-
-    PRINTF("[DEBUG] tz_ui_stream_pushl(%s, %s, %u)\n", title, value, max);
-    PRINTF("[DEBUG]        bucket     %d\n", bucket);
-    PRINTF("[DEBUG]        title:     \"%s\"\n", s->screens[bucket].title);
-    for (line = 0; line < TZ_UI_STREAM_CONTENTS_LINES; line++)
-        if (s->screens[bucket].body[line]) {
-            PRINTF("[DEBUG]        value[%d]:  \"%s\"\n", line,
-                   s->screens[bucket].body[line]);
-        } else {
-            PRINTF("[DEBUG]        value[%d]:  \"\"\n", line);
-        }
-    PRINTF("[DEBUG]        total:     %d -> %d\n", prev_total, s->total);
-    PRINTF("[DEBUG]        current:   %d -> %d\n", prev_current, s->current);
-    PRINTF("[DEBUG]        last:      %d -> %d\n", prev_last, s->last);
-    PRINTF("[DEBUG]        offset:    %d\n", offset);
-    FUNC_LEAVE();
-
-    return offset;
 }
 
 tz_ui_cb_type_t
@@ -237,14 +124,13 @@ pred(void)
     }
     FUNC_LEAVE();
 }
-#endif  // HAVE_BAGL
 
 static void
 succ(void)
 {
     tz_ui_stream_t *s = &global.stream;
 
-    FUNC_ENTER(("void"));
+    FUNC_ENTER(("current=%d total=%d", s->current, s->total));
     if (s->current < s->total) {
         s->pressed_right = false;
         s->current++;
@@ -254,7 +140,6 @@ succ(void)
 
 // View
 
-#ifdef HAVE_BAGL
 static unsigned int
 cb(unsigned int                         button_mask,
    __attribute__((unused)) unsigned int button_mask_counter)
@@ -482,34 +367,32 @@ change_screen_left(void)
     redisplay();
     FUNC_LEAVE();
 }
-#endif  // HAVE_BAGL
 
 void
 change_screen_right(void)
 {
     tz_ui_stream_t *s = &global.stream;
 
-    FUNC_ENTER(("void"));
+    TZ_PREAMBLE(("void"));
     s->pressed_right = true;
-    if (s->current == s->total) {
-        if (!s->full)
-            s->cb(TZ_UI_STREAM_CB_REFILL);
-#ifdef HAVE_BAGL
+    if (!s->full && s->current == s->total) {
+        PRINTF("[DEBUG] Looping in change_screen_right\n");
+        s->cb(TZ_UI_STREAM_CB_REFILL);
+        PRINTF("[DEBUG] step=%d\n", global.keys.apdu.sign.step);
+
         if (global.step == ST_ERROR) {
             global.step = ST_IDLE;
             ui_home_init();
             return;
         }
-#endif
     }
     // go back to the data screen
     succ();
 
-#ifdef HAVE_BAGL
     redisplay();
-#endif
-    FUNC_LEAVE();
+    TZ_POSTAMBLE;
 }
+#endif  // HAVE_BAGL
 
 void
 tz_ui_stream_start(void)
@@ -534,17 +417,134 @@ tz_ui_stream(void)
     redisplay();
     FUNC_LEAVE();
 }
+
+uint8_t
+tz_ui_max_line_chars(const char *value, int length)
+{
+    uint8_t will_fit = MIN(TZ_UI_STREAM_CONTENTS_WIDTH, length);
+
+    FUNC_ENTER(("value=\"%s\", length=%d", value, length));
+
+    /* Wrap on newline */
+    const char *tmp = memchr(value, '\n', will_fit);
+    if (tmp && (tmp - value) <= will_fit)
+        will_fit = (tmp - value);
+
+#ifdef TARGET_NANOS
+    will_fit = se_get_cropped_length(value, will_fit, BAGL_WIDTH,
+                                     BAGL_ENCODING_LATIN1);
+#elif defined(HAVE_BAGL)
+    uint8_t width;
+    will_fit++;
+    do {
+        width = bagl_compute_line_width(BAGL_FONT_OPEN_SANS_REGULAR_11px, 0,
+                                        value, --will_fit,
+                                        BAGL_ENCODING_LATIN1);
+    } while (width >= BAGL_WIDTH);
+
+    PRINTF("[DEBUG] max_line_width(value: \"%s\", width: %d, will_fit: %d)\n",
+           value, width, will_fit);
 #endif
+
+    FUNC_LEAVE();
+    return will_fit;
+}
+
+/* pushl mechanism */
+size_t
+tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
+                   const char *value, ssize_t max,
+                   tz_ui_layout_type_t layout_type, tz_ui_icon_t icon)
+{
+    tz_ui_stream_t *s = &global.stream;
+
+    FUNC_ENTER(("title=%s, value=%s", title, value));
+    if (s->full) {
+        PRINTF("trying to push in already closed stream display");
+        THROW(EXC_UNKNOWN);
+    }
+#ifdef TEZOS_DEBUG
+    int prev_total   = s->total;
+    int prev_current = s->current;
+    int prev_last    = s->last;
+#endif
+
+    s->total++;
+    int bucket = s->total % TZ_UI_STREAM_HISTORY_SCREENS;
+
+    if (s->total >= 0
+        && (s->current % TZ_UI_STREAM_HISTORY_SCREENS) == bucket) {
+        PRINTF(
+            "[ERROR] PANIC!!!! Overwriting current screen, some bad things "
+            "are happening\n");
+    }
+
+    /* drop the previous screen text in our bucket */
+    if (s->total > 0 && bucket == (s->last % TZ_UI_STREAM_HISTORY_SCREENS))
+        drop_last_screen();
+
+    push_str(title, strlen(title), &s->screens[bucket].title);
+
+    // Ensure things fit on one line
+    size_t length = strlen(value);
+    size_t offset = 0;
+
+    if (max != -1)
+        length = MIN(length, (size_t)max);
+
+    s->screens[bucket].cb_type     = cb_type;
+    s->screens[bucket].layout_type = layout_type;
+    s->screens[bucket].icon        = icon;
+
+    int line = 0;
+    while (offset < length && line < TZ_UI_STREAM_CONTENTS_LINES) {
+        uint8_t will_fit;
+
+        if (value[offset] == '\n')
+            offset++;
+
+        will_fit = tz_ui_max_line_chars(&value[offset], length - offset);
+
+        PRINTF(
+            "[DEBUG] split(value: \"%s\", will_fit: %d, line: %d, "
+            "offset: %d)\n",
+            &value[offset], will_fit, line, offset);
+
+        push_str(&value[offset], will_fit, &s->screens[bucket].body[line]);
+
+        offset += will_fit;
+
+        line++;
+    }
+
+    PRINTF("[DEBUG] tz_ui_stream_pushl(%s, %s, %u)\n", title, value, max);
+    PRINTF("[DEBUG]        bucket     %d\n", bucket);
+    PRINTF("[DEBUG]        title:     \"%s\"\n", s->screens[bucket].title);
+    for (line = 0; line < TZ_UI_STREAM_CONTENTS_LINES; line++)
+        if (s->screens[bucket].body[line]) {
+            PRINTF("[DEBUG]        value[%d]:  \"%s\"\n", line,
+                   s->screens[bucket].body[line]);
+        } else {
+            PRINTF("[DEBUG]        value[%d]:  \"\"\n", line);
+        }
+    PRINTF("[DEBUG]        total:     %d -> %d\n", prev_total, s->total);
+    PRINTF("[DEBUG]        current:   %d -> %d\n", prev_current, s->current);
+    PRINTF("[DEBUG]        last:      %d -> %d\n", prev_last, s->last);
+    PRINTF("[DEBUG]        offset:    %d\n", offset);
+    FUNC_LEAVE();
+
+    return offset;
+}
 
 void
 drop_last_screen(void)
 {
     tz_ui_stream_t *s      = &global.stream;
     size_t          bucket = s->last % TZ_UI_STREAM_HISTORY_SCREENS;
-    size_t          i;
 
     TZ_PREAMBLE(("last: %d", s->last));
 
+    size_t i;
     if (s->screens[bucket].title)
         TZ_CHECK(ui_strings_drop(&s->screens[bucket].title));
     for (i = 0; i < TZ_UI_STREAM_CONTENTS_LINES; i++) {
@@ -552,11 +552,11 @@ drop_last_screen(void)
             TZ_CHECK(ui_strings_drop(&s->screens[bucket].body[i]));
         }
     }
-
     s->last++;
 
     TZ_POSTAMBLE;
 }
+#endif
 
 void
 push_str(const char *text, size_t len, char **out)

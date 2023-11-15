@@ -37,7 +37,7 @@ if __name__ == "__main__":
     app.send_apdu("800f81005e0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316");
 
     # Don't tap again - we tapped earlier
-    app.assert_screen("operation_0_transaction")
+    app.assert_screen("trt_review_1")
 
     app.review_reject_signing()
     app.expect_apdu_failure("6985")

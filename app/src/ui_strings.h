@@ -37,8 +37,10 @@
 
 #ifdef TARGET_NANOS
 #define BUFF_LEN 128
-#else
+#elif defined(HAVE_BAGL)
 #define BUFF_LEN 256
+#else
+#define BUFF_LEN 512
 #endif
 
 typedef struct {
@@ -52,4 +54,5 @@ typedef struct {
 void ui_strings_init(void);
 void ui_strings_push(const char *, size_t, char **);
 void ui_strings_drop(char **);
+void ui_strings_drop_last(char **);
 void ui_strings_can_fit(size_t, bool *);
