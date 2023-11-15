@@ -439,10 +439,6 @@ def nano_app(seed: str = DEFAULT_SEED) -> Generator[TezosAppScreen, None, None]:
                         type=int,
                         default=5000,
                         help="Port")
-    parser.add_argument("--display",
-                        type=str,
-                        default="headless",
-                        help="Display")
     parser.add_argument("--golden-run",
                         action='store_const',
                         const=True,
