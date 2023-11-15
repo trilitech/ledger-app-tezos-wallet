@@ -22,8 +22,7 @@
 
 /* Allow future unit tests to override */
 #ifndef UI_STRINGS
-static tz_ui_strings_t ui_strings;
-#define UI_STRINGS &ui_strings
+#define UI_STRINGS &global.stream.strings
 #endif
 
 #define BUFF_START ((char *)(s->buffer))
