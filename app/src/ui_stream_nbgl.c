@@ -279,7 +279,7 @@ tz_ui_nav_cb(uint8_t page, nbgl_pageContent_t *content)
             c->list.startIndex        = 0;
             c->list.nbPairs           = s->screens[bucket].nb_pairs;
             c->list.smallCaseForValue = false;
-            c->list.wrapping          = false; /* XXX: should wrap */
+            c->list.wrapping          = true;
 
             content->type         = TAG_VALUE_LIST;
             content->tagValueList = c->list;
@@ -369,7 +369,7 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
         nbgl_layoutTagValueList_t l = {.nbPairs = idx,
                                        .pairs   = s->screens[bucket].pairs,
                                        .smallCaseForValue = false,
-                                       .wrapping          = false};
+                                       .wrapping          = true};
 
         /* This returns the number that can fit. Potentially we could
          * optimistically push all 4 rows, and then try?
