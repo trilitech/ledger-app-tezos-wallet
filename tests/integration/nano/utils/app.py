@@ -87,7 +87,14 @@ def send_and_navigate(send: Callable[[], bytes], navigate: Callable[[], None]) -
     return result_queue.get()
 
 class SpeculosTezosBackend(TezosBackend, SpeculosBackend):
-    pass
+
+    def __enter__(self) -> "SpeculosTezosBackend":
+        try:
+            super().__enter__()
+            return self
+        except Exception as e:
+            self._client.stop()
+            raise e
 
 version: Tuple[int, int, int] = (3, 0, 0)
 
