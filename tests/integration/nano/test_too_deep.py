@@ -24,10 +24,32 @@ if __name__ == "__main__":
 
         app.assert_screen(Screen.Home)
 
-        app.parsing_error_signing(DEFAULT_ACCOUNT,
-                                  "0502000000f702000000f202000000ed02000000e802000000e302000000de02000000d902000000d402000000cf02000000ca02000000c502000000c002000000bb02000000b602000000b102000000ac02000000a702000000a2020000009d02000000980200000093020000008e02000000890200000084020000007f020000007a02000000750200000070020000006b02000000660200000061020000005c02000000570200000052020000004d02000000480200000043020000003e02000000390200000034020000002f020000002a02000000250200000020020000001b020000001602000000",
-                                  with_hash=True,
-                                  text="TOO_DEEP",
-                                  path=test_name)
+        expression="0502000000f702000000f202000000ed02000000e802000000e302000000de02000000d902000000d402000000cf02000000ca02000000c502000000c002000000bb02000000b602000000b102000000ac02000000a702000000a2020000009d02000000980200000093020000008e02000000890200000084020000007f020000007a02000000750200000070020000006b02000000660200000061020000005c02000000570200000052020000004d02000000480200000043020000003e02000000390200000034020000002f020000002a02000000250200000020020000001b020000001602000000"
+
+        if app.backend.firmware.device == "nanos":
+            def send() -> None:
+                with app.expect_apdu_failure(StatusCode.PARSE_ERROR):
+                    app.backend.sign_with_hash(DEFAULT_ACCOUNT, expression)
+            def assert_screen_i(i):
+                app.assert_screen(f"{str(i).zfill(5)}", path=test_name)
+
+            send_process = Process(target=send)
+            send_process.start()
+
+            for i in range(3):
+                assert_screen_i(i)
+                app.backend.right_click()
+
+            assert_screen_i(i+1)
+            app.backend.both_click()
+
+            send_process.join()
+            assert send_process.exitcode == 0, "Should have terminate successfully"
+        else:
+            app.parsing_error_signing(DEFAULT_ACCOUNT,
+                                      expression,
+                                      with_hash=True,
+                                      text="TOO_DEEP",
+                                      path=test_name)
 
         app.quit()
