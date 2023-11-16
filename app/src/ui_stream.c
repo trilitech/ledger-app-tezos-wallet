@@ -289,6 +289,10 @@ redisplay_screen(tz_ui_layout_type_t layout, uint8_t icon_pos)
         }
     }
 
+    if (layout == TZ_UI_LAYOUT_NP) {
+        init[txt_start_line].component.font_id = REGULAR;
+    }
+
     display_init(init, icon_pos);
 }
 

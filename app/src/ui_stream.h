@@ -92,7 +92,8 @@ typedef uint8_t tz_ui_cb_type_t;
  */
 typedef enum : uint8_t {
     TZ_UI_LAYOUT_BNP = 1,
-    TZ_UI_LAYOUT_BP  = 2
+    TZ_UI_LAYOUT_BP  = 2,
+    TZ_UI_LAYOUT_NP  = 3
 } tz_ui_layout_type_t;
 
 /*
