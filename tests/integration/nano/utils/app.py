@@ -25,7 +25,7 @@ from enum import Enum
 from multiprocessing import Process, Queue
 from pathlib import Path
 from requests.exceptions import ConnectionError
-from typing import Callable, Generator, List, Tuple, Union
+from typing import Callable, Generator, List, Optional, Tuple, Union
 
 from ragger.backend import SpeculosBackend
 from ragger.error import ExceptionRAPDU
@@ -150,14 +150,22 @@ class TezosAppScreen():
     def __exit__(self, *args):
         self.backend.__exit__(*args)
 
-    def assert_screen(self, screen: Union[str, Screen]) -> None:
+    def assert_screen(self, screen: Union[str, Screen], path: Optional[Union[str, Path]] = None) -> None:
         golden_run = self.golden_run and screen not in self.snapshotted
         if golden_run:
             self.snapshotted = self.snapshotted + [screen]
             input(f"Press ENTER to snapshot {screen}")
 
-        path = self.snapshots_dir / f'{screen}.png'
-        tmp_path = self.tmp_snapshots_dir / f'{screen}.png'
+        snapshots_dir = self.snapshots_dir if path is None else self.snapshots_dir / path
+        tmp_snapshots_dir = self.tmp_snapshots_dir if path is None else self.tmp_snapshots_dir / path
+
+        if not snapshots_dir.is_dir() and golden_run:
+            snapshots_dir.mkdir(parents=True)
+        if not tmp_snapshots_dir.is_dir():
+            tmp_snapshots_dir.mkdir(parents=True)
+
+        path = snapshots_dir / f'{screen}.png'
+        tmp_path = tmp_snapshots_dir / f'{screen}.png'
         def check():
             print(f"- Expecting {screen} -")
             assert self.backend.compare_screen_with_snapshot(
@@ -439,10 +447,6 @@ def nano_app(seed: str = DEFAULT_SEED) -> Generator[TezosAppScreen, None, None]:
                         type=int,
                         default=5000,
                         help="Port")
-    parser.add_argument("--display",
-                        type=str,
-                        default="headless",
-                        help="Display")
     parser.add_argument("--golden-run",
                         action='store_const',
                         const=True,
