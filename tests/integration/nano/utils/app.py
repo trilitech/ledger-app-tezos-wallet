@@ -88,13 +88,28 @@ def send_and_navigate(send: Callable[[], bytes], navigate: Callable[[], None]) -
 
 class SpeculosTezosBackend(TezosBackend, SpeculosBackend):
 
+    # speculos can be slow to start up in a slow environment.
+    # Here, we expect a little more
     def __enter__(self) -> "SpeculosTezosBackend":
         try:
             super().__enter__()
             return self
         except Exception as e:
-            self._client.stop()
-            raise e
+            process = self._client.process
+            try:
+                with_retry(self._client._wait_until_ready, attempts=5)
+                super().__enter__()
+            except Exception as e:
+                self._client.stop()
+                # do not forget to close the first process
+                self._client.process = process
+                self._client.stop()
+                raise e
+            # replace the new process by the first one
+            self._client.process.kill()
+            self._client.process.wait()
+            self._client.process = process
+            return self
 
 version: Tuple[int, int, int] = (3, 0, 0)
 
