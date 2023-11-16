@@ -472,7 +472,7 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
     s->total++;
     int bucket = s->total % TZ_UI_STREAM_HISTORY_SCREENS;
 
-    if (s->total >= 0
+    if (s->total > 0
         && (s->current % TZ_UI_STREAM_HISTORY_SCREENS) == bucket) {
         PRINTF(
             "[ERROR] PANIC!!!! Overwriting current screen, some bad things "
