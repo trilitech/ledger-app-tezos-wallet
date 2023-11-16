@@ -60,7 +60,6 @@ static nbgl_choiceCallback_t      onChoice;
 
 // contexts for background and modal pages
 static nbgl_page_t *pageContext;
-static nbgl_page_t *modalPageContext;
 
 // context for settings pages
 static nbgl_pageNavigationInfo_t navInfo;
@@ -71,8 +70,6 @@ static bool                      forwardNavOnly;
  **********************/
 static void displayReviewPage(uint8_t page, bool forceFullRefresh);
 static void pageCallback(int token, uint8_t index);
-static void displaySkipWarning(void);
-static void pageModalCallback(int token, uint8_t index);
 
 void
 nbgl_useCaseForwardOnlyReviewNoSkip(const char                *rejectText,
@@ -93,7 +90,7 @@ nbgl_useCaseForwardOnlyReviewNoSkip(const char                *rejectText,
     navInfo.navWithTap.nextPageToken = NEXT_TOKEN;
     navInfo.navWithTap.quitText      = rejectText;
     navInfo.navWithTap.backToken     = BACK_TOKEN;
-    navInfo.navWithTap.skipText      = "Skip >>";
+    navInfo.navWithTap.skipText      = NULL;
     navInfo.navWithTap.skipToken     = SKIP_TOKEN;
     navInfo.progressIndicator        = true;
     navInfo.tuneId                   = TUNE_TAP_CASUAL;
@@ -186,60 +183,10 @@ pageCallback(int token, uint8_t index)
         if (onNav != NULL) {
             displayReviewPage(navInfo.activePage + 1, false);
         }
-    } else if (token == SKIP_TOKEN) {
-        // display a modal warning to confirm skip
-        displaySkipWarning();
     } else {  // probably a control provided by caller
         if (onControls != NULL) {
             onControls(token, index);
         }
     }
 }
-
-// called when skip button is touched in footer, during forward only review
-static void
-displaySkipWarning(void)
-{
-    nbgl_pageConfirmationDescription_t info
-        = {.cancelText         = "Go back to review",
-           .centeredInfo.text1 = "Skip message review?",
-           .centeredInfo.text2
-           = "Skip only if you trust the\nsource. If you skip, you won't\nbe "
-             "able to review it again.",
-           .centeredInfo.text3   = NULL,
-           .centeredInfo.style   = LARGE_CASE_INFO,
-           .centeredInfo.icon    = &C_warning64px,
-           .centeredInfo.offsetY = -64,
-           .confirmationText     = "Yes, skip",
-           .confirmationToken    = SKIP_TOKEN,
-           .tuneId               = TUNE_TAP_CASUAL,
-           .modal                = true};
-    modalPageContext = nbgl_pageDrawConfirmation(&pageModalCallback, &info);
-    nbgl_refreshSpecial(FULL_COLOR_PARTIAL_REFRESH);
-}
-
-/* Copied... details removed */
-static void
-pageModalCallback(int token, uint8_t index)
-{
-    nbgl_pageRelease(modalPageContext);
-    modalPageContext = NULL;
-    if (token == SKIP_TOKEN) {
-        if (index == 0) {
-            // display the last forward only review page, whatever it is
-            displayReviewPage(LAST_PAGE_FOR_REVIEW, true);
-        } else {
-            // display background, which should be the page where skip has
-            // been touched
-            nbgl_screenRedraw();
-            nbgl_refresh();
-        }
-    } else if (token == CHOICE_TOKEN) {
-        // display background, which should be the page where skip has been
-        // touched
-        nbgl_screenRedraw();
-        nbgl_refresh();
-    }
-}
-
 #endif  // HAVE_NBGL
