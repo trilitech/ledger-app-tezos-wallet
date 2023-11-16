@@ -85,18 +85,15 @@ typedef uint8_t tz_ui_cb_type_t;
 #define TZ_UI_STREAM_CB_REJECT   0xfe
 #define TZ_UI_STREAM_CB_ACCEPT   0xff
 
-typedef uint8_t tz_ui_layout_type_t;
-/*
- * Bold
- * Non bold
- * Icon
+/**
+ * Layout type:
+ * BNP - refers to Bold Title, normal text/picture below the title.
+ * BP  - refers to Bold tile and picture below the title(optional).
  */
-#define TZ_UI_LAYOUT_BNP 0x00
-/*
- * Bold
- * Icon
- */
-#define TZ_UI_LAYOUT_BP  0x01
+typedef enum : uint8_t {
+    TZ_UI_LAYOUT_BNP = 1,
+    TZ_UI_LAYOUT_BP  = 2
+} tz_ui_layout_type_t;
 
 /*
  * The icons we used are generalised to allow for seamless Stax support
