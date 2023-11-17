@@ -143,21 +143,13 @@ press_button() {
 
 expected_home() {
     echo " - expected_home"
-    if [ "$TARGET" == "nanos" ]; then
-        expect_full_text 'ready for' 'safe signing'
-    else
-        expect_full_text 'Tezos Wallet' 'ready for' 'safe signing'
-    fi
+	  expect_full_text 'Ready for' 'safe signing'
 }
 
 expected_blind_home() {
     echo " - expected_blind_home"
-    if [ "$TARGET" == "nanos" ]; then
-        expect_full_text 'ready for' 'BLIND signing'
-    else
-        expect_full_text 'Tezos Wallet' 'ready for' 'BLIND signing'
-    fi
-}
+	  expect_full_text 'Ready for' 'BLIND signing'
+ }
 
 expected_version() {
     echo " - expected_version"

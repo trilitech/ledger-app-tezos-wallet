@@ -192,23 +192,10 @@ find_icon(tz_ui_icon_t icon)
 }
 
 static void
-display_init(bagl_element_t init[], uint8_t icon_pos)
+display_init(bagl_element_t init[UI_INIT_ARRAY_LEN])
 {
     tz_ui_stream_t *s = &global.stream;
-    size_t          bucket;
-
     FUNC_ENTER(("void"));
-
-    bucket = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
-
-    tz_ui_icon_t icon = s->screens[bucket].icon;
-    if (icon) {
-#ifdef TARGET_NANOS
-        init[UI_INIT_ARRAY_LEN - 2].text = NULL;
-        // TODO: Do we need this? Now that we have different layouts?
-#endif
-        init[icon_pos].text = find_icon(icon);
-    }
 
     /* If we aren't on the first screen, we can go back */
     if (s->current > 0) {
@@ -234,9 +221,12 @@ display_init(bagl_element_t init[], uint8_t icon_pos)
 static void
 redisplay_screen(tz_ui_layout_type_t layout, uint8_t icon_pos)
 {
+    TZ_PREAMBLE(("void"));
     tz_ui_stream_t *s = &global.stream;
     size_t          bucket;
-    bucket                = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
+    bucket            = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
+    tz_ui_icon_t icon = s->screens[bucket].icon;
+
     bagl_element_t init[] = {
   //  {type, userid, x, y, width, height, stroke, radius,
   //   fill, fgcolor, bgcolor, font_id, icon_id}, text/icon
@@ -282,18 +272,65 @@ redisplay_screen(tz_ui_layout_type_t layout, uint8_t icon_pos)
         = 3;  /// first three lines are for black rectangle, left screen icon
               /// and right screen icon.
 
-    if (layout == TZ_UI_LAYOUT_BP) {
+    if (layout == TZ_UI_LAYOUT_BP || layout == TZ_UI_LAYOUT_HOME_BP) {
         // Change the contents to bold.
         for (int i = txt_start_line + 1; i < icon_pos; i++) {
             init[i].component.font_id = BOLD;
         }
-    }
-
-    if (layout == TZ_UI_LAYOUT_NP) {
+    } else if (layout == TZ_UI_LAYOUT_NP || layout == TZ_UI_LAYOUT_HOME_NP) {
+        // Set title to Regular.
         init[txt_start_line].component.font_id = REGULAR;
+    } else if (layout == TZ_UI_LAYOUT_HOME_PB) {
+        // Icon will be at txt_start_line.
+        // modify the x,y coordinates for index txt_start_line to end.
+        init[txt_start_line].component   = init[icon_pos].component;
+        init[txt_start_line].component.x = BAGL_WIDTH / 2 - 8;
+#ifdef TARGET_NANOS
+        init[txt_start_line].component.y = BAGL_HEIGHT / 2 - 14;
+#else
+        init[txt_start_line].component.y = BAGL_HEIGHT / 2 - 20;
+#endif
+        icon_pos = txt_start_line;
+        for (int i = txt_start_line + 1; i < UI_INIT_ARRAY_LEN; i++) {
+            init[i].component         = init[icon_pos + 1].component;
+            init[i].component.font_id = BOLD;
+            if (i == txt_start_line + 1)
+                init[i].text = s->screens[bucket].title;
+            else
+                init[i].text = s->screens[bucket].body[i - 5];
+            init[i].component.x = 8;
+            init[i].component.y
+                = init[txt_start_line].component.y + 16 + 8 + ((i - 4) * 12);
+            init[i].component.width = 112;
+        }
     }
 
-    display_init(init, icon_pos);
+    if (icon) {
+        init[icon_pos].text = find_icon(icon);
+#ifdef TARGET_NANOS
+        // Make sure text does not overflow on icon line in non-PB layouts.
+        if (layout != TZ_UI_LAYOUT_HOME_PB)
+            init[icon_pos - 1].text = NULL;
+#endif
+    }
+
+    // if the screen layout type is home , set the left and right arrows to
+    // middle of screen.
+    if (layout & TZ_UI_LAYOUT_HOME_MASK) {
+        init[1].component.y = BAGL_HEIGHT / 2 - 3;
+        init[2].component.y = BAGL_HEIGHT / 2 - 3;
+        // as icon_pos = txt_start_line in TZ_UI_LAYOUT_HOME_PB layout,
+        // following changes dont affect it.
+        for (int i = txt_start_line; i < icon_pos; i++) {
+            init[i].component.x     = 8;
+            init[i].component.width = 112;
+            init[i].component.y
+                = BAGL_HEIGHT / 2 - 3 + ((i - txt_start_line) * 13);
+        }
+    }
+
+    display_init(init);
+    TZ_POSTAMBLE;
 }
 
 static void

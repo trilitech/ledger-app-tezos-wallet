@@ -52,15 +52,16 @@ static void
 clear_sign_screen(void)
 {
     tz_ui_stream_push(SCREEN_CLEAR_SIGN, "Ready for", "safe signing",
-                      TZ_UI_LAYOUT_NP, TZ_UI_ICON_NONE);
+                      TZ_UI_LAYOUT_HOME_NP, TZ_UI_ICON_NONE);
 }
 
 static void
 blind_sign_screen(void)
 {
     tz_ui_stream_push(SCREEN_BLIND_SIGN, "Ready for", "BLIND signing",
-                      TZ_UI_LAYOUT_NP, TZ_UI_ICON_NONE);
+                      TZ_UI_LAYOUT_HOME_NP, TZ_UI_ICON_NONE);
 }
+
 #endif  // HAVE_BAGL
 
 void
@@ -72,11 +73,11 @@ ui_home_init(void)
     clear_sign_screen();
     if (N_settings.blindsigning)
         blind_sign_screen();
-    tz_ui_stream_push(SCREEN_VERSION, "Version", APPVERSION, TZ_UI_LAYOUT_BNP,
-                      TZ_UI_ICON_NONE);
-    tz_ui_stream_push(SCREEN_SETTINGS, "Settings", "", TZ_UI_LAYOUT_BP,
+    tz_ui_stream_push(SCREEN_VERSION, "Version", APPVERSION,
+                      TZ_UI_LAYOUT_HOME_BNP, TZ_UI_ICON_NONE);
+    tz_ui_stream_push(SCREEN_SETTINGS, "Settings", "", TZ_UI_LAYOUT_HOME_PB,
                       TZ_UI_ICON_SETTINGS);
-    tz_ui_stream_push(SCREEN_QUIT, "Quit?", "", TZ_UI_LAYOUT_BP,
+    tz_ui_stream_push(SCREEN_QUIT, "Quit?", "", TZ_UI_LAYOUT_HOME_PB,
                       TZ_UI_ICON_DASHBOARD);
     tz_ui_stream_close();
     tz_ui_stream_start();
