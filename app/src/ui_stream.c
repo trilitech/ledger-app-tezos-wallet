@@ -20,7 +20,9 @@
 #include "exception.h"
 #include "ui_strings.h"
 
-/* Prototypes */
+//! Init array consists of TZ_SCREEN_LINES + background + left & right arrow +
+//! picture.
+#define UI_INIT_ARRAY_LEN (4 + TZ_SCREEN_LINES_11PX)
 
 #ifdef HAVE_BAGL
 static unsigned int cb(unsigned int, unsigned int);
@@ -190,64 +192,10 @@ find_icon(tz_ui_icon_t icon)
 }
 
 static void
-redisplay_bnp(void)
+display_init(bagl_element_t init[UI_INIT_ARRAY_LEN])
 {
     tz_ui_stream_t *s = &global.stream;
-    size_t          bucket;
-
     FUNC_ENTER(("void"));
-
-    bucket = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
-
-    bagl_element_t init[] = {
-  //  {type, userid, x, y, width, height, stroke, radius,
-  //   fill, fgcolor, bgcolor, font_id, icon_id}, text/icon
-        {{BAGL_RECTANGLE, 0x00, 0, 0, 128, BAGL_HEIGHT, 0, 0, BAGL_FILL,
-          0x000000, 0xFFFFFF, 0, 0},
-         NULL                      },
-        {{BAGL_ICON, 0x00, 1, 1, 7, 7, 0, 0, 0, 0xFFFFFF, 0x000000, 0,
-          BAGL_GLYPH_NOGLYPH},
-         (const char *)&C_icon_rien},
-        {{BAGL_ICON, 0x00, 120, 1, 7, 7, 0, 0, 0, 0xFFFFFF, 0x000000, 0,
-          BAGL_GLYPH_NOGLYPH},
-         (const char *)&C_icon_rien},
-        {{BAGL_LABELINE, 0x02, 8, 8, 112, 11, 0, 0, 0, 0xFFFFFF, 0x000000,
-          BOLD, 0},
-         s->screens[bucket].title  },
-#ifdef TARGET_NANOS
-        {{BAGL_LABELINE, 0x02, 0, 19, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000,
-          REGULAR, 0},
-         s->screens[bucket].body[0]},
-        {{BAGL_ICON, 0x00, 56, 14, 16, 16, 0, 0, 0, 0xFFFFFF, 0x000000, 0,
-          BAGL_GLYPH_NOGLYPH},
-         (const char *)&C_icon_rien},
-#else
-        {{BAGL_LABELINE, 0x02, 0, 21, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000,
-          REGULAR, 0},
-         s->screens[bucket].body[0]},
-        {{BAGL_LABELINE, 0x02, 0, 34, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000,
-          REGULAR, 0},
-         s->screens[bucket].body[1]},
-        {{BAGL_LABELINE, 0x02, 0, 47, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000,
-          REGULAR, 0},
-         s->screens[bucket].body[2]},
-        {{BAGL_LABELINE, 0x02, 0, 60, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000,
-          REGULAR, 0},
-         s->screens[bucket].body[3]},
-        {{BAGL_ICON, 0x00, 56, 47, 16, 16, 0, 0, 0, 0xFFFFFF, 0x000000, 0,
-          BAGL_GLYPH_NOGLYPH},
-         (const char *)&C_icon_rien},
-#endif
-    };
-
-    tz_ui_icon_t icon = s->screens[bucket].icon;
-    if (icon) {
-#ifdef TARGET_NANOS
-        init[sizeof(init) / sizeof(bagl_element_t) - 2].text = NULL;
-#endif
-        init[sizeof(init) / sizeof(bagl_element_t) - 1].text
-            = find_icon(icon);
-    }
 
     /* If we aren't on the first screen, we can go back */
     if (s->current > 0) {
@@ -261,19 +209,23 @@ redisplay_bnp(void)
     if (!s->full || s->current < s->total)
         init[2].text = (const char *)&C_icon_go_right;
 
-    DISPLAY(init, cb);
+    DISPLAY(init, cb, UI_INIT_ARRAY_LEN)
     FUNC_LEAVE();
 }
 
+/**
+ * Display the screen with given layout.
+ * layout -
+ * icon_pos - Position of icon in init array.
+ */
 static void
-redisplay_bp(void)
+redisplay_screen(tz_ui_layout_type_t layout, uint8_t icon_pos)
 {
+    TZ_PREAMBLE(("void"));
     tz_ui_stream_t *s = &global.stream;
     size_t          bucket;
-
-    FUNC_ENTER(("void"));
-
-    bucket = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
+    bucket            = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
+    tz_ui_icon_t icon = s->screens[bucket].icon;
 
     bagl_element_t init[] = {
   //  {type, userid, x, y, width, height, stroke, radius,
@@ -292,23 +244,23 @@ redisplay_bp(void)
          s->screens[bucket].title  },
 #ifdef TARGET_NANOS
         {{BAGL_LABELINE, 0x02, 0, 19, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000,
-          BOLD, 0},
+          REGULAR, 0},
          s->screens[bucket].body[0]},
         {{BAGL_ICON, 0x00, 56, 14, 16, 16, 0, 0, 0, 0xFFFFFF, 0x000000, 0,
           BAGL_GLYPH_NOGLYPH},
          (const char *)&C_icon_rien},
 #else
         {{BAGL_LABELINE, 0x02, 0, 21, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000,
-          BOLD, 0},
+          REGULAR, 0},
          s->screens[bucket].body[0]},
         {{BAGL_LABELINE, 0x02, 0, 34, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000,
-          BOLD, 0},
+          REGULAR, 0},
          s->screens[bucket].body[1]},
         {{BAGL_LABELINE, 0x02, 0, 47, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000,
-          BOLD, 0},
+          REGULAR, 0},
          s->screens[bucket].body[2]},
         {{BAGL_LABELINE, 0x02, 0, 60, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000,
-          BOLD, 0},
+          REGULAR, 0},
          s->screens[bucket].body[3]},
         {{BAGL_ICON, 0x00, 56, 47, 16, 16, 0, 0, 0, 0xFFFFFF, 0x000000, 0,
           BAGL_GLYPH_NOGLYPH},
@@ -316,29 +268,69 @@ redisplay_bp(void)
 #endif
     };
 
-    tz_ui_icon_t icon = s->screens[bucket].icon;
-    if (icon) {
+    const uint8_t txt_start_line
+        = 3;  /// first three lines are for black rectangle, left screen icon
+              /// and right screen icon.
+
+    if (layout == TZ_UI_LAYOUT_BP || layout == TZ_UI_LAYOUT_HOME_BP) {
+        // Change the contents to bold.
+        for (int i = txt_start_line + 1; i < icon_pos; i++) {
+            init[i].component.font_id = BOLD;
+        }
+    } else if (layout == TZ_UI_LAYOUT_NP || layout == TZ_UI_LAYOUT_HOME_NP) {
+        // Set title to Regular.
+        init[txt_start_line].component.font_id = REGULAR;
+    } else if (layout == TZ_UI_LAYOUT_HOME_PB) {
+        // Icon will be at txt_start_line.
+        // modify the x,y coordinates for index txt_start_line to end.
+        init[txt_start_line].component   = init[icon_pos].component;
+        init[txt_start_line].component.x = BAGL_WIDTH / 2 - 8;
 #ifdef TARGET_NANOS
-        init[sizeof(init) / sizeof(bagl_element_t) - 2].text = NULL;
+        init[txt_start_line].component.y = BAGL_HEIGHT / 2 - 14;
+#else
+        init[txt_start_line].component.y = BAGL_HEIGHT / 2 - 20;
 #endif
-        init[sizeof(init) / sizeof(bagl_element_t) - 1].text
-            = find_icon(icon);
+        icon_pos = txt_start_line;
+        for (int i = txt_start_line + 1; i < UI_INIT_ARRAY_LEN; i++) {
+            init[i].component         = init[icon_pos + 1].component;
+            init[i].component.font_id = BOLD;
+            if (i == txt_start_line + 1)
+                init[i].text = s->screens[bucket].title;
+            else
+                init[i].text = s->screens[bucket].body[i - 5];
+            init[i].component.x = 8;
+            init[i].component.y
+                = init[txt_start_line].component.y + 16 + 8 + ((i - 4) * 12);
+            init[i].component.width = 112;
+        }
     }
 
-    /* If we aren't on the first screen, we can go back */
-    if (s->current > 0) {
-        /* Unless we can't... */
-        if (s->current == s->last)
-            init[1].text = (const char *)&C_icon_go_forbid;
-        else
-            init[1].text = (const char *)&C_icon_go_left;
+    if (icon) {
+        init[icon_pos].text = find_icon(icon);
+#ifdef TARGET_NANOS
+        // Make sure text does not overflow on icon line in non-PB layouts.
+        if (layout != TZ_UI_LAYOUT_HOME_PB)
+            init[icon_pos - 1].text = NULL;
+#endif
     }
-    /* If we aren't full or aren't on the last page, we can go right */
-    if (!s->full || s->current < s->total)
-        init[2].text = (const char *)&C_icon_go_right;
 
-    DISPLAY(init, cb);
-    FUNC_LEAVE();
+    // if the screen layout type is home , set the left and right arrows to
+    // middle of screen.
+    if (layout & TZ_UI_LAYOUT_HOME_MASK) {
+        init[1].component.y = BAGL_HEIGHT / 2 - 3;
+        init[2].component.y = BAGL_HEIGHT / 2 - 3;
+        // as icon_pos = txt_start_line in TZ_UI_LAYOUT_HOME_PB layout,
+        // following changes dont affect it.
+        for (int i = txt_start_line; i < icon_pos; i++) {
+            init[i].component.x     = 8;
+            init[i].component.width = 112;
+            init[i].component.y
+                = BAGL_HEIGHT / 2 - 3 + ((i - txt_start_line) * 13);
+        }
+    }
+
+    display_init(init);
+    TZ_POSTAMBLE;
 }
 
 static void
@@ -346,15 +338,11 @@ redisplay(void)
 {
     TZ_PREAMBLE(("void"));
 
-    tz_ui_stream_t *s      = &global.stream;
-    size_t          bucket = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
-
+    tz_ui_stream_t *s        = &global.stream;
+    size_t          bucket   = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
+    uint8_t         icon_pos = UI_INIT_ARRAY_LEN - 1;
     // clang-format off
-    switch (s->screens[bucket].layout_type) {
-    case TZ_UI_LAYOUT_BNP: redisplay_bnp(); break;
-    case TZ_UI_LAYOUT_BP:  redisplay_bp(); break;
-    default: TZ_FAIL(EXC_UNKNOWN);
-    }
+    redisplay_screen(s->screens[bucket].layout_type, icon_pos);
     // clang-format on
     TZ_POSTAMBLE;
 }

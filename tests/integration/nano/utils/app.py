@@ -403,7 +403,7 @@ class TezosAppScreen():
         self._failing_signing(account,
                               message,
                               with_hash,
-                              "ready for",
+                              "Ready for",
                               status_code,
                               path)
 

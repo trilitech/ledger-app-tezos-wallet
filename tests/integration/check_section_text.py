@@ -110,7 +110,7 @@ def check_multi_screen(url, title, content, content_lines, device):
     while True:
       def check_screen():
         if device in ["nanos", "nanosp"]:
-          screen = get_screen(url)
+          screen = get_titled_screen(url, title)
           assert screen.title == title, f"expected section '{title}' but on '{screen.title}'"
         # https://github.com/trilitech/ledger-app-tezos-wallet/issues/43
         # Get screens contents with the 'events' service for nanox

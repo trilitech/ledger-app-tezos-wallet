@@ -85,18 +85,27 @@ typedef uint8_t tz_ui_cb_type_t;
 #define TZ_UI_STREAM_CB_REJECT   0xfe
 #define TZ_UI_STREAM_CB_ACCEPT   0xff
 
-typedef uint8_t tz_ui_layout_type_t;
-/*
- * Bold
- * Non bold
- * Icon
+#define TZ_UI_LAYOUT_HOME_MASK 0x80
+/**
+ * Layout type:
+ * BNP - refers to Bold Title, normal text/picture below the title.
+ * BP  - refers to Bold tile and picture below the title(optional).
+ * NP  - Normal text and picture below the text(optional)
+ * PB  - Picture and Bold title below it,left/rigth arrow all vertically
+ *       centered.
+ * HOME_X - X layout for home/settings screens
+ * with left/right arrows vertically centered.
+ *
  */
-#define TZ_UI_LAYOUT_BNP 0x00
-/*
- * Bold
- * Icon
- */
-#define TZ_UI_LAYOUT_BP  0x01
+typedef enum : uint8_t {
+    TZ_UI_LAYOUT_BNP      = 0x01,
+    TZ_UI_LAYOUT_BP       = 0x02,
+    TZ_UI_LAYOUT_NP       = 0x03,
+    TZ_UI_LAYOUT_HOME_PB  = (0x04 | TZ_UI_LAYOUT_HOME_MASK),
+    TZ_UI_LAYOUT_HOME_BNP = (0x05 | TZ_UI_LAYOUT_HOME_MASK),
+    TZ_UI_LAYOUT_HOME_BP  = (0x06 | TZ_UI_LAYOUT_HOME_MASK),
+    TZ_UI_LAYOUT_HOME_NP  = (0x07 | TZ_UI_LAYOUT_HOME_MASK)
+} tz_ui_layout_type_t;
 
 /*
  * The icons we used are generalised to allow for seamless Stax support

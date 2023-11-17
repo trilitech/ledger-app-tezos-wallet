@@ -143,42 +143,34 @@ press_button() {
 
 expected_home() {
     echo " - expected_home"
-    if [ "$TARGET" == "nanos" ]; then
-        expect_full_text 'ready for' 'safe signing'
-    else
-        expect_full_text 'Tezos Wallet' 'ready for' 'safe signing'
-    fi
+	  expect_section_content 'Ready for' 'safe signing'
 }
 
 expected_blind_home() {
     echo " - expected_blind_home"
-    if [ "$TARGET" == "nanos" ]; then
-        expect_full_text 'ready for' 'BLIND signing'
-    else
-        expect_full_text 'Tezos Wallet' 'ready for' 'BLIND signing'
-    fi
-}
+	  expect_section_content 'Ready for' 'BLIND signing'
+ }
 
 expected_version() {
     echo " - expected_version"
-    expect_full_text 'Version' $APPVERSION
+    expect_section_content 'Version' $APPVERSION
 }
 
 expected_verify_address() {
     echo " - expected_verify_address"
     if [ "$TARGET" == "nanos" ]; then
-        expect_full_text 'Verify address'
+        expect_section_content 'Verify address'
     else
-        expect_full_text 'Verify' 'address'
+        expect_section_content 'Verify' 'address'
     fi
 }
 
 expected_review_operation() {
     echo " - expected_review_operation"
     if [ "$TARGET" == "nanos" ]; then
-        expect_full_text 'Review operation'
+        expect_section_content 'Review operation'
     else
-        expect_full_text 'Review' 'operation'
+        expect_section_content 'Review' 'operation'
     fi
 }
 
@@ -190,11 +182,11 @@ set_blind_signing() {
     press_button right
     expect_full_text "Settings"
     press_button both
-    expect_full_text 'Blind Signing' 'DISABLED'
+    expect_section_content 'Blind Signing' 'DISABLED'
     press_button both
-    expect_full_text 'Blind Signing' 'ENABLED'
+    expect_section_content 'Blind Signing' 'ENABLED'
     press_button right
-    expect_full_text 'Back'
+    expect_section_content 'Back'
     press_button both
     expected_home
 }
@@ -230,28 +222,28 @@ quit_blind_app() {
 expected_accept() {
     echo " - expected_accept"
     if [ "$TARGET" == "nanos" ]; then
-        expect_full_text 'Accept and send'
+        expect_section_content 'Accept and send'
     else
-        expect_full_text 'Accept' 'and send'
+        expect_section_content 'Accept' 'and send'
     fi
 }
 
 expected_accept_public_key() {
     echo " - expected_accept_public_key"
-    expect_full_text 'Approve'
+    expect_section_content 'Approve'
 }
 
 expected_reject() {
     echo " - expected_reject"
-    expect_full_text 'Reject'
+    expect_section_content 'Reject'
 }
 
 expected_parsing_error() {
     echo " - expected_parsing_error $1"
     if [ "$TARGET" == "nanos" ]; then
-        expect_full_text 'Parsing error'
+        expect_section_content 'Parsing error'
     else
-        expect_full_text 'Parsing error' $1
+        expect_section_content 'Parsing error' $1
     fi
 }
 
