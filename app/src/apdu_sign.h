@@ -52,6 +52,7 @@ typedef struct {
     sign_step_t step;
     bool        return_hash;
     bool        received_last_msg;
+    uint8_t     tag;
 
     union {
         struct {
@@ -60,7 +61,6 @@ typedef struct {
             bool            skip_to_sign;
         } clear;
         struct {
-            uint8_t          tag;
             blindsign_step_t step;
         } blind;
     } u;

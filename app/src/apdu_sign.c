@@ -354,6 +354,12 @@ handle_first_apdu(command_t *cmd)
               check_derivation_type(global.path_with_curve.derivation_type));
     TZ_CHECK(cx_blake2b_init_no_throw(&global.keys.apdu.hash.state,
                                       SIGN_HASH_SIZE * 8));
+    /*
+     * We set the tag to zero here which indicates that it is unset.
+     * The first data packet will set it to the first byte.
+     */
+    global.keys.apdu.sign.tag = 0;
+
     // clang-format off
     switch (global.step) {
     case ST_CLEAR_SIGN: TZ_CHECK(handle_first_apdu_clear(cmd)); break;
@@ -409,11 +415,6 @@ handle_first_apdu_blind(__attribute__((unused)) command_t *cmd)
     nbgl_useCaseSpinner("Loading operation");
 #endif
 
-    /*
-     * We set the tag to zero here which indicates that it is unset.
-     * The first data packet will set it to the first byte.
-     */
-    global.keys.apdu.sign.u.blind.tag  = 0;
     global.keys.apdu.sign.u.blind.step = BLINDSIGN_ST_OPERATION;
 }
 
@@ -434,6 +435,9 @@ handle_data_apdu(command_t *cmd)
 
     if (PKT_IS_LAST(cmd))
         global.keys.apdu.sign.received_last_msg = true;
+
+    if (!global.keys.apdu.sign.tag)
+        global.keys.apdu.sign.tag = cmd->data[0];
 
     // clang-format off
     switch (global.step) {
@@ -559,8 +563,6 @@ handle_data_apdu_blind(command_t *cmd)
     TZ_PREAMBLE(("cmd=0x%p", cmd));
 
     TZ_ASSERT_NOTNULL(cmd);
-    if (!global.keys.apdu.sign.u.blind.tag)
-        global.keys.apdu.sign.u.blind.tag = cmd->data[0];
     if (!PKT_IS_LAST(cmd)) {
         io_send_sw(SW_OK);
         TZ_SUCCEED();
@@ -572,7 +574,7 @@ handle_data_apdu_blind(command_t *cmd)
     global.keys.apdu.sign.step              = SIGN_ST_WAIT_USER_INPUT;
 
     // clang-format off
-    switch(global.keys.apdu.sign.u.blind.tag) {
+    switch(global.keys.apdu.sign.tag) {
     case 0x01: case 0x11: type = "Block\nproposal";         break;
     case 0x03:            type = "Manager\noperation";      break;
     case 0x02:
