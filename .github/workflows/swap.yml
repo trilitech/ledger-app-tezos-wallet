@@ -9,9 +9,9 @@ on:
 
 jobs:
   job_functional_tests:
-    uses: spalmer25/app-exchange/.github/workflows/reusable_swap_functional_tests.yml@develop
+    uses: functori/app-exchange/.github/workflows/reusable_swap_functional_tests.yml@develop
     with:
-      repo_for_exchange: 'spalmer25/app-exchange'
+      repo_for_exchange: 'functori/app-exchange'
       branch_for_exchange: 'd825bfceea484937f46461975af0d51940796d87'
       branch_for_tezos: ${{ github.ref }}
       run_for_devices: '["nanos", "nanosp"]'
