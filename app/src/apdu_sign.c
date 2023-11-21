@@ -57,7 +57,7 @@ static void handle_first_apdu_clear(command_t *);
 static void handle_first_apdu_blind(command_t *);
 static void handle_data_apdu(command_t *);
 static void handle_data_apdu_clear(command_t *);
-static void handle_data_apdu_blind(command_t *);
+static void handle_data_apdu_blind(void);
 
 /* Macros */
 
@@ -442,7 +442,7 @@ handle_data_apdu(command_t *cmd)
     // clang-format off
     switch (global.step) {
     case ST_CLEAR_SIGN: TZ_CHECK(handle_data_apdu_clear(cmd)); break;
-    case ST_BLIND_SIGN: TZ_CHECK(handle_data_apdu_blind(cmd)); break;
+    case ST_BLIND_SIGN: TZ_CHECK(handle_data_apdu_blind());    break;
     default:            TZ_FAIL(EXC_UNEXPECTED_STATE);         break;
     }
     // clang-format on
@@ -558,20 +558,18 @@ continue_blindsign_cb(void)
 #endif
 
 static void
-handle_data_apdu_blind(command_t *cmd)
+handle_data_apdu_blind(void)
 {
-    TZ_PREAMBLE(("cmd=0x%p", cmd));
+    TZ_PREAMBLE(("void"));
 
-    TZ_ASSERT_NOTNULL(cmd);
-    if (!PKT_IS_LAST(cmd)) {
+    if (!global.keys.apdu.sign.received_last_msg) {
         io_send_sw(SW_OK);
         TZ_SUCCEED();
     }
 
     const char *type = "unknown type";
 
-    global.keys.apdu.sign.received_last_msg = true;
-    global.keys.apdu.sign.step              = SIGN_ST_WAIT_USER_INPUT;
+    global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
 
     // clang-format off
     switch(global.keys.apdu.sign.tag) {
