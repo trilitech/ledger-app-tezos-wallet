@@ -51,6 +51,7 @@ static void send_reject(void);
 static void send_continue(void);
 static void send_cancel(void);
 static void refill(void);
+static void pass_from_clear_to_blind(void);
 static void stream_cb(tz_ui_cb_type_t);
 static void handle_first_apdu(command_t *);
 static void handle_first_apdu_clear(command_t *);
@@ -197,13 +198,23 @@ refill_error(void)
     tz_parser_state *st = &global.keys.apdu.sign.u.clear.parser_state;
     TZ_PREAMBLE(("void"));
 
+    global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
+
 #ifdef HAVE_BAGL
     tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Parsing error",
                           tz_parser_result_name(st->errno), TZ_UI_LAYOUT_BNP,
                           TZ_UI_ICON_NONE);
 
-    tz_ui_stream_push_all(TZ_UI_STREAM_CB_CANCEL, "Blindsigning",
-                          "not enabled", TZ_UI_LAYOUT_BP, TZ_UI_ICON_NONE);
+    if (N_settings.blindsigning) {
+        tz_ui_stream_push(TZ_UI_STREAM_CB_BLINDSIGN, "Blindsign", "",
+                          TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_TICK);
+        tz_ui_stream_push(TZ_UI_STREAM_CB_CANCEL, "Reject", "",
+                          TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_CROSS);
+    } else {
+        tz_ui_stream_push_all(TZ_UI_STREAM_CB_CANCEL, "Blindsigning",
+                              "not enabled", TZ_UI_LAYOUT_HOME_BP,
+                              TZ_UI_ICON_NONE);
+    }
 #elif HAVE_NBGL
     tz_ui_stream_push_all(TZ_UI_STREAM_CB_CANCEL, "Parsing error",
                           tz_parser_result_name(st->errno), TZ_UI_LAYOUT_BNP,
@@ -269,17 +280,35 @@ send_cancel(void)
 }
 
 static void
+pass_from_clear_to_blind(void)
+{
+    TZ_PREAMBLE(("void"));
+
+    APDU_SIGN_ASSERT_STEP(SIGN_ST_WAIT_USER_INPUT);
+
+    global.step                        = ST_BLIND_SIGN;
+    global.keys.apdu.sign.step         = SIGN_ST_WAIT_DATA;
+    global.keys.apdu.sign.u.blind.step = BLINDSIGN_ST_OPERATION;
+
+    init_blind_stream();
+    handle_data_apdu_blind();
+
+    TZ_POSTAMBLE;
+}
+
+static void
 stream_cb(tz_ui_cb_type_t cb_type)
 {
     TZ_PREAMBLE(("cb_type=%u", cb_type));
 
     // clang-format off
     switch (cb_type) {
-    case TZ_UI_STREAM_CB_ACCEPT: TZ_CHECK(sign_packet()); break;
-    case TZ_UI_STREAM_CB_REFILL: TZ_CHECK(refill());      break;
-    case TZ_UI_STREAM_CB_REJECT: send_reject(); break;
-    case TZ_UI_STREAM_CB_CANCEL: TZ_CHECK(send_cancel()); break;
-    default:                     TZ_FAIL(EXC_UNKNOWN);    break;
+    case TZ_UI_STREAM_CB_ACCEPT:    TZ_CHECK(sign_packet());              break;
+    case TZ_UI_STREAM_CB_REFILL:    TZ_CHECK(refill());                   break;
+    case TZ_UI_STREAM_CB_REJECT:    send_reject();                        break;
+    case TZ_UI_STREAM_CB_CANCEL:    TZ_CHECK(send_cancel());              break;
+    case TZ_UI_STREAM_CB_BLINDSIGN: TZ_CHECK(pass_from_clear_to_blind()); break;
+    default:                        TZ_FAIL(EXC_UNKNOWN);                 break;
     }
     // clang-format on
 

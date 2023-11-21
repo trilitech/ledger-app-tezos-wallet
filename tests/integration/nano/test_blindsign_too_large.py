@@ -22,11 +22,12 @@ if __name__ == "__main__":
     test_name = Path(__file__).stem
     with nano_app() as app:
 
-        app.setup_blind_signing()
+        app.assert_screen(Screen.Home)
 
-        data = app.sign_with_hash(DEFAULT_ACCOUNT,
-                                  "050092abf8e3d9e5f8cfd9ae8a9fe5f28ea1d5b5abf1af82dae8a4b68df3d1889eb6f988f5e8d31a",
-                                  path=test_name)
+        data = app.blind_sign(DEFAULT_ACCOUNT,
+                              "050092abf8e3d9e5f8cfd9ae8a9fe5f28ea1d5b5abf1af82dae8a4b68df3d1889eb6f988f5e8d31a",
+                              with_hash=True,
+                              path=test_name)
 
         app.check_signature_with_hash(
             hash="ef565fa445d815cd77518a4d14ce90b7a536627455f0930c9dbfa22a75d478d8",

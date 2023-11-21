@@ -190,8 +190,6 @@ class TezosAppScreen():
         self.assert_screen(Screen.Settings_back)
         self.backend.both_click()
         self.assert_screen(Screen.Home)
-        self.backend.right_click()
-        self.assert_screen(Screen.Blind_home)
 
     def _quit(self) -> None:
         self.assert_screen(Screen.Quit)
@@ -365,6 +363,25 @@ class TezosAppScreen():
             f"Expected start with hash {hash.hex()} but got {data.hex()}"
         data = data[len(hash):]
         check_tlv_signature.check_signature(data.hex(), pk, message)
+
+    def blind_sign(self,
+                   account: Account,
+                   message: Union[str, bytes],
+                   with_hash: bool,
+                   path: Union[str, Path]) -> bytes:
+
+        if isinstance(path, str): path = Path(path)
+        sign = self.backend.sign_with_hash if with_hash else self.backend.sign
+
+        self.setup_blind_signing()
+
+        def navigate() -> None:
+            self.navigate_until_text("Blindsign", path / "clear")
+            self.navigate_until_text("Accept", path / "blind")
+
+        return send_and_navigate(
+            send=(lambda: sign(account, message)),
+            navigate=navigate)
 
     def _failing_signing(self,
                          account: Account,
