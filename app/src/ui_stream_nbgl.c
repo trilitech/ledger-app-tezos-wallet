@@ -22,6 +22,7 @@
 #include <ux.h>
 
 #include "globals.h"
+#include "nbgl_sdk.h"
 #include "ui_stream.h"
 
 bool tz_ui_nav_cb(uint8_t, nbgl_pageContent_t *);
@@ -131,7 +132,8 @@ tz_ui_stream_cb(void)
 {
     FUNC_ENTER(("void"));
 
-    nbgl_useCaseForwardOnlyReview("Reject", NULL, tz_ui_nav_cb, tz_choice_ui);
+    nbgl_useCaseForwardOnlyReviewNoSkip("Reject", NULL, tz_ui_nav_cb,
+                                        tz_choice_ui);
 
     FUNC_LEAVE();
 }
