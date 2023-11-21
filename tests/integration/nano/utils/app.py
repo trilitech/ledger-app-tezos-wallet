@@ -411,15 +411,11 @@ class TezosAppScreen():
                               account: Account,
                               message: Union[str, bytes],
                               with_hash: bool,
-                              text: str,
                               path: Union[str, Path]) -> None:
-        if self.backend.firmware.device != "nanox":
-            text = "Parsing error"
-
         self._failing_signing(account,
                               message,
                               with_hash,
-                              text,
+                              "Blindsigning",
                               StatusCode.PARSE_ERROR,
                               path)
 

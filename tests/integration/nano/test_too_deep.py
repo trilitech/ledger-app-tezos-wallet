@@ -36,7 +36,7 @@ if __name__ == "__main__":
             send_process = Process(target=send)
             send_process.start()
 
-            for i in range(3):
+            for i in range(4):
                 assert_screen_i(i)
                 app.backend.right_click()
 
@@ -49,7 +49,6 @@ if __name__ == "__main__":
             app.parsing_error_signing(DEFAULT_ACCOUNT,
                                       expression,
                                       with_hash=True,
-                                      text="TOO_DEEP",
                                       path=test_name)
 
         app.quit()

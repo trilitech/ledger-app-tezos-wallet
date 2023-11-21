@@ -196,9 +196,18 @@ refill_error(void)
     tz_parser_state *st = &global.keys.apdu.sign.u.clear.parser_state;
     TZ_PREAMBLE(("void"));
 
+#ifdef HAVE_BAGL
+    tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Parsing error",
+                          tz_parser_result_name(st->errno), TZ_UI_LAYOUT_BNP,
+                          TZ_UI_ICON_NONE);
+
+    tz_ui_stream_push_all(TZ_UI_STREAM_CB_CANCEL, "Blindsigning",
+                          "not enabled", TZ_UI_LAYOUT_BP, TZ_UI_ICON_NONE);
+#elif HAVE_NBGL
     tz_ui_stream_push_all(TZ_UI_STREAM_CB_CANCEL, "Parsing error",
                           tz_parser_result_name(st->errno), TZ_UI_LAYOUT_BNP,
                           TZ_UI_ICON_CROSS);
+#endif
 
     tz_ui_stream_close();
     TZ_POSTAMBLE;
