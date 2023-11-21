@@ -54,6 +54,7 @@ static void refill(void);
 static void stream_cb(tz_ui_cb_type_t);
 static void handle_first_apdu(command_t *);
 static void handle_first_apdu_clear(command_t *);
+static void init_blind_stream(void);
 static void handle_first_apdu_blind(command_t *);
 static void handle_data_apdu(command_t *);
 static void handle_data_apdu_clear(command_t *);
@@ -406,13 +407,21 @@ handle_first_apdu_clear(__attribute__((unused)) command_t *cmd)
 }
 
 static void
-handle_first_apdu_blind(__attribute__((unused)) command_t *cmd)
+init_blind_stream(void)
 {
 #ifdef HAVE_BAGL
     tz_ui_stream_init(bs_stream_cb);
-    tz_ui_stream_push_initial_screen();
 #elif HAVE_NBGL
     nbgl_useCaseSpinner("Loading operation");
+#endif
+}
+
+static void
+handle_first_apdu_blind(__attribute__((unused)) command_t *cmd)
+{
+    init_blind_stream();
+#ifdef HAVE_BAGL
+    tz_ui_stream_push_initial_screen();
 #endif
 
     global.keys.apdu.sign.u.blind.step = BLINDSIGN_ST_OPERATION;
