@@ -410,7 +410,7 @@ class TezosAppScreen():
         self._failing_signing(account,
                               message,
                               with_hash,
-                              "Ready for",
+                              "Application",
                               status_code,
                               path)
 

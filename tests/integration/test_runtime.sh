@@ -143,7 +143,7 @@ press_button() {
 
 expected_home() {
     echo " - expected_home"
-	  expect_section_content 'Ready for' 'safe signing'
+	  expect_section_content 'Application' 'is ready'
 }
 
 expected_version() {

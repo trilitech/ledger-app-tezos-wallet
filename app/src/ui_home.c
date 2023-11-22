@@ -55,7 +55,7 @@ ui_home_init(void)
     FUNC_ENTER(("void"));
 #ifdef HAVE_BAGL
     tz_ui_stream_init(cb);
-    tz_ui_stream_push(SCREEN_HOME, "Ready for", "safe signing",
+    tz_ui_stream_push(SCREEN_HOME, "Application", "is ready",
                       TZ_UI_LAYOUT_HOME_NP, TZ_UI_ICON_NONE);
     tz_ui_stream_push(SCREEN_VERSION, "Version", APPVERSION,
                       TZ_UI_LAYOUT_HOME_BNP, TZ_UI_ICON_NONE);
