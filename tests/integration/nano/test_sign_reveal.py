@@ -17,7 +17,7 @@ from utils.apdu import *
 from utils.app import *
 
 # Operation (0): Reveal
-# Fee: 0.01 tz
+# Fee: 0.01 XTZ
 # Storage limit: 4
 # Public key: edpkuXX2VdkdXzkN11oLCb8Aurdo1BTAtQiK8ZY9UPj2YMt3AHEpcY
 

@@ -510,9 +510,10 @@ tz_operation_parser_step(tz_parser_state *state)
                 }
             add_currency:
                 str[len]     = ' ';
-                str[len + 1] = 't';
-                str[len + 2] = 'z';
-                len += 3;
+                str[len + 1] = 'X';
+                str[len + 2] = 'T';
+                str[len + 3] = 'Z';
+                len += 4;
                 str[len] = 0;
                 break;
             }

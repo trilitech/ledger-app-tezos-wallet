@@ -25,16 +25,16 @@ from utils.apdu import *
 from utils.app import *
 
 # Operation (0): Transaction
-# Fee: 0.39 tz
+# Fee: 0.39 XTZ
 # Storage limit: 6
-# Amount: 0.02 tz
+# Amount: 0.02 XTZ
 # Destination: tz1cfdVKpBb9VRBdny8BQ5RSK82UudAp2miM
 # Entrypoint: jean_bob
 # Parameter: {Pair {} (Right -76723569314251090535296646);Pair {Elt Unit (Pair {Left Unit} (Pair (Left 0x03F01167865DC63DFEE0E31251329CEAB660D94606) (Pair 0x0107B21FCA96C5763F67B286752C7AAEFC5931D15A Unit)))} (Right 3120123370638446806591421154959427514880865200209654970345);Pair {} (Left (Some Unit))}
 # Operation (1): Transaction
-# Fee: 0.65 tz
+# Fee: 0.65 XTZ
 # Storage limit: 2
-# Amount: 0.06 tz
+# Amount: 0.06 XTZ
 # Destination: KT1CYT8oACUcCSNTu2qfgB4fj5bD7szYrpti
 
 if __name__ == "__main__":

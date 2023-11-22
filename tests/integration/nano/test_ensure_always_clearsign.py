@@ -17,9 +17,9 @@ from utils.apdu import *
 from utils.app import *
 
 # Operation (0): Transaction
-# Fee: 0.01 tz
+# Fee: 0.01 XTZ
 # Storage limit: 4
-# Amount: 0 tz
+# Amount: 0 XTZ
 # Destination: KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT
 # Entrypoint: root
 # Data: {pair "[" (pair "Z" (pair "Y" (pair "X" (pair "W" (pair "V" (pair "U" (pair "T" (pair "S" (pair "R" (pair "Q" (pair "P" (pair "O" (pair "N" (pair "M" (pair "L" (pair "K" (pair "J" (pair "I" (pair "H" (pair "G" (pair "F" (pair "E" (pair "D" (pair "C" (pair "B" {})))))))))))))))))))))))));pair 10 (pair 9 (pair 8 (pair 7 (pair 6 (pair 5 (pair 4 (pair 3 (pair 2 (pair 1 {})))))))))}

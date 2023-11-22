@@ -17,7 +17,7 @@ from utils.apdu import *
 from utils.app import *
 
 # Operation (0): SR: execute outbox message
-# Fee: 0.01 tz
+# Fee: 0.01 XTZ
 # Storage limit: 4
 # Rollup: sr163Lv22CdE8QagCwf48PWDTquk6isQwv57
 # Commitment: src12UJzB8mg7yU6nWPzicH7ofJbFjyJEbHvwtZdfRXi8DQHNp1LY8

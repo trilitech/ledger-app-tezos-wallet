@@ -13,12 +13,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-COMMIT=$(git describe --tags --abbrev=8 --always --long --dirty 2>/dev/null | sed 's/-dirty/*/')
-COMMIT_BYTES=$(printf '%s' "$COMMIT" | xxd -p -c 256)
+export COMMIT=$(git describe --tags --abbrev=8 --always --long --dirty 2>/dev/null | sed 's/-dirty/*/')
+export COMMIT_BYTES=$(printf '%s' "$COMMIT" | xxd -p -c 256)
 
-VERSION_WALLET_TAG="00"
-APPVERSION_M=3
-APPVERSION_N=0
-APPVERSION_P=0
-APPVERSION=$APPVERSION_M.$APPVERSION_N.$APPVERSION_P
-VERSION_BYTES=$(printf "%02x%02x%02x%02x" "$VERSION_WALLET_TAG" "$APPVERSION_M" "$APPVERSION_N" "$APPVERSION_P")
+export VERSION_WALLET_TAG="00"
+export APPVERSION_M=3
+export APPVERSION_N=0
+export APPVERSION_P=0
+export APPVERSION=$APPVERSION_M.$APPVERSION_N.$APPVERSION_P
+export VERSION_BYTES=$(printf "%02x%02x%02x%02x" "$VERSION_WALLET_TAG" "$APPVERSION_M" "$APPVERSION_N" "$APPVERSION_P")

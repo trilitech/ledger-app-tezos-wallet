@@ -17,9 +17,9 @@ from utils.apdu import *
 from utils.app import *
 
 # Operation (0): Origination
-# Fee: 0.01 tz
+# Fee: 0.01 XTZ
 # Storage limit: 4
-# Balance: 0.5 tz
+# Balance: 0.5 XTZ
 # Delegate: Field unset
 # Code: UNPAIR
 # Storage: pair "1" 2

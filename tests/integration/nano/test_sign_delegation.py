@@ -17,7 +17,7 @@ from utils.apdu import *
 from utils.app import *
 
 # Operation (0): Delegation
-# Fee: 0.2 tz
+# Fee: 0.2 XTZ
 # Storage limit: 889
 # Delegate: tz1TmFPVZsGQ8MnrBJtnECJgkFUwLa6EWYDm
 

@@ -17,7 +17,7 @@ from utils.apdu import *
 from utils.app import *
 
 # Operation (0): Increase paid storage
-# Fee: 0.01 tz
+# Fee: 0.01 XTZ
 # Storage limit: 4
 # Amount: 5
 # Destination: KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT

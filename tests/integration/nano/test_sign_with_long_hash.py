@@ -17,9 +17,9 @@ from utils.apdu import *
 from utils.app import *
 
 # Operation (0): Transaction
-# Fee: 0.01 tz
+# Fee: 0.01 XTZ
 # Storage limit: 4
-# Amount: 0 tz
+# Amount: 0 XTZ
 # Destination: KT1GW4QHn66m7WWWMWCMNaWmGYpCRbg5ahwU
 # Entrypoint: root
 # Parameter: 0
