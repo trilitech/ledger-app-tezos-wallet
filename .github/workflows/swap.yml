@@ -9,10 +9,10 @@ on:
 
 jobs:
   job_functional_tests:
-    uses: functori/app-exchange/.github/workflows/reusable_swap_functional_tests.yml@develop
+    uses: functori/app-exchange/.github/workflows/reusable_swap_functional_tests.yml@eaa2ad414d01e56389fa3214917cd15c12c5b2f9
     with:
       repo_for_exchange: 'functori/app-exchange'
-      branch_for_exchange: 'd825bfceea484937f46461975af0d51940796d87'
+      branch_for_exchange: 'eaa2ad414d01e56389fa3214917cd15c12c5b2f9'
       branch_for_tezos: ${{ github.ref }}
       run_for_devices: '["nanos", "nanosp"]'
       test_filter: '"tezos_new"'
