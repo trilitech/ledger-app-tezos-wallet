@@ -236,7 +236,8 @@ class TezosAppScreen():
             assert False, f"Expect fail with { code } but succeed"
         except ExceptionRAPDU as e:
             failing_code = StatusCode(e.status)
-            assert code == failing_code, f"Expect fail with { code } but fail with { failing_code }"
+            assert code == failing_code, \
+                f"Expect fail with { code.name } but fail with { failing_code.name }"
 
     def _failing_send(self,
                       send: Callable[[], bytes],
