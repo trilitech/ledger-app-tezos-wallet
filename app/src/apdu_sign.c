@@ -218,9 +218,11 @@ refill_error(void)
         tz_ui_stream_push(TZ_UI_STREAM_CB_CANCEL, "Reject", "",
                           TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_CROSS);
     } else {
-        tz_ui_stream_push_all(TZ_UI_STREAM_CB_CANCEL, "Blindsigning",
+        tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Blindsigning",
                               "not enabled", TZ_UI_LAYOUT_HOME_BP,
                               TZ_UI_ICON_NONE);
+        tz_ui_stream_push(TZ_UI_STREAM_CB_CANCEL, "Home", "",
+                          TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_BACK);
     }
 #elif HAVE_NBGL
     tz_ui_stream_push_all(TZ_UI_STREAM_CB_CANCEL, "Parsing error",

@@ -433,7 +433,7 @@ class TezosAppScreen():
         self._failing_signing(account,
                               message,
                               with_hash,
-                              "Blindsigning",
+                              "Home",
                               StatusCode.PARSE_ERROR,
                               path)
 

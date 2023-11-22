@@ -36,7 +36,7 @@ if __name__ == "__main__":
             send_process = Process(target=send)
             send_process.start()
 
-            for i in range(4):
+            for i in range(5):
                 assert_screen_i(i)
                 app.backend.right_click()
 
