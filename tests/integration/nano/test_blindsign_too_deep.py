@@ -43,7 +43,7 @@ if __name__ == "__main__":
                 assert_screen_i(i)
                 app.backend.right_click()
 
-            # Blindsign screen
+            # 'Switch to blindsigning' screen
             assert_screen_i(i+1)
 
             def blind_navigate() -> None:

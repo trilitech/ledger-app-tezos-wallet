@@ -376,7 +376,7 @@ class TezosAppScreen():
         self.setup_blind_signing()
 
         def navigate() -> None:
-            self.navigate_until_text("Blindsign", path / "clear")
+            self.navigate_until_text("Switch to", path / "clear")
             self.navigate_until_text("Accept", path / "blind")
 
         return send_and_navigate(
