@@ -56,7 +56,9 @@ static void stream_cb(tz_ui_cb_type_t);
 static void handle_first_apdu(command_t *);
 static void handle_first_apdu_clear(command_t *);
 static void init_blind_stream(void);
+#ifndef HAVE_BAGL
 static void handle_first_apdu_blind(command_t *);
+#endif
 static void handle_data_apdu(command_t *);
 static void handle_data_apdu_clear(command_t *);
 static void handle_data_apdu_blind(void);
@@ -399,6 +401,11 @@ handle_first_apdu(command_t *cmd)
      */
     global.keys.apdu.sign.tag = 0;
 
+#ifdef HAVE_BAGL
+    TZ_ASSERT(EXC_UNEXPECTED_STATE, global.step == ST_CLEAR_SIGN);
+
+    TZ_CHECK(handle_first_apdu_clear(cmd));
+#else
     // clang-format off
     switch (global.step) {
     case ST_CLEAR_SIGN: TZ_CHECK(handle_first_apdu_clear(cmd)); break;
@@ -406,6 +413,7 @@ handle_first_apdu(command_t *cmd)
     default:            TZ_FAIL(EXC_UNEXPECTED_STATE);
     }
     // clang-format on
+#endif
 
     io_send_sw(SW_OK);
     global.keys.apdu.sign.step = SIGN_ST_WAIT_DATA;
@@ -413,30 +421,19 @@ handle_first_apdu(command_t *cmd)
     TZ_POSTAMBLE;
 }
 
-#ifdef HAVE_BAGL
-static void
-tz_ui_stream_push_initial_screen(void)
-{
-    FUNC_ENTER(("void"));
-#ifdef TARGET_NANOS
-    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Review operation", "",
-                      TZ_UI_LAYOUT_BP, TZ_UI_ICON_EYE);
-#else
-    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Review", "operation",
-                      TZ_UI_LAYOUT_BP, TZ_UI_ICON_EYE);
-#endif
-    FUNC_LEAVE();
-}
-#endif
-
 static void
 handle_first_apdu_clear(__attribute__((unused)) command_t *cmd)
 {
     tz_parser_state *st = &global.keys.apdu.sign.u.clear.parser_state;
 
     tz_ui_stream_init(stream_cb);
-#ifdef HAVE_BAGL
-    tz_ui_stream_push_initial_screen();
+
+#ifdef TARGET_NANOS
+    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Review operation", "",
+                      TZ_UI_LAYOUT_BP, TZ_UI_ICON_EYE);
+#elif defined(HAVE_BAGL)
+    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Review", "operation",
+                      TZ_UI_LAYOUT_BP, TZ_UI_ICON_EYE);
 #endif
 
     tz_operation_parser_init(st, TZ_UNKNOWN_SIZE, false);
@@ -454,16 +451,15 @@ init_blind_stream(void)
 #endif
 }
 
+#ifndef HAVE_BAGL
 static void
 handle_first_apdu_blind(__attribute__((unused)) command_t *cmd)
 {
     init_blind_stream();
-#ifdef HAVE_BAGL
-    tz_ui_stream_push_initial_screen();
-#endif
 
     global.keys.apdu.sign.u.blind.step = BLINDSIGN_ST_OPERATION;
 }
+#endif
 
 static void
 handle_data_apdu(command_t *cmd)
@@ -655,12 +651,6 @@ handle_data_apdu_blind(void)
 }
 #undef FINAL_HASH
 
-#ifdef HAVE_BAGL
-#define GET_HOME_SCREEN() tz_ui_stream_get_cb_type()
-#elif HAVE_NBGL
-#define GET_HOME_SCREEN() global.home_screen
-#endif
-
 void
 handle_apdu_sign(command_t *cmd)
 {
@@ -674,14 +664,18 @@ handle_apdu_sign(command_t *cmd)
 
         memset(&global.keys, 0, sizeof(global.keys));
 
+#ifdef HAVE_BAGL
+        global.step = ST_CLEAR_SIGN;
+#else
         // clang-format off
-        switch (GET_HOME_SCREEN()) {
+        switch (global.home_screen) {
         case SCREEN_CLEAR_SIGN: global.step = ST_CLEAR_SIGN; break;
         case SCREEN_BLIND_SIGN: global.step = ST_BLIND_SIGN; break;
         default:
             TZ_FAIL(EXC_UNEXPECTED_STATE);
         }
         // clang-format on
+#endif
 
         TZ_CHECK(handle_first_apdu(cmd));
         global.keys.apdu.sign.return_hash = return_hash;

@@ -208,17 +208,6 @@ class TezosAppScreen():
         self.backend.right_click()
         self._quit()
 
-    def quit_blind(self) -> None:
-        self.assert_screen(Screen.Home)
-        self.backend.right_click()
-        self.assert_screen(Screen.Blind_home)
-        self.backend.right_click()
-        self.assert_screen(Screen.Version)
-        self.backend.right_click()
-        self.assert_screen(Screen.Settings)
-        self.backend.right_click()
-        self._quit()
-
     def navigate_until_text(self, text: str, path: Union[str, Path]) -> None:
         if isinstance(path, str): path = Path(path)
         self.navigator.\

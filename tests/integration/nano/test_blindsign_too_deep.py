@@ -71,4 +71,4 @@ if __name__ == "__main__":
             signature="8309e41ed87ac1d33006806b688cfcff7632c4fbe499ff3ea4983ae4f06dea7790ec25db045689bca2c63967b5c563aabff86c4ef163bff92af3bb2ca9392d09",
             data=data)
 
-        app.quit_blind()
+        app.quit()

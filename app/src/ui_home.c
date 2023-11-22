@@ -34,8 +34,7 @@ cb(tz_ui_cb_type_t cb_type)
     FUNC_ENTER(("cb_type=%u", cb_type));
 
     switch (cb_type) {
-    case SCREEN_BLIND_SIGN:
-    case SCREEN_CLEAR_SIGN:
+    case SCREEN_HOME:
     case SCREEN_VERSION:
         break;
     case SCREEN_SETTINGS:
@@ -48,20 +47,6 @@ cb(tz_ui_cb_type_t cb_type)
     FUNC_LEAVE();
 }
 
-static void
-clear_sign_screen(void)
-{
-    tz_ui_stream_push(SCREEN_CLEAR_SIGN, "Ready for", "safe signing",
-                      TZ_UI_LAYOUT_HOME_NP, TZ_UI_ICON_NONE);
-}
-
-static void
-blind_sign_screen(void)
-{
-    tz_ui_stream_push(SCREEN_BLIND_SIGN, "Ready for", "BLIND signing",
-                      TZ_UI_LAYOUT_HOME_NP, TZ_UI_ICON_NONE);
-}
-
 #endif  // HAVE_BAGL
 
 void
@@ -70,9 +55,8 @@ ui_home_init(void)
     FUNC_ENTER(("void"));
 #ifdef HAVE_BAGL
     tz_ui_stream_init(cb);
-    clear_sign_screen();
-    if (N_settings.blindsigning)
-        blind_sign_screen();
+    tz_ui_stream_push(SCREEN_HOME, "Ready for", "safe signing",
+                      TZ_UI_LAYOUT_HOME_NP, TZ_UI_ICON_NONE);
     tz_ui_stream_push(SCREEN_VERSION, "Version", APPVERSION,
                       TZ_UI_LAYOUT_HOME_BNP, TZ_UI_ICON_NONE);
     tz_ui_stream_push(SCREEN_SETTINGS, "Settings", "", TZ_UI_LAYOUT_HOME_PB,

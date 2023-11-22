@@ -34,4 +34,4 @@ if __name__ == "__main__":
             signature="3e2bcb333ba0d639dd28c1b77c5860e552ab02092a50a57f1424f573278230ab8ba81d8a40956415278a27e3f28cae64d1f1f13bf613e6e9a57035e9e1451102",
             data=data)
 
-        app.quit_blind()
+        app.quit()

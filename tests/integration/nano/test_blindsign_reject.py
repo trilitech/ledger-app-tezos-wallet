@@ -47,4 +47,4 @@ if __name__ == "__main__":
             send=expected_failure_send,
             navigate=navigate)
 
-        app.quit_blind()
+        app.quit()
