@@ -143,13 +143,8 @@ press_button() {
 
 expected_home() {
     echo " - expected_home"
-	  expect_section_content 'Ready for' 'safe signing'
+	  expect_section_content 'Application' 'is ready'
 }
-
-expected_blind_home() {
-    echo " - expected_blind_home"
-	  expect_section_content 'Ready for' 'BLIND signing'
- }
 
 expected_version() {
     echo " - expected_version"
@@ -194,21 +189,6 @@ set_blind_signing() {
 quit_app() {
     echo " - quit_app"
     expected_home
-    press_button right
-    expected_version
-    press_button right
-    expect_full_text "Settings"
-    press_button right
-    expect_full_text "Quit?"
-    press_button both
-    expect_exited
-}
-
-quit_blind_app() {
-    echo " - quit_blind_app"
-    expected_home
-    press_button right
-    expected_blind_home
     press_button right
     expected_version
     press_button right

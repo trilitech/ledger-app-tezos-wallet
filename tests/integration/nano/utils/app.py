@@ -190,8 +190,6 @@ class TezosAppScreen():
         self.assert_screen(Screen.Settings_back)
         self.backend.both_click()
         self.assert_screen(Screen.Home)
-        self.backend.right_click()
-        self.assert_screen(Screen.Blind_home)
 
     def _quit(self) -> None:
         self.assert_screen(Screen.Quit)
@@ -203,17 +201,6 @@ class TezosAppScreen():
 
     def quit(self) -> None:
         self.assert_screen(Screen.Home)
-        self.backend.right_click()
-        self.assert_screen(Screen.Version)
-        self.backend.right_click()
-        self.assert_screen(Screen.Settings)
-        self.backend.right_click()
-        self._quit()
-
-    def quit_blind(self) -> None:
-        self.assert_screen(Screen.Home)
-        self.backend.right_click()
-        self.assert_screen(Screen.Blind_home)
         self.backend.right_click()
         self.assert_screen(Screen.Version)
         self.backend.right_click()
@@ -238,7 +225,8 @@ class TezosAppScreen():
             assert False, f"Expect fail with { code } but succeed"
         except ExceptionRAPDU as e:
             failing_code = StatusCode(e.status)
-            assert code == failing_code, f"Expect fail with { code } but fail with { failing_code }"
+            assert code == failing_code, \
+                f"Expect fail with { code.name } but fail with { failing_code.name }"
 
     def _failing_send(self,
                       send: Callable[[], bytes],
@@ -366,6 +354,25 @@ class TezosAppScreen():
         data = data[len(hash):]
         check_tlv_signature.check_signature(data.hex(), pk, message)
 
+    def blind_sign(self,
+                   account: Account,
+                   message: Union[str, bytes],
+                   with_hash: bool,
+                   path: Union[str, Path]) -> bytes:
+
+        if isinstance(path, str): path = Path(path)
+        sign = self.backend.sign_with_hash if with_hash else self.backend.sign
+
+        self.setup_blind_signing()
+
+        def navigate() -> None:
+            self.navigate_until_text("Switch to", path / "clear")
+            self.navigate_until_text("Accept", path / "blind")
+
+        return send_and_navigate(
+            send=(lambda: sign(account, message)),
+            navigate=navigate)
+
     def _failing_signing(self,
                          account: Account,
                          message: Union[str, bytes],
@@ -403,7 +410,7 @@ class TezosAppScreen():
         self._failing_signing(account,
                               message,
                               with_hash,
-                              "Ready for",
+                              "Application",
                               status_code,
                               path)
 
@@ -411,15 +418,11 @@ class TezosAppScreen():
                               account: Account,
                               message: Union[str, bytes],
                               with_hash: bool,
-                              text: str,
                               path: Union[str, Path]) -> None:
-        if self.backend.firmware.device != "nanox":
-            text = "Parsing error"
-
         self._failing_signing(account,
                               message,
                               with_hash,
-                              text,
+                              "Home",
                               StatusCode.PARSE_ERROR,
                               path)
 

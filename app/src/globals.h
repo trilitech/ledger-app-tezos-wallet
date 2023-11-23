@@ -56,8 +56,12 @@ void toggle_blindsigning(void);
 #define MAX_SIGNATURE_SIZE 100
 
 typedef enum {
+#ifdef HAVE_BAGL
+    SCREEN_HOME = 0,
+#else
     SCREEN_CLEAR_SIGN = 0,
     SCREEN_BLIND_SIGN,
+#endif
     SCREEN_VERSION,
     SCREEN_SETTINGS,
     SCREEN_QUIT,

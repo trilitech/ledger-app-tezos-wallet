@@ -51,13 +51,17 @@ static void send_reject(void);
 static void send_continue(void);
 static void send_cancel(void);
 static void refill(void);
+static void pass_from_clear_to_blind(void);
 static void stream_cb(tz_ui_cb_type_t);
 static void handle_first_apdu(command_t *);
 static void handle_first_apdu_clear(command_t *);
+static void init_blind_stream(void);
+#ifndef HAVE_BAGL
 static void handle_first_apdu_blind(command_t *);
+#endif
 static void handle_data_apdu(command_t *);
 static void handle_data_apdu_clear(command_t *);
-static void handle_data_apdu_blind(command_t *);
+static void handle_data_apdu_blind(void);
 
 /* Macros */
 
@@ -196,9 +200,37 @@ refill_error(void)
     tz_parser_state *st = &global.keys.apdu.sign.u.clear.parser_state;
     TZ_PREAMBLE(("void"));
 
+    global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
+
+#ifdef HAVE_BAGL
+    tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Parsing error",
+                          tz_parser_result_name(st->errno), TZ_UI_LAYOUT_BNP,
+                          TZ_UI_ICON_NONE);
+
+    if (N_settings.blindsigning) {
+#ifdef TARGET_NANOS
+        tz_ui_stream_push(TZ_UI_STREAM_CB_BLINDSIGN, "Switch to",
+                          "blindsigning", TZ_UI_LAYOUT_HOME_BP,
+                          TZ_UI_ICON_NONE);
+#else
+        tz_ui_stream_push(TZ_UI_STREAM_CB_BLINDSIGN, "Switch to",
+                          "blindsigning", TZ_UI_LAYOUT_HOME_PB,
+                          TZ_UI_ICON_TICK);
+#endif
+        tz_ui_stream_push(TZ_UI_STREAM_CB_CANCEL, "Reject", "",
+                          TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_CROSS);
+    } else {
+        tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Blindsigning",
+                              "not enabled", TZ_UI_LAYOUT_HOME_BP,
+                              TZ_UI_ICON_NONE);
+        tz_ui_stream_push(TZ_UI_STREAM_CB_CANCEL, "Home", "",
+                          TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_BACK);
+    }
+#elif HAVE_NBGL
     tz_ui_stream_push_all(TZ_UI_STREAM_CB_CANCEL, "Parsing error",
                           tz_parser_result_name(st->errno), TZ_UI_LAYOUT_BNP,
                           TZ_UI_ICON_CROSS);
+#endif
 
     tz_ui_stream_close();
     TZ_POSTAMBLE;
@@ -259,17 +291,35 @@ send_cancel(void)
 }
 
 static void
+pass_from_clear_to_blind(void)
+{
+    TZ_PREAMBLE(("void"));
+
+    APDU_SIGN_ASSERT_STEP(SIGN_ST_WAIT_USER_INPUT);
+
+    global.step                        = ST_BLIND_SIGN;
+    global.keys.apdu.sign.step         = SIGN_ST_WAIT_DATA;
+    global.keys.apdu.sign.u.blind.step = BLINDSIGN_ST_OPERATION;
+
+    init_blind_stream();
+    handle_data_apdu_blind();
+
+    TZ_POSTAMBLE;
+}
+
+static void
 stream_cb(tz_ui_cb_type_t cb_type)
 {
     TZ_PREAMBLE(("cb_type=%u", cb_type));
 
     // clang-format off
     switch (cb_type) {
-    case TZ_UI_STREAM_CB_ACCEPT: TZ_CHECK(sign_packet()); break;
-    case TZ_UI_STREAM_CB_REFILL: TZ_CHECK(refill());      break;
-    case TZ_UI_STREAM_CB_REJECT: send_reject(); break;
-    case TZ_UI_STREAM_CB_CANCEL: TZ_CHECK(send_cancel()); break;
-    default:                     TZ_FAIL(EXC_UNKNOWN);    break;
+    case TZ_UI_STREAM_CB_ACCEPT:    TZ_CHECK(sign_packet());              break;
+    case TZ_UI_STREAM_CB_REFILL:    TZ_CHECK(refill());                   break;
+    case TZ_UI_STREAM_CB_REJECT:    send_reject();                        break;
+    case TZ_UI_STREAM_CB_CANCEL:    TZ_CHECK(send_cancel());              break;
+    case TZ_UI_STREAM_CB_BLINDSIGN: TZ_CHECK(pass_from_clear_to_blind()); break;
+    default:                        TZ_FAIL(EXC_UNKNOWN);                 break;
     }
     // clang-format on
 
@@ -345,6 +395,17 @@ handle_first_apdu(command_t *cmd)
               check_derivation_type(global.path_with_curve.derivation_type));
     TZ_CHECK(cx_blake2b_init_no_throw(&global.keys.apdu.hash.state,
                                       SIGN_HASH_SIZE * 8));
+    /*
+     * We set the tag to zero here which indicates that it is unset.
+     * The first data packet will set it to the first byte.
+     */
+    global.keys.apdu.sign.tag = 0;
+
+#ifdef HAVE_BAGL
+    TZ_ASSERT(EXC_UNEXPECTED_STATE, global.step == ST_CLEAR_SIGN);
+
+    TZ_CHECK(handle_first_apdu_clear(cmd));
+#else
     // clang-format off
     switch (global.step) {
     case ST_CLEAR_SIGN: TZ_CHECK(handle_first_apdu_clear(cmd)); break;
@@ -352,6 +413,7 @@ handle_first_apdu(command_t *cmd)
     default:            TZ_FAIL(EXC_UNEXPECTED_STATE);
     }
     // clang-format on
+#endif
 
     io_send_sw(SW_OK);
     global.keys.apdu.sign.step = SIGN_ST_WAIT_DATA;
@@ -359,30 +421,19 @@ handle_first_apdu(command_t *cmd)
     TZ_POSTAMBLE;
 }
 
-#ifdef HAVE_BAGL
-static void
-tz_ui_stream_push_initial_screen(void)
-{
-    FUNC_ENTER(("void"));
-#ifdef TARGET_NANOS
-    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Review operation", "",
-                      TZ_UI_LAYOUT_BP, TZ_UI_ICON_EYE);
-#else
-    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Review", "operation",
-                      TZ_UI_LAYOUT_BP, TZ_UI_ICON_EYE);
-#endif
-    FUNC_LEAVE();
-}
-#endif
-
 static void
 handle_first_apdu_clear(__attribute__((unused)) command_t *cmd)
 {
     tz_parser_state *st = &global.keys.apdu.sign.u.clear.parser_state;
 
     tz_ui_stream_init(stream_cb);
-#ifdef HAVE_BAGL
-    tz_ui_stream_push_initial_screen();
+
+#ifdef TARGET_NANOS
+    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Review operation", "",
+                      TZ_UI_LAYOUT_BP, TZ_UI_ICON_EYE);
+#elif defined(HAVE_BAGL)
+    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Review", "operation",
+                      TZ_UI_LAYOUT_BP, TZ_UI_ICON_EYE);
 #endif
 
     tz_operation_parser_init(st, TZ_UNKNOWN_SIZE, false);
@@ -391,22 +442,24 @@ handle_first_apdu_clear(__attribute__((unused)) command_t *cmd)
 }
 
 static void
-handle_first_apdu_blind(__attribute__((unused)) command_t *cmd)
+init_blind_stream(void)
 {
 #ifdef HAVE_BAGL
     tz_ui_stream_init(bs_stream_cb);
-    tz_ui_stream_push_initial_screen();
 #elif HAVE_NBGL
     nbgl_useCaseSpinner("Loading operation");
 #endif
+}
 
-    /*
-     * We set the tag to zero here which indicates that it is unset.
-     * The first data packet will set it to the first byte.
-     */
-    global.keys.apdu.sign.u.blind.tag  = 0;
+#ifndef HAVE_BAGL
+static void
+handle_first_apdu_blind(__attribute__((unused)) command_t *cmd)
+{
+    init_blind_stream();
+
     global.keys.apdu.sign.u.blind.step = BLINDSIGN_ST_OPERATION;
 }
+#endif
 
 static void
 handle_data_apdu(command_t *cmd)
@@ -426,10 +479,13 @@ handle_data_apdu(command_t *cmd)
     if (PKT_IS_LAST(cmd))
         global.keys.apdu.sign.received_last_msg = true;
 
+    if (!global.keys.apdu.sign.tag)
+        global.keys.apdu.sign.tag = cmd->data[0];
+
     // clang-format off
     switch (global.step) {
     case ST_CLEAR_SIGN: TZ_CHECK(handle_data_apdu_clear(cmd)); break;
-    case ST_BLIND_SIGN: TZ_CHECK(handle_data_apdu_blind(cmd)); break;
+    case ST_BLIND_SIGN: TZ_CHECK(handle_data_apdu_blind());    break;
     default:            TZ_FAIL(EXC_UNEXPECTED_STATE);         break;
     }
     // clang-format on
@@ -545,25 +601,21 @@ continue_blindsign_cb(void)
 #endif
 
 static void
-handle_data_apdu_blind(command_t *cmd)
+handle_data_apdu_blind(void)
 {
-    TZ_PREAMBLE(("cmd=0x%p", cmd));
+    TZ_PREAMBLE(("void"));
 
-    TZ_ASSERT_NOTNULL(cmd);
-    if (!global.keys.apdu.sign.u.blind.tag)
-        global.keys.apdu.sign.u.blind.tag = cmd->data[0];
-    if (!PKT_IS_LAST(cmd)) {
+    if (!global.keys.apdu.sign.received_last_msg) {
         io_send_sw(SW_OK);
         TZ_SUCCEED();
     }
 
     const char *type = "unknown type";
 
-    global.keys.apdu.sign.received_last_msg = true;
-    global.keys.apdu.sign.step              = SIGN_ST_WAIT_USER_INPUT;
+    global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
 
     // clang-format off
-    switch(global.keys.apdu.sign.u.blind.tag) {
+    switch(global.keys.apdu.sign.tag) {
     case 0x01: case 0x11: type = "Block\nproposal";         break;
     case 0x03:            type = "Manager\noperation";      break;
     case 0x02:
@@ -599,12 +651,6 @@ handle_data_apdu_blind(command_t *cmd)
 }
 #undef FINAL_HASH
 
-#ifdef HAVE_BAGL
-#define GET_HOME_SCREEN() tz_ui_stream_get_cb_type()
-#elif HAVE_NBGL
-#define GET_HOME_SCREEN() global.home_screen
-#endif
-
 void
 handle_apdu_sign(command_t *cmd)
 {
@@ -618,14 +664,18 @@ handle_apdu_sign(command_t *cmd)
 
         memset(&global.keys, 0, sizeof(global.keys));
 
+#ifdef HAVE_BAGL
+        global.step = ST_CLEAR_SIGN;
+#else
         // clang-format off
-        switch (GET_HOME_SCREEN()) {
+        switch (global.home_screen) {
         case SCREEN_CLEAR_SIGN: global.step = ST_CLEAR_SIGN; break;
         case SCREEN_BLIND_SIGN: global.step = ST_BLIND_SIGN; break;
         default:
             TZ_FAIL(EXC_UNEXPECTED_STATE);
         }
         // clang-format on
+#endif
 
         TZ_CHECK(handle_first_apdu(cmd));
         global.keys.apdu.sign.return_hash = return_hash;
