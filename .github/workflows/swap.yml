@@ -12,7 +12,7 @@ jobs:
     uses: functori/app-exchange/.github/workflows/reusable_swap_functional_tests.yml@eaa2ad414d01e56389fa3214917cd15c12c5b2f9
     with:
       repo_for_exchange: 'functori/app-exchange'
-      branch_for_exchange: '20a54e4b4b0afa30592e3bbedd44ebd1da002e68'
+      branch_for_exchange: '1f642940d36983a44c945e227fd52045d3d086c5'
       branch_for_tezos: ${{ github.ref }}
       run_for_devices: '["nanos", "nanosp"]'
       test_filter: '"tezos_new"'

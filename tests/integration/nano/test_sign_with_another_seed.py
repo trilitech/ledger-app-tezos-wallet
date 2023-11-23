@@ -17,9 +17,9 @@ from utils.apdu import *
 from utils.app import *
 
 # Operation (0): Transaction
-# Fee: 0.05 tz
+# Fee: 0.05 XTZ
 # Storage limit: 45
-# Amount: 0.24 tz
+# Amount: 0.24 XTZ
 # Destination: KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT
 # Entrypoint: do
 # Parameter: CAR

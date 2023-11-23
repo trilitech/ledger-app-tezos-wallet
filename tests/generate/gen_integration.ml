@@ -174,7 +174,7 @@ let pp_opt_field pp ppf = function
   | None -> Format.fprintf ppf "Field unset"
   | Some v -> Format.fprintf ppf "%a" pp v
 
-let pp_tz ppf tz = Format.fprintf ppf "%a tz" Protocol.Alpha_context.Tez.pp tz
+let pp_tz ppf tz = Format.fprintf ppf "%a XTZ" Protocol.Alpha_context.Tez.pp tz
 
 let pp_lazy_expr ppf lazy_expr =
   let expr = Result.get_ok @@ Protocol.Script_repr.force_decode lazy_expr in

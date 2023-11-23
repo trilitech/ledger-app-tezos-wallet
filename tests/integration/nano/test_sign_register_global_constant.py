@@ -17,7 +17,7 @@ from utils.apdu import *
 from utils.app import *
 
 # Operation (0): Register global constant
-# Fee: 0.01 tz
+# Fee: 0.01 XTZ
 # Storage limit: 4
 # Value: Pair "1" 2
 

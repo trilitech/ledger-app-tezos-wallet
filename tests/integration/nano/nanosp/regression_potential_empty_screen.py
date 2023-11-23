@@ -25,7 +25,7 @@ from utils.apdu import *
 from utils.app import *
 
 # Operation (0): Transfer ticket
-# Fee: 0.01 tz
+# Fee: 0.01 XTZ
 # Storage limit: 4
 # Contents: UNPAIR
 # Type: pair "1" 2

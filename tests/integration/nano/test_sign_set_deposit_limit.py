@@ -17,9 +17,9 @@ from utils.apdu import *
 from utils.app import *
 
 # Operation (0): Set deposit limit
-# Fee: 0.06 tz
+# Fee: 0.06 XTZ
 # Storage limit: 4
-# Staking limit: 0.02 tz
+# Staking limit: 0.02 XTZ
 
 if __name__ == "__main__":
     test_name = Path(__file__).stem
