@@ -1,6 +1,6 @@
 /* Tezos Ledger application - Home screen display
 
-   Copyright 2023 TriliTech <contact@nomadic-labs.com>
+   Copyright 2023 TriliTech <contact@trili.tech>
 
    With code excerpts from:
     - Legacy Tezos app, Copyright 2019 Obsidian Systems
