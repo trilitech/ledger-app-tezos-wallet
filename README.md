@@ -223,3 +223,45 @@ open at the end of a test.
 You will be requested to press enter to take each snapshot in term.
 **NB** make sure that the screen has updated to the screen you want to snapshot each time. It's also a good idea to
 re-run the test normally afterwards, to ensure the snapshots have been set correctly.
+
+## Swap test
+
+### Requirement
+
+Our swap tests are located in the https://github.com/functori/app-exchange repository.
+You must have a clone of this repository. In the commands below, it must be referenced in the `APP_EXCHANGE_REPO` variable.
+
+In some of the commands below, other variables will be required:
+- `APP_TEZOS_REPO`: your clone of the https://github.com/trilitech/ledger-app-tezos-wallet repository
+- `APP_ETH_REPO`: your clone of the https://github.com/LedgerHQ/app-ethereum repository
+The commands below will consider the version of the current branch of each repository.
+
+### Preparation
+
+Make sure that the Tezos, Ethereum, and Exchange apps are built and set up correctly in the app-exchange repository.
+If not, run :
+```sh
+./scripts/test_swap.sh build_app_exchange $DEVICE
+./scripts/test_swap.sh build_app_ethereum $DEVICE
+./scripts/test_swap.sh build_app_tezos    $DEVICE
+```
+
+### Running
+
+You can run all  test with :
+```sh
+./scripts/test_swap.sh run_tests_all $DEVICE
+```
+
+And you can run an individual test with :
+```sh
+./scripts/test_swap.sh run_tests --device $DEVICE -v -k "your_test_name"
+```
+
+### Update
+
+You can run :
+```sh
+./scripts/test_swap.sh update $DEVICE
+```
+to perform all snapshot update steps based on your current Tezos repository.
