@@ -314,6 +314,7 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
 {
     tz_ui_stream_t *s = &global.stream;
     bool            push_to_next;
+    bool            append    = false;
     size_t          max_pairs = (cb_type == TZ_UI_STREAM_CB_CANCEL)
                                     ? 1
                                     : NB_MAX_DISPLAYED_PAIRS_IN_REVIEW;
@@ -351,18 +352,34 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
             PRINTF("[ERROR] PANIC!!! we pushing to a screen that's full");
         }
 
-        push_str(title, strlen(title),
-                 (char **)&s->screens[bucket].pairs[idx].item);
+        if (idx > 0
+            && 0 == strcmp(title, s->screens[bucket].pairs[idx - 1].item))
+            append = true;
+
+        if (!append)
+            push_str(title, strlen(title),
+                     (char **)&s->screens[bucket].pairs[idx].item);
 
         if (max != -1)
             length = MIN(length, (size_t)max);
 
         s->screens[bucket].cb_type = cb_type;
 
-        push_str(&value[offset], length,
-                 (char **)&s->screens[bucket].pairs[idx].value);
+        char *out = NULL;
 
-        offset = length;
+        if (append) {
+            bool can_fit = false;
+            ui_strings_can_fit(length, &can_fit);
+            if (!can_fit)
+                drop_last_screen();
+
+            offset = ui_strings_append_last(&value[offset], length, &out);
+            idx--;
+        } else {
+            push_str(&value[offset], length,
+                     (char **)&s->screens[bucket].pairs[idx].value);
+            offset = length;
+        }
 
         /* Check that the whole screen fits on the page
          * if it doesn't, we need to pop this pair, and move
@@ -384,15 +401,22 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
 
         if (push_to_next) {
             /* We need to move to the next screen, retry */
-            ui_strings_drop_last(
-                (char **)&s->screens[bucket].pairs[idx].value);
-            ui_strings_drop_last(
-                (char **)&s->screens[bucket].pairs[idx].item);
+            if (append && offset > 0) {
+                ui_strings_drop_last(&out);
+            } else {
+                ui_strings_drop_last(
+                    (char **)&s->screens[bucket].pairs[idx].value);
+                ui_strings_drop_last(
+                    (char **)&s->screens[bucket].pairs[idx].item);
+            }
+
             offset = 0;
         }
     }
 
-    if (push_to_next || ++(s->screens[bucket].nb_pairs) == max_pairs) {
+    if (push_to_next
+        || (!append && ++(s->screens[bucket].nb_pairs) == max_pairs)
+        || (append && offset == 0)) {
         s->total++;
         if (s->total > 0
             && s->total % TZ_UI_STREAM_HISTORY_SCREENS

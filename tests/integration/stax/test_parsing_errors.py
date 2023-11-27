@@ -110,6 +110,8 @@ if __name__ == "__main__":
 
     with app.review_parsing_error("too_deep"):
         app.review.tap()
+        app.assert_screen("tpe_review_too_deep_0")
+        app.review.tap()
     assert_home_with_code(app, "9405")
 
     # wrong last packet
