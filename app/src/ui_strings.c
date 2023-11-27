@@ -32,6 +32,7 @@
 void   ui_strings_init(void);
 void   ui_strings_push(const char *str, size_t len, char **out);
 void   ui_strings_drop(char **str);
+void   ui_strings_drop_last(char **str);
 size_t ui_strings_fit_up_to(size_t len, char **write_start);
 void   ui_strings_can_fit(size_t len, bool *can_fit);
 bool   ui_strings_is_empty();
