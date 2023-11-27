@@ -241,9 +241,13 @@ ui_strings_drop_last(char **in)
 
     PRINTF("[DEBUG] zeroing %p (%d) (%s)\n", *in, len, *in);
     memset(*in, '\0', len);
-    s->count--;
 
-    s->end = *in;
+    if (*in == BUFF_START || *(*in - 1) == '\0') {
+        s->count--;
+        s->end = *in;
+    } else {
+        s->end = *in + 1;
+    }
 
     *in = NULL;
 
