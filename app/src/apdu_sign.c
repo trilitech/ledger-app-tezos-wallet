@@ -520,7 +520,8 @@ handle_data_apdu_clear(command_t *cmd)
         tz_operation_parser_set_size(
             st, global.keys.apdu.sign.u.clear.total_length);
     TZ_CHECK(refill());
-    tz_ui_stream();
+    if (global.keys.apdu.sign.step == SIGN_ST_WAIT_USER_INPUT)
+        tz_ui_stream();
 
     TZ_POSTAMBLE;
 }
