@@ -32,9 +32,11 @@
 void   ui_strings_init(void);
 void   ui_strings_push(const char *str, size_t len, char **out);
 void   ui_strings_drop(char **str);
+void   ui_strings_drop_last(char **str);
 size_t ui_strings_fit_up_to(size_t len, char **write_start);
 void   ui_strings_can_fit(size_t len, bool *can_fit);
 bool   ui_strings_is_empty();
+size_t ui_strings_append_last(const char *str, size_t, char **out);
 
 #ifdef TEZOS_DEBUG
 void ui_strings_print();
@@ -240,9 +242,13 @@ ui_strings_drop_last(char **in)
 
     PRINTF("[DEBUG] zeroing %p (%d) (%s)\n", *in, len, *in);
     memset(*in, '\0', len);
-    s->count--;
 
-    s->end = *in;
+    if (*in == BUFF_START || *(*in - 1) == '\0') {
+        s->count--;
+        s->end = *in;
+    } else {
+        s->end = *in + 1;
+    }
 
     *in = NULL;
 
@@ -255,6 +261,57 @@ ui_strings_drop_last(char **in)
     PRINTF("[DEBUG] s=%p e=%p ie=%p", s->start, s->end, s->internal_end);
     TZ_POSTAMBLE;
     PRINT_STRINGS;
+}
+
+/* Append as much as possible from str to the last string in the buffer.
+ * This WILL NOT move `last` in the buffer.
+ *
+ * @param out: the start of the copied chars in the buffer.
+ */
+size_t
+ui_strings_append_last(const char *str, size_t max, char **out)
+{
+    size_t           appended = 0;
+    tz_ui_strings_t *s        = UI_STRINGS;
+
+    TZ_PREAMBLE(("str=%s, out=%p", str, out));
+    PRINT_STRINGS;
+
+    /* argument checks */
+    TZ_ASSERT_NOTNULL(str);
+    TZ_ASSERT(EXC_MEMORY_ERROR, (*out == NULL));
+    TZ_ASSERT(EXC_MEMORY_ERROR, (!ui_strings_is_empty()));
+    /* Internal checks */
+    TZ_ASSERT(EXC_MEMORY_ERROR, (s->start < s->internal_end));
+    TZ_ASSERT(EXC_MEMORY_ERROR, (s->end <= s->internal_end));
+
+    if (s->start == s->end) {
+        // Cannot append any chars
+        TZ_SUCCEED();
+    }
+
+    if (s->start < s->end) {
+        max = (size_t)MIN((int)max + 1, BUFF_END - s->end);
+    } else {
+        max = (size_t)MIN((int)max + 1, s->start - s->end);
+    }
+
+    *out = s->end - 1;
+
+    strlcpy(*out, str, max);
+    appended = max - 1;
+
+    s->end += appended;
+
+    if (s->end > s->start)
+        s->internal_end = s->end;
+
+    PRINTF("[DEBUG] appended=%d, end=%p, out=%p, end?=%p\n", appended, s->end,
+           *out, *out + appended);
+
+    PRINT_STRINGS;
+    TZ_POSTAMBLE;
+    return appended;
 }
 
 bool

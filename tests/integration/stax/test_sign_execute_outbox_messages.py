@@ -41,7 +41,7 @@ if __name__ == "__main__":
 
     app.assert_screen("tseom_review_01")
 
-    for i in range(6):
+    for i in range(4):
         app.review.tap()
         app.assert_screen(f"operation_proof_396...834_{i}")
 
