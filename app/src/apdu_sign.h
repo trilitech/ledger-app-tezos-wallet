@@ -59,6 +59,7 @@ typedef struct {
             size_t          total_length;
             tz_parser_state parser_state;
             bool            skip_to_sign;
+            bool            received_msg;
         } clear;
         struct {
             blindsign_step_t step;

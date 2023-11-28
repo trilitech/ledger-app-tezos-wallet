@@ -135,15 +135,19 @@ class TezosBackend(BackendInterface):
         if last: index |= INDEX.LAST
         return self._exchange(ins, index, payload=message)
 
-    def _sign(self, ins: INS, account: Account, message: Union[str, bytes]) -> bytes:
+    def _sign(self,
+              ins: INS,
+              account: Account,
+              message: Union[str, bytes],
+              apdu_size: int = MAX_APDU_SIZE) -> bytes:
         if isinstance(message, str): message = bytes.fromhex(message)
         assert message, "Do not sign empty message"
 
         self._ask_sign(ins, account)
 
         while(message):
-            payload = message[:MAX_APDU_SIZE]
-            message = message[MAX_APDU_SIZE:]
+            payload = message[:apdu_size]
+            message = message[apdu_size:]
             last = not message
             data = self._continue_sign(ins, payload, last)
             if last:
