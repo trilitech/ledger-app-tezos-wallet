@@ -525,14 +525,18 @@ tz_operation_parser_step(tz_parser_state *state)
         break;
     }
     case TZ_OPERATION_STEP_READ_INT32: {
-        uint32_t value = 0;
-        uint8_t  b;
-        for (int ofs = 0; ofs < 4; ofs++) {
+        uint8_t   b;
+        uint32_t *value = &op->frame->step_read_int32.value;
+        if (op->frame->step_read_int32.ofs < 4) {
             tz_must(tz_parser_read(state, &b));
-            value = value << 8 | b;
+            *value = *value << 8 | b;
+            op->frame->step_read_int32.ofs++;
+        } else {
+            snprintf((char *)CAPTURE, sizeof(CAPTURE), "%d", *value);
+            op->frame->step_read_string.skip
+                = op->frame->step_read_int32.skip;
+            tz_must(tz_print_string(state));
         }
-        snprintf((char *)CAPTURE, sizeof(CAPTURE), "%d", value);
-        tz_must(tz_print_string(state));
         break;
     }
     case TZ_OPERATION_STEP_READ_BYTES: {
@@ -805,7 +809,9 @@ tz_operation_parser_step(tz_parser_state *state)
             }
             case TZ_OPERATION_FIELD_INT32: {
                 tz_must(push_frame(state, TZ_OPERATION_STEP_READ_INT32));
-                op->frame->step_read_string.skip = field->skip;
+                op->frame->step_read_int32.value = 0;
+                op->frame->step_read_int32.ofs   = 0;
+                op->frame->step_read_int32.skip  = field->skip;
                 break;
             }
             case TZ_OPERATION_FIELD_PARAMETER: {
