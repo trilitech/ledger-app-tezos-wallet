@@ -98,9 +98,6 @@ typedef struct {
         bagl_element_t bagls[5 + TZ_SCREEN_LINES_11PX];
     } ux;
 #endif
-#ifdef HAVE_NBGL
-    screen_t home_screen;
-#endif
 } globals_t;
 
 /* Settings */

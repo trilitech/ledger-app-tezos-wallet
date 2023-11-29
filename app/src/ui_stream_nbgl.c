@@ -34,22 +34,12 @@ void push_str(const char *, size_t, char **);
 void
 tz_cancel_ui(void)
 {
-    tz_ui_stream_t *s                 = &global.stream;
-    char            error_message[50] = "";
-
+    tz_ui_stream_t *s = &global.stream;
     FUNC_ENTER(("void"));
 
     size_t bucket = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
-    STRLCPY(error_message, s->screens[bucket].pairs[0].item);
-    strlcat(error_message, "\n", sizeof(error_message));
-    strlcat(error_message, s->screens[bucket].pairs[0].value,
-            sizeof(error_message));
-
-    s->cb(TZ_UI_STREAM_CB_CANCEL);
-
-    global.step = ST_IDLE;
-    nbgl_useCaseStatus(error_message, false, ui_home_init);
-
+    switch_to_blindsigning(s->screens[bucket].pairs[0].item,
+                           s->screens[bucket].pairs[0].value);
     FUNC_LEAVE();
 }
 
@@ -213,11 +203,15 @@ tz_ui_nav_cb(uint8_t page, nbgl_pageContent_t *content)
     tz_ui_stream_t         *s      = &global.stream;
     tz_ui_stream_display_t *c      = &s->current_screen;
     bool                    result = true;
+    tz_parser_state        *st = &global.keys.apdu.sign.u.clear.parser_state;
 
-    PRINTF("[DEBUG] pressed_right=%d, current=%d, total=%d, full=%d\n",
-           s->pressed_right, s->current, s->total, s->full);
+    PRINTF(
+        "[DEBUG] pressed_right=%d, current=%d, total=%d, full=%d, "
+        "global.step= %d\n",
+        s->pressed_right, s->current, s->total, s->full, global.step);
 
-    while (s->total < 0 || (s->current == s->total && !s->full)) {
+    while ((s->total < 0 || (s->current == s->total && !s->full))
+           && (st->errno < TZ_ERR_INVALID_TAG)) {
         PRINTF("tz_ui_nav_cb: Looping...\n");
         tz_ui_continue();
         if (global.step == ST_ERROR) {
@@ -240,8 +234,10 @@ tz_ui_nav_cb(uint8_t page, nbgl_pageContent_t *content)
         s->total++;
     }
 
-    PRINTF("[DEBUG] pressed_right=%d, current=%d, total=%d, full=%d\n",
-           s->pressed_right, s->current, s->total, s->full);
+    PRINTF(
+        "[DEBUG] pressed_right=%d, current=%d, total=%d, full=%d, "
+        "global.step=%d\n",
+        s->pressed_right, s->current, s->total, s->full, global.step);
 
     if (global.step == ST_ERROR) {
         // TODO: this is handled by change_screen_right except we disable it
@@ -250,7 +246,7 @@ tz_ui_nav_cb(uint8_t page, nbgl_pageContent_t *content)
         global.step = ST_IDLE;
         ui_home_init();
         result = false;
-    } else if (global.step != ST_CLEAR_SIGN && global.step != ST_BLIND_SIGN) {
+    } else if (global.step != ST_CLEAR_SIGN) {
         result = false;
     } else if ((s->current == s->total) && s->full) {
         PRINTF("[DEBUG] signing...\n");
