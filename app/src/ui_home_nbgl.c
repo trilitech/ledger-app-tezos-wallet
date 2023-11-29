@@ -76,10 +76,6 @@ controls_callback(int token, __attribute__((unused)) uint8_t index)
     switch (token) {
     case BLIND_SIGNING_TOKEN:
         toggle_blindsigning();
-
-        if (!N_settings.blindsigning)
-            global.home_screen = SCREEN_CLEAR_SIGN;
-        break;
     }
 }
 
@@ -92,55 +88,15 @@ ui_menu_about_wallet(void)
                          controls_callback);
 }
 
-static void
-ui_toggle_clear_blind(void)
-{
-    // clang-format off
-    switch (global.home_screen) {
-    case SCREEN_CLEAR_SIGN: global.home_screen = SCREEN_BLIND_SIGN; break;
-    case SCREEN_BLIND_SIGN: global.home_screen = SCREEN_CLEAR_SIGN; break;
-    default:
-        THROW (EXC_UNEXPECTED_STATE);
-    }
-    // clang-format on
-
-    tz_ui_home_redisplay();
-}
-
-#define CLEAR_SIGN_HOME_TEXT \
-    "This app enables signing transactions on the Tezos Network"
-#define BLIND_SIGN_HOME_TEXT \
-    "Ready for blind signing operations on the Tezos Network"
+#define HOME_TEXT "This app enables signing transactions on the Tezos Network"
 
 void
 tz_ui_home_redisplay(void)
 {
     FUNC_ENTER(("void"));
 
-    if (!N_settings.blindsigning) {
-        nbgl_useCaseHome("Tezos Wallet", &C_tezos, CLEAR_SIGN_HOME_TEXT, true,
-                         ui_menu_about_wallet, app_exit);
-    } else {
-        const char *button_text;
-        const char *tagline;
-
-        switch (global.home_screen) {
-        case SCREEN_CLEAR_SIGN:
-            tagline     = CLEAR_SIGN_HOME_TEXT;
-            button_text = "blind sign";
-            break;
-        case SCREEN_BLIND_SIGN:
-            tagline     = BLIND_SIGN_HOME_TEXT;
-            button_text = "clear sign";
-            break;
-        default:
-            THROW(EXC_UNEXPECTED_STATE);
-        }
-
-        nbgl_useCaseHomeExt("Tezos Wallet", &C_tezos, tagline, true,
-                            button_text, ui_toggle_clear_blind,
-                            ui_menu_about_wallet, app_exit);
-    }
+    nbgl_useCaseHome("Tezos Wallet", &C_tezos, HOME_TEXT, true,
+                     ui_menu_about_wallet, app_exit);
 
     FUNC_LEAVE();
 }

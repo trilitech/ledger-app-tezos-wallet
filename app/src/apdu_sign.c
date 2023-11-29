@@ -47,7 +47,7 @@
 /* Prototypes */
 
 static void sign_packet(void);
-static void send_reject(void);
+static void send_reject(int);
 static void send_continue(void);
 static void send_cancel(void);
 static void refill(void);
@@ -56,9 +56,6 @@ static void stream_cb(tz_ui_cb_type_t);
 static void handle_first_apdu(command_t *);
 static void handle_first_apdu_clear(command_t *);
 static void init_blind_stream(void);
-#ifndef HAVE_BAGL
-static void handle_first_apdu_blind(command_t *);
-#endif
 static void handle_data_apdu(command_t *);
 static void handle_data_apdu_clear(command_t *);
 static void handle_data_apdu_blind(void);
@@ -126,13 +123,13 @@ sign_packet(void)
 }
 
 static void
-send_reject(void)
+send_reject(int error_code)
 {
     TZ_PREAMBLE(("void"));
 
     APDU_SIGN_ASSERT_STEP(SIGN_ST_WAIT_USER_INPUT);
     APDU_SIGN_ASSERT(global.keys.apdu.sign.received_last_msg);
-    TZ_FAIL(EXC_REJECT);
+    TZ_FAIL(error_code);
     TZ_POSTAMBLE;
 }
 
@@ -194,6 +191,80 @@ refill_blo_done(void)
     TZ_POSTAMBLE;
 }
 
+#ifdef HAVE_NBGL
+
+static void
+cancel_operation(void)
+{
+    TZ_PREAMBLE(("void"));
+    global.keys.apdu.sign.received_last_msg = true;
+    stream_cb(TZ_UI_STREAM_CB_BLINDSIGN_REJECT);
+    global.step = ST_IDLE;
+    tz_ui_stream_close();
+    nbgl_useCaseStatus("Rejected", false, ui_home_init);
+
+    TZ_POSTAMBLE;
+}
+
+static void
+blindsign_splash(void)
+{
+    TZ_PREAMBLE(("void"));
+    nbgl_useCaseReviewStart(
+        &C_round_warning_64px, "Blind signing",
+        "This transaction can not be securely interpreted by Ledger Stax. It "
+        "might put your assets at risk.",
+        "Reject", pass_from_clear_to_blind, cancel_operation);
+
+    TZ_POSTAMBLE;
+}
+
+static void
+handle_blindsigning(bool confirm)
+{
+    TZ_PREAMBLE(("void"));
+    if (confirm) {
+        if (!N_settings.blindsigning)
+            toggle_blindsigning();
+        nbgl_useCaseReviewStart(&C_round_check_64px, "Blind signing enabled",
+                                NULL, "Reject", blindsign_splash,
+                                cancel_operation);
+
+    } else {
+        cancel_operation();
+    }
+    TZ_POSTAMBLE;
+}
+
+static void
+refill_error(void)
+{
+    TZ_PREAMBLE(("void"));
+    PRINTF("[DEBUG] refill_error: global.step = %d\n", global.step);
+    TZ_ASSERT(EXC_UNEXPECTED_STATE, global.step == ST_CLEAR_SIGN);
+    tz_parser_state *st        = &global.keys.apdu.sign.u.clear.parser_state;
+    global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
+    global.step                = ST_BLIND_SIGN;
+    if (N_settings.blindsigning) {
+        nbgl_useCaseReviewStart(&C_round_warning_64px,
+                                "Blind signing required:\nParsing Error",
+                                tz_parser_result_name(st->errno), "Reject",
+                                blindsign_splash, cancel_operation);
+    } else {
+        nbgl_useCaseChoice(&C_round_warning_64px,
+                           "Enable blind signing to authorize this "
+                           "transaction:\nParsing Error",
+                           tz_parser_result_name(st->errno),
+                           "Enable blind signing", "Reject",
+                           handle_blindsigning);
+    }
+
+    TZ_POSTAMBLE;
+}
+
+#endif
+
+#ifdef HAVE_BAGL
 static void
 refill_error(void)
 {
@@ -202,7 +273,6 @@ refill_error(void)
 
     global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
 
-#ifdef HAVE_BAGL
     tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Parsing error",
                           tz_parser_result_name(st->errno), TZ_UI_LAYOUT_BNP,
                           TZ_UI_ICON_NONE);
@@ -226,15 +296,11 @@ refill_error(void)
         tz_ui_stream_push(TZ_UI_STREAM_CB_CANCEL, "Home", "",
                           TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_BACK);
     }
-#elif HAVE_NBGL
-    tz_ui_stream_push_all(TZ_UI_STREAM_CB_CANCEL, "Parsing error",
-                          tz_parser_result_name(st->errno), TZ_UI_LAYOUT_BNP,
-                          TZ_UI_ICON_CROSS);
-#endif
 
     tz_ui_stream_close();
     TZ_POSTAMBLE;
 }
+#endif
 
 static void
 refill(void)
@@ -314,12 +380,13 @@ stream_cb(tz_ui_cb_type_t cb_type)
 
     // clang-format off
     switch (cb_type) {
-    case TZ_UI_STREAM_CB_ACCEPT:    TZ_CHECK(sign_packet());              break;
-    case TZ_UI_STREAM_CB_REFILL:    TZ_CHECK(refill());                   break;
-    case TZ_UI_STREAM_CB_REJECT:    send_reject();                        break;
-    case TZ_UI_STREAM_CB_CANCEL:    TZ_CHECK(send_cancel());              break;
-    case TZ_UI_STREAM_CB_BLINDSIGN: TZ_CHECK(pass_from_clear_to_blind()); break;
-    default:                        TZ_FAIL(EXC_UNKNOWN);                 break;
+    case TZ_UI_STREAM_CB_ACCEPT:           TZ_CHECK(sign_packet());              break;
+    case TZ_UI_STREAM_CB_REFILL:           TZ_CHECK(refill());                   break;
+    case TZ_UI_STREAM_CB_REJECT:           send_reject(EXC_REJECT);              break;
+    case TZ_UI_STREAM_CB_BLINDSIGN_REJECT: send_reject(EXC_PARSE_ERROR);         break;
+    case TZ_UI_STREAM_CB_CANCEL:           TZ_CHECK(send_cancel());              break;
+    case TZ_UI_STREAM_CB_BLINDSIGN:        TZ_CHECK(pass_from_clear_to_blind()); break;
+    default:                               TZ_FAIL(EXC_UNKNOWN);                 break;
     }
     // clang-format on
 
@@ -370,7 +437,7 @@ bs_stream_cb(tz_ui_cb_type_t cb_type)
     switch (cb_type) {
     case TZ_UI_STREAM_CB_ACCEPT: return sign_packet();
     case TZ_UI_STREAM_CB_REFILL: return bs_push_next();
-    case TZ_UI_STREAM_CB_REJECT: return send_reject();
+    case TZ_UI_STREAM_CB_REJECT: return send_reject(EXC_REJECT);
     case TZ_UI_STREAM_CB_CANCEL: return send_cancel();
     default:                     TZ_FAIL(EXC_UNKNOWN);
     }
@@ -401,19 +468,9 @@ handle_first_apdu(command_t *cmd)
      */
     global.keys.apdu.sign.tag = 0;
 
-#ifdef HAVE_BAGL
     TZ_ASSERT(EXC_UNEXPECTED_STATE, global.step == ST_CLEAR_SIGN);
 
     TZ_CHECK(handle_first_apdu_clear(cmd));
-#else
-    // clang-format off
-    switch (global.step) {
-    case ST_CLEAR_SIGN: TZ_CHECK(handle_first_apdu_clear(cmd)); break;
-    case ST_BLIND_SIGN: TZ_CHECK(handle_first_apdu_blind(cmd)); break;
-    default:            TZ_FAIL(EXC_UNEXPECTED_STATE);
-    }
-    // clang-format on
-#endif
 
     io_send_sw(SW_OK);
     global.keys.apdu.sign.step = SIGN_ST_WAIT_DATA;
@@ -450,16 +507,6 @@ init_blind_stream(void)
     nbgl_useCaseSpinner("Loading operation");
 #endif
 }
-
-#ifndef HAVE_BAGL
-static void
-handle_first_apdu_blind(__attribute__((unused)) command_t *cmd)
-{
-    init_blind_stream();
-
-    global.keys.apdu.sign.u.blind.step = BLINDSIGN_ST_OPERATION;
-}
-#endif
 
 static void
 handle_data_apdu(command_t *cmd)
@@ -525,9 +572,18 @@ reject_blindsign_cb(void)
 {
     FUNC_ENTER(("void"));
 
-    stream_cb(TZ_UI_STREAM_CB_REJECT);
+    stream_cb(TZ_UI_STREAM_CB_BLINDSIGN_REJECT);
+    global.step = ST_IDLE;
     ui_home_init();
 
+    FUNC_LEAVE();
+}
+
+void
+reject_blindsign_review_cb(void)
+{
+    FUNC_ENTER(("void"));
+    nbgl_useCaseStatus("Rejected", false, reject_blindsign_cb);
     FUNC_LEAVE();
 }
 
@@ -635,15 +691,9 @@ handle_data_apdu_blind(void)
     if (tz_format_base58(FINAL_HASH, sizeof(FINAL_HASH), obuf, sizeof(obuf)))
         TZ_FAIL(EXC_UNKNOWN);
 
-    char request[80];
-    snprintf(request, sizeof(request), "Review request to blind\nsign %s",
-             type);
-
     transaction_type = type;
     STRLCPY(hash, obuf);
-
-    nbgl_useCaseReviewStart(&C_tezos, request, NULL, "Reject request",
-                            continue_blindsign_cb, reject_blindsign_cb);
+    continue_blindsign_cb();
 #endif
 
     /* XXXrcd: the logic here need analysis. */
@@ -664,18 +714,7 @@ handle_apdu_sign(command_t *cmd)
 
         memset(&global.keys, 0, sizeof(global.keys));
 
-#ifdef HAVE_BAGL
         global.step = ST_CLEAR_SIGN;
-#else
-        // clang-format off
-        switch (global.home_screen) {
-        case SCREEN_CLEAR_SIGN: global.step = ST_CLEAR_SIGN; break;
-        case SCREEN_BLIND_SIGN: global.step = ST_BLIND_SIGN; break;
-        default:
-            TZ_FAIL(EXC_UNEXPECTED_STATE);
-        }
-        // clang-format on
-#endif
 
         TZ_CHECK(handle_first_apdu(cmd));
         global.keys.apdu.sign.return_hash = return_hash;

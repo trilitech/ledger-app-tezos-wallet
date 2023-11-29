@@ -23,7 +23,7 @@ from ragger.backend import SpeculosBackend
 from ragger.backend.interface import RaisePolicy
 from ragger.firmware import Firmware
 from ragger.firmware.stax.screen import MetaScreen
-from ragger.firmware.stax.use_cases import UseCaseHomeExt, UseCaseSettings, UseCaseAddressConfirmation, UseCaseReview
+from ragger.firmware.stax.use_cases import UseCaseHomeExt, UseCaseSettings, UseCaseAddressConfirmation, UseCaseReview, UseCaseChoice
 from ragger.firmware.stax.layouts import ChoiceList
 from ragger.firmware.stax.positions import BUTTON_LOWER_LEFT, BUTTON_LOWER_RIGHT, BUTTON_ABOVE_LOWER_MIDDLE, BUTTON_LOWER_MIDDLE
 
@@ -49,6 +49,7 @@ class TezosAppScreen(metaclass=MetaScreen):
     use_case_info = UseCaseSettings
     use_case_provide_pk = UseCaseAddressConfirmation
     use_case_review = UseCaseReview
+    use_case_choice = UseCaseChoice
 
     __backend = None
     __golden = False
@@ -154,13 +155,6 @@ class TezosAppScreen(metaclass=MetaScreen):
         if with_loading: self.assert_screen("loading_operation")
         self.review.client.resume_ticker()
 
-    @contextmanager
-    def review_parsing_error(self, parsing_error_screen):
-        self.welcome.client.pause_ticker()
-        yield
-        self.assert_screen(parsing_error_screen)
-        self.review.tap() # Exit status screen quickly, rather than waiting for ticket event
-        self.welcome.client.resume_ticker()
 
 def stax_app(prefix) -> TezosAppScreen:
     port = os.environ["PORT"]
@@ -174,3 +168,26 @@ def stax_app(prefix) -> TezosAppScreen:
         app.make_golden()
 
     return app
+
+def assert_home_with_code(app, code):
+    app.assert_screen(SCREEN_HOME_DEFAULT)
+    app.expect_apdu_failure(code)
+
+def send_initialize_msg(app, apdu):
+    app.send_apdu(apdu)
+    app.expect_apdu_return("9000")
+
+    app.assert_screen("review_request_sign_operation");
+
+def send_payload(app, apdu):
+    app.send_apdu(apdu)
+    app.assert_screen("review_request_sign_operation");
+
+def verify_err_reject_response(app, tag):
+    app.assert_screen(tag)
+    app.welcome.client.pause_ticker()
+    app.review.reject()
+    app.assert_screen("reject_review")
+    app.welcome.client.resume_ticker()
+    app.review.tap()
+    assert_home_with_code(app, "9405")
