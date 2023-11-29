@@ -50,7 +50,6 @@ class SIGNATURE_TYPE(IntEnum):
     SECP256K1     = 0x01
     SECP256R1     = 0x02
     BIP32_ED25519 = 0x03
-    NONE          = 0xff
 
 class StatusCode(IntEnum):
     SECURITY                  = 0x6982
@@ -93,15 +92,18 @@ class TezosBackend(BackendInterface):
     def _exchange(self,
                   ins: INS,
                   index: INDEX = INDEX.FIRST,
-                  sig_type: SIGNATURE_TYPE = SIGNATURE_TYPE.NONE,
+                  sig_type: Union[SIGNATURE_TYPE, None] = None,
                   payload: bytes = b'') -> bytes:
 
         assert len(payload) <= MAX_APDU_SIZE, f"Apdu too large"
 
+        # Set to a non-existent value to ensure that p2 is unused
+        p2: int = sig_type if sig_type is not None else 0xff
+
         rapdu: RAPDU = self.exchange(CLA.DEFAULT,
                                      ins,
                                      p1=index,
-                                     p2=sig_type,
+                                     p2=p2,
                                      data=payload)
 
         if rapdu.status != StatusCode.OK:
