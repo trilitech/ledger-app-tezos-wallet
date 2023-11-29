@@ -12,12 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+import sys
+
+file_path=os.path.abspath(__file__)
+dir_path=os.path.dirname(file_path)
+sys.path.append(dir_path)
+
 from enum import IntEnum
+from ragger.backend.interface import BackendInterface, RAPDU
+from ragger.error import ExceptionRAPDU
 from typing import Union
 
-from ragger.backend.interface import BackendInterface, RAPDU
-from ragger.bip import pack_derivation_path
-from ragger.error import ExceptionRAPDU
+from account import Account, SIGNATURE_TYPE
 
 class CLA(IntEnum):
     DEFAULT = 0x80
@@ -46,12 +53,6 @@ class INDEX(IntEnum):
     LAST       = 0x80
     OTHER_LAST = 0x81
 
-class SIGNATURE_TYPE(IntEnum):
-    ED25519       = 0x00
-    SECP256K1     = 0x01
-    SECP256R1     = 0x02
-    BIP32_ED25519 = 0x03
-
 class StatusCode(IntEnum):
     SECURITY                  = 0x6982
     HID_REQUIRED              = 0x6983
@@ -74,17 +75,6 @@ class StatusCode(IntEnum):
 class APP_KIND(IntEnum):
     WALLET = 0x00
     BAKING = 0x01
-
-class Account:
-    def __init__(self,
-                 path: Union[str, bytes],
-                 sig_type: SIGNATURE_TYPE,
-                 public_key: str):
-        self.path: bytes = \
-            pack_derivation_path(path) if isinstance(path, str) \
-            else path
-        self.sig_type: SIGNATURE_TYPE = sig_type
-        self.public_key: str = public_key
 
 MAX_APDU_SIZE: int = 235
 
