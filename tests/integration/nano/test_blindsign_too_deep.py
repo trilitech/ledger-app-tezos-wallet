@@ -39,6 +39,8 @@ if __name__ == "__main__":
             send_process = Process(target=send, args=(result_queue,))
             send_process.start()
 
+            app.backend.wait_for_text_not_on_screen("Application")
+
             for i in range(4):
                 assert_screen_i(i)
                 app.backend.right_click()
