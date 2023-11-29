@@ -41,9 +41,10 @@ class INS(IntEnum):
     SIGN_WITH_HASH            = 0x0f
 
 class INDEX(IntEnum):
-    FIRST = 0x00
-    OTHER = 0x01
-    LAST = 0x80
+    FIRST      = 0x00
+    OTHER      = 0x01
+    LAST       = 0x80
+    OTHER_LAST = 0x81
 
 class SIGNATURE_TYPE(IntEnum):
     ED25519       = 0x00
@@ -134,7 +135,7 @@ class TezosBackend(BackendInterface):
     def _continue_sign(self, ins: INS, message: Union[str, bytes], last: bool) -> bytes:
         if isinstance(message, str): message = bytes.fromhex(message)
         index: INDEX = INDEX.OTHER
-        if last: index |= INDEX.LAST
+        if last: index = INDEX(index | INDEX.LAST)
         return self._exchange(ins, index, payload=message)
 
     def sign(self,
