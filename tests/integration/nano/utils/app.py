@@ -37,7 +37,7 @@ dir_path=os.path.dirname(file_path)
 sys.path.append(dir_path)
 
 import check_tlv_signature
-from apdu import *
+from backend import *
 
 MAX_ATTEMPTS = 50
 

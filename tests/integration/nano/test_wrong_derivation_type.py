@@ -13,8 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from utils.apdu import *
 from utils.app import *
+from utils.backend import *
 
 if __name__ == "__main__":
     account = Account("m/44'/1729'/0'/0'", 0x04, "__unused__")

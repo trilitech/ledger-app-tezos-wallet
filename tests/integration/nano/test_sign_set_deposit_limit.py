@@ -13,8 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from utils.apdu import *
 from utils.app import *
+from utils.backend import *
 
 # Operation (0): Set deposit limit
 # Fee: 0.06 XTZ

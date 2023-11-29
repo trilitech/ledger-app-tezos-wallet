@@ -13,8 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from utils.apdu import *
 from utils.app import *
+from utils.backend import *
 
 # Expression: 12345678901234567890123456789012345678901234567890123456789012345678901234567890
 # is too large

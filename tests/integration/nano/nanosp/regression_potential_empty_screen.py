@@ -21,8 +21,8 @@ dir_path=os.path.dirname(file_path)
 root_path=os.path.dirname(dir_path)
 sys.path.append(root_path)
 
-from utils.apdu import *
 from utils.app import *
+from utils.backend import *
 
 # Operation (0): Transfer ticket
 # Fee: 0.01 XTZ
