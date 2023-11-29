@@ -56,10 +56,9 @@ if __name__ == "__main__":
     app.assert_screen(SCREEN_HOME_DEFAULT)
 
     send_initialize_msg(app, "800f000011048000002c800006c18000000080000000")
-    app.welcome.client.pause_ticker()
-    app.send_apdu("800f810028050092abf8e3d9e5f8cfd9ae8a9fe5f28ea1d5b5abf1af82dae8a4b68df3d1889eb6f988f5e8d31a")
+    send_payload(app,"800f810028050092abf8e3d9e5f8cfd9ae8a9fe5f28ea1d5b5abf1af82dae8a4b68df3d1889eb6f988f5e8d31a")
+    app.review.tap()
     app.assert_screen("too_large_blindsign_notify")
-    app.welcome.client.resume_ticker()
     app.choice.confirm()
 
     app.assert_screen("blindsign_warning")

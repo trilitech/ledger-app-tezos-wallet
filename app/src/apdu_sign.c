@@ -200,7 +200,6 @@ cancel_operation(void)
     global.keys.apdu.sign.received_last_msg = true;
     stream_cb(TZ_UI_STREAM_CB_BLINDSIGN_REJECT);
     global.step = ST_IDLE;
-    tz_ui_stream_close();
     nbgl_useCaseStatus("Rejected", false, ui_home_init);
 
     TZ_POSTAMBLE;
@@ -236,26 +235,24 @@ handle_blindsigning(bool confirm)
     TZ_POSTAMBLE;
 }
 
-static void
-refill_error(void)
+void
+switch_to_blindsigning(__attribute__((unused)) const char *err_type,
+                       const char                         *err_code)
 {
     TZ_PREAMBLE(("void"));
     PRINTF("[DEBUG] refill_error: global.step = %d\n", global.step);
     TZ_ASSERT(EXC_UNEXPECTED_STATE, global.step == ST_CLEAR_SIGN);
-    tz_parser_state *st        = &global.keys.apdu.sign.u.clear.parser_state;
     global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
     global.step                = ST_BLIND_SIGN;
     if (N_settings.blindsigning) {
-        nbgl_useCaseReviewStart(&C_round_warning_64px,
-                                "Blind signing required:\nParsing Error",
-                                tz_parser_result_name(st->errno), "Reject",
-                                blindsign_splash, cancel_operation);
+        nbgl_useCaseReviewStart(
+            &C_round_warning_64px, "Blind signing required:\nParsing Error",
+            err_code, "Reject", blindsign_splash, cancel_operation);
     } else {
         nbgl_useCaseChoice(&C_round_warning_64px,
                            "Enable blind signing to authorize this "
                            "transaction:\nParsing Error",
-                           tz_parser_result_name(st->errno),
-                           "Enable blind signing", "Reject",
+                           err_code, "Enable blind signing", "Reject",
                            handle_blindsigning);
     }
 
@@ -264,7 +261,6 @@ refill_error(void)
 
 #endif
 
-#ifdef HAVE_BAGL
 static void
 refill_error(void)
 {
@@ -273,6 +269,7 @@ refill_error(void)
 
     global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
 
+#ifdef HAVE_BAGL
     tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Parsing error",
                           tz_parser_result_name(st->errno), TZ_UI_LAYOUT_BNP,
                           TZ_UI_ICON_NONE);
@@ -296,11 +293,15 @@ refill_error(void)
         tz_ui_stream_push(TZ_UI_STREAM_CB_CANCEL, "Home", "",
                           TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_BACK);
     }
+#elif HAVE_NBGL
+    tz_ui_stream_push_all(TZ_UI_STREAM_CB_CANCEL, "Parsing error",
+                          tz_parser_result_name(st->errno), TZ_UI_LAYOUT_BNP,
+                          TZ_UI_ICON_CROSS);
+#endif
 
     tz_ui_stream_close();
     TZ_POSTAMBLE;
 }
-#endif
 
 static void
 refill(void)

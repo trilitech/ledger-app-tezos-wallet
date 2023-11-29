@@ -34,22 +34,12 @@ void push_str(const char *, size_t, char **);
 void
 tz_cancel_ui(void)
 {
-    tz_ui_stream_t *s                 = &global.stream;
-    char            error_message[50] = "";
-
+    tz_ui_stream_t *s = &global.stream;
     FUNC_ENTER(("void"));
 
     size_t bucket = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
-    STRLCPY(error_message, s->screens[bucket].pairs[0].item);
-    strlcat(error_message, "\n", sizeof(error_message));
-    strlcat(error_message, s->screens[bucket].pairs[0].value,
-            sizeof(error_message));
-
-    s->cb(TZ_UI_STREAM_CB_CANCEL);
-
-    global.step = ST_IDLE;
-    nbgl_useCaseStatus(error_message, false, ui_home_init);
-
+    switch_to_blindsigning(s->screens[bucket].pairs[0].item,
+                           s->screens[bucket].pairs[0].value);
     FUNC_LEAVE();
 }
 

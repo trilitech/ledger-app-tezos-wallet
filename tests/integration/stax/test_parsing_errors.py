@@ -27,10 +27,12 @@ if __name__ == "__main__":
     print("Invalid input: Unknown magic bytes")
     send_initialize_msg(app, "800f000011048000002c800006c18000000080000000")
     send_payload(app, "800f81005e0100000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316")
+    app.review.tap()
     verify_err_reject_response(app, "invalid_tag")
 
     send_initialize_msg(app, "800f000011048000002c800006c18000000080000000")
     send_payload(app, "800f81005e03000000000000000000000000000000000000000000000000000000000000000001016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316")
+    app.review.tap()
     verify_err_reject_response(app, "invalid_tag")
 
     print("Invalid input: 1 byte removed inside")
@@ -38,6 +40,8 @@ if __name__ == "__main__":
     send_payload(app, "800f81005d0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e010000000000000000000000000000000000000000ff02000000020316")
     app.review.tap()
     app.assert_screen("tpe_review_0_01")
+    app.review.tap()
+    app.assert_screen("tpe_review_0_02_partial")
     app.review.tap()
     verify_err_reject_response(app, "invalid_tag")
 
@@ -47,6 +51,8 @@ if __name__ == "__main__":
     app.review.tap()
     app.assert_screen("tpe_review_0_01")
     app.review.tap()
+    app.assert_screen("tpe_review_0_02_full")
+    app.review.tap()
     verify_err_reject_response(app, "invalid_tag")
 
     print("Invalid input: 1 byte introduced inside")
@@ -54,6 +60,8 @@ if __name__ == "__main__":
     send_payload(app, "800f81005f0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e0100000000000000000000000000000000000000000000ff02000000020316")
     app.review.tap()
     app.assert_screen("tpe_review_0_01")
+    app.review.tap()
+    app.assert_screen("tpe_review_0_02_dest_only")
     app.review.tap()
     verify_err_reject_response(app, "invalid_tag")
 
@@ -69,6 +77,8 @@ if __name__ == "__main__":
     send_initialize_msg(app, "800f000011048000002c800006c18000000080000000")
     send_payload(app, "800f0100eb0502000000f702000000f202000000ed02000000e802000000e302000000de02000000d902000000d402000000cf02000000ca02000000c502000000c002000000bb02000000b602000000b102000000ac02000000a702000000a2020000009d02000000980200000093020000008e02000000890200000084020000007f020000007a02000000750200000070020000006b02000000660200000061020000005c02000000570200000052020000004d02000000480200000043020000003e02000000390200000034020000002f020000002a02000000250200000020020000001b020000001602000000")
     app.review.tap()
+    app.assert_screen('tpe_review_too_deep_0')
+    app.review.tap()
     verify_err_reject_response(app, "too_deep")
 
     print("wrong last packet")
@@ -77,7 +87,6 @@ if __name__ == "__main__":
 
     app.review.tap()
     app.assert_screen("tpe_review_1_01")
-
     # No error screen <- issue with packet framing protocol
     app.review.tap()
     app.expect_apdu_failure("9002")
