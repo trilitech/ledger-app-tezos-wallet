@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import base58
 from enum import IntEnum
 from ragger.bip import pack_derivation_path
 from typing import Union
@@ -35,3 +36,56 @@ class Account:
 
     def __repr__(self) -> str:
         return self.public_key
+
+    @property
+    def base58_decoded(self) -> bytes:
+
+        # Get the public_key without prefix
+        public_key = base58.b58decode_check(self.public_key)
+
+        if self.sig_type in [
+                SIGNATURE_TYPE.ED25519,
+                SIGNATURE_TYPE.BIP32_ED25519
+        ]:
+            prefix = bytes.fromhex("0d0f25d9") # edpk(54)
+        elif self.sig_type == SIGNATURE_TYPE.SECP256K1:
+            prefix = bytes.fromhex("03fee256") # sppk(55)
+        elif self.sig_type == SIGNATURE_TYPE.SECP256R1:
+            prefix = bytes.fromhex("03b28b7f") # p2pk(55)
+        else:
+            assert False, \
+                "Account do not have a right signature type: {account.sig_type}"
+        assert public_key.startswith(prefix), \
+            "Expected prefix {prefix.hex()} but got {public_key.hex()}"
+
+        public_key = public_key[len(prefix):]
+
+        if self.sig_type in [
+                SIGNATURE_TYPE.SECP256K1,
+                SIGNATURE_TYPE.SECP256R1
+        ]:
+            assert public_key[0] in [0x02, 0x03], \
+                "Expected a prefix kind of 0x02 or 0x03 but got {public_key[0]}"
+            public_key = public_key[1:]
+
+        return public_key
+
+    def check_public_key(self, data: bytes) -> None:
+
+        # `data` should be:
+        # length + kind + pk
+        # kind : 02=odd, 03=even, 04=uncompressed
+        # pk length = 32 for compressed, 64 for uncompressed
+        assert len(data) == data[0] + 1
+        if data[1] == 0x04: # public key uncompressed
+            assert data[0] == 1 + 32 + 32
+        elif data[1] in [0x02, 0x03]: # public key even or odd (compressed)
+            assert data[0] == 1 + 32
+        else:
+            assert False, \
+                "Expected a prefix kind of 0x02, 0x03 or 0x04 but got {data[1]}"
+        data = data[2:2+32]
+
+        public_key = self.base58_decoded
+        assert data == public_key, \
+            f"Expected public key {public_key.hex()} but got {data.hex()}"
