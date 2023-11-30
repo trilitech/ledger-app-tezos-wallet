@@ -147,15 +147,6 @@ class TezosAppScreen(metaclass=MetaScreen):
         else:
             self.welcome.client.finger_touch(BUTTON_LOWER_MIDDLE.x, BUTTON_LOWER_MIDDLE.y)
 
-    def review_skip_to_signing(self, with_loading=False):
-        self.review.client.finger_touch(BUTTON_LOWER_RIGHT.x, BUTTON_LOWER_RIGHT.y)
-        self.assert_screen("skip_to_signing")
-        self.review.client.pause_ticker()
-        self.review.client.finger_touch(BUTTON_ABOVE_LOWER_MIDDLE.x, BUTTON_ABOVE_LOWER_MIDDLE.y)
-        if with_loading: self.assert_screen("loading_operation")
-        self.review.client.resume_ticker()
-
-
 def stax_app(prefix) -> TezosAppScreen:
     port = os.environ["PORT"]
     commit = os.environ["COMMIT_BYTES"]

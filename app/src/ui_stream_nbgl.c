@@ -188,10 +188,6 @@ tz_ui_stream_close(void)
     }
     s->full = true;
 
-    if (global.keys.apdu.sign.u.clear.skip_to_sign) {
-        tz_ui_stream();
-    }
-
     FUNC_LEAVE();
 }
 
@@ -222,15 +218,7 @@ tz_ui_nav_cb(uint8_t page, nbgl_pageContent_t *content)
         }
     }
 
-    if (page == LAST_PAGE_FOR_REVIEW) {
-        // skipped
-        global.keys.apdu.sign.u.clear.skip_to_sign = true;
-
-        nbgl_useCaseSpinner("Loading operation");
-        if (!s->full)
-            tz_ui_continue();
-
-    } else if (s->full && has_final_screen()) {
+    if (s->full && has_final_screen()) {
         s->total++;
     }
 
