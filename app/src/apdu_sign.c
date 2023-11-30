@@ -142,8 +142,11 @@ send_continue(void)
                      || global.keys.apdu.sign.step == SIGN_ST_WAIT_DATA);
     APDU_SIGN_ASSERT(!global.keys.apdu.sign.received_last_msg);
 
-    if (global.keys.apdu.sign.step != SIGN_ST_WAIT_DATA)
+    if (global.keys.apdu.sign.u.clear.received_msg) {
+        global.keys.apdu.sign.u.clear.received_msg = false;
         io_send_sw(SW_OK);
+    }
+
     global.keys.apdu.sign.step = SIGN_ST_WAIT_DATA;
 
     TZ_POSTAMBLE;
@@ -178,6 +181,8 @@ refill_blo_done(void)
 
     TZ_ASSERT(EXC_UNEXPECTED_STATE,
               global.keys.apdu.sign.received_last_msg && st->regs.ilen == 0);
+
+    global.keys.apdu.sign.u.clear.received_msg = false;
     if (st->regs.oofs != 0) {
         refill_blo_im_full();
         TZ_SUCCEED();
@@ -484,6 +489,8 @@ handle_first_apdu_clear(__attribute__((unused)) command_t *cmd)
 {
     tz_parser_state *st = &global.keys.apdu.sign.u.clear.parser_state;
 
+    global.keys.apdu.sign.u.clear.received_msg = false;
+
     tz_ui_stream_init(stream_cb);
 
 #ifdef TARGET_NANOS
@@ -547,6 +554,8 @@ handle_data_apdu_clear(command_t *cmd)
     tz_parser_state *st = &global.keys.apdu.sign.u.clear.parser_state;
     TZ_PREAMBLE(("cmd=0x%p", cmd));
 
+    global.keys.apdu.sign.u.clear.received_msg = true;
+
     TZ_ASSERT_NOTNULL(cmd);
     if (st->regs.ilen > 0)
         // we asked for more input but did not consume what we already had
@@ -559,7 +568,8 @@ handle_data_apdu_clear(command_t *cmd)
         tz_operation_parser_set_size(
             st, global.keys.apdu.sign.u.clear.total_length);
     TZ_CHECK(refill());
-    tz_ui_stream();
+    if (global.keys.apdu.sign.step == SIGN_ST_WAIT_USER_INPUT)
+        tz_ui_stream();
 
     TZ_POSTAMBLE;
 }

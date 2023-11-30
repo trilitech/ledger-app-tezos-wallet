@@ -29,16 +29,19 @@ let read_hex_file ~encoding path =
 let pp_c_bin ~(cparse_step : cparse_step) ppf bytes =
   let len = Bytes.length bytes in
   let state = cparse_init len in
-  let ss = 1 + Random.int 1000 in
   let rec screen_by_screen ofs =
-    let buf = Bytes.make ss ' ' in
+    let input_len = 1 + Random.int 234 in
+    let output_len = 1 + Random.int 100 in
+    let buf = Bytes.make output_len ' ' in
     let read, written, st =
-      cparse_step state ~input:(bytes, ofs, len - ofs) ~output:(buf, 0, ss)
+      cparse_step state
+        ~input:(bytes, ofs, min input_len (len - ofs))
+        ~output:(buf, 0, output_len)
     in
     if written > 0 then
       Format.fprintf ppf "%s" (Bytes.to_string (Bytes.sub buf 0 written));
     match st with
-    | FEED_ME -> ()
+    | FEED_ME -> if len - ofs > 0 then screen_by_screen (ofs + read)
     | IM_FULL -> screen_by_screen (ofs + read)
     | DONE -> ()
   in
@@ -88,13 +91,13 @@ let () =
             else (acctoo_deep, acctoo_large, failed :: accl))
           (0, 0, []) failed
       in
+      display_failed failed;
       Format.printf
         "Result: %d test were run, %d hard failed, %d failed with TOO_DEEP, %d \
          failed with TOO_LARGE.@."
         (nfail + nok)
         (nfail - ntoo_deep - ntoo_large)
-        ntoo_deep ntoo_large;
-      display_failed failed
+        ntoo_deep ntoo_large
   | [| _; "operations"; path |] ->
       let inputs =
         read_hex_file
@@ -104,8 +107,8 @@ let () =
         Test_operations_c_parser.(
           check ~to_string ~to_bytes ~cparse_step inputs)
       in
-      Format.printf "Result: %d test were run, %d failed.@." (nfail + nok) nfail;
-      display_failed failed
+      display_failed failed;
+      Format.printf "Result: %d test were run, %d failed.@." (nfail + nok) nfail
   | _ ->
       Format.eprintf "Usage: %s <micheline|operations> <path>@."
         Sys.executable_name;
