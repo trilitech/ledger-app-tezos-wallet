@@ -24,13 +24,16 @@ if __name__ == "__main__":
 
         app.assert_screen(Screen.Home)
 
+        message = "05020000001d0100000004434143410100000004504f504f0100000006424f5544494e"
+
         data = app.sign(DEFAULT_ACCOUNT,
-                        "05020000001d0100000004434143410100000004504f504f0100000006424f5544494e",
+                        message,
                         with_hash=False,
                         path=test_name)
 
         app.check_signature(
-            signature="e0722bd72d15319474dff2207c137e85d57e742b7e5ccd1a995a610b8e055ad164e7606a37163b1a81e9003dc9e306afd46c4e645bbb190cf6c456459587ed04",
-            data=data)
+            account=DEFAULT_ACCOUNT,
+            message=message,
+            signature=data)
 
         app.quit()

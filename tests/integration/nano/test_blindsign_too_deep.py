@@ -69,8 +69,9 @@ if __name__ == "__main__":
                                   path=test_name)
 
         app.check_signature_with_hash(
+            account=DEFAULT_ACCOUNT,
+            message=expression,
             hash="93070b00990e4cf29c31f6497307bea0ad86a9d0dc08dba8b607e8dc0e23652f",
-            signature="8309e41ed87ac1d33006806b688cfcff7632c4fbe499ff3ea4983ae4f06dea7790ec25db045689bca2c63967b5c563aabff86c4ef163bff92af3bb2ca9392d09",
             data=data)
 
         app.quit()

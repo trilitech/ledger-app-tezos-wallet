@@ -27,14 +27,18 @@ if __name__ == "__main__":
         account = Account("m/44'/1729'/0'/0'",
                           SIGNATURE_TYPE.ED25519,
                           "edpkuXX2VdkdXzkN11oLCb8Aurdo1BTAtQiK8ZY9UPj2YMt3AHEpcY")
+
+        message = "05020000001d0100000004434143410100000004504f504f0100000006424f5544494e"
+
         data = app.sign(account,
-                        "05020000001d0100000004434143410100000004504f504f0100000006424f5544494e",
+                        message,
                         with_hash=True,
                         path=test_name)
 
         app.check_signature_with_hash(
+            account=account,
+            message=message,
             hash="84e475e38707140e725019e91f036e341fa4a2c8752b7828f37bbf91061b0e0a",
-            signature="e0722bd72d15319474dff2207c137e85d57e742b7e5ccd1a995a610b8e055ad164e7606a37163b1a81e9003dc9e306afd46c4e645bbb190cf6c456459587ed04",
             data=data)
 
         app.quit()

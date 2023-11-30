@@ -25,16 +25,18 @@ if __name__ == "__main__":
         account = Account("m/44'/1729'/0'/0'",
                           SIGNATURE_TYPE.SECP256R1,
                           "p2pk67fq5pzuMMABZ9RDrooYbLrgmnQbLt8z7PTGM9mskf7LXS5tdBG")
-        message="05020000001d0100000004434143410100000004504f504f0100000006424f5544494e"
+
+        message = "05020000001d0100000004434143410100000004504f504f0100000006424f5544494e"
+
         data = app.sign(account,
                         message,
                         with_hash=True,
                         path=test_name)
 
-        app.check_tlv_signature_with_hash(
-            hash="84e475e38707140e725019e91f036e341fa4a2c8752b7828f37bbf91061b0e0a",
+        app.check_signature_with_hash(
+            account=account,
             message=message,
-            pk="p2pk67fq5pzuMMABZ9RDrooYbLrgmnQbLt8z7PTGM9mskf7LXS5tdBG",
+            hash="84e475e38707140e725019e91f036e341fa4a2c8752b7828f37bbf91061b0e0a",
             data=data)
 
         app.quit()

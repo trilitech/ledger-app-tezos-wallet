@@ -29,14 +29,21 @@ if __name__ == "__main__":
     seed = "around dignity equal spread between young lawsuit interest climb wide that panther rather mom snake scene ecology reunion ice illegal brush"
     with nano_app(seed) as app:
 
-        data = app.sign(DEFAULT_ACCOUNT,
-                        "0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316",
+        account = Account("m/44'/1729'/0'/0'",
+                          SIGNATURE_TYPE.ED25519,
+                          "edpkupntwMyERpYniuK1GDWquPaPU1wYsQgMirJPLGmC4Y5dMUsQNo")
+
+        message = "0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316"
+
+        data = app.sign(account,
+                        message,
                         with_hash=True,
                         path=test_name)
 
         app.check_signature_with_hash(
+            account=account,
+            message=message,
             hash="f6d5fa0e79cac216e25104938ac873ca17ee9d7f06763719293b413cf2ed475c",
-            signature="7365f6549fa50c31591f348efe2684982a038fe44458077e72d5cf7b4284d887f72a8e3842f9595fee7176c6062cdfdfae132c9330a77680958c652731e99a0e",
             data=data)
 
         app.quit()

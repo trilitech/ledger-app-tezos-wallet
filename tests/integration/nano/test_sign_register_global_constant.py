@@ -27,14 +27,17 @@ if __name__ == "__main__":
 
         app.assert_screen(Screen.Home)
 
+        message = "0300000000000000000000000000000000000000000000000000000000000000006f00ffdd6102321bc251e4a5190ad5b12b251069d9b4904e0203040000000a07070100000001310002"
+
         data = app.sign(DEFAULT_ACCOUNT,
-                        "0300000000000000000000000000000000000000000000000000000000000000006f00ffdd6102321bc251e4a5190ad5b12b251069d9b4904e0203040000000a07070100000001310002",
+                        message,
                         with_hash=True,
                         path=test_name)
 
         app.check_signature_with_hash(
+            account=DEFAULT_ACCOUNT,
+            message=message,
             hash="bb38ac8ad80f5280b3f4e006d5656a8c8f6192994c86dcd160e4f5977332ccb7",
-            signature="528f3b3ff8b2ed2095f23add2c7409b05cbfdf1dae96ad7436083429bad30cd867912a42fe9f5eddc153cb847f13ffa4e7979ce78b833f8c7cbf3b8345591802",
             data=data)
 
         app.quit()

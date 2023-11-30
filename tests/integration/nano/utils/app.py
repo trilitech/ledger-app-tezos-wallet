@@ -36,7 +36,6 @@ file_path=os.path.abspath(__file__)
 dir_path=os.path.dirname(file_path)
 sys.path.append(dir_path)
 
-import check_tlv_signature
 from backend import *
 
 MAX_ATTEMPTS = 50
@@ -277,40 +276,24 @@ class TezosAppScreen():
             navigate=(lambda: self.navigate_until_text("Accept", path)))
 
     def check_signature(self,
-                        signature: Union[str, bytes],
-                        data: bytes) -> None:
-        if isinstance(signature, str): signature = bytes.fromhex(signature)
-
-        assert data == signature, \
-            f"Expected signature {signature.hex()} but got {data.hex()}"
-
-    def check_tlv_signature(self,
-                            message: str,
-                            pk: str,
-                            data: bytes) -> None:
-        check_tlv_signature.check_signature(data, pk, message)
+                        account: Account,
+                        message: Union[str, bytes],
+                        signature: bytes) -> None:
+        account.check_signature(signature, message)
 
     def check_signature_with_hash(self,
-                                 hash: Union[str, bytes],
-                                 signature: Union[str, bytes],
-                                 data: bytes) -> None:
-        if isinstance(hash, str): hash = bytes.fromhex(hash)
-        if isinstance(signature, str): signature = bytes.fromhex(signature)
-
-        assert data == hash + signature, \
-            f"Expected hash {hash.hex()} and signature {signature.hex()} but got {data.hex()}"
-
-    def check_tlv_signature_with_hash(self,
-                                      hash: Union[str, bytes],
-                                      message: str,
-                                      pk: str,
-                                      data: bytes) -> None:
+                                  account: Account,
+                                  message: Union[str, bytes],
+                                  hash: Union[str, bytes],
+                                  data: bytes) -> None:
         if isinstance(hash, str): hash = bytes.fromhex(hash)
 
         assert data.startswith(hash), \
-            f"Expected start with hash {hash.hex()} but got {data.hex()}"
-        data = data[len(hash):]
-        check_tlv_signature.check_signature(data.hex(), pk, message)
+            f"Expected a starting hash {hash.hex()} but got {data.hex()}"
+
+        signature = data[len(hash):]
+
+        self.check_signature(account, message, signature)
 
     def blind_sign(self,
                    account: Account,
