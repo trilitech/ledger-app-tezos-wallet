@@ -26,9 +26,10 @@ if __name__ == "__main__":
                           SIGNATURE_TYPE.SECP256K1,
                           "sppk7bVy617DmGvXsMqcwsiLtnedTN2trUi5ugXcNig7en4rHJyunK1")
         message="05020000001d0100000004434143410100000004504f504f0100000006424f5544494e"
-        data = app.sign_with_hash(account,
-                                  message,
-                                  path=test_name)
+        data = app.sign(account,
+                        message,
+                        with_hash=True,
+                        path=test_name)
 
         app.check_tlv_signature_with_hash(
             hash="84e475e38707140e725019e91f036e341fa4a2c8752b7828f37bbf91061b0e0a",

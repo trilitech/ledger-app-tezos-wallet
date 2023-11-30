@@ -36,7 +36,7 @@ if __name__ == "__main__":
 
         def expected_failure_send() -> bytes:
             with app.expect_apdu_failure(StatusCode.REJECT):
-                app.backend.sign(DEFAULT_ACCOUNT, expression)
+                app.backend.sign(DEFAULT_ACCOUNT, expression, with_hash=False)
             return b''
 
         def navigate() -> None:

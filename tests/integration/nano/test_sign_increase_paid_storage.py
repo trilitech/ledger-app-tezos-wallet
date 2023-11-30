@@ -28,9 +28,10 @@ if __name__ == "__main__":
 
         app.assert_screen(Screen.Home)
 
-        data = app.sign_with_hash(DEFAULT_ACCOUNT,
-                                  "0300000000000000000000000000000000000000000000000000000000000000007100ffdd6102321bc251e4a5190ad5b12b251069d9b4904e0203040501000000000000000000000000000000000000000000",
-                                  path=test_name)
+        data = app.sign(DEFAULT_ACCOUNT,
+                        "0300000000000000000000000000000000000000000000000000000000000000007100ffdd6102321bc251e4a5190ad5b12b251069d9b4904e0203040501000000000000000000000000000000000000000000",
+                        with_hash=True,
+                        path=test_name)
 
         app.check_signature_with_hash(
             hash="48ab3de08b4a53ffe8cb8984cb5e0174082496321d5f9644ec8a3f01f3b2176f",

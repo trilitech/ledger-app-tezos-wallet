@@ -38,7 +38,7 @@ if __name__ == "__main__":
 
             app.assert_screen(Screen.Home)
 
-            data = app.backend.get_public_key(account)
+            data = app.backend.get_public_key(account, with_prompt=False)
 
             app.check_public_key(account, data)
 

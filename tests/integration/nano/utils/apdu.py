@@ -117,13 +117,13 @@ class TezosBackend(BackendInterface):
     def version(self) -> bytes:
         return self._exchange(INS.VERSION)
 
-    def get_public_key(self, account: Account) -> bytes:
-        return self._exchange(INS.GET_PUBLIC_KEY,
-                              sig_type=account.sig_type,
-                              payload=account.path)
+    def get_public_key(self,
+                       account: Account,
+                       with_prompt: bool = False) -> bytes:
 
-    def prompt_public_key(self, account: Account) -> bytes:
-        return self._exchange(INS.PROMPT_PUBLIC_KEY,
+        ins = INS.PROMPT_PUBLIC_KEY if with_prompt else INS.GET_PUBLIC_KEY
+
+        return self._exchange(ins,
                               sig_type=account.sig_type,
                               payload=account.path)
 
@@ -137,13 +137,15 @@ class TezosBackend(BackendInterface):
         if last: index |= INDEX.LAST
         return self._exchange(ins, index, payload=message)
 
-    def _sign(self,
-              ins: INS,
-              account: Account,
-              message: Union[str, bytes],
-              apdu_size: int = MAX_APDU_SIZE) -> bytes:
+    def sign(self,
+             account: Account,
+             message: Union[str, bytes],
+             with_hash: bool = False,
+             apdu_size: int = MAX_APDU_SIZE) -> bytes:
         if isinstance(message, str): message = bytes.fromhex(message)
         assert message, "Do not sign empty message"
+
+        ins = INS.SIGN_WITH_HASH if with_hash else INS.SIGN
 
         self._ask_sign(ins, account)
 
@@ -158,9 +160,3 @@ class TezosBackend(BackendInterface):
                 assert not data
 
         assert False, "We should have already returned"
-
-    def sign(self, account: Account, message: Union[str, bytes]) -> bytes:
-        return self._sign(INS.SIGN, account, message)
-
-    def sign_with_hash(self, account: Account, message: Union[str, bytes]) -> bytes:
-        return self._sign(INS.SIGN_WITH_HASH, account, message)

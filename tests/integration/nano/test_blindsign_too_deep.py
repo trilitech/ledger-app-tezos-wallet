@@ -30,7 +30,7 @@ if __name__ == "__main__":
             app.setup_blind_signing()
 
             def send(result_queue: Queue) -> None:
-                res = app.backend.sign_with_hash(DEFAULT_ACCOUNT, expression)
+                res = app.backend.sign(DEFAULT_ACCOUNT, expression, with_hash=True)
                 result_queue.put(res)
             def assert_screen_i(i):
                 app.assert_screen(f"{str(i).zfill(5)}", path=(Path(test_name) / "clear"))

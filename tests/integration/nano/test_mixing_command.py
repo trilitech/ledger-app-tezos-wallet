@@ -41,13 +41,13 @@ if __name__ == "__main__":
 
         app.backend._ask_sign(INS.SIGN, DEFAULT_ACCOUNT)
         with app.expect_apdu_failure(StatusCode.UNEXPECTED_STATE):
-            app.backend.prompt_public_key(DEFAULT_ACCOUNT)
+            app.backend.get_public_key(DEFAULT_ACCOUNT, with_prompt=True)
 
         app.assert_screen(Screen.Home)
 
         app.backend._ask_sign(INS.SIGN, DEFAULT_ACCOUNT)
         with app.expect_apdu_failure(StatusCode.UNEXPECTED_STATE):
-            app.backend.get_public_key(DEFAULT_ACCOUNT)
+            app.backend.get_public_key(DEFAULT_ACCOUNT, with_prompt=False)
 
         app.assert_screen(Screen.Home)
 

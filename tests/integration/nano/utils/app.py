@@ -247,7 +247,7 @@ class TezosAppScreen():
                           path: Union[str, Path]) -> bytes:
 
         return send_and_navigate(
-            send=(lambda: self.backend.prompt_public_key(account)),
+            send=(lambda: self.backend.get_public_key(account, with_prompt=True)),
             navigate=(lambda: self.navigate_until_text("Approve", path)))
 
     def check_public_key(self,
@@ -295,7 +295,7 @@ class TezosAppScreen():
                           path: Union[str, Path]) -> None:
 
         self._failing_send(
-            send=(lambda: self.backend.prompt_public_key(account)),
+            send=(lambda: self.backend.get_public_key(account, with_prompt=True)),
             text="Reject",
             status_code=StatusCode.REJECT,
             path=path)
@@ -303,10 +303,11 @@ class TezosAppScreen():
     def sign(self,
              account: Account,
              message: Union[str, bytes],
+             with_hash: bool,
              path: Union[str, Path]) -> bytes:
 
         return send_and_navigate(
-            send=(lambda: self.backend.sign(account, message)),
+            send=(lambda: self.backend.sign(account, message, with_hash)),
             navigate=(lambda: self.navigate_until_text("Accept", path)))
 
     def check_signature(self,
@@ -322,15 +323,6 @@ class TezosAppScreen():
                             pk: str,
                             data: bytes) -> None:
         check_tlv_signature.check_signature(data, pk, message)
-
-    def sign_with_hash(self,
-                       account: Account,
-                       message: Union[str, bytes],
-                       path: Union[str, Path]) -> bytes:
-
-        return send_and_navigate(
-            send=(lambda: self.backend.sign_with_hash(account, message)),
-            navigate=(lambda: self.navigate_until_text("Accept", path)))
 
     def check_signature_with_hash(self,
                                  hash: Union[str, bytes],
@@ -361,7 +353,6 @@ class TezosAppScreen():
                    path: Union[str, Path]) -> bytes:
 
         if isinstance(path, str): path = Path(path)
-        sign = self.backend.sign_with_hash if with_hash else self.backend.sign
 
         self.setup_blind_signing()
 
@@ -370,7 +361,7 @@ class TezosAppScreen():
             self.navigate_until_text("Accept", path / "blind")
 
         return send_and_navigate(
-            send=(lambda: sign(account, message)),
+            send=(lambda: self.backend.sign(account, message, with_hash)),
             navigate=navigate)
 
     def _failing_signing(self,
@@ -380,10 +371,9 @@ class TezosAppScreen():
                          text: str,
                          status_code: StatusCode,
                          path: Union[str, Path]) -> None:
-        sign = self.backend.sign_with_hash if with_hash else self.backend.sign
 
         self._failing_send(
-            send=(lambda: sign(account, message)),
+            send=(lambda: self.backend.sign(account, message, with_hash)),
             text=text,
             status_code=status_code,
             path=path)

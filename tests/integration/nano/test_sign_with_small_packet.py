@@ -23,7 +23,7 @@ if __name__ == "__main__":
         def sign_with_small_packet(account: Account, message: str, path: str) -> bytes:
 
             return send_and_navigate(
-                send=(lambda: app.backend._sign(INS.SIGN, DEFAULT_ACCOUNT, message, apdu_size=10)),
+                send=(lambda: app.backend.sign(DEFAULT_ACCOUNT, message, apdu_size=10)),
                 navigate=(lambda: app.navigate_until_text("Accept", path)))
 
         app.assert_screen(Screen.Home)

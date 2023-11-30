@@ -26,6 +26,7 @@ if __name__ == "__main__":
 
         data = app.sign(DEFAULT_ACCOUNT,
                         "05020000001d0100000004434143410100000004504f504f0100000006424f5544494e",
+                        with_hash=False,
                         path=test_name)
 
         app.check_signature(

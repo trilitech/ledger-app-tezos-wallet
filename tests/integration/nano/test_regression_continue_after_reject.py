@@ -35,7 +35,7 @@ if __name__ == "__main__":
                            with_hash=True,
                            path=make_path("reject_signing"))
 
-        data = app.backend.get_public_key(DEFAULT_ACCOUNT)
+        data = app.backend.get_public_key(DEFAULT_ACCOUNT, with_prompt=False)
 
         app.check_public_key(DEFAULT_ACCOUNT, data)
 

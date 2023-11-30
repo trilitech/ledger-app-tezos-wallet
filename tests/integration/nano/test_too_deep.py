@@ -29,7 +29,7 @@ if __name__ == "__main__":
         if app.backend.firmware.device == "nanos":
             def send() -> None:
                 with app.expect_apdu_failure(StatusCode.PARSE_ERROR):
-                    app.backend.sign_with_hash(DEFAULT_ACCOUNT, expression)
+                    app.backend.sign(DEFAULT_ACCOUNT, expression, with_hash=True)
             def assert_screen_i(i):
                 app.assert_screen(f"{str(i).zfill(5)}", path=test_name)
 
