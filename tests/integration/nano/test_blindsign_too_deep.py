@@ -39,7 +39,7 @@ if __name__ == "__main__":
             send_process = Process(target=send, args=(result_queue,))
             send_process.start()
 
-            app.backend.wait_for_text_not_on_screen("Application")
+            app.backend.wait_for_text_not_on_screen(Screen_text.Home)
 
             for i in range(4):
                 assert_screen_i(i)
@@ -49,7 +49,7 @@ if __name__ == "__main__":
             assert_screen_i(i+1)
 
             def blind_navigate() -> None:
-                app.navigate_until_text("Accept", Path(test_name) / "blind")
+                app.navigate_until_text(Screen_text.Sign_accept, Path(test_name) / "blind")
             navigate_process = Process(target=blind_navigate)
             navigate_process.start()
 

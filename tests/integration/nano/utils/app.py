@@ -40,16 +40,6 @@ from backend import *
 
 MAX_ATTEMPTS = 50
 
-class Screen(str, Enum):
-    Home = "home"
-    Blind_home = "blind_home"
-    Version = "version"
-    Settings = "settings"
-    Settings_blind_disabled = "settings_blind_signing_disabled"
-    Settings_blind_enabled = "settings_blind_signing_enabled"
-    Settings_back = "back"
-    Quit = "quit"
-
 def with_retry(f, attempts=MAX_ATTEMPTS):
     while True:
         try:
@@ -111,6 +101,25 @@ class SpeculosTezosBackend(TezosBackend, SpeculosBackend):
             return self
 
 version: Tuple[int, int, int] = (3, 0, 0)
+
+class Screen(str, Enum):
+    Home = "home"
+    Blind_home = "blind_home"
+    Version = "version"
+    Settings = "settings"
+    Settings_blind_disabled = "settings_blind_signing_disabled"
+    Settings_blind_enabled = "settings_blind_signing_enabled"
+    Settings_back = "back"
+    Quit = "quit"
+
+class Screen_text(str, Enum):
+    Home = "Application"
+    Public_key_approve = "Approve"
+    Public_key_reject = "Reject"
+    Sign_accept = "Accept"
+    Sign_reject = "Reject"
+    Blind_switch = "Switch to"
+    Back_home = "Home"
 
 class TezosAppScreen():
 
@@ -207,7 +216,7 @@ class TezosAppScreen():
         self.backend.right_click()
         self._quit()
 
-    def navigate_until_text(self, text: str, path: Union[str, Path]) -> None:
+    def navigate_until_text(self, text: Screen_text, path: Union[str, Path]) -> None:
         if isinstance(path, str): path = Path(path)
         self.navigator.\
             navigate_until_text_and_compare(NavInsID.RIGHT_CLICK,
@@ -229,7 +238,7 @@ class TezosAppScreen():
 
     def _failing_send(self,
                       send: Callable[[], bytes],
-                      text: str,
+                      text: Screen_text,
                       status_code: StatusCode,
                       path: Union[str, Path]) -> None:
         def expected_failure_send() -> bytes:
@@ -247,7 +256,7 @@ class TezosAppScreen():
 
         return send_and_navigate(
             send=(lambda: self.backend.get_public_key(account, with_prompt=True)),
-            navigate=(lambda: self.navigate_until_text("Approve", path)))
+            navigate=(lambda: self.navigate_until_text(Screen_text.Public_key_approve, path)))
 
     def check_public_key(self,
                          account: Account,
@@ -261,7 +270,7 @@ class TezosAppScreen():
 
         self._failing_send(
             send=(lambda: self.backend.get_public_key(account, with_prompt=True)),
-            text="Reject",
+            text=Screen_text.Public_key_reject,
             status_code=StatusCode.REJECT,
             path=path)
 
@@ -273,7 +282,7 @@ class TezosAppScreen():
 
         return send_and_navigate(
             send=(lambda: self.backend.sign(account, message, with_hash)),
-            navigate=(lambda: self.navigate_until_text("Accept", path)))
+            navigate=(lambda: self.navigate_until_text(Screen_text.Sign_accept, path)))
 
     def check_signature(self,
                         account: Account,
@@ -306,8 +315,8 @@ class TezosAppScreen():
         self.setup_blind_signing()
 
         def navigate() -> None:
-            self.navigate_until_text("Switch to", path / "clear")
-            self.navigate_until_text("Accept", path / "blind")
+            self.navigate_until_text(Screen_text.Blind_switch, path / "clear")
+            self.navigate_until_text(Screen_text.Sign_accept, path / "blind")
 
         return send_and_navigate(
             send=(lambda: self.backend.sign(account, message, with_hash)),
@@ -317,7 +326,7 @@ class TezosAppScreen():
                          account: Account,
                          message: Union[str, bytes],
                          with_hash: bool,
-                         text: str,
+                         text: Screen_text,
                          status_code: StatusCode,
                          path: Union[str, Path]) -> None:
 
@@ -336,7 +345,7 @@ class TezosAppScreen():
             account,
             message,
             with_hash,
-            text="Reject",
+            text=Screen_text.Sign_reject,
             status_code=StatusCode.REJECT,
             path=path)
 
@@ -349,7 +358,7 @@ class TezosAppScreen():
         self._failing_signing(account,
                               message,
                               with_hash,
-                              "Application",
+                              Screen_text.Home,
                               status_code,
                               path)
 
@@ -361,7 +370,7 @@ class TezosAppScreen():
         self._failing_signing(account,
                               message,
                               with_hash,
-                              "Home",
+                              Screen_text.Back_home,
                               StatusCode.PARSE_ERROR,
                               path)
 

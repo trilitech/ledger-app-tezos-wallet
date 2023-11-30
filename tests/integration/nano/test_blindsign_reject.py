@@ -30,7 +30,7 @@ if __name__ == "__main__":
         app._failing_signing(DEFAULT_ACCOUNT,
                              expression,
                              with_hash=False,
-                             text="Reject",
+                             text=Screen_text.Sign_reject,
                              status_code=StatusCode.PARSE_ERROR,
                              path=Path(test_name) / "reject_from_clear")
 
@@ -40,8 +40,8 @@ if __name__ == "__main__":
             return b''
 
         def navigate() -> None:
-            app.navigate_until_text("Switch to", Path(test_name) / "reject_from_blind" / "clear")
-            app.navigate_until_text("Reject", Path(test_name) / "reject_from_blind" / "blind")
+            app.navigate_until_text(Screen_text.Blind_switch, Path(test_name) / "reject_from_blind" / "clear")
+            app.navigate_until_text(Screen_text.Sign_reject, Path(test_name) / "reject_from_blind" / "blind")
 
         send_and_navigate(
             send=expected_failure_send,
