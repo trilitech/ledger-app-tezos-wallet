@@ -117,7 +117,7 @@ class TezosAppScreen():
 
     def __init__(self,
                  backend: SpeculosTezosBackend,
-                 version_tag: VERSION_TAG,
+                 app_kind: APP_KIND,
                  golden_run: bool):
         self.backend = backend
 
@@ -135,7 +135,7 @@ class TezosAppScreen():
         if repo.is_dirty(): commit += "*"
         self.commit = bytes.fromhex(commit.encode('utf-8').hex() + "00")
         self.version = \
-            version_tag.to_bytes(1, byteorder='big') + \
+            app_kind.to_bytes(1, byteorder='big') + \
             version[0].to_bytes(1, byteorder='big') + \
             version[1].to_bytes(1, byteorder='big') + \
             version[2].to_bytes(1, byteorder='big')
@@ -460,5 +460,5 @@ def nano_app(seed: str = DEFAULT_SEED) -> Generator[TezosAppScreen, None, None]:
                                    firmware,
                                    port=args.port,
                                    args=speculos_args)
-    with TezosAppScreen(backend, VERSION_TAG.WALLET, args.golden_run) as app:
+    with TezosAppScreen(backend, APP_KIND.WALLET, args.golden_run) as app:
         yield app

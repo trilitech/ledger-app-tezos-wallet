@@ -71,7 +71,7 @@ class StatusCode(IntEnum):
     MEMORY_ERROR              = 0x9200
     PARSE_ERROR               = 0x9405
 
-class VERSION_TAG(IntEnum):
+class APP_KIND(IntEnum):
     WALLET = 0x00
     BAKING = 0x01
 
