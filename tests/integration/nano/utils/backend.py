@@ -12,20 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import sys
-
-file_path=os.path.abspath(__file__)
-dir_path=os.path.dirname(file_path)
-sys.path.append(dir_path)
-
 from enum import IntEnum
 from ragger.backend.interface import BackendInterface, RAPDU
 from ragger.error import ExceptionRAPDU
 from typing import Union
 
-from account import Account, SIGNATURE_TYPE
-from message import Message
+from .account import Account, SIGNATURE_TYPE
+from .message import Message
 
 class CLA(IntEnum):
     DEFAULT = 0x80

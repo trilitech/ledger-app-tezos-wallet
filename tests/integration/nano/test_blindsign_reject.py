@@ -13,8 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from utils.app import *
-from utils.backend import *
+from pathlib import Path
+
+from utils.app import nano_app, Screen_text, send_and_navigate, DEFAULT_ACCOUNT
+from utils.backend import StatusCode
+from utils.message import Message
 
 # Expression: 12345678901234567890123456789012345678901234567890123456789012345678901234567890
 # is too large

@@ -21,8 +21,10 @@ dir_path=os.path.dirname(file_path)
 root_path=os.path.dirname(dir_path)
 sys.path.append(root_path)
 
-from utils.app import *
-from utils.backend import *
+from pathlib import Path
+
+from utils.app import nano_app, Screen, DEFAULT_ACCOUNT
+from utils.message import Message
 
 # Operation (0): Transfer ticket
 # Fee: 0.01 XTZ

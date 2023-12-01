@@ -13,8 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from utils.app import *
-from utils.backend import *
+from pathlib import Path
+
+from utils.app import nano_app, Screen, DEFAULT_ACCOUNT
+from utils.message import Message
 
 if __name__ == "__main__":
     test_name = Path(__file__).stem

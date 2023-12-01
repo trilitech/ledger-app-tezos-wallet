@@ -14,30 +14,22 @@
 # limitations under the License.
 
 import argparse
-import base58
 import git
-import os
-import sys
 import time
-
 from contextlib import contextmanager
 from enum import Enum
 from multiprocessing import Process, Queue
 from pathlib import Path
 from requests.exceptions import ConnectionError
-from typing import Callable, Generator, List, Optional, Tuple, Union
-
 from ragger.backend import SpeculosBackend
 from ragger.error import ExceptionRAPDU
 from ragger.firmware import Firmware
 from ragger.navigator import NavInsID, NanoNavigator
+from typing import Callable, Generator, List, Optional, Tuple, Union
 
-file_path=os.path.abspath(__file__)
-dir_path=os.path.dirname(file_path)
-sys.path.append(dir_path)
-
-from backend import *
-from message import Message
+from .message import Message
+from .account import Account, SIGNATURE_TYPE
+from .backend import StatusCode, TezosBackend, APP_KIND
 
 MAX_ATTEMPTS = 50
 

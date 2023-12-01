@@ -13,8 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from utils.app import *
-from utils.backend import *
+from pathlib import Path
+
+from utils.app import nano_app, Screen, DEFAULT_ACCOUNT
 
 if __name__ == "__main__":
     test_name = Path(__file__).stem

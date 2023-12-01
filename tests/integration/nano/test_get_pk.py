@@ -13,8 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from utils.app import *
-from utils.backend import *
+from utils.account import Account, SIGNATURE_TYPE
+from utils.app import nano_app, Screen
 
 if __name__ == "__main__":
     with nano_app() as app:
