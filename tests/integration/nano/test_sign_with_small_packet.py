@@ -31,7 +31,11 @@ if __name__ == "__main__":
                 send=(lambda: app.backend.sign(account, message, apdu_size=10)),
                 navigate=(lambda: app.navigate_until_text(Screen_text.Sign_accept, path)))
 
-            app.check_signature(account, message, data)
+            app.check_signature(
+                account,
+                message,
+                with_hash=False,
+                data=data)
 
             app.assert_screen(Screen.Home)
 

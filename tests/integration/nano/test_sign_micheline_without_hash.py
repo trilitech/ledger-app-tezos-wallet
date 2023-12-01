@@ -34,6 +34,7 @@ if __name__ == "__main__":
         app.check_signature(
             account=DEFAULT_ACCOUNT,
             message=message,
-            signature=data)
+            with_hash=False,
+            data=data)
 
         app.quit()

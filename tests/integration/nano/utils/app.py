@@ -288,19 +288,16 @@ class TezosAppScreen():
     def check_signature(self,
                         account: Account,
                         message: Message,
-                        signature: bytes) -> None:
-        account.check_signature(signature, message.bytes)
+                        with_hash: bool,
+                        data: bytes) -> None:
 
-    def check_signature_with_hash(self,
-                                  account: Account,
-                                  message: Message,
-                                  data: bytes) -> None:
-        assert data.startswith(message.hash), \
-            f"Expected a starting hash {message.hash.hex()} but got {data.hex()}"
+        if with_hash:
+            assert data.startswith(message.hash), \
+                f"Expected a starting hash {message.hash.hex()} but got {data.hex()}"
 
-        signature = data[len(message.hash):]
+            data = data[len(message.hash):]
 
-        self.check_signature(account, message, signature)
+        account.check_signature(data, message.bytes)
 
     def blind_sign(self,
                    account: Account,
