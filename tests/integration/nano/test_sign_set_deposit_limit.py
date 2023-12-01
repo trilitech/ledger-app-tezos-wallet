@@ -27,7 +27,7 @@ if __name__ == "__main__":
 
         app.assert_screen(Screen.Home)
 
-        message = "03000000000000000000000000000000000000000000000000000000000000000070027c252d3806e6519ed064026bdb98edf866117331e0d40304f80204ffa09c01"
+        message = Message.from_bytes("03000000000000000000000000000000000000000000000000000000000000000070027c252d3806e6519ed064026bdb98edf866117331e0d40304f80204ffa09c01")
 
         data = app.sign(DEFAULT_ACCOUNT,
                         message,
@@ -37,7 +37,6 @@ if __name__ == "__main__":
         app.check_signature_with_hash(
             account=DEFAULT_ACCOUNT,
             message=message,
-            hash="8b4456454de1b3c41f5ea45e711893df26fabe9427048b95fda4276d5cf76ff6",
             data=data)
 
         app.quit()

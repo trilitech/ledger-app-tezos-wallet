@@ -23,7 +23,7 @@ if __name__ == "__main__":
     test_name = Path(__file__).stem
     with nano_app() as app:
 
-        expression="050092abf8e3d9e5f8cfd9ae8a9fe5f28ea1d5b5abf1af82dae8a4b68df3d1889eb6f988f5e8d31a"
+        expression = Message.from_bytes("050092abf8e3d9e5f8cfd9ae8a9fe5f28ea1d5b5abf1af82dae8a4b68df3d1889eb6f988f5e8d31a")
 
         app.setup_blind_signing()
 

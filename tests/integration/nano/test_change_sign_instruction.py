@@ -21,11 +21,14 @@ if __name__ == "__main__":
 
         app.assert_screen(Screen.Home)
 
+        message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316")
+        payload=message.bytes
+
         app.backend._ask_sign(INS.SIGN_WITH_HASH, DEFAULT_ACCOUNT)
 
         with app.expect_apdu_failure(StatusCode.INVALID_INS):
             app.backend._continue_sign(INS.SIGN,
-                                       "0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316",
+                                       payload,
                                        last=True)
 
         app.assert_screen(Screen.Home)
@@ -34,7 +37,7 @@ if __name__ == "__main__":
 
         with app.expect_apdu_failure(StatusCode.INVALID_INS):
             app.backend._continue_sign(INS.SIGN_WITH_HASH,
-                                       "0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316",
+                                       payload,
                                        last=True)
 
         app.quit()

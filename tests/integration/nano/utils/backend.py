@@ -25,6 +25,7 @@ from ragger.error import ExceptionRAPDU
 from typing import Union
 
 from account import Account, SIGNATURE_TYPE
+from message import Message
 
 class CLA(IntEnum):
     DEFAULT = 0x80
@@ -122,29 +123,28 @@ class TezosBackend(BackendInterface):
         data: bytes = self._exchange(ins, sig_type=account.sig_type, payload=account.path)
         assert not data
 
-    def _continue_sign(self, ins: INS, message: Union[str, bytes], last: bool) -> bytes:
-        if isinstance(message, str): message = bytes.fromhex(message)
+    def _continue_sign(self, ins: INS, payload: bytes, last: bool) -> bytes:
         index: INDEX = INDEX.OTHER
         if last: index = INDEX(index | INDEX.LAST)
-        return self._exchange(ins, index, payload=message)
+        return self._exchange(ins, index, payload=payload)
 
     def sign(self,
              account: Account,
-             message: Union[str, bytes],
+             message: Message,
              with_hash: bool = False,
              apdu_size: int = MAX_APDU_SIZE) -> bytes:
-        if isinstance(message, str): message = bytes.fromhex(message)
-        assert message, "Do not sign empty message"
+        msg = message.bytes
+        assert msg, "Do not sign empty message"
 
         ins = INS.SIGN_WITH_HASH if with_hash else INS.SIGN
 
         self._ask_sign(ins, account)
 
-        while(message):
-            payload = message[:apdu_size]
-            message = message[apdu_size:]
-            last = not message
-            data = self._continue_sign(ins, payload, last)
+        while(msg):
+            payload = msg[:apdu_size]
+            msg     = msg[apdu_size:]
+            last    = not msg
+            data    = self._continue_sign(ins, payload, last)
             if last:
                 return data
             else:

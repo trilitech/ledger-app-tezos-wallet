@@ -37,6 +37,7 @@ dir_path=os.path.dirname(file_path)
 sys.path.append(dir_path)
 
 from backend import *
+from message import Message
 
 MAX_ATTEMPTS = 50
 
@@ -276,7 +277,7 @@ class TezosAppScreen():
 
     def sign(self,
              account: Account,
-             message: Union[str, bytes],
+             message: Message,
              with_hash: bool,
              path: Union[str, Path]) -> bytes:
 
@@ -286,27 +287,24 @@ class TezosAppScreen():
 
     def check_signature(self,
                         account: Account,
-                        message: Union[str, bytes],
+                        message: Message,
                         signature: bytes) -> None:
-        account.check_signature(signature, message)
+        account.check_signature(signature, message.bytes)
 
     def check_signature_with_hash(self,
                                   account: Account,
-                                  message: Union[str, bytes],
-                                  hash: Union[str, bytes],
+                                  message: Message,
                                   data: bytes) -> None:
-        if isinstance(hash, str): hash = bytes.fromhex(hash)
+        assert data.startswith(message.hash), \
+            f"Expected a starting hash {message.hash.hex()} but got {data.hex()}"
 
-        assert data.startswith(hash), \
-            f"Expected a starting hash {hash.hex()} but got {data.hex()}"
-
-        signature = data[len(hash):]
+        signature = data[len(message.hash):]
 
         self.check_signature(account, message, signature)
 
     def blind_sign(self,
                    account: Account,
-                   message: Union[str, bytes],
+                   message: Message,
                    with_hash: bool,
                    path: Union[str, Path]) -> bytes:
 
@@ -324,7 +322,7 @@ class TezosAppScreen():
 
     def _failing_signing(self,
                          account: Account,
-                         message: Union[str, bytes],
+                         message: Message,
                          with_hash: bool,
                          text: Screen_text,
                          status_code: StatusCode,
@@ -338,7 +336,7 @@ class TezosAppScreen():
 
     def reject_signing(self,
                        account: Account,
-                       message: Union[str, bytes],
+                       message: Message,
                        with_hash: bool,
                        path: Union[str, Path]) -> None:
         self._failing_signing(
@@ -351,7 +349,7 @@ class TezosAppScreen():
 
     def hard_failing_signing(self,
                              account: Account,
-                             message: Union[str, bytes],
+                             message: Message,
                              with_hash: bool,
                              status_code: StatusCode,
                              path: Union[str, Path]) -> None:
@@ -364,7 +362,7 @@ class TezosAppScreen():
 
     def parsing_error_signing(self,
                               account: Account,
-                              message: Union[str, bytes],
+                              message: Message,
                               with_hash: bool,
                               path: Union[str, Path]) -> None:
         self._failing_signing(account,

@@ -24,7 +24,7 @@ if __name__ == "__main__":
 
         app.assert_screen(Screen.Home)
 
-        message = "05020000001d0100000004434143410100000004504f504f0100000006424f5544494e"
+        message = Message.from_bytes("05020000001d0100000004434143410100000004504f504f0100000006424f5544494e")
 
         data = app.sign(DEFAULT_ACCOUNT,
                         message,

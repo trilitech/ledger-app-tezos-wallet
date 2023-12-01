@@ -26,7 +26,7 @@ if __name__ == "__main__":
                           SIGNATURE_TYPE.SECP256K1,
                           "sppk7bVy617DmGvXsMqcwsiLtnedTN2trUi5ugXcNig7en4rHJyunK1")
 
-        message = "05020000001d0100000004434143410100000004504f504f0100000006424f5544494e"
+        message = Message.from_bytes("05020000001d0100000004434143410100000004504f504f0100000006424f5544494e")
 
         data = app.sign(account,
                         message,
@@ -36,7 +36,6 @@ if __name__ == "__main__":
         app.check_signature_with_hash(
             account=account,
             message=message,
-            hash="84e475e38707140e725019e91f036e341fa4a2c8752b7828f37bbf91061b0e0a",
             data=data)
 
         app.quit()
