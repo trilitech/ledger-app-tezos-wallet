@@ -41,6 +41,6 @@ if __name__ == "__main__":
 
         data = app.backend.get_public_key(DEFAULT_ACCOUNT, with_prompt=False)
 
-        app.check_public_key(DEFAULT_ACCOUNT, data)
+        app.checker.check_public_key(DEFAULT_ACCOUNT, data)
 
         app.quit()

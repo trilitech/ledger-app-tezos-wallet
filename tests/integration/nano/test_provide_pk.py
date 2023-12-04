@@ -57,6 +57,6 @@ if __name__ == "__main__":
 
             data = app.provide_public_key(account, test_name + "/" + kind)
 
-            app.check_public_key(account, data)
+            app.checker.check_public_key(account, data)
 
         app.quit()

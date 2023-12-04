@@ -52,7 +52,7 @@ if __name__ == "__main__":
                         with_hash=True,
                         path=test_name)
 
-        app.check_signature(
+        app.checker.check_signature(
             account=DEFAULT_ACCOUNT,
             message=message,
             with_hash=True,

@@ -22,7 +22,6 @@ if __name__ == "__main__":
 
         data = app.backend.git()
 
-        assert data == app.commit, \
-            f"Expected commit {app.commit.hex()} but got {data.hex()}"
+        app.checker.check_commit(data)
 
         app.quit()

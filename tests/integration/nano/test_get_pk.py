@@ -40,6 +40,6 @@ if __name__ == "__main__":
 
             data = app.backend.get_public_key(account, with_prompt=False)
 
-            app.check_public_key(account, data)
+            app.checker.check_public_key(account, data)
 
         app.quit()

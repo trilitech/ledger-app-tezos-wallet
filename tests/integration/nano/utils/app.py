@@ -31,6 +31,54 @@ from .message import Message
 from .account import Account, SIGNATURE_TYPE
 from .backend import StatusCode, TezosBackend, APP_KIND
 
+version: Tuple[int, int, int] = (3, 0, 0)
+
+class TezosAPDUChecker:
+
+    def __init__(self, app_kind: APP_KIND):
+        self.app_kind = app_kind
+
+    @property
+    def commit(self) -> bytes:
+        repo = git.Repo(".")
+        commit = repo.head.commit.hexsha[:8]
+        if repo.is_dirty(): commit += "*"
+        return bytes.fromhex(commit.encode('utf-8').hex() + "00")
+
+    @property
+    def version_bytes(self) -> bytes:
+        return \
+            self.app_kind.to_bytes(1, byteorder='big') + \
+            version[0].to_bytes(1, byteorder='big') + \
+            version[1].to_bytes(1, byteorder='big') + \
+            version[2].to_bytes(1, byteorder='big')
+
+    def check_commit(self, commit: bytes) -> None:
+        assert commit == self.commit, \
+            f"Expected commit {self.commit.hex()} but got {commit.hex()}"
+
+    def check_version(self, version: bytes) -> None:
+        assert version == self.version_bytes, \
+            f"Expected version {self.version_bytes.hex()} but got {version.hex()}"
+
+    def check_public_key(self,
+                         account: Account,
+                         public_key: bytes) -> None:
+        account.check_public_key(public_key)
+
+    def check_signature(self,
+                        account: Account,
+                        message: Message,
+                        with_hash: bool,
+                        data: bytes) -> None:
+        if with_hash:
+            assert data.startswith(message.hash), \
+                f"Expected a starting hash {message.hash.hex()} but got {data.hex()}"
+
+            data = data[len(message.hash):]
+
+        account.check_signature(data, message.bytes)
+
 MAX_ATTEMPTS = 50
 
 def with_retry(f, attempts=MAX_ATTEMPTS):
@@ -93,8 +141,6 @@ class SpeculosTezosBackend(TezosBackend, SpeculosBackend):
             self._client.process = process
             return self
 
-version: Tuple[int, int, int] = (3, 0, 0)
-
 class Screen(str, Enum):
     Home = "home"
     Blind_home = "blind_home"
@@ -121,6 +167,7 @@ class TezosAppScreen():
                  app_kind: APP_KIND,
                  golden_run: bool):
         self.backend = backend
+        self.checker = TezosAPDUChecker(app_kind)
 
         self.path: Path = Path(__file__).resolve().parent.parent
         self.snapshots_dir: Path = self.path / "snapshots" / backend.firmware.name
@@ -130,16 +177,6 @@ class TezosAppScreen():
         if not self.tmp_snapshots_dir.is_dir():
             self.tmp_snapshots_dir.mkdir(parents=True)
         self.snapshotted: List[str] = []
-
-        repo = git.Repo(".")
-        commit = repo.head.commit.hexsha[:8]
-        if repo.is_dirty(): commit += "*"
-        self.commit = bytes.fromhex(commit.encode('utf-8').hex() + "00")
-        self.version = \
-            app_kind.to_bytes(1, byteorder='big') + \
-            version[0].to_bytes(1, byteorder='big') + \
-            version[1].to_bytes(1, byteorder='big') + \
-            version[2].to_bytes(1, byteorder='big')
 
         self.golden_run = golden_run
         self.navigator = NanoNavigator(backend, backend.firmware, golden_run)
@@ -251,12 +288,6 @@ class TezosAppScreen():
             send=(lambda: self.backend.get_public_key(account, with_prompt=True)),
             navigate=(lambda: self.navigate_until_text(Screen_text.Public_key_approve, path)))
 
-    def check_public_key(self,
-                         account: Account,
-                         data: bytes) -> None:
-
-        account.check_public_key(data)
-
     def reject_public_key(self,
                           account: Account,
                           path: Union[str, Path]) -> None:
@@ -276,20 +307,6 @@ class TezosAppScreen():
         return send_and_navigate(
             send=(lambda: self.backend.sign(account, message, with_hash)),
             navigate=(lambda: self.navigate_until_text(Screen_text.Sign_accept, path)))
-
-    def check_signature(self,
-                        account: Account,
-                        message: Message,
-                        with_hash: bool,
-                        data: bytes) -> None:
-
-        if with_hash:
-            assert data.startswith(message.hash), \
-                f"Expected a starting hash {message.hash.hex()} but got {data.hex()}"
-
-            data = data[len(message.hash):]
-
-        account.check_signature(data, message.bytes)
 
     def blind_sign(self,
                    account: Account,
