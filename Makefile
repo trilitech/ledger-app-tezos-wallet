@@ -74,11 +74,12 @@ clean:
 
 unit_tests:	test/samples/micheline/nano/samples.hex	\
 		test/samples/operations/nano/samples.hex\
-		tests/unit/*.ml*			\
-		tests/unit/*.[ch]			\
-		tests/unit/dune				\
+		tests/unit/parser/*.ml				\
+		tests/unit/parser/*.[ch]			\
+		tests/unit/parser/dune				\
+		tests/unit/parser/Makefile			\
 		tests/unit/Makefile
-	@cp app/src/parser/[!g]*.[ch] tests/unit
+	@cp app/src/parser/[!g]*.[ch] tests/unit/parser/
 
 	$(DOCKER_RUN_APP_OCAML) make -C /app/tests/unit
 
