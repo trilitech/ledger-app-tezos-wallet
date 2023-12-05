@@ -73,10 +73,8 @@ navigation_cb_wallet(__attribute__((unused)) uint8_t page,
 static void
 controls_callback(int token, __attribute__((unused)) uint8_t index)
 {
-    switch (token) {
-    case BLIND_SIGNING_TOKEN:
+    if (token == BLIND_SIGNING_TOKEN)
         toggle_blindsigning();
-    }
 }
 
 static void
