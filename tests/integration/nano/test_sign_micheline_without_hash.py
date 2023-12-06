@@ -13,8 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from utils.apdu import *
-from utils.app import *
+from pathlib import Path
+
+from utils.app import nano_app, Screen, DEFAULT_ACCOUNT
+from utils.message import Message
 
 # Expression: {"CACA";"POPO";"BOUDIN"}
 
@@ -24,12 +26,17 @@ if __name__ == "__main__":
 
         app.assert_screen(Screen.Home)
 
+        message = Message.from_bytes("05020000001d0100000004434143410100000004504f504f0100000006424f5544494e")
+
         data = app.sign(DEFAULT_ACCOUNT,
-                        "05020000001d0100000004434143410100000004504f504f0100000006424f5544494e",
+                        message,
+                        with_hash=False,
                         path=test_name)
 
-        app.check_signature(
-            signature="e0722bd72d15319474dff2207c137e85d57e742b7e5ccd1a995a610b8e055ad164e7606a37163b1a81e9003dc9e306afd46c4e645bbb190cf6c456459587ed04",
+        app.checker.check_signature(
+            account=DEFAULT_ACCOUNT,
+            message=message,
+            with_hash=False,
             data=data)
 
         app.quit()

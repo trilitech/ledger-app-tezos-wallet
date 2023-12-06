@@ -13,11 +13,12 @@
 # limitations under the License.
 
 from enum import IntEnum
+from ragger.backend.interface import BackendInterface, RAPDU
+from ragger.error import ExceptionRAPDU
 from typing import Union
 
-from ragger.backend.interface import BackendInterface, RAPDU
-from ragger.bip import pack_derivation_path
-from ragger.error import ExceptionRAPDU
+from .account import Account, SIGNATURE_TYPE
+from .message import Message
 
 class CLA(IntEnum):
     DEFAULT = 0x80
@@ -41,16 +42,10 @@ class INS(IntEnum):
     SIGN_WITH_HASH            = 0x0f
 
 class INDEX(IntEnum):
-    FIRST = 0x00
-    OTHER = 0x01
-    LAST = 0x80
-
-class SIGNATURE_TYPE(IntEnum):
-    ED25519       = 0x00
-    SECP256K1     = 0x01
-    SECP256R1     = 0x02
-    BIP32_ED25519 = 0x03
-    NONE          = 0xff
+    FIRST      = 0x00
+    OTHER      = 0x01
+    LAST       = 0x80
+    OTHER_LAST = 0x81
 
 class StatusCode(IntEnum):
     SECURITY                  = 0x6982
@@ -71,20 +66,9 @@ class StatusCode(IntEnum):
     MEMORY_ERROR              = 0x9200
     PARSE_ERROR               = 0x9405
 
-class VERSION_TAG(IntEnum):
+class APP_KIND(IntEnum):
     WALLET = 0x00
     BAKING = 0x01
-
-class Account:
-    def __init__(self,
-                 path: Union[str, bytes],
-                 sig_type: SIGNATURE_TYPE,
-                 public_key: str):
-        self.path: bytes = \
-            pack_derivation_path(path) if isinstance(path, str) \
-            else path
-        self.sig_type: SIGNATURE_TYPE = sig_type
-        self.public_key: str = public_key
 
 MAX_APDU_SIZE: int = 235
 
@@ -93,15 +77,18 @@ class TezosBackend(BackendInterface):
     def _exchange(self,
                   ins: INS,
                   index: INDEX = INDEX.FIRST,
-                  sig_type: SIGNATURE_TYPE = SIGNATURE_TYPE.NONE,
+                  sig_type: Union[SIGNATURE_TYPE, None] = None,
                   payload: bytes = b'') -> bytes:
 
         assert len(payload) <= MAX_APDU_SIZE, f"Apdu too large"
 
+        # Set to a non-existent value to ensure that p2 is unused
+        p2: int = sig_type if sig_type is not None else 0xff
+
         rapdu: RAPDU = self.exchange(CLA.DEFAULT,
                                      ins,
                                      p1=index,
-                                     p2=sig_type,
+                                     p2=p2,
                                      data=payload)
 
         if rapdu.status != StatusCode.OK:
@@ -115,13 +102,13 @@ class TezosBackend(BackendInterface):
     def version(self) -> bytes:
         return self._exchange(INS.VERSION)
 
-    def get_public_key(self, account: Account) -> bytes:
-        return self._exchange(INS.GET_PUBLIC_KEY,
-                              sig_type=account.sig_type,
-                              payload=account.path)
+    def get_public_key(self,
+                       account: Account,
+                       with_prompt: bool = False) -> bytes:
 
-    def prompt_public_key(self, account: Account) -> bytes:
-        return self._exchange(INS.PROMPT_PUBLIC_KEY,
+        ins = INS.PROMPT_PUBLIC_KEY if with_prompt else INS.GET_PUBLIC_KEY
+
+        return self._exchange(ins,
                               sig_type=account.sig_type,
                               payload=account.path)
 
@@ -129,36 +116,31 @@ class TezosBackend(BackendInterface):
         data: bytes = self._exchange(ins, sig_type=account.sig_type, payload=account.path)
         assert not data
 
-    def _continue_sign(self, ins: INS, message: Union[str, bytes], last: bool) -> bytes:
-        if isinstance(message, str): message = bytes.fromhex(message)
+    def _continue_sign(self, ins: INS, payload: bytes, last: bool) -> bytes:
         index: INDEX = INDEX.OTHER
-        if last: index |= INDEX.LAST
-        return self._exchange(ins, index, payload=message)
+        if last: index = INDEX(index | INDEX.LAST)
+        return self._exchange(ins, index, payload=payload)
 
-    def _sign(self,
-              ins: INS,
-              account: Account,
-              message: Union[str, bytes],
-              apdu_size: int = MAX_APDU_SIZE) -> bytes:
-        if isinstance(message, str): message = bytes.fromhex(message)
-        assert message, "Do not sign empty message"
+    def sign(self,
+             account: Account,
+             message: Message,
+             with_hash: bool = False,
+             apdu_size: int = MAX_APDU_SIZE) -> bytes:
+        msg = message.bytes
+        assert msg, "Do not sign empty message"
+
+        ins = INS.SIGN_WITH_HASH if with_hash else INS.SIGN
 
         self._ask_sign(ins, account)
 
-        while(message):
-            payload = message[:apdu_size]
-            message = message[apdu_size:]
-            last = not message
-            data = self._continue_sign(ins, payload, last)
+        while(msg):
+            payload = msg[:apdu_size]
+            msg     = msg[apdu_size:]
+            last    = not msg
+            data    = self._continue_sign(ins, payload, last)
             if last:
                 return data
             else:
                 assert not data
 
         assert False, "We should have already returned"
-
-    def sign(self, account: Account, message: Union[str, bytes]) -> bytes:
-        return self._sign(INS.SIGN, account, message)
-
-    def sign_with_hash(self, account: Account, message: Union[str, bytes]) -> bytes:
-        return self._sign(INS.SIGN_WITH_HASH, account, message)

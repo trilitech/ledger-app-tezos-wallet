@@ -13,8 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from utils.apdu import *
-from utils.app import *
+from utils.account import Account, SIGNATURE_TYPE
+from utils.app import nano_app, Screen
+from utils.backend import INS, StatusCode
 
 if __name__ == "__main__":
     wrong_number_index_account = Account(
@@ -34,8 +35,8 @@ if __name__ == "__main__":
         for account in [wrong_number_index_account,
                         wrong_length_account,
                         too_much_index_account]:
-            for sender in [app.backend.get_public_key,
-                           app.backend.prompt_public_key,
+            for sender in [lambda account: app.backend.get_public_key(account, with_prompt=False),
+                           lambda account: app.backend.get_public_key(account, with_prompt=True),
                            lambda account: app.backend._ask_sign(INS.SIGN, account),
                            lambda account: app.backend._ask_sign(INS.SIGN_WITH_HASH, account)]:
 

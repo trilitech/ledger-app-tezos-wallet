@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from utils.app import *
+from utils.app import nano_app, Screen
 
 if __name__ == "__main__":
     with nano_app() as app:
@@ -22,7 +22,6 @@ if __name__ == "__main__":
 
         data = app.backend.version()
 
-        assert data == app.version, \
-            f"Expected version {app.version.hex()} but got {data.hex()}"
+        app.checker.check_version(data)
 
         app.quit()

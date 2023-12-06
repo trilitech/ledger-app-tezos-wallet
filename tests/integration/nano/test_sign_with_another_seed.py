@@ -13,8 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from utils.apdu import *
-from utils.app import *
+from pathlib import Path
+
+from utils.account import Account, SIGNATURE_TYPE
+from utils.app import nano_app, Screen
+from utils.message import Message
 
 # Operation (0): Transaction
 # Fee: 0.05 XTZ
@@ -29,13 +32,21 @@ if __name__ == "__main__":
     seed = "around dignity equal spread between young lawsuit interest climb wide that panther rather mom snake scene ecology reunion ice illegal brush"
     with nano_app(seed) as app:
 
-        data = app.sign_with_hash(DEFAULT_ACCOUNT,
-                                  "0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316",
-                                  path=test_name)
+        account = Account("m/44'/1729'/0'/0'",
+                          SIGNATURE_TYPE.ED25519,
+                          "edpkupntwMyERpYniuK1GDWquPaPU1wYsQgMirJPLGmC4Y5dMUsQNo")
 
-        app.check_signature_with_hash(
-            hash="f6d5fa0e79cac216e25104938ac873ca17ee9d7f06763719293b413cf2ed475c",
-            signature="7365f6549fa50c31591f348efe2684982a038fe44458077e72d5cf7b4284d887f72a8e3842f9595fee7176c6062cdfdfae132c9330a77680958c652731e99a0e",
+        message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316")
+
+        data = app.sign(account,
+                        message,
+                        with_hash=True,
+                        path=test_name)
+
+        app.checker.check_signature(
+            account=account,
+            message=message,
+            with_hash=True,
             data=data)
 
         app.quit()

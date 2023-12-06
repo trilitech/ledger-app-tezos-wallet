@@ -13,8 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from utils.apdu import *
-from utils.app import *
+from pathlib import Path
+
+from utils.app import nano_app, Screen, DEFAULT_ACCOUNT
+from utils.message import Message
 
 # Operation (0): Set deposit limit
 # Fee: 0.06 XTZ
@@ -27,13 +29,17 @@ if __name__ == "__main__":
 
         app.assert_screen(Screen.Home)
 
-        data = app.sign_with_hash(DEFAULT_ACCOUNT,
-                                  "03000000000000000000000000000000000000000000000000000000000000000070027c252d3806e6519ed064026bdb98edf866117331e0d40304f80204ffa09c01",
-                                  path=test_name)
+        message = Message.from_bytes("03000000000000000000000000000000000000000000000000000000000000000070027c252d3806e6519ed064026bdb98edf866117331e0d40304f80204ffa09c01")
 
-        app.check_signature_with_hash(
-            hash="8b4456454de1b3c41f5ea45e711893df26fabe9427048b95fda4276d5cf76ff6",
-            signature="069c2cd9fe167a52cc21611a0f59465784f4fce94211aab9fee6309c8e8bf5cbcf1a3e3102d0825b5acaf341656b1c2078850f7d3a6749cc47f74688fbe2c30e",
+        data = app.sign(DEFAULT_ACCOUNT,
+                        message,
+                        with_hash=True,
+                        path=test_name)
+
+        app.checker.check_signature(
+            account=DEFAULT_ACCOUNT,
+            message=message,
+            with_hash=True,
             data=data)
 
         app.quit()

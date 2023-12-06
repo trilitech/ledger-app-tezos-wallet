@@ -13,8 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from utils.apdu import *
-from utils.app import *
+from pathlib import Path
+
+from utils.app import nano_app, Screen, DEFAULT_ACCOUNT
+from utils.message import Message
 
 # Operation (0): Register global constant
 # Fee: 0.01 XTZ
@@ -27,13 +29,17 @@ if __name__ == "__main__":
 
         app.assert_screen(Screen.Home)
 
-        data = app.sign_with_hash(DEFAULT_ACCOUNT,
-                                  "0300000000000000000000000000000000000000000000000000000000000000006f00ffdd6102321bc251e4a5190ad5b12b251069d9b4904e0203040000000a07070100000001310002",
-                                  path=test_name)
+        message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000006f00ffdd6102321bc251e4a5190ad5b12b251069d9b4904e0203040000000a07070100000001310002")
 
-        app.check_signature_with_hash(
-            hash="bb38ac8ad80f5280b3f4e006d5656a8c8f6192994c86dcd160e4f5977332ccb7",
-            signature="528f3b3ff8b2ed2095f23add2c7409b05cbfdf1dae96ad7436083429bad30cd867912a42fe9f5eddc153cb847f13ffa4e7979ce78b833f8c7cbf3b8345591802",
+        data = app.sign(DEFAULT_ACCOUNT,
+                        message,
+                        with_hash=True,
+                        path=test_name)
+
+        app.checker.check_signature(
+            account=DEFAULT_ACCOUNT,
+            message=message,
+            with_hash=True,
             data=data)
 
         app.quit()

@@ -14,42 +14,72 @@
 # limitations under the License.
 
 import argparse
-import base58
 import git
-import os
-import sys
 import time
-
 from contextlib import contextmanager
 from enum import Enum
 from multiprocessing import Process, Queue
 from pathlib import Path
 from requests.exceptions import ConnectionError
-from typing import Callable, Generator, List, Optional, Tuple, Union
-
 from ragger.backend import SpeculosBackend
 from ragger.error import ExceptionRAPDU
 from ragger.firmware import Firmware
 from ragger.navigator import NavInsID, NanoNavigator
+from typing import Callable, Generator, List, Optional, Tuple, Union
 
-file_path=os.path.abspath(__file__)
-dir_path=os.path.dirname(file_path)
-sys.path.append(dir_path)
+from .message import Message
+from .account import Account, SIGNATURE_TYPE
+from .backend import StatusCode, TezosBackend, APP_KIND
 
-import check_tlv_signature
-from apdu import *
+version: Tuple[int, int, int] = (3, 0, 0)
+
+class TezosAPDUChecker:
+
+    def __init__(self, app_kind: APP_KIND):
+        self.app_kind = app_kind
+
+    @property
+    def commit(self) -> bytes:
+        repo = git.Repo(".")
+        commit = repo.head.commit.hexsha[:8]
+        if repo.is_dirty(): commit += "*"
+        return bytes.fromhex(commit.encode('utf-8').hex() + "00")
+
+    @property
+    def version_bytes(self) -> bytes:
+        return \
+            self.app_kind.to_bytes(1, byteorder='big') + \
+            version[0].to_bytes(1, byteorder='big') + \
+            version[1].to_bytes(1, byteorder='big') + \
+            version[2].to_bytes(1, byteorder='big')
+
+    def check_commit(self, commit: bytes) -> None:
+        assert commit == self.commit, \
+            f"Expected commit {self.commit.hex()} but got {commit.hex()}"
+
+    def check_version(self, version: bytes) -> None:
+        assert version == self.version_bytes, \
+            f"Expected version {self.version_bytes.hex()} but got {version.hex()}"
+
+    def check_public_key(self,
+                         account: Account,
+                         public_key: bytes) -> None:
+        account.check_public_key(public_key)
+
+    def check_signature(self,
+                        account: Account,
+                        message: Message,
+                        with_hash: bool,
+                        data: bytes) -> None:
+        if with_hash:
+            assert data.startswith(message.hash), \
+                f"Expected a starting hash {message.hash.hex()} but got {data.hex()}"
+
+            data = data[len(message.hash):]
+
+        account.check_signature(data, message.bytes)
 
 MAX_ATTEMPTS = 50
-
-class Screen(str, Enum):
-    Home = "home"
-    Blind_home = "blind_home"
-    Version = "version"
-    Settings = "settings"
-    Settings_blind_disabled = "settings_blind_signing_disabled"
-    Settings_blind_enabled = "settings_blind_signing_enabled"
-    Settings_back = "back"
-    Quit = "quit"
 
 def with_retry(f, attempts=MAX_ATTEMPTS):
     while True:
@@ -111,15 +141,33 @@ class SpeculosTezosBackend(TezosBackend, SpeculosBackend):
             self._client.process = process
             return self
 
-version: Tuple[int, int, int] = (3, 0, 0)
+class Screen(str, Enum):
+    Home = "home"
+    Blind_home = "blind_home"
+    Version = "version"
+    Settings = "settings"
+    Settings_blind_disabled = "settings_blind_signing_disabled"
+    Settings_blind_enabled = "settings_blind_signing_enabled"
+    Settings_back = "back"
+    Quit = "quit"
+
+class Screen_text(str, Enum):
+    Home = "Application"
+    Public_key_approve = "Approve"
+    Public_key_reject = "Reject"
+    Sign_accept = "Accept"
+    Sign_reject = "Reject"
+    Blind_switch = "Switch to"
+    Back_home = "Home"
 
 class TezosAppScreen():
 
     def __init__(self,
                  backend: SpeculosTezosBackend,
-                 version_tag: VERSION_TAG,
+                 app_kind: APP_KIND,
                  golden_run: bool):
         self.backend = backend
+        self.checker = TezosAPDUChecker(app_kind)
 
         self.path: Path = Path(__file__).resolve().parent.parent
         self.snapshots_dir: Path = self.path / "snapshots" / backend.firmware.name
@@ -129,16 +177,6 @@ class TezosAppScreen():
         if not self.tmp_snapshots_dir.is_dir():
             self.tmp_snapshots_dir.mkdir(parents=True)
         self.snapshotted: List[str] = []
-
-        repo = git.Repo(".")
-        commit = repo.head.commit.hexsha[:8]
-        if repo.is_dirty(): commit += "*"
-        self.commit = bytes.fromhex(commit.encode('utf-8').hex() + "00")
-        self.version = \
-            version_tag.to_bytes(1, byteorder='big') + \
-            version[0].to_bytes(1, byteorder='big') + \
-            version[1].to_bytes(1, byteorder='big') + \
-            version[2].to_bytes(1, byteorder='big')
 
         self.golden_run = golden_run
         self.navigator = NanoNavigator(backend, backend.firmware, golden_run)
@@ -208,7 +246,7 @@ class TezosAppScreen():
         self.backend.right_click()
         self._quit()
 
-    def navigate_until_text(self, text: str, path: Union[str, Path]) -> None:
+    def navigate_until_text(self, text: Screen_text, path: Union[str, Path]) -> None:
         if isinstance(path, str): path = Path(path)
         self.navigator.\
             navigate_until_text_and_compare(NavInsID.RIGHT_CLICK,
@@ -230,7 +268,7 @@ class TezosAppScreen():
 
     def _failing_send(self,
                       send: Callable[[], bytes],
-                      text: str,
+                      text: Screen_text,
                       status_code: StatusCode,
                       path: Union[str, Path]) -> None:
         def expected_failure_send() -> bytes:
@@ -247,182 +285,96 @@ class TezosAppScreen():
                           path: Union[str, Path]) -> bytes:
 
         return send_and_navigate(
-            send=(lambda: self.backend.prompt_public_key(account)),
-            navigate=(lambda: self.navigate_until_text("Approve", path)))
-
-    def check_public_key(self,
-                         account: Account,
-                         data: bytes) -> None:
-
-        # Get the public_key without prefix
-        public_key = base58.b58decode_check(account.public_key)
-        if account.sig_type in [SIGNATURE_TYPE.ED25519, SIGNATURE_TYPE.BIP32_ED25519]:
-            prefix = bytes.fromhex("0d0f25d9") # edpk(54)
-        elif account.sig_type == SIGNATURE_TYPE.SECP256K1:
-            prefix = bytes.fromhex("03fee256") # sppk(55)
-        elif account.sig_type == SIGNATURE_TYPE.SECP256R1:
-            prefix = bytes.fromhex("03b28b7f") # p2pk(55)
-        else:
-            assert False, \
-                "Account do not have a right signature type: {account.sig_type}"
-        assert public_key.startswith(prefix), \
-            "Expected prefix {prefix.hex()} but got {public_key.hex()}"
-        public_key = public_key[len(prefix):]
-        if account.sig_type in [SIGNATURE_TYPE.SECP256K1, SIGNATURE_TYPE.SECP256R1]:
-            assert public_key[0] in [0x02, 0x03], \
-                "Expected a prefix kind of 0x02 or 0x03 but got {public_key[0]}"
-            public_key = public_key[1:]
-
-        # `data` should be:
-        # length + kind + pk
-        # kind : 02=odd, 03=even, 04=uncompressed
-        # pk length = 32 for compressed, 64 for uncompressed
-        assert len(data) == data[0] + 1
-        if data[1] == 0x04: # public key uncompressed
-            assert data[0] == 1 + 32 + 32
-        elif data[1] in [0x02, 0x03]: # public key even or odd (compressed)
-            assert data[0] == 1 + 32
-        else:
-            assert False, \
-                "Expected a prefix kind of 0x02, 0x03 or 0x04 but got {data[1]}"
-        data = data[2:2+32]
-
-        assert data == public_key, \
-            f"Expected public key {public_key.hex()} but got {data.hex()}"
+            send=(lambda: self.backend.get_public_key(account, with_prompt=True)),
+            navigate=(lambda: self.navigate_until_text(Screen_text.Public_key_approve, path)))
 
     def reject_public_key(self,
                           account: Account,
                           path: Union[str, Path]) -> None:
 
         self._failing_send(
-            send=(lambda: self.backend.prompt_public_key(account)),
-            text="Reject",
+            send=(lambda: self.backend.get_public_key(account, with_prompt=True)),
+            text=Screen_text.Public_key_reject,
             status_code=StatusCode.REJECT,
             path=path)
 
     def sign(self,
              account: Account,
-             message: Union[str, bytes],
+             message: Message,
+             with_hash: bool,
              path: Union[str, Path]) -> bytes:
 
         return send_and_navigate(
-            send=(lambda: self.backend.sign(account, message)),
-            navigate=(lambda: self.navigate_until_text("Accept", path)))
-
-    def check_signature(self,
-                        signature: Union[str, bytes],
-                        data: bytes) -> None:
-        if isinstance(signature, str): signature = bytes.fromhex(signature)
-
-        assert data == signature, \
-            f"Expected signature {signature.hex()} but got {data.hex()}"
-
-    def check_tlv_signature(self,
-                            message: str,
-                            pk: str,
-                            data: bytes) -> None:
-        check_tlv_signature.check_signature(data, pk, message)
-
-    def sign_with_hash(self,
-                       account: Account,
-                       message: Union[str, bytes],
-                       path: Union[str, Path]) -> bytes:
-
-        return send_and_navigate(
-            send=(lambda: self.backend.sign_with_hash(account, message)),
-            navigate=(lambda: self.navigate_until_text("Accept", path)))
-
-    def check_signature_with_hash(self,
-                                 hash: Union[str, bytes],
-                                 signature: Union[str, bytes],
-                                 data: bytes) -> None:
-        if isinstance(hash, str): hash = bytes.fromhex(hash)
-        if isinstance(signature, str): signature = bytes.fromhex(signature)
-
-        assert data == hash + signature, \
-            f"Expected hash {hash.hex()} and signature {signature.hex()} but got {data.hex()}"
-
-    def check_tlv_signature_with_hash(self,
-                                      hash: Union[str, bytes],
-                                      message: str,
-                                      pk: str,
-                                      data: bytes) -> None:
-        if isinstance(hash, str): hash = bytes.fromhex(hash)
-
-        assert data.startswith(hash), \
-            f"Expected start with hash {hash.hex()} but got {data.hex()}"
-        data = data[len(hash):]
-        check_tlv_signature.check_signature(data.hex(), pk, message)
+            send=(lambda: self.backend.sign(account, message, with_hash)),
+            navigate=(lambda: self.navigate_until_text(Screen_text.Sign_accept, path)))
 
     def blind_sign(self,
                    account: Account,
-                   message: Union[str, bytes],
+                   message: Message,
                    with_hash: bool,
                    path: Union[str, Path]) -> bytes:
 
         if isinstance(path, str): path = Path(path)
-        sign = self.backend.sign_with_hash if with_hash else self.backend.sign
 
         self.setup_blind_signing()
 
         def navigate() -> None:
-            self.navigate_until_text("Switch to", path / "clear")
-            self.navigate_until_text("Accept", path / "blind")
+            self.navigate_until_text(Screen_text.Blind_switch, path / "clear")
+            self.navigate_until_text(Screen_text.Sign_accept, path / "blind")
 
         return send_and_navigate(
-            send=(lambda: sign(account, message)),
+            send=(lambda: self.backend.sign(account, message, with_hash)),
             navigate=navigate)
 
     def _failing_signing(self,
                          account: Account,
-                         message: Union[str, bytes],
+                         message: Message,
                          with_hash: bool,
-                         text: str,
+                         text: Screen_text,
                          status_code: StatusCode,
                          path: Union[str, Path]) -> None:
-        sign = self.backend.sign_with_hash if with_hash else self.backend.sign
 
         self._failing_send(
-            send=(lambda: sign(account, message)),
+            send=(lambda: self.backend.sign(account, message, with_hash)),
             text=text,
             status_code=status_code,
             path=path)
 
     def reject_signing(self,
                        account: Account,
-                       message: Union[str, bytes],
+                       message: Message,
                        with_hash: bool,
                        path: Union[str, Path]) -> None:
         self._failing_signing(
             account,
             message,
             with_hash,
-            text="Reject",
+            text=Screen_text.Sign_reject,
             status_code=StatusCode.REJECT,
             path=path)
 
     def hard_failing_signing(self,
                              account: Account,
-                             message: Union[str, bytes],
+                             message: Message,
                              with_hash: bool,
                              status_code: StatusCode,
                              path: Union[str, Path]) -> None:
         self._failing_signing(account,
                               message,
                               with_hash,
-                              "Application",
+                              Screen_text.Home,
                               status_code,
                               path)
 
     def parsing_error_signing(self,
                               account: Account,
-                              message: Union[str, bytes],
+                              message: Message,
                               with_hash: bool,
                               path: Union[str, Path]) -> None:
         self._failing_signing(account,
                               message,
                               with_hash,
-                              "Home",
+                              Screen_text.Back_home,
                               StatusCode.PARSE_ERROR,
                               path)
 
@@ -470,5 +422,5 @@ def nano_app(seed: str = DEFAULT_SEED) -> Generator[TezosAppScreen, None, None]:
                                    firmware,
                                    port=args.port,
                                    args=speculos_args)
-    with TezosAppScreen(backend, VERSION_TAG.WALLET, args.golden_run) as app:
+    with TezosAppScreen(backend, APP_KIND.WALLET, args.golden_run) as app:
         yield app

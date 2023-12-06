@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # Copyright 2023 Functori <contact@functori.com>
 
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,16 +12,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from pathlib import Path
+from hashlib import blake2b
+from typing import Union
 
-from utils.app import nano_app, Screen, DEFAULT_ACCOUNT
+class Message:
 
-if __name__ == "__main__":
-    test_name = Path(__file__).stem
-    with nano_app() as app:
+    HASH_SIZE = 32
 
-        app.assert_screen(Screen.Home)
+    def __init__(self, value: bytes):
+        self.value: bytes = value
 
-        app.reject_public_key(DEFAULT_ACCOUNT, test_name)
+    @classmethod
+    def from_bytes(self, value: Union[str, bytes]) -> 'Message':
+        if isinstance(value, str): value = bytes.fromhex(value)
+        return Message(value)
 
-        app.quit()
+    @property
+    def hash(self) -> bytes:
+        return blake2b(
+            self.value,
+            digest_size=Message.HASH_SIZE
+        ).digest()
+
+    @property
+    def bytes(self) -> bytes:
+        return self.value

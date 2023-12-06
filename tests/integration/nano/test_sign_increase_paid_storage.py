@@ -13,8 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from utils.apdu import *
-from utils.app import *
+from pathlib import Path
+
+from utils.app import nano_app, Screen, DEFAULT_ACCOUNT
+from utils.message import Message
 
 # Operation (0): Increase paid storage
 # Fee: 0.01 XTZ
@@ -28,13 +30,17 @@ if __name__ == "__main__":
 
         app.assert_screen(Screen.Home)
 
-        data = app.sign_with_hash(DEFAULT_ACCOUNT,
-                                  "0300000000000000000000000000000000000000000000000000000000000000007100ffdd6102321bc251e4a5190ad5b12b251069d9b4904e0203040501000000000000000000000000000000000000000000",
-                                  path=test_name)
+        message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000007100ffdd6102321bc251e4a5190ad5b12b251069d9b4904e0203040501000000000000000000000000000000000000000000")
 
-        app.check_signature_with_hash(
-            hash="48ab3de08b4a53ffe8cb8984cb5e0174082496321d5f9644ec8a3f01f3b2176f",
-            signature="6782addb600b8b796195b2591e4f240091d478214661ff6728b392f0a84d8eca66ddcb5d5c83838642c0335f7d6b797c835ea8f465550e8c1d5ec64d87193b07",
+        data = app.sign(DEFAULT_ACCOUNT,
+                        message,
+                        with_hash=True,
+                        path=test_name)
+
+        app.checker.check_signature(
+            account=DEFAULT_ACCOUNT,
+            message=message,
+            with_hash=True,
             data=data)
 
         app.quit()

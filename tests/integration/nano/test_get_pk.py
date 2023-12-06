@@ -13,8 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from utils.apdu import *
-from utils.app import *
+from utils.account import Account, SIGNATURE_TYPE
+from utils.app import nano_app, Screen
 
 if __name__ == "__main__":
     with nano_app() as app:
@@ -38,8 +38,8 @@ if __name__ == "__main__":
 
             app.assert_screen(Screen.Home)
 
-            data = app.backend.get_public_key(account)
+            data = app.backend.get_public_key(account, with_prompt=False)
 
-            app.check_public_key(account, data)
+            app.checker.check_public_key(account, data)
 
         app.quit()

@@ -13,8 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from utils.apdu import *
-from utils.app import *
+from multiprocessing import Process, Queue
+from pathlib import Path
+
+from utils.app import nano_app, Screen, Screen_text, DEFAULT_ACCOUNT
+from utils.message import Message
 
 # Expression: {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{42}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}
 
@@ -24,13 +27,13 @@ if __name__ == "__main__":
 
         app.assert_screen(Screen.Home)
 
-        expression="0502000000f702000000f202000000ed02000000e802000000e302000000de02000000d902000000d402000000cf02000000ca02000000c502000000c002000000bb02000000b602000000b102000000ac02000000a702000000a2020000009d02000000980200000093020000008e02000000890200000084020000007f020000007a02000000750200000070020000006b02000000660200000061020000005c02000000570200000052020000004d02000000480200000043020000003e02000000390200000034020000002f020000002a02000000250200000020020000001b02000000160200000011020000000c02000000070200000002002a"
+        expression = Message.from_bytes("0502000000f702000000f202000000ed02000000e802000000e302000000de02000000d902000000d402000000cf02000000ca02000000c502000000c002000000bb02000000b602000000b102000000ac02000000a702000000a2020000009d02000000980200000093020000008e02000000890200000084020000007f020000007a02000000750200000070020000006b02000000660200000061020000005c02000000570200000052020000004d02000000480200000043020000003e02000000390200000034020000002f020000002a02000000250200000020020000001b02000000160200000011020000000c02000000070200000002002a")
 
         if app.backend.firmware.device == "nanos":
             app.setup_blind_signing()
 
             def send(result_queue: Queue) -> None:
-                res = app.backend.sign_with_hash(DEFAULT_ACCOUNT, expression)
+                res = app.backend.sign(DEFAULT_ACCOUNT, expression, with_hash=True)
                 result_queue.put(res)
             def assert_screen_i(i):
                 app.assert_screen(f"{str(i).zfill(5)}", path=(Path(test_name) / "clear"))
@@ -39,7 +42,7 @@ if __name__ == "__main__":
             send_process = Process(target=send, args=(result_queue,))
             send_process.start()
 
-            app.backend.wait_for_text_not_on_screen("Application")
+            app.backend.wait_for_text_not_on_screen(Screen_text.Home)
 
             for i in range(4):
                 assert_screen_i(i)
@@ -49,7 +52,7 @@ if __name__ == "__main__":
             assert_screen_i(i+1)
 
             def blind_navigate() -> None:
-                app.navigate_until_text("Accept", Path(test_name) / "blind")
+                app.navigate_until_text(Screen_text.Sign_accept, Path(test_name) / "blind")
             navigate_process = Process(target=blind_navigate)
             navigate_process.start()
 
@@ -68,9 +71,10 @@ if __name__ == "__main__":
                                   with_hash=True,
                                   path=test_name)
 
-        app.check_signature_with_hash(
-            hash="93070b00990e4cf29c31f6497307bea0ad86a9d0dc08dba8b607e8dc0e23652f",
-            signature="8309e41ed87ac1d33006806b688cfcff7632c4fbe499ff3ea4983ae4f06dea7790ec25db045689bca2c63967b5c563aabff86c4ef163bff92af3bb2ca9392d09",
+        app.checker.check_signature(
+            account=DEFAULT_ACCOUNT,
+            message=expression,
+            with_hash=True,
             data=data)
 
         app.quit()

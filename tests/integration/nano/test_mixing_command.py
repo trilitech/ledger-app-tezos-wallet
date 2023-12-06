@@ -13,8 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from utils.apdu import *
-from utils.app import *
+from utils.app import nano_app, Screen, DEFAULT_ACCOUNT
+from utils.backend import INS, StatusCode
 
 if __name__ == "__main__":
     with nano_app() as app:
@@ -41,13 +41,13 @@ if __name__ == "__main__":
 
         app.backend._ask_sign(INS.SIGN, DEFAULT_ACCOUNT)
         with app.expect_apdu_failure(StatusCode.UNEXPECTED_STATE):
-            app.backend.prompt_public_key(DEFAULT_ACCOUNT)
+            app.backend.get_public_key(DEFAULT_ACCOUNT, with_prompt=True)
 
         app.assert_screen(Screen.Home)
 
         app.backend._ask_sign(INS.SIGN, DEFAULT_ACCOUNT)
         with app.expect_apdu_failure(StatusCode.UNEXPECTED_STATE):
-            app.backend.get_public_key(DEFAULT_ACCOUNT)
+            app.backend.get_public_key(DEFAULT_ACCOUNT, with_prompt=False)
 
         app.assert_screen(Screen.Home)
 

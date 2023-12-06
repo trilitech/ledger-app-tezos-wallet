@@ -13,8 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from utils.apdu import *
-from utils.app import *
+from pathlib import Path
+
+from utils.app import nano_app, Screen, DEFAULT_ACCOUNT
+from utils.message import Message
 
 # Operation (0): Transfer ticket
 # Fee: 0.01 XTZ
@@ -32,13 +34,17 @@ if __name__ == "__main__":
 
         app.assert_screen(Screen.Home)
 
-        data = app.sign_with_hash(DEFAULT_ACCOUNT,
-                                  "0300000000000000000000000000000000000000000000000000000000000000009e00ffdd6102321bc251e4a5190ad5b12b251069d9b4904e02030400000002037a0000000a076501000000013100020000ffdd6102321bc251e4a5190ad5b12b251069d9b401010000000000000000000000000000000000000000000000000764656661756c74",
-                                  path=test_name)
+        message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000009e00ffdd6102321bc251e4a5190ad5b12b251069d9b4904e02030400000002037a0000000a076501000000013100020000ffdd6102321bc251e4a5190ad5b12b251069d9b401010000000000000000000000000000000000000000000000000764656661756c74")
 
-        app.check_signature_with_hash(
-            hash="9c4f36db1d1258b08c88844f2f79b73361f5a9b3ff5fe89261cdce9827569635",
-            signature="25fbe358a31f56759eebdd9c137960ed24a14352d4c64e8792e2402b31360734ad9de6d7dd45aed49c78070b7718cf8469de0be71f7dafd2601900b3eecd350b",
+        data = app.sign(DEFAULT_ACCOUNT,
+                        message,
+                        with_hash=True,
+                        path=test_name)
+
+        app.checker.check_signature(
+            account=DEFAULT_ACCOUNT,
+            message=message,
+            with_hash=True,
             data=data)
 
         app.quit()

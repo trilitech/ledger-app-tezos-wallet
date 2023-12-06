@@ -21,8 +21,10 @@ dir_path=os.path.dirname(file_path)
 root_path=os.path.dirname(dir_path)
 sys.path.append(root_path)
 
-from utils.apdu import *
-from utils.app import *
+from pathlib import Path
+
+from utils.app import nano_app, Screen, DEFAULT_ACCOUNT
+from utils.message import Message
 
 # Operation (0): Transfer ticket
 # Fee: 0.01 XTZ
@@ -44,13 +46,17 @@ if __name__ == "__main__":
 
         app.assert_screen(Screen.Home)
 
-        data = app.sign_with_hash(DEFAULT_ACCOUNT,
-                                  "0300000000000000000000000000000000000000000000000000000000000000009e00ffdd6102321bc251e4a5190ad5b12b251069d9b4904e02030400000002037a0000000a076501000000013100020000ffdd6102321bc251e4a5190ad5b12b251069d9b4010100000000000000000000000000000000000000000000000008530a0a530a530a53",
-                                  path=test_name)
+        message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000009e00ffdd6102321bc251e4a5190ad5b12b251069d9b4904e02030400000002037a0000000a076501000000013100020000ffdd6102321bc251e4a5190ad5b12b251069d9b4010100000000000000000000000000000000000000000000000008530a0a530a530a53")
 
-        app.check_signature_with_hash(
-            hash="ba220e5b9af0fa350d127665049ef6dcc85304a6bd62fcc5e4f12752092af1f7",
-            signature="03399e1639e7884f86b83714e5eea2acdc56d3449f029e7258ef3bbbd35f449105d9545c3c62f7ffa088d3dfebcfa38cd316e2b4d4067cf288e9e275b8fe6901",
+        data = app.sign(DEFAULT_ACCOUNT,
+                        message,
+                        with_hash=True,
+                        path=test_name)
+
+        app.checker.check_signature(
+            account=DEFAULT_ACCOUNT,
+            message=message,
+            with_hash=True,
             data=data)
 
         app.quit()

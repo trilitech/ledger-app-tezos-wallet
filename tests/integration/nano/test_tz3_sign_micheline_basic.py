@@ -13,8 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from utils.apdu import *
-from utils.app import *
+from pathlib import Path
+
+from utils.account import Account, SIGNATURE_TYPE
+from utils.app import nano_app
+from utils.message import Message
 
 # Expression: {"CACA";"POPO";"BOUDIN"}
 
@@ -25,15 +28,18 @@ if __name__ == "__main__":
         account = Account("m/44'/1729'/0'/0'",
                           SIGNATURE_TYPE.SECP256R1,
                           "p2pk67fq5pzuMMABZ9RDrooYbLrgmnQbLt8z7PTGM9mskf7LXS5tdBG")
-        message="05020000001d0100000004434143410100000004504f504f0100000006424f5544494e"
-        data = app.sign_with_hash(account,
-                                  message,
-                                  path=test_name)
 
-        app.check_tlv_signature_with_hash(
-            hash="84e475e38707140e725019e91f036e341fa4a2c8752b7828f37bbf91061b0e0a",
+        message = Message.from_bytes("05020000001d0100000004434143410100000004504f504f0100000006424f5544494e")
+
+        data = app.sign(account,
+                        message,
+                        with_hash=True,
+                        path=test_name)
+
+        app.checker.check_signature(
+            account=account,
             message=message,
-            pk="p2pk67fq5pzuMMABZ9RDrooYbLrgmnQbLt8z7PTGM9mskf7LXS5tdBG",
+            with_hash=True,
             data=data)
 
         app.quit()

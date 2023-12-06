@@ -13,8 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from utils.apdu import *
-from utils.app import *
+from pathlib import Path
+
+from utils.app import nano_app, Screen, DEFAULT_ACCOUNT
+from utils.message import Message
 
 # Operation (0): Proposals
 # Source: tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa
@@ -28,13 +30,17 @@ if __name__ == "__main__":
 
         app.assert_screen(Screen.Home)
 
-        data = app.sign_with_hash(DEFAULT_ACCOUNT,
-                                  "0300000000000000000000000000000000000000000000000000000000000000000500ffdd6102321bc251e4a5190ad5b12b251069d9b400000020000000400bcd7b2cadcd87ecb0d5c50330fb59feed7432bffecede8a09a2b86cfb33847b0bcd7b2cadcd87ecb0d5c50330fb59feed7432bffecede8a09a2b86dac301a2d",
-                                  path=test_name)
+        message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000000500ffdd6102321bc251e4a5190ad5b12b251069d9b400000020000000400bcd7b2cadcd87ecb0d5c50330fb59feed7432bffecede8a09a2b86cfb33847b0bcd7b2cadcd87ecb0d5c50330fb59feed7432bffecede8a09a2b86dac301a2d")
 
-        app.check_signature_with_hash(
-            hash="71f5f45b1ccf3f57647f84465be2dd5e049c6b3cf1b67a5db15c33fc89f1e660",
-            signature="d23d7ffe172d4a5c66e48bd2384cea19367d9255da631339ba8b12a071e697b9481b101f72607b3dd8f8dc736624ae9749adb97a1ff1a2ad2a31a1ac4645180e",
+        data = app.sign(DEFAULT_ACCOUNT,
+                        message,
+                        with_hash=True,
+                        path=test_name)
+
+        app.checker.check_signature(
+            account=DEFAULT_ACCOUNT,
+            message=message,
+            with_hash=True,
             data=data)
 
         app.quit()
