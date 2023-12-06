@@ -49,175 +49,176 @@ const char *const tz_operation_parser_step_name[] = {"MAGIC",
                                                      "READ_PROTOS"};
 #endif
 
+// clang-format off
 const tz_operation_field_descriptor proposals_fields[] = {
-  // Name,       Kind,                      Req,  Skip,  None
-    {"Source",   TZ_OPERATION_FIELD_PKH,    true, false, false},
-    {"Period",   TZ_OPERATION_FIELD_INT32,  true, false, false},
-    {"Proposal", TZ_OPERATION_FIELD_PROTOS, true, false, false},
-    {NULL,       0,                         0,    0,     0    }
+  // Name,       Kind,                      Req,  Skip,  None,  Complex
+    {"Source",   TZ_OPERATION_FIELD_PKH,    true, false, false, false},
+    {"Period",   TZ_OPERATION_FIELD_INT32,  true, false, false, false},
+    {"Proposal", TZ_OPERATION_FIELD_PROTOS, true, false, false, false},
+    {NULL,       0,                         0,    0,     0,     0    }
 };
 
 const tz_operation_field_descriptor ballot_fields[] = {
-  // Name,       Kind,                      Req,  Skip,  None
-    {"Source",   TZ_OPERATION_FIELD_PKH,    true, false, false},
-    {"Period",   TZ_OPERATION_FIELD_INT32,  true, false, false},
-    {"Proposal", TZ_OPERATION_FIELD_PROTO,  true, false, false},
-    {"Ballot",   TZ_OPERATION_FIELD_BALLOT, true, false, false},
-    {NULL,       0,                         0,    0,     0    }
+  // Name,       Kind,                      Req,  Skip,  None,  Complex
+    {"Source",   TZ_OPERATION_FIELD_PKH,    true, false, false, false},
+    {"Period",   TZ_OPERATION_FIELD_INT32,  true, false, false, false},
+    {"Proposal", TZ_OPERATION_FIELD_PROTO,  true, false, false, false},
+    {"Ballot",   TZ_OPERATION_FIELD_BALLOT, true, false, false, false},
+    {NULL,       0,                         0,    0,     0,     0    }
 };
 
 const tz_operation_field_descriptor failing_noop_fields[] = {
-  // Name,      Kind,                      Req,  Skip,  None
-    {"Message", TZ_OPERATION_FIELD_BINARY, true, false, false},
-    {NULL,      0,                         0,    0,     0    }
+  // Name,      Kind,                      Req,  Skip,  None,  Complex
+    {"Message", TZ_OPERATION_FIELD_BINARY, true, false, false, false},
+    {NULL,      0,                         0,    0,     0,     0    }
 };
 
 const tz_operation_field_descriptor transaction_fields[] = {
-  // Name,            Kind,                           Req,   Skip,  None
-    {"Source",        TZ_OPERATION_FIELD_SOURCE,      true,  true,  false},
-    {"Fee",           TZ_OPERATION_FIELD_FEE,         true,  false, false},
-    {"Counter",       TZ_OPERATION_FIELD_NAT,         true,  true,  false},
-    {"Gas",           TZ_OPERATION_FIELD_NAT,         true,  true,  false},
-    {"Storage limit", TZ_OPERATION_FIELD_NAT,         true,  false, false},
-    {"Amount",        TZ_OPERATION_FIELD_AMOUNT,      true,  false, false},
-    {"Destination",   TZ_OPERATION_FIELD_DESTINATION, true,  false, false},
-    {"Parameter",     TZ_OPERATION_FIELD_PARAMETER,   false, false, false},
-    {NULL,            0,                              0,     0,     0    }
+  // Name,            Kind,                           Req,   Skip,  None,  Complex
+    {"Source",        TZ_OPERATION_FIELD_SOURCE,      true,  true,  false, false},
+    {"Fee",           TZ_OPERATION_FIELD_FEE,         true,  false, false, false},
+    {"Counter",       TZ_OPERATION_FIELD_NAT,         true,  true,  false, false},
+    {"Gas",           TZ_OPERATION_FIELD_NAT,         true,  true,  false, false},
+    {"Storage limit", TZ_OPERATION_FIELD_NAT,         true,  false, false, false},
+    {"Amount",        TZ_OPERATION_FIELD_AMOUNT,      true,  false, false, false},
+    {"Destination",   TZ_OPERATION_FIELD_DESTINATION, true,  false, false, false},
+    {"Parameter",     TZ_OPERATION_FIELD_PARAMETER,   false, false, false, false},
+    {NULL,            0,                              0,     0,     0,     0    }
 };
 
 const tz_operation_field_descriptor reveal_fields[] = {
-  // Name,            Kind,                      Req,  Skip,  None
-    {"Source",        TZ_OPERATION_FIELD_SOURCE, true, true,  false},
-    {"Fee",           TZ_OPERATION_FIELD_FEE,    true, false, false},
-    {"Counter",       TZ_OPERATION_FIELD_NAT,    true, true,  false},
-    {"Gas",           TZ_OPERATION_FIELD_NAT,    true, true,  false},
-    {"Storage limit", TZ_OPERATION_FIELD_NAT,    true, false, false},
-    {"Public key",    TZ_OPERATION_FIELD_PK,     true, false, false},
-    {NULL,            0,                         0,    0,     0    }
+  // Name,            Kind,                      Req,  Skip,  None,  Complex
+    {"Source",        TZ_OPERATION_FIELD_SOURCE, true, true,  false, false},
+    {"Fee",           TZ_OPERATION_FIELD_FEE,    true, false, false, false},
+    {"Counter",       TZ_OPERATION_FIELD_NAT,    true, true,  false, false},
+    {"Gas",           TZ_OPERATION_FIELD_NAT,    true, true,  false, false},
+    {"Storage limit", TZ_OPERATION_FIELD_NAT,    true, false, false, false},
+    {"Public key",    TZ_OPERATION_FIELD_PK,     true, false, false, false},
+    {NULL,            0,                         0,    0,     0,     0    }
 };
 
 const tz_operation_field_descriptor delegation_fields[] = {
-  // Name,           Kind,                        Req,  Skip,  None
-    {"Source",        TZ_OPERATION_FIELD_SOURCE, true,  true,  false},
-    {"Fee",           TZ_OPERATION_FIELD_FEE,    true,  false, false},
-    {"Counter",       TZ_OPERATION_FIELD_NAT,    true,  true,  false},
-    {"Gas",           TZ_OPERATION_FIELD_NAT,    true,  true,  false},
-    {"Storage limit", TZ_OPERATION_FIELD_NAT,    true,  false, false},
-    {"Delegate",      TZ_OPERATION_FIELD_PKH,    false, false, true },
-    {NULL,            0,                         0,     0,     0    }
+  // Name,           Kind,                        Req,  Skip,  None,  Complex
+    {"Source",        TZ_OPERATION_FIELD_SOURCE, true,  true,  false, false},
+    {"Fee",           TZ_OPERATION_FIELD_FEE,    true,  false, false, false},
+    {"Counter",       TZ_OPERATION_FIELD_NAT,    true,  true,  false, false},
+    {"Gas",           TZ_OPERATION_FIELD_NAT,    true,  true,  false, false},
+    {"Storage limit", TZ_OPERATION_FIELD_NAT,    true,  false, false, false},
+    {"Delegate",      TZ_OPERATION_FIELD_PKH,    false, false, true,  false},
+    {NULL,            0,                         0,     0,     0,     0    }
 };
 
 const tz_operation_field_descriptor reg_glb_cst_fields[] = {
-  // Name,            Kind,                      Req,  Skip,  None
-    {"Source",        TZ_OPERATION_FIELD_SOURCE, true, true,  false},
-    {"Fee",           TZ_OPERATION_FIELD_FEE,    true, false, false},
-    {"Counter",       TZ_OPERATION_FIELD_NAT,    true, true,  false},
-    {"Gas",           TZ_OPERATION_FIELD_NAT,    true, true,  false},
-    {"Storage limit", TZ_OPERATION_FIELD_NAT,    true, false, false},
-    {"Value",         TZ_OPERATION_FIELD_EXPR,   true, false, false},
-    {NULL,            0,                         0,    0,     0    }
+  // Name,            Kind,                      Req,  Skip,  None,  Complex
+    {"Source",        TZ_OPERATION_FIELD_SOURCE, true, true,  false, false},
+    {"Fee",           TZ_OPERATION_FIELD_FEE,    true, false, false, false},
+    {"Counter",       TZ_OPERATION_FIELD_NAT,    true, true,  false, false},
+    {"Gas",           TZ_OPERATION_FIELD_NAT,    true, true,  false, false},
+    {"Storage limit", TZ_OPERATION_FIELD_NAT,    true, false, false, false},
+    {"Value",         TZ_OPERATION_FIELD_EXPR,   true, false, false, false},
+    {NULL,            0,                         0,    0,     0,     0    }
 };
 
 const tz_operation_field_descriptor set_deposit_fields[] = {
-  // Name,            Kind,                      Req,   Skip,  None
-    {"Source",        TZ_OPERATION_FIELD_SOURCE, true,  true,  false},
-    {"Fee",           TZ_OPERATION_FIELD_FEE,    true,  false, false},
-    {"Counter",       TZ_OPERATION_FIELD_NAT,    true,  true,  false},
-    {"Gas",           TZ_OPERATION_FIELD_NAT,    true,  true,  false},
-    {"Storage limit", TZ_OPERATION_FIELD_NAT,    true,  false, false},
-    {"Staking limit", TZ_OPERATION_FIELD_AMOUNT, false, false, true },
-    {NULL,            0,                         0,     0,     0    }
+  // Name,            Kind,                      Req,   Skip,  None,  Complex
+    {"Source",        TZ_OPERATION_FIELD_SOURCE, true,  true,  false, false},
+    {"Fee",           TZ_OPERATION_FIELD_FEE,    true,  false, false, false},
+    {"Counter",       TZ_OPERATION_FIELD_NAT,    true,  true,  false, false},
+    {"Gas",           TZ_OPERATION_FIELD_NAT,    true,  true,  false, false},
+    {"Storage limit", TZ_OPERATION_FIELD_NAT,    true,  false, false, false},
+    {"Staking limit", TZ_OPERATION_FIELD_AMOUNT, false, false, true,  false},
+    {NULL,            0,                         0,     0,     0,     0    }
 };
 
 const tz_operation_field_descriptor inc_paid_stg_fields[] = {
-  // Name,            Kind,                           Req,  Skip,  None
-    {"Source",        TZ_OPERATION_FIELD_SOURCE,      true, true,  false},
-    {"Fee",           TZ_OPERATION_FIELD_FEE,         true, false, false},
-    {"Counter",       TZ_OPERATION_FIELD_NAT,         true, true,  false},
-    {"Gas",           TZ_OPERATION_FIELD_NAT,         true, true,  false},
-    {"Storage limit", TZ_OPERATION_FIELD_NAT,         true, false, false},
-    {"Amount",        TZ_OPERATION_FIELD_INT,         true, false, false},
-    {"Destination",   TZ_OPERATION_FIELD_DESTINATION, true, false, false},
-    {NULL,            0,                              0,    0,     0    }
+  // Name,            Kind,                           Req,  Skip,  None,  Complex
+    {"Source",        TZ_OPERATION_FIELD_SOURCE,      true, true,  false, false},
+    {"Fee",           TZ_OPERATION_FIELD_FEE,         true, false, false, false},
+    {"Counter",       TZ_OPERATION_FIELD_NAT,         true, true,  false, false},
+    {"Gas",           TZ_OPERATION_FIELD_NAT,         true, true,  false, false},
+    {"Storage limit", TZ_OPERATION_FIELD_NAT,         true, false, false, false},
+    {"Amount",        TZ_OPERATION_FIELD_INT,         true, false, false, false},
+    {"Destination",   TZ_OPERATION_FIELD_DESTINATION, true, false, false, false},
+    {NULL,            0,                              0,    0,     0,     0    }
 };
 
 const tz_operation_field_descriptor update_ck_fields[] = {
-  // Name,            Kind,                      Req,  Skip,  None
-    {"Source",        TZ_OPERATION_FIELD_SOURCE, true, true,  false},
-    {"Fee",           TZ_OPERATION_FIELD_FEE,    true, false, false},
-    {"Counter",       TZ_OPERATION_FIELD_NAT,    true, true,  false},
-    {"Gas",           TZ_OPERATION_FIELD_NAT,    true, true,  false},
-    {"Storage limit", TZ_OPERATION_FIELD_NAT,    true, false, false},
-    {"Public key",    TZ_OPERATION_FIELD_PK,     true, false, false},
-    {NULL,            0,                         0,    0,     0    }
+  // Name,            Kind,                      Req,  Skip,  None,  Complex
+    {"Source",        TZ_OPERATION_FIELD_SOURCE, true, true,  false, false},
+    {"Fee",           TZ_OPERATION_FIELD_FEE,    true, false, false, false},
+    {"Counter",       TZ_OPERATION_FIELD_NAT,    true, true,  false, false},
+    {"Gas",           TZ_OPERATION_FIELD_NAT,    true, true,  false, false},
+    {"Storage limit", TZ_OPERATION_FIELD_NAT,    true, false, false, false},
+    {"Public key",    TZ_OPERATION_FIELD_PK,     true, false, false, false},
+    {NULL,            0,                         0,    0,     0,     0    }
 };
 
 const tz_operation_field_descriptor origination_fields[] = {
-  // Name,            Kind,                      Req,   Skip,  None
-    {"Source",        TZ_OPERATION_FIELD_SOURCE, true,  true,  false},
-    {"Fee",           TZ_OPERATION_FIELD_FEE,    true,  false, false},
-    {"Counter",       TZ_OPERATION_FIELD_NAT,    true,  true,  false},
-    {"Gas",           TZ_OPERATION_FIELD_NAT,    true,  true,  false},
-    {"Storage limit", TZ_OPERATION_FIELD_NAT,    true,  false, false},
-    {"Balance",       TZ_OPERATION_FIELD_AMOUNT, true,  false, false},
-    {"Delegate",      TZ_OPERATION_FIELD_PKH,    false, false, true },
-    {"Code",          TZ_OPERATION_FIELD_EXPR,   true,  false, false},
-    {"Storage",       TZ_OPERATION_FIELD_EXPR,   true,  false, false},
-    {NULL,            0,                         0,     0,     0    }
+  // Name,            Kind,                      Req,   Skip,  None,  Complex
+    {"Source",        TZ_OPERATION_FIELD_SOURCE, true,  true,  false, false},
+    {"Fee",           TZ_OPERATION_FIELD_FEE,    true,  false, false, false},
+    {"Counter",       TZ_OPERATION_FIELD_NAT,    true,  true,  false, false},
+    {"Gas",           TZ_OPERATION_FIELD_NAT,    true,  true,  false, false},
+    {"Storage limit", TZ_OPERATION_FIELD_NAT,    true,  false, false, false},
+    {"Balance",       TZ_OPERATION_FIELD_AMOUNT, true,  false, false, false},
+    {"Delegate",      TZ_OPERATION_FIELD_PKH,    false, false, true,  false},
+    {"Code",          TZ_OPERATION_FIELD_EXPR,   true,  false, false, false},
+    {"Storage",       TZ_OPERATION_FIELD_EXPR,   true,  false, false, false},
+    {NULL,            0,                         0,     0,     0,     0    }
 };
 
 const tz_operation_field_descriptor transfer_tck_fields[] = {
-  // Name,            Kind,                           Req,  Skip,  None
-    {"Source",        TZ_OPERATION_FIELD_SOURCE,      true, true,  false},
-    {"Fee",           TZ_OPERATION_FIELD_FEE,         true, false, false},
-    {"Counter",       TZ_OPERATION_FIELD_NAT,         true, true,  false},
-    {"Gas",           TZ_OPERATION_FIELD_NAT,         true, true,  false},
-    {"Storage limit", TZ_OPERATION_FIELD_NAT,         true, false, false},
-    {"Contents",      TZ_OPERATION_FIELD_EXPR,        true, false, false},
-    {"Type",          TZ_OPERATION_FIELD_EXPR,        true, false, false},
-    {"Ticketer",      TZ_OPERATION_FIELD_DESTINATION, true, false, false},
-    {"Amount",        TZ_OPERATION_FIELD_NAT,         true, false, false},
-    {"Destination",   TZ_OPERATION_FIELD_DESTINATION, true, false, false},
-    {"Entrypoint",    TZ_OPERATION_FIELD_STRING,      true, false, false},
-    {NULL,            0,                              0,    0,     0    }
+  // Name,            Kind,                           Req,  Skip,  None,  Complex
+    {"Source",        TZ_OPERATION_FIELD_SOURCE,      true, true,  false, false},
+    {"Fee",           TZ_OPERATION_FIELD_FEE,         true, false, false, false},
+    {"Counter",       TZ_OPERATION_FIELD_NAT,         true, true,  false, false},
+    {"Gas",           TZ_OPERATION_FIELD_NAT,         true, true,  false, false},
+    {"Storage limit", TZ_OPERATION_FIELD_NAT,         true, false, false, false},
+    {"Contents",      TZ_OPERATION_FIELD_EXPR,        true, false, false, false},
+    {"Type",          TZ_OPERATION_FIELD_EXPR,        true, false, false, false},
+    {"Ticketer",      TZ_OPERATION_FIELD_DESTINATION, true, false, false, false},
+    {"Amount",        TZ_OPERATION_FIELD_NAT,         true, false, false, false},
+    {"Destination",   TZ_OPERATION_FIELD_DESTINATION, true, false, false, false},
+    {"Entrypoint",    TZ_OPERATION_FIELD_STRING,      true, false, false, false},
+    {NULL,            0,                              0,    0,     0,     0    }
 };
 
 const tz_operation_field_descriptor soru_add_msg_fields[] = {
-  // Name,            Kind,                             Req,  Skip,  None
-    {"Source",        TZ_OPERATION_FIELD_SOURCE,        true, true,  false},
-    {"Fee",           TZ_OPERATION_FIELD_FEE,           true, false, false},
-    {"Counter",       TZ_OPERATION_FIELD_NAT,           true, true,  false},
-    {"Gas",           TZ_OPERATION_FIELD_NAT,           true, true,  false},
-    {"Storage limit", TZ_OPERATION_FIELD_NAT,           true, false, false},
-    {"Message",       TZ_OPERATION_FIELD_SORU_MESSAGES, true, false, false},
-    {NULL,            0,                                0,    0,     0    }
+  // Name,            Kind,                             Req,  Skip,  None,  Complex
+    {"Source",        TZ_OPERATION_FIELD_SOURCE,        true, true,  false, false},
+    {"Fee",           TZ_OPERATION_FIELD_FEE,           true, false, false, false},
+    {"Counter",       TZ_OPERATION_FIELD_NAT,           true, true,  false, false},
+    {"Gas",           TZ_OPERATION_FIELD_NAT,           true, true,  false, false},
+    {"Storage limit", TZ_OPERATION_FIELD_NAT,           true, false, false, false},
+    {"Message",       TZ_OPERATION_FIELD_SORU_MESSAGES, true, false, false, false},
+    {NULL,            0,                                0,    0,     0,     0    }
 };
 
 const tz_operation_field_descriptor soru_exe_msg_fields[] = {
-  // Name,            Kind,                      Req,  Skip,  None
-    {"Source",        TZ_OPERATION_FIELD_SOURCE, true, true,  false},
-    {"Fee",           TZ_OPERATION_FIELD_FEE,    true, false, false},
-    {"Counter",       TZ_OPERATION_FIELD_NAT,    true, true,  false},
-    {"Gas",           TZ_OPERATION_FIELD_NAT,    true, true,  false},
-    {"Storage limit", TZ_OPERATION_FIELD_NAT,    true, false, false},
-    {"Rollup",        TZ_OPERATION_FIELD_SR,     true, false, false},
-    {"Commitment",    TZ_OPERATION_FIELD_SRC,    true, false, false},
-    {"Output proof",  TZ_OPERATION_FIELD_BINARY, true, false, false},
-    {NULL,            0,                         0,    0,     0    }
+  // Name,            Kind,                      Req,  Skip,  None,  Complex
+    {"Source",        TZ_OPERATION_FIELD_SOURCE, true, true,  false, false},
+    {"Fee",           TZ_OPERATION_FIELD_FEE,    true, false, false, false},
+    {"Counter",       TZ_OPERATION_FIELD_NAT,    true, true,  false, false},
+    {"Gas",           TZ_OPERATION_FIELD_NAT,    true, true,  false, false},
+    {"Storage limit", TZ_OPERATION_FIELD_NAT,    true, false, false, false},
+    {"Rollup",        TZ_OPERATION_FIELD_SR,     true, false, false, false},
+    {"Commitment",    TZ_OPERATION_FIELD_SRC,    true, false, false, false},
+    {"Output proof",  TZ_OPERATION_FIELD_BINARY, true, false, false, false},
+    {NULL,            0,                         0,    0,     0,     0    }
 };
 
 const tz_operation_field_descriptor soru_origin_fields[] = {
-  // Name,            Kind,                         Req,  Skip,  None
-    {"Source",        TZ_OPERATION_FIELD_SOURCE,    true, true,  false},
-    {"Fee",           TZ_OPERATION_FIELD_FEE,       true, false, false},
-    {"Counter",       TZ_OPERATION_FIELD_NAT,       true, true,  false},
-    {"Gas",           TZ_OPERATION_FIELD_NAT,       true, true,  false},
-    {"Storage limit", TZ_OPERATION_FIELD_NAT,       true, false, false},
-    {"Kind",          TZ_OPERATION_FIELD_SORU_KIND, true, false, false},
-    {"Kernel",        TZ_OPERATION_FIELD_BINARY,    true, false, false},
-    {"Proof",         TZ_OPERATION_FIELD_BINARY,    true, false, false},
-    {"Parameters",    TZ_OPERATION_FIELD_EXPR,      true, false, false},
-    {NULL,            0,                            0,    0,     0    }
+  // Name,            Kind,                         Req,  Skip,  None,  Complex
+    {"Source",        TZ_OPERATION_FIELD_SOURCE,    true, true,  false, false},
+    {"Fee",           TZ_OPERATION_FIELD_FEE,       true, false, false, false},
+    {"Counter",       TZ_OPERATION_FIELD_NAT,       true, true,  false, false},
+    {"Gas",           TZ_OPERATION_FIELD_NAT,       true, true,  false, false},
+    {"Storage limit", TZ_OPERATION_FIELD_NAT,       true, false, false, false},
+    {"Kind",          TZ_OPERATION_FIELD_SORU_KIND, true, false, false, false},
+    {"Kernel",        TZ_OPERATION_FIELD_BINARY,    true, false, false, false},
+    {"Proof",         TZ_OPERATION_FIELD_BINARY,    true, false, false, false},
+    {"Parameters",    TZ_OPERATION_FIELD_EXPR,      true, false, false, false},
+    {NULL,            0,                            0,    0,     0,     0    }
 };
 
 const tz_operation_descriptor tz_operation_descriptors[] = {
@@ -228,19 +229,17 @@ const tz_operation_descriptor tz_operation_descriptors[] = {
     {TZ_OPERATION_TAG_TRANSACTION,  "Transaction",                transaction_fields },
     {TZ_OPERATION_TAG_ORIGINATION,  "Origination",                origination_fields },
     {TZ_OPERATION_TAG_DELEGATION,   "Delegation",                 delegation_fields  },
-    {TZ_OPERATION_TAG_REG_GLB_CST,  "Register global constant",
-     reg_glb_cst_fields                                                              },
+    {TZ_OPERATION_TAG_REG_GLB_CST,  "Register global constant",   reg_glb_cst_fields },
     {TZ_OPERATION_TAG_SET_DEPOSIT,  "Set deposit limit",          set_deposit_fields },
-    {TZ_OPERATION_TAG_INC_PAID_STG, "Increase paid storage",
-     inc_paid_stg_fields                                                             },
+    {TZ_OPERATION_TAG_INC_PAID_STG, "Increase paid storage",      inc_paid_stg_fields},
     {TZ_OPERATION_TAG_UPDATE_CK,    "Set consensus key",          update_ck_fields   },
     {TZ_OPERATION_TAG_TRANSFER_TCK, "Transfer ticket",            transfer_tck_fields},
     {TZ_OPERATION_TAG_SORU_ADD_MSG, "SR: send messages",          soru_add_msg_fields},
-    {TZ_OPERATION_TAG_SORU_EXE_MSG, "SR: execute outbox message",
-     soru_exe_msg_fields                                                             },
+    {TZ_OPERATION_TAG_SORU_EXE_MSG, "SR: execute outbox message", soru_exe_msg_fields},
     {TZ_OPERATION_TAG_SORU_ORIGIN,  "SR: originate",              soru_origin_fields },
     {0,                             NULL,                         0                  }
 };
+// clang-format on
 
 static const char *expression_name = "Expression";
 static const char *unset_message   = "Field unset";
