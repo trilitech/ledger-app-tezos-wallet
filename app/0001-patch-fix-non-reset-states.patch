@@ -1,0 +1,39 @@
+From 2063beb16eb04ee0cb87ac4bdd7f1ff086da1237 Mon Sep 17 00:00:00 2001
+From: Emma Turner <mail@emturner.co.uk>
+Date: Thu, 7 Dec 2023 16:20:24 +0000
+Subject: [PATCH] patch: fix non-reset states
+
+---
+ lib_nbgl/src/nbgl_use_case.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/lib_nbgl/src/nbgl_use_case.c b/lib_nbgl/src/nbgl_use_case.c
+index 15e52ae..19b8003 100644
+--- a/lib_nbgl/src/nbgl_use_case.c
++++ b/lib_nbgl/src/nbgl_use_case.c
+@@ -1241,6 +1241,7 @@ void nbgl_useCaseForwardOnlyReview(const char                *rejectText,
+     navInfo.navWithTap.backToken     = BACK_TOKEN;
+     navInfo.navWithTap.skipText      = "Skip >>";
+     navInfo.navWithTap.skipToken     = SKIP_TOKEN;
++    navInfo.navWithTap.backButton    = false;
+     navInfo.progressIndicator        = true;
+     navInfo.tuneId                   = TUNE_TAP_CASUAL;
+
+@@ -1281,6 +1282,7 @@ void nbgl_useCaseForwardOnlyReviewNoSkip(const char                *rejectText,
+     navInfo.navWithTap.nextPageToken = NEXT_TOKEN;
+     navInfo.navWithTap.quitText      = rejectText;
+     navInfo.navWithTap.backToken     = BACK_TOKEN;
++    navInfo.navWithTap.backButton    = false;
+     navInfo.navWithTap.skipText      = NULL;
+     navInfo.progressIndicator        = true;
+     navInfo.tuneId                   = TUNE_TAP_CASUAL;
+@@ -1456,6 +1458,7 @@ void nbgl_useCaseAddressConfirmationExt(const char                      *address
+     navInfo.navWithTap.backButton    = (tagValueList != NULL);
+     navInfo.navWithTap.quitText      = "Cancel";
+     navInfo.navWithTap.nextPageToken = ADDR_NEXT_TOKEN;
++    navInfo.navWithTap.nextPageText  = NULL;
+     navInfo.navWithTap.backToken     = ADDR_BACK_TOKEN;
+     navInfo.navWithTap.skipText      = NULL;
+     navInfo.quitToken                = REJECT_TOKEN;
+--
+2.41.0

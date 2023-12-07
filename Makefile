@@ -25,8 +25,8 @@ docker_speculos:
 	$(DOCKER) image tag $(LEDGERHQ)/speculos speculos
 
 docker_ledger_app_builder:
-	$(DOCKER) pull $(LEDGERHQ)/ledger-app-builder/ledger-app-builder:3.8.0
-	$(DOCKER) image tag $(LEDGERHQ)/ledger-app-builder/ledger-app-builder:3.8.0 \
+	$(DOCKER) pull $(LEDGERHQ)/ledger-app-builder/ledger-app-builder:3.10.0
+	$(DOCKER) image tag $(LEDGERHQ)/ledger-app-builder/ledger-app-builder:3.10.0 \
 			ledger-app-builder
 
 docker_ledger_app_ocaml:
@@ -55,7 +55,7 @@ app_%_dbg.tgz:	app/src/*.[ch]	\
 	app/Makefile
 	SDK=$(shell echo $* | tr "[:lower:]" "[:upper:]")_SDK;	\
 	$(DOCKER_RUN_APP_BUILDER) bash -c						\
-		"BOLOS_SDK=\$$$$SDK make -C app DEBUG=1"
+		"git config --global user.email \"hi@patch.com\" && git config --global user.name patch && cd /opt/stax-secure-sdk && git am /app/app/0001-patch-fix-non-reset-states.patch && cd /app && BOLOS_SDK=\$$$$SDK make -C app DEBUG=1"
 	$(DOCKER_RUN_APP_BUILDER) bash -c "cd app/bin/ && tar cz ." > $@
 
 
@@ -64,7 +64,7 @@ app_%.tgz:	app/src/*.[ch]		\
 		app/Makefile
 	SDK=$(shell echo $* | tr "[:lower:]" "[:upper:]")_SDK;	\
 	$(DOCKER_RUN_APP_BUILDER) bash -c						\
-		"BOLOS_SDK=\$$$$SDK make -C app"
+		"git config --global user.email \"hi@patch.com\" && git config --global user.name patch && cd /opt/stax-secure-sdk && git am /app/app/0001-patch-fix-non-reset-states.patch && cd /app && BOLOS_SDK=\$$$$SDK make -C app"
 	$(DOCKER_RUN_APP_BUILDER) bash -c "cd app/bin/ && tar cz ." > $@
 
 clean:
