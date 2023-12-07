@@ -200,7 +200,7 @@ cancel_operation(void)
     global.keys.apdu.sign.received_last_msg = true;
     stream_cb(TZ_UI_STREAM_CB_BLINDSIGN_REJECT);
     global.step = ST_IDLE;
-    nbgl_useCaseStatus("Rejected", false, ui_home_init);
+    nbgl_useCaseStatus("Transaction rejected", false, ui_home_init);
 
     TZ_POSTAMBLE;
 }
@@ -213,7 +213,7 @@ blindsign_splash(void)
         &C_round_warning_64px, "Blind signing",
         "This transaction can not be securely interpreted by Ledger Stax. It "
         "might put your assets at risk.",
-        "Reject", pass_from_clear_to_blind, cancel_operation);
+        "Reject transaction", pass_from_clear_to_blind, cancel_operation);
 
     TZ_POSTAMBLE;
 }
@@ -226,7 +226,7 @@ handle_blindsigning(bool confirm)
         if (!N_settings.blindsigning)
             toggle_blindsigning();
         nbgl_useCaseReviewStart(&C_round_check_64px, "Blind signing enabled",
-                                NULL, "Reject", blindsign_splash,
+                                NULL, "Reject transaction", blindsign_splash,
                                 cancel_operation);
 
     } else {
@@ -245,15 +245,16 @@ switch_to_blindsigning(__attribute__((unused)) const char *err_type,
     global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
     global.step                = ST_BLIND_SIGN;
     if (N_settings.blindsigning) {
-        nbgl_useCaseReviewStart(
-            &C_round_warning_64px, "Blind signing required:\nParsing Error",
-            err_code, "Reject", blindsign_splash, cancel_operation);
+        nbgl_useCaseReviewStart(&C_round_warning_64px,
+                                "Blind signing required:\nParsing Error",
+                                err_code, "Reject transaction",
+                                blindsign_splash, cancel_operation);
     } else {
         nbgl_useCaseChoice(&C_round_warning_64px,
                            "Enable blind signing to authorize this "
                            "transaction:\nParsing Error",
-                           err_code, "Enable blind signing", "Reject",
-                           handle_blindsigning);
+                           err_code, "Enable blind signing",
+                           "Reject transaction", handle_blindsigning);
     }
 
     TZ_POSTAMBLE;
@@ -582,7 +583,7 @@ void
 reject_blindsign_review_cb(void)
 {
     FUNC_ENTER(("void"));
-    nbgl_useCaseStatus("Rejected", false, reject_blindsign_cb);
+    nbgl_useCaseStatus("Transaction rejected", false, reject_blindsign_cb);
     FUNC_LEAVE();
 }
 
@@ -603,9 +604,10 @@ reviewChoice(bool confirm)
     FUNC_ENTER(("confirm=%d", confirm));
 
     if (confirm) {
-        nbgl_useCaseStatus("SIGNING\nSUCCESSFUL", true, accept_blindsign_cb);
+        nbgl_useCaseStatus("TRANSACTION\nSIGNED", true, accept_blindsign_cb);
     } else {
-        nbgl_useCaseStatus("Rejected", false, reject_blindsign_cb);
+        nbgl_useCaseStatus("Transaction rejected", false,
+                           reject_blindsign_cb);
     }
 
     FUNC_LEAVE();
@@ -645,10 +647,10 @@ continue_blindsign_cb(void)
     useCaseTagValueList.smallCaseForValue = false;
     useCaseTagValueList.wrapping          = false;
     infoLongPress.icon                    = &C_tezos;
-    infoLongPress.text                    = "Approve";
-    infoLongPress.longPressText           = "Sign";
-    nbgl_useCaseStaticReview(&useCaseTagValueList, &infoLongPress, "Reject",
-                             reviewChoice);
+    infoLongPress.text                    = "Sign transaction?";
+    infoLongPress.longPressText           = "Hold to sign";
+    nbgl_useCaseStaticReview(&useCaseTagValueList, &infoLongPress,
+                             "Reject transaction", reviewChoice);
 
     FUNC_LEAVE();
 }

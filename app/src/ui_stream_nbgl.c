@@ -56,7 +56,7 @@ tz_reject(void)
     s->cb(TZ_UI_STREAM_CB_REJECT);
 
     global.step = ST_IDLE;
-    nbgl_useCaseStatus("Rejected", false, ui_home_init);
+    nbgl_useCaseStatus("Transaction rejected", false, ui_home_init);
 
     FUNC_LEAVE();
 }
@@ -82,7 +82,7 @@ tz_accept_ui(void)
     global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
     s->cb(TZ_UI_STREAM_CB_ACCEPT);
 
-    nbgl_useCaseStatus("SIGNING\nSUCCESSFUL", true, ui_home_init);
+    nbgl_useCaseStatus("TRANSACTION\nSIGNED", true, ui_home_init);
 
     FUNC_LEAVE();
 }
@@ -121,8 +121,8 @@ tz_ui_stream_cb(void)
 {
     FUNC_ENTER(("void"));
 
-    nbgl_useCaseForwardOnlyReviewNoSkip("Reject", NULL, tz_ui_nav_cb,
-                                        tz_choice_ui);
+    nbgl_useCaseForwardOnlyReviewNoSkip("Reject transaction", NULL,
+                                        tz_ui_nav_cb, tz_choice_ui);
 
     FUNC_LEAVE();
 }
@@ -239,8 +239,8 @@ tz_ui_nav_cb(uint8_t page, nbgl_pageContent_t *content)
         PRINTF("[DEBUG] signing...\n");
         content->type                        = INFO_LONG_PRESS;
         content->infoLongPress.icon          = &C_tezos;
-        content->infoLongPress.text          = "Sign";
-        content->infoLongPress.longPressText = "Sign";
+        content->infoLongPress.text          = "Sign transaction?";
+        content->infoLongPress.longPressText = "Hold to sign";
     } else if (page == LAST_PAGE_FOR_REVIEW) {
         s->current = s->total;
         result     = false;

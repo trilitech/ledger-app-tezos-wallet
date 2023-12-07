@@ -12,7 +12,7 @@ jobs:
     uses: functori/app-exchange/.github/workflows/reusable_swap_functional_tests.yml@ebc5932d939e2bad5eaf3d5e316626169da6ff23
     with:
       repo_for_exchange: 'functori/app-exchange'
-      branch_for_exchange: 'ebc5932d939e2bad5eaf3d5e316626169da6ff23'
+      branch_for_exchange: 'ajinkyaraj-23@Update-snapshots-for-stax-text-changes'
       branch_for_tezos: ${{ github.ref }}
       run_for_devices: '["nanos", "nanosp", "stax"]'
       test_filter: '"tezos_new"'
