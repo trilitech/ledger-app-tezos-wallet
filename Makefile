@@ -73,12 +73,14 @@ clean:
 	$(DOCKER_RUN_APP_OCAML) bash -c "make -C /app/tests/generate clean && cd /app && rm -rf _build"
 
 unit_tests:	test/samples/micheline/nano/samples.hex	\
-		test/samples/operations/nano/samples.hex\
+		test/samples/operations/nano/samples.hex	\
 		tests/unit/parser/*.ml				\
 		tests/unit/parser/*.[ch]			\
 		tests/unit/parser/dune				\
 		tests/unit/parser/Makefile			\
-		tests/unit/Makefile
+		tests/unit/Makefile				\
+		tests/unit/ctest/Makefile			\
+		tests/unit/ctest/*.[ch]
 	@cp app/src/parser/[!g]*.[ch] tests/unit/parser/
 
 	$(DOCKER_RUN_APP_OCAML) make -C /app/tests/unit
