@@ -708,8 +708,10 @@ tz_operation_parser_step(tz_parser_state *state)
             uint8_t present = 1;
             if (!field->required)
                 tz_must(tz_parser_read(state, &present));
-            if (!field->skip)
+            if (!field->skip) {
                 STRLCPY(state->field_name, name);
+                state->is_field_complex = field->complex;
+            }
             op->frame->step_operation.field++;
             if (!present) {
                 if (field->display_none) {
