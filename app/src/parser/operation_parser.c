@@ -82,7 +82,7 @@ const tz_operation_field_descriptor transaction_fields[] = {
     {"Storage limit", TZ_OPERATION_FIELD_NAT,         true,  false, false, false},
     {"Amount",        TZ_OPERATION_FIELD_AMOUNT,      true,  false, false, false},
     {"Destination",   TZ_OPERATION_FIELD_DESTINATION, true,  false, false, false},
-    {"Parameter",     TZ_OPERATION_FIELD_PARAMETER,   false, false, false, false},
+    {"Parameter",     TZ_OPERATION_FIELD_PARAMETER,   false, false, false, true },
     {NULL,            0,                              0,     0,     0,     0    }
 };
 
@@ -115,7 +115,7 @@ const tz_operation_field_descriptor reg_glb_cst_fields[] = {
     {"Counter",       TZ_OPERATION_FIELD_NAT,    true, true,  false, false},
     {"Gas",           TZ_OPERATION_FIELD_NAT,    true, true,  false, false},
     {"Storage limit", TZ_OPERATION_FIELD_NAT,    true, false, false, false},
-    {"Value",         TZ_OPERATION_FIELD_EXPR,   true, false, false, false},
+    {"Value",         TZ_OPERATION_FIELD_EXPR,   true, false, false, true },
     {NULL,            0,                         0,    0,     0,     0    }
 };
 
@@ -162,8 +162,8 @@ const tz_operation_field_descriptor origination_fields[] = {
     {"Storage limit", TZ_OPERATION_FIELD_NAT,    true,  false, false, false},
     {"Balance",       TZ_OPERATION_FIELD_AMOUNT, true,  false, false, false},
     {"Delegate",      TZ_OPERATION_FIELD_PKH,    false, false, true,  false},
-    {"Code",          TZ_OPERATION_FIELD_EXPR,   true,  false, false, false},
-    {"Storage",       TZ_OPERATION_FIELD_EXPR,   true,  false, false, false},
+    {"Code",          TZ_OPERATION_FIELD_EXPR,   true,  false, false, true },
+    {"Storage",       TZ_OPERATION_FIELD_EXPR,   true,  false, false, true },
     {NULL,            0,                         0,     0,     0,     0    }
 };
 
@@ -174,8 +174,8 @@ const tz_operation_field_descriptor transfer_tck_fields[] = {
     {"Counter",       TZ_OPERATION_FIELD_NAT,         true, true,  false, false},
     {"Gas",           TZ_OPERATION_FIELD_NAT,         true, true,  false, false},
     {"Storage limit", TZ_OPERATION_FIELD_NAT,         true, false, false, false},
-    {"Contents",      TZ_OPERATION_FIELD_EXPR,        true, false, false, false},
-    {"Type",          TZ_OPERATION_FIELD_EXPR,        true, false, false, false},
+    {"Contents",      TZ_OPERATION_FIELD_EXPR,        true, false, false, true },
+    {"Type",          TZ_OPERATION_FIELD_EXPR,        true, false, false, true },
     {"Ticketer",      TZ_OPERATION_FIELD_DESTINATION, true, false, false, false},
     {"Amount",        TZ_OPERATION_FIELD_NAT,         true, false, false, false},
     {"Destination",   TZ_OPERATION_FIELD_DESTINATION, true, false, false, false},
@@ -203,7 +203,7 @@ const tz_operation_field_descriptor soru_exe_msg_fields[] = {
     {"Storage limit", TZ_OPERATION_FIELD_NAT,    true, false, false, false},
     {"Rollup",        TZ_OPERATION_FIELD_SR,     true, false, false, false},
     {"Commitment",    TZ_OPERATION_FIELD_SRC,    true, false, false, false},
-    {"Output proof",  TZ_OPERATION_FIELD_BINARY, true, false, false, false},
+    {"Output proof",  TZ_OPERATION_FIELD_BINARY, true, false, false, true },
     {NULL,            0,                         0,    0,     0,     0    }
 };
 
@@ -215,9 +215,9 @@ const tz_operation_field_descriptor soru_origin_fields[] = {
     {"Gas",           TZ_OPERATION_FIELD_NAT,       true, true,  false, false},
     {"Storage limit", TZ_OPERATION_FIELD_NAT,       true, false, false, false},
     {"Kind",          TZ_OPERATION_FIELD_SORU_KIND, true, false, false, false},
-    {"Kernel",        TZ_OPERATION_FIELD_BINARY,    true, false, false, false},
-    {"Proof",         TZ_OPERATION_FIELD_BINARY,    true, false, false, false},
-    {"Parameters",    TZ_OPERATION_FIELD_EXPR,      true, false, false, false},
+    {"Kernel",        TZ_OPERATION_FIELD_BINARY,    true, false, false, true },
+    {"Proof",         TZ_OPERATION_FIELD_BINARY,    true, false, false, true },
+    {"Parameters",    TZ_OPERATION_FIELD_EXPR,      true, false, false, true },
     {NULL,            0,                            0,    0,     0,     0    }
 };
 
