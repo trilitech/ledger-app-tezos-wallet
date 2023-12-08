@@ -35,10 +35,11 @@ static const char *const infoContents[]
     = {APPVERSION, "Trilitech Kanvas Limited et al."};
 
 enum {
-    BLIND_SIGNING_TOKEN = FIRST_USER_TOKEN,
+    EXPERT_MODE_TOKEN = FIRST_USER_TOKEN,
+    BLIND_SIGNING_TOKEN
 };
 
-static nbgl_layoutSwitch_t switches[1];
+static nbgl_layoutSwitch_t switches[2];
 
 static bool
 navigation_cb_wallet(__attribute__((unused)) uint8_t page,
@@ -53,6 +54,13 @@ navigation_cb_wallet(__attribute__((unused)) uint8_t page,
         break;
     case 1:
         switches[0] = (nbgl_layoutSwitch_t){
+            .initState = N_settings.expert_mode ? ON_STATE : OFF_STATE,
+            .text      = "Expert mode",
+            .subText   = "Enable expert mode signing",
+            .token     = EXPERT_MODE_TOKEN,
+            .tuneId    = TUNE_TAP_CASUAL};
+
+        switches[1] = (nbgl_layoutSwitch_t){
             .initState = N_settings.blindsigning ? ON_STATE : OFF_STATE,
             .text      = "Blind signing",
             .subText   = "Enable transaction blind signing",
@@ -60,7 +68,7 @@ navigation_cb_wallet(__attribute__((unused)) uint8_t page,
             .tuneId    = TUNE_TAP_CASUAL};
 
         content->type                    = SWITCHES_LIST;
-        content->switchesList.nbSwitches = 1;
+        content->switchesList.nbSwitches = 2;
         content->switchesList.switches   = (nbgl_layoutSwitch_t *)switches;
         break;
     default:
@@ -75,6 +83,9 @@ controls_callback(int token, __attribute__((unused)) uint8_t index)
 {
     if (token == BLIND_SIGNING_TOKEN)
         toggle_blindsigning();
+    else if (token == EXPERT_MODE_TOKEN) {
+        toggle_expert_mode();
+    }
 }
 
 static void

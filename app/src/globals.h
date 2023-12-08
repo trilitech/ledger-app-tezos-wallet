@@ -49,6 +49,9 @@
 // UI/exchange buffers.
 void init_globals(void);
 
+// Toggles the persisted expert_mode setting
+void toggle_expert_mode(void);
+
 // Toggles the persisted blindsigning setting
 void toggle_blindsigning(void);
 
@@ -103,6 +106,7 @@ typedef struct {
 /* Settings */
 typedef struct {
     bool blindsigning;
+    bool expert_mode;
 } settings_t;
 
 extern globals_t global;

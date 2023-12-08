@@ -38,7 +38,7 @@ cb(tz_ui_cb_type_t cb_type)
     case SCREEN_VERSION:
         break;
     case SCREEN_SETTINGS:
-        ui_settings_init();
+        ui_settings_init(SETTINGS_HOME_PAGE);
         break;
     case SCREEN_QUIT:
         app_exit();
