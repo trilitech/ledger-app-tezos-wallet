@@ -22,7 +22,6 @@
 #include <ux.h>
 
 #include "globals.h"
-#include "nbgl_sdk.h"
 #include "ui_stream.h"
 
 bool tz_ui_nav_cb(uint8_t, nbgl_pageContent_t *);

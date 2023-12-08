@@ -1,4 +1,4 @@
-FROM ghcr.io/ledgerhq/speculos:sha-bced779
+FROM ghcr.io/ledgerhq/speculos:sha-f9dfe87
 
 RUN apt update &&                                                                    \
     apt install -y curl jq build-essential libsodium-dev git xxd &&                  \

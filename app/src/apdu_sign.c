@@ -454,7 +454,7 @@ handle_first_apdu(command_t *cmd)
     global.path_with_curve.derivation_type = cmd->p2;
     TZ_ASSERT(EXC_WRONG_PARAM,
               check_derivation_type(global.path_with_curve.derivation_type));
-    TZ_CHECK(cx_blake2b_init_no_throw(&global.keys.apdu.hash.state,
+    CX_CHECK(cx_blake2b_init_no_throw(&global.keys.apdu.hash.state,
                                       SIGN_HASH_SIZE * 8));
     /*
      * We set the tag to zero here which indicates that it is unset.
