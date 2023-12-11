@@ -139,8 +139,8 @@ load_%: app_%.tgz
 # Dash vs under aliases:
 
 format:
-	@find ./app/src -name '*.c' -exec clang-format -i "{}" \;
-	@find ./app/src -name '*.h' -exec clang-format -i "{}" \;
+	@find ./app/src ./tests -name '*.c' -exec clang-format -i "{}" \;
+	@find ./app/src ./tests -name '*.h' -exec clang-format -i "{}" \;
 
 docker-images: docker_images
 integration-tests: integration_tests

@@ -22,6 +22,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+// clang-format off
 #ifndef CRYPTOHASH_SHA256_H
 #define CRYPTOHASH_SHA256_H
 
@@ -51,3 +52,4 @@ void digestif_sha256_update(struct sha256_ctx *ctx, uint8_t *data, uint32_t len)
 void digestif_sha256_finalize(struct sha256_ctx *ctx, uint8_t *out);
 
 #endif
+// clang-format on

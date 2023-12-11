@@ -22,6 +22,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+// clang-format off
 #ifndef BITFN_H
 #define BITFN_H
 
@@ -323,3 +324,4 @@ static __INLINE void store64( void *dst, uint64_t w )
 #endif
 
 #endif /* !BITFN_H */
+// clang-format on

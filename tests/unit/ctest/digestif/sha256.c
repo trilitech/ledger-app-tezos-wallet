@@ -22,6 +22,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+// clang-format off
 #include <string.h>
 #include "sha256.h"
 #include "bitfn.h"
@@ -173,3 +174,4 @@ void digestif_sha256_finalize(struct sha256_ctx *ctx, uint8_t *out)
 	for (i = 0; i < 8; i++)
 		p[i] = cpu_to_be32(ctx->h[i]);
 }
+// clang-format on

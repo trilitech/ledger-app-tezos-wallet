@@ -17,5 +17,5 @@ repos:
         description: Run `clang-format` on C/C++/CUDA files.
         entry: clang-format -i
         language: system
-        files: ^app/src
+        files: ^
         types: [file, c]
