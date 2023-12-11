@@ -21,14 +21,12 @@ jobs:
         device: [nanos, nanosp, nanox, stax]
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder:3.10.0
+      image: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder:3.11.0
     steps:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Build
         run: |
-          # TODO: remove once fixed in the SDK
-          git config --global user.email \"hi@patch.com\" && git config --global user.name patch && cd /opt/stax-secure-sdk && git am $GITHUB_WORKSPACE/app/0001-patch-fix-non-reset-states.patch && cd $GITHUB_WORKSPACE
           DEVICE_SDK="$(echo ${{ matrix.device }} | tr a-z A-Z)_SDK"
           bash -c "make -C app BOLOS_SDK=\$${DEVICE_SDK}"
           tar -C app/bin -czf app_${{ matrix.device }}.tgz .
