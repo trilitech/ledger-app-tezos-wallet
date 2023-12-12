@@ -1,9 +1,9 @@
-.PHONY: all test_micheline_c_parser test_operations_c_parser
+.PHONY: all parser ctest
 
-all: test_micheline_c_parser test_operations_c_parser
+all: ctest parser
 
-test_micheline_c_parser: *.ml *.[ch] dune Makefile
-	dune exec ./test_c_parser.exe micheline ../samples/micheline/nano/samples.hex
+parser: Makefile
+	make -C parser all
 
-test_operations_c_parser: *.ml *.[ch] dune Makefile
-	dune exec ./test_c_parser.exe operations ../samples/operations/nano/samples.hex
+ctest: Makefile
+	make -C ctest all
