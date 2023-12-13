@@ -90,7 +90,7 @@ typedef enum {
 typedef struct {
     const char             *name;
     tz_operation_field_kind kind : 5;
-    uint8_t                 required : 1, skip : 1, display_none : 1;
+    uint8_t required : 1, skip : 1, display_none : 1, complex : 1;
 } tz_operation_field_descriptor;
 
 typedef struct {

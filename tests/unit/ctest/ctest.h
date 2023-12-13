@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+// clang-format off
 #ifndef CTEST_H
 #define CTEST_H
 
@@ -607,3 +608,4 @@ __attribute__((no_sanitize_address)) int ctest_main(int argc, const char *argv[]
 #endif
 
 #endif
+// clang-format on
