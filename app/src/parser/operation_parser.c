@@ -703,6 +703,7 @@ tz_operation_parser_step(tz_parser_state *state)
             tz_stop(IM_FULL);
 
         if (name == NULL) {
+            state->is_field_complex = false;
             tz_must(pop_frame(state));
         } else {
             uint8_t present = 1;
