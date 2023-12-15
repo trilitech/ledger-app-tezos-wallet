@@ -116,7 +116,7 @@ check_field_complexity(struct ctest_operation_parser_data *data, char *str,
             if (strstr(st->field_name, fields_check[idx].name) != NULL) {
                 if (fields_check[idx].complex != st->is_field_complex) {
                     CTEST_LOG(
-                        "%s:%d %s field expected to have complex to %s but "
+                        "%s:%d '%s' field expected to have complex to %s but "
                         "got %s",
                         __FILE__, __LINE__, st->field_name,
                         fields_check[idx].complex ? "true" : "false",
@@ -124,6 +124,12 @@ check_field_complexity(struct ctest_operation_parser_data *data, char *str,
                     result = false;
                 }
                 already_seen = true;
+            } else if (st->is_field_complex) {
+                CTEST_LOG(
+                    "%s:%d '%s' has not been defined as an operation field "
+                    "and therefore must not be complex",
+                    __FILE__, __LINE__, st->field_name);
+                result = false;
             }
             tz_parser_flush(st, data->obuf, data->olen);
             continue;
@@ -228,6 +234,29 @@ CTEST2(operation_parser, check_transaction_complexity)
           "6c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e0100"
           "0000000000000000000000000000000000000000ff02000000020316";
     const tz_fields_check fields_check[] = {
+        {"Fee",           false},
+        {"Storage limit", false},
+        {"Amount",        false},
+        {"Destination",   false},
+        {"Entrypoint",    true },
+        {"Parameter",     true },
+    };
+    check_field_complexity(data, str, fields_check, sizeof(fields_check));
+}
+
+CTEST2(operation_parser, check_double_transaction_complexity)
+{
+    char str[]
+        = "030000000000000000000000000000000000000000000000000000000000000000"
+          "6c00ffdd6102321bc251e4a5190ad5b12b251069d9b4a0c21e020304904e010000"
+          "0000000000000000000000000000000000000000"
+          "6c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e0100"
+          "0000000000000000000000000000000000000000ff02000000020316";
+    const tz_fields_check fields_check[] = {
+        {"Fee",           false},
+        {"Storage limit", false},
+        {"Amount",        false},
+        {"Destination",   false},
         {"Fee",           false},
         {"Storage limit", false},
         {"Amount",        false},
