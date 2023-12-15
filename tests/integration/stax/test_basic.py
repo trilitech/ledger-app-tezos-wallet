@@ -23,6 +23,21 @@ if __name__ == "__main__":
     app.welcome.info()
     app.assert_screen(SCREEN_INFO_PAGE)
 
+    app.info.next()
+    app.assert_screen("settings_blindsigning_off")
+
+    app.settings_toggle_blindsigning()
+    app.assert_screen("settings_blindsigning_on")
+
+    app.settings_toggle_expert_mode()
+    app.assert_screen("settings_blindsigning_expert_on")
+
+    app.settings_toggle_blindsigning()
+    app.assert_screen("settings_expert_on")
+
+    app.settings_toggle_expert_mode()
+    app.assert_screen("settings_blindsigning_off")
+
     app.info.multi_page_exit()
     app.assert_screen(SCREEN_HOME_DEFAULT)
 

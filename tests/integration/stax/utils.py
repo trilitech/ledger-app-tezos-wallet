@@ -112,8 +112,11 @@ class TezosAppScreen(metaclass=MetaScreen):
         else:
             input(f"PRESS ENTER to continue next test\n- You may need to reset to home")
 
-    def settings_toggle_blindsigning(self):
+    def settings_toggle_expert_mode(self):
         self.__settings.choose(1)
+
+    def settings_toggle_blindsigning(self):
+        self.__settings.choose(2)
 
     def start_loading_operation(self, first_packet):
         """

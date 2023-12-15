@@ -24,6 +24,15 @@ def toggle_blindsigning():
     app.info.multi_page_exit()
     app.assert_screen(SCREEN_HOME_DEFAULT)
 
+def toggle_expert_mode():
+    app.assert_screen(SCREEN_HOME_DEFAULT)
+    app.welcome.settings()
+    app.assert_screen(SCREEN_INFO_PAGE)
+    app.info.next()
+    app.settings_toggle_expert_mode()
+    app.info.multi_page_exit()
+    app.assert_screen(SCREEN_HOME_DEFAULT)
+
 if __name__ == "__main__":
     app = stax_app(__file__)
 
