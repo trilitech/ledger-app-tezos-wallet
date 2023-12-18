@@ -23,6 +23,8 @@ if __name__ == "__main__":
     test_name = Path(__file__).stem
     with nano_app() as app:
 
+        app.setup_expert_mode()
+
         def check_sign_with_small_packet(
                 account: Account,
                 message: Message,

@@ -32,6 +32,8 @@ if __name__ == "__main__":
     seed = "around dignity equal spread between young lawsuit interest climb wide that panther rather mom snake scene ecology reunion ice illegal brush"
     with nano_app(seed) as app:
 
+        app.setup_expert_mode()
+
         account = Account("m/44'/1729'/0'/0'",
                           SIGNATURE_TYPE.ED25519,
                           "edpkupntwMyERpYniuK1GDWquPaPU1wYsQgMirJPLGmC4Y5dMUsQNo")
