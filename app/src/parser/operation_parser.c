@@ -713,6 +713,7 @@ tz_operation_parser_step(tz_parser_state *state)
             if (!field->skip) {
                 STRLCPY(state->field_info.field_name, name);
                 state->field_info.is_field_complex = field->complex;
+                state->field_info.field_index++;
             }
             op->frame->step_operation.field++;
             if (!present) {

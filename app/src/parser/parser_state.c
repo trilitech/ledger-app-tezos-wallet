@@ -55,6 +55,7 @@ tz_parser_init(tz_parser_state *state)
     state->ofs                         = 0;
     state->field_info.field_name[0]    = 0;
     state->field_info.is_field_complex = false;
+    state->field_info.field_index      = 0;
 }
 
 void

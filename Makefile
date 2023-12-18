@@ -69,6 +69,7 @@ app_%.tgz:	app/src/*.[ch]		\
 
 clean:
 	rm -rf bin app_*.tgz
+	make -C tests/unit/ctest clean
 	$(DOCKER_RUN_APP_BUILDER) make -C app mrproper
 	$(DOCKER_RUN_APP_OCAML) bash -c "make -C /app/tests/generate clean && cd /app && rm -rf _build"
 
