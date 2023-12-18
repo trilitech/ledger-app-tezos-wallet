@@ -160,7 +160,7 @@ refill_blo_im_full(void)
     TZ_PREAMBLE(("void"));
 
     global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
-    wrote = tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, st->field_name,
+    wrote = tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, st->field_info.field_name,
                               global.line_buf, TZ_UI_LAYOUT_BNP,
                               TZ_UI_ICON_NONE);
     tz_parser_flush_up_to(st, global.line_buf, TZ_UI_STREAM_CONTENTS_SIZE,

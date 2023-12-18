@@ -71,8 +71,11 @@ typedef struct {
 
     // common fields to communicate with caller
     tz_parser_result errno;
-    char             field_name[TZ_FIELD_NAME_SIZE];
-    bool             is_field_complex;
+    struct {
+        char field_name[TZ_FIELD_NAME_SIZE];
+        bool is_field_complex;
+        int  field_index;
+    } field_info;
     // common singleton buffers
     int ofs;
     struct {

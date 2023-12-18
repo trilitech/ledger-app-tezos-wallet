@@ -51,10 +51,10 @@ tz_parser_result_name(tz_parser_result code)
 void
 tz_parser_init(tz_parser_state *state)
 {
-    state->errno            = TZ_CONTINUE;
-    state->ofs              = 0;
-    state->field_name[0]    = 0;
-    state->is_field_complex = false;
+    state->errno                       = TZ_CONTINUE;
+    state->ofs                         = 0;
+    state->field_info.field_name[0]    = 0;
+    state->field_info.is_field_complex = false;
 }
 
 void

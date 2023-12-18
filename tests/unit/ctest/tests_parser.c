@@ -108,27 +108,30 @@ check_field_complexity(struct ctest_operation_parser_data *data, char *str,
 
         case TZ_BLO_IM_FULL:
             if (already_seen
-                && strstr(st->field_name, fields_check[idx].name) == NULL) {
+                && strstr(st->field_info.field_name, fields_check[idx].name)
+                       == NULL) {
                 idx++;
                 ASSERT_LT((intmax_t)idx, (intmax_t)fields_check_len);
                 already_seen = false;
             }
-            if (strstr(st->field_name, fields_check[idx].name) != NULL) {
-                if (fields_check[idx].complex != st->is_field_complex) {
+            if (strstr(st->field_info.field_name, fields_check[idx].name)
+                != NULL) {
+                if (fields_check[idx].complex
+                    != st->field_info.is_field_complex) {
                     CTEST_LOG(
                         "%s:%d '%s' field expected to have complex to %s but "
                         "got %s",
-                        __FILE__, __LINE__, st->field_name,
+                        __FILE__, __LINE__, st->field_info.field_name,
                         fields_check[idx].complex ? "true" : "false",
-                        st->is_field_complex ? "true" : "false");
+                        st->field_info.is_field_complex ? "true" : "false");
                     result = false;
                 }
                 already_seen = true;
-            } else if (st->is_field_complex) {
+            } else if (st->field_info.is_field_complex) {
                 CTEST_LOG(
                     "%s:%d '%s' has not been defined as an operation field "
                     "and therefore must not be complex",
-                    __FILE__, __LINE__, st->field_name);
+                    __FILE__, __LINE__, st->field_info.field_name);
                 result = false;
             }
             tz_parser_flush(st, data->obuf, data->olen);

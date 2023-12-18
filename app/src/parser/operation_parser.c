@@ -296,7 +296,7 @@ tz_operation_parser_init(tz_parser_state *state, uint16_t size,
     if (!skip_magic) {
         op->stack[0].step = TZ_OPERATION_STEP_MAGIC;
     } else {
-        STRLCPY(state->field_name, "Branch");
+        STRLCPY(state->field_info.field_name, "Branch");
         op->stack[0].step = TZ_OPERATION_STEP_BRANCH;
         push_frame(state, TZ_OPERATION_STEP_READ_BYTES);  // ignore result,
                                                           // assume success
@@ -361,7 +361,7 @@ tz_operation_parser_step(tz_parser_state *state)
         tz_must(tz_parser_read(state, &b));
         switch (b) {
         case 3:  // manager/anonymous operation
-            STRLCPY(state->field_name, "Branch");
+            STRLCPY(state->field_info.field_name, "Branch");
             op->stack[0].step = TZ_OPERATION_STEP_BRANCH;
             push_frame(state,
                        TZ_OPERATION_STEP_READ_BYTES);  // ignore result,
@@ -411,7 +411,7 @@ tz_operation_parser_step(tz_parser_state *state)
                 op->frame->step_operation.descriptor = d;
                 op->frame->step_operation.field      = 0;
                 tz_must(push_frame(state, TZ_OPERATION_STEP_PRINT));
-                snprintf(state->field_name, 30, "Operation (%d)",
+                snprintf(state->field_info.field_name, 30, "Operation (%d)",
                          op->batch_index);
                 op->frame->step_print.str = d->name;
                 tz_continue;
@@ -422,7 +422,8 @@ tz_operation_parser_step(tz_parser_state *state)
     case TZ_OPERATION_STEP_READ_MICHELINE: {
         if (!op->frame->step_read_micheline.inited) {
             op->frame->step_read_micheline.inited = 1;
-            STRLCPY(state->field_name, op->frame->step_read_micheline.name);
+            STRLCPY(state->field_info.field_name,
+                    op->frame->step_read_micheline.name);
             tz_micheline_parser_init(state);
         }
         tz_micheline_parser_step(state);
@@ -703,15 +704,15 @@ tz_operation_parser_step(tz_parser_state *state)
             tz_stop(IM_FULL);
 
         if (name == NULL) {
-            state->is_field_complex = false;
+            state->field_info.is_field_complex = false;
             tz_must(pop_frame(state));
         } else {
             uint8_t present = 1;
             if (!field->required)
                 tz_must(tz_parser_read(state, &present));
             if (!field->skip) {
-                STRLCPY(state->field_name, name);
-                state->is_field_complex = field->complex;
+                STRLCPY(state->field_info.field_name, name);
+                state->field_info.is_field_complex = field->complex;
             }
             op->frame->step_operation.field++;
             if (!present) {
@@ -826,7 +827,7 @@ tz_operation_parser_step(tz_parser_state *state)
                 op->frame->step_size.size_len = 4;
                 tz_must(push_frame(state,
                                    TZ_OPERATION_STEP_READ_SMART_ENTRYPOINT));
-                STRLCPY(state->field_name, "Entrypoint");
+                STRLCPY(state->field_info.field_name, "Entrypoint");
                 op->frame->step_read_string.ofs  = 0;
                 op->frame->step_read_string.skip = field->skip;
                 break;
@@ -915,8 +916,8 @@ tz_operation_parser_step(tz_parser_state *state)
         } else {
             op->frame->step_read_list.index++;
             tz_must(push_frame(state, TZ_OPERATION_STEP_READ_BINARY));
-            snprintf(state->field_name, TZ_FIELD_NAME_SIZE, "%s (%d)", name,
-                     index);
+            snprintf(state->field_info.field_name, TZ_FIELD_NAME_SIZE,
+                     "%s (%d)", name, index);
             op->frame->step_read_string.ofs  = 0;
             op->frame->step_read_string.skip = skip;
             tz_must(push_frame(state, TZ_OPERATION_STEP_SIZE));
@@ -974,7 +975,8 @@ tz_operation_parser_step(tz_parser_state *state)
         } else {
             op->frame->step_read_list.index++;
             tz_must(push_frame(state, TZ_OPERATION_STEP_READ_BYTES));
-            snprintf(state->field_name, 30, "%s (%d)", name, index);
+            snprintf(state->field_info.field_name, 30, "%s (%d)", name,
+                     index);
             op->frame->step_read_bytes.kind = TZ_OPERATION_FIELD_PROTO;
             op->frame->step_read_bytes.skip = skip;
             op->frame->step_read_bytes.ofs  = 0;
