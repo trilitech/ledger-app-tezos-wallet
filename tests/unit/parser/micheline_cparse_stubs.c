@@ -27,7 +27,7 @@ micheline_cparse_capture_name(value mlstate)
     CAMLparam1(mlstate);
     CAMLlocal1(r);
     tz_parser_state **state = Data_abstract_val(mlstate);
-    r                       = caml_copy_string((*state)->field_name);
+    r = caml_copy_string((*state)->field_info.field_name);
     CAMLreturn(r);
 }
 

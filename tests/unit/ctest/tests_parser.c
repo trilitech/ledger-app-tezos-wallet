@@ -69,6 +69,7 @@ refill(struct ctest_operation_parser_data *data)
 typedef struct {
     const char *name;
     uint8_t     complex : 1;
+    int         field_index;
 } tz_fields_check;
 
 static void
@@ -108,27 +109,35 @@ check_field_complexity(struct ctest_operation_parser_data *data, char *str,
 
         case TZ_BLO_IM_FULL:
             if (already_seen
-                && strstr(st->field_name, fields_check[idx].name) == NULL) {
+                && strstr(st->field_info.field_name, fields_check[idx].name)
+                       == NULL) {
                 idx++;
                 ASSERT_LT((intmax_t)idx, (intmax_t)fields_check_len);
                 already_seen = false;
             }
-            if (strstr(st->field_name, fields_check[idx].name) != NULL) {
-                if (fields_check[idx].complex != st->is_field_complex) {
+            if (strstr(st->field_info.field_name, fields_check[idx].name)
+                != NULL) {
+                if (fields_check[idx].complex
+                        != st->field_info.is_field_complex
+                    || fields_check[idx].field_index
+                           != st->field_info.field_index) {
                     CTEST_LOG(
-                        "%s:%d '%s' field expected to have complex to %s but "
-                        "got %s",
-                        __FILE__, __LINE__, st->field_name,
+                        "%s:%d '%s' field expected to have complex: %s "
+                        "index: %d but "
+                        "got complex: %s index: %d",
+                        __FILE__, __LINE__, st->field_info.field_name,
                         fields_check[idx].complex ? "true" : "false",
-                        st->is_field_complex ? "true" : "false");
+                        fields_check[idx].field_index,
+                        st->field_info.is_field_complex ? "true" : "false",
+                        st->field_info.field_index);
                     result = false;
                 }
                 already_seen = true;
-            } else if (st->is_field_complex) {
+            } else if (st->field_info.is_field_complex) {
                 CTEST_LOG(
                     "%s:%d '%s' has not been defined as an operation field "
                     "and therefore must not be complex",
-                    __FILE__, __LINE__, st->field_name);
+                    __FILE__, __LINE__, st->field_info.field_name);
                 result = false;
             }
             tz_parser_flush(st, data->obuf, data->olen);
@@ -159,9 +168,9 @@ CTEST2(operation_parser, check_proposals_complexity)
           "2cadcd87ecb0d5c50330fb59feed7432bffecede8a09a2b86cfb33847b0bcd7b2c"
           "adcd87ecb0d5c50330fb59feed7432bffecede8a09a2b86dac301a2d";
     const tz_fields_check fields_check[] = {
-        {"Source",   false},
-        {"Period",   false},
-        {"Proposal", false},
+        {"Source",   false, 1},
+        {"Period",   false, 2},
+        {"Proposal", false, 3},
     };
     check_field_complexity(data, str, fields_check, sizeof(fields_check));
 }
@@ -173,10 +182,10 @@ CTEST2(operation_parser, check_ballot_complexity)
           "0600ffdd6102321bc251e4a5190ad5b12b251069d9b4000000200bcd7b2cadcd87"
           "ecb0d5c50330fb59feed7432bffecede8a09a2b86cfb33847b00";
     const tz_fields_check fields_check[] = {
-        {"Source",   false},
-        {"Period",   false},
-        {"Proposal", false},
-        {"Ballot",   false},
+        {"Source",   false, 1},
+        {"Period",   false, 2},
+        {"Proposal", false, 3},
+        {"Ballot",   false, 4},
     };
     check_field_complexity(data, str, fields_check, sizeof(fields_check));
 }
@@ -193,7 +202,7 @@ CTEST2(operation_parser, check_failing_noop_complexity)
           "343764396431333264653162623664613233643566663964386466666461323262"
           "6139613834";
     const tz_fields_check fields_check[] = {
-        {"Message", false},
+        {"Message", false, 1},
     };
     check_field_complexity(data, str, fields_check, sizeof(fields_check));
 }
@@ -205,9 +214,9 @@ CTEST2(operation_parser, check_reveal_complexity)
           "6b00ffdd6102321bc251e4a5190ad5b12b251069d9b4904e02030400747884d9ab"
           "df16b3ab745158925f567e222f71225501826fa83347f6cbe9c393";
     const tz_fields_check fields_check[] = {
-        {"Fee",           false},
-        {"Storage limit", false},
-        {"Public key",    false},
+        {"Fee",           false, 1},
+        {"Storage limit", false, 2},
+        {"Public key",    false, 3},
     };
     check_field_complexity(data, str, fields_check, sizeof(fields_check));
 }
@@ -219,10 +228,10 @@ CTEST2(operation_parser, check_simple_transaction_complexity)
           "6c00ffdd6102321bc251e4a5190ad5b12b251069d9b4a0c21e020304904e010000"
           "0000000000000000000000000000000000000000";
     const tz_fields_check fields_check[] = {
-        {"Fee",           false},
-        {"Storage limit", false},
-        {"Amount",        false},
-        {"Destination",   false},
+        {"Fee",           false, 1},
+        {"Storage limit", false, 2},
+        {"Amount",        false, 3},
+        {"Destination",   false, 4},
     };
     check_field_complexity(data, str, fields_check, sizeof(fields_check));
 }
@@ -234,12 +243,12 @@ CTEST2(operation_parser, check_transaction_complexity)
           "6c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e0100"
           "0000000000000000000000000000000000000000ff02000000020316";
     const tz_fields_check fields_check[] = {
-        {"Fee",           false},
-        {"Storage limit", false},
-        {"Amount",        false},
-        {"Destination",   false},
-        {"Entrypoint",    true },
-        {"Parameter",     true },
+        {"Fee",           false, 1},
+        {"Storage limit", false, 2},
+        {"Amount",        false, 3},
+        {"Destination",   false, 4},
+        {"Entrypoint",    true,  5},
+        {"Parameter",     true,  5},
     };
     check_field_complexity(data, str, fields_check, sizeof(fields_check));
 }
@@ -253,16 +262,17 @@ CTEST2(operation_parser, check_double_transaction_complexity)
           "6c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e0100"
           "0000000000000000000000000000000000000000ff02000000020316";
     const tz_fields_check fields_check[] = {
-        {"Fee",           false},
-        {"Storage limit", false},
-        {"Amount",        false},
-        {"Destination",   false},
-        {"Fee",           false},
-        {"Storage limit", false},
-        {"Amount",        false},
-        {"Destination",   false},
-        {"Entrypoint",    true },
-        {"Parameter",     true },
+        {"Fee",           false, 1 },
+        {"Storage limit", false, 2 },
+        {"Amount",        false, 3 },
+        {"Destination",   false, 4 },
+ // {"None"     ,   false, 5 },
+        {"Fee",           false, 6 },
+        {"Storage limit", false, 7 },
+        {"Amount",        false, 8 },
+        {"Destination",   false, 9 },
+        {"Entrypoint",    true,  10},
+        {"Parameter",     true,  10},
     };
     check_field_complexity(data, str, fields_check, sizeof(fields_check));
 }
@@ -274,12 +284,12 @@ CTEST2(operation_parser, check_origination_complexity)
           "6d00ffdd6102321bc251e4a5190ad5b12b251069d9b4904e020304a0c21e000000"
           "0002037a0000000a07650100000001310002";
     const tz_fields_check fields_check[] = {
-        {"Fee",           false},
-        {"Storage limit", false},
-        {"Balance",       false},
-        {"Delegate",      false},
-        {"Code",          true },
-        {"Storage",       true },
+        {"Fee",           false, 1},
+        {"Storage limit", false, 2},
+        {"Balance",       false, 3},
+        {"Delegate",      false, 4},
+        {"Code",          true,  5},
+        {"Storage",       true,  6},
     };
     check_field_complexity(data, str, fields_check, sizeof(fields_check));
 }
@@ -291,9 +301,9 @@ CTEST2(operation_parser, check_delegation_complexity)
           "6e01774d99da021b92d8c3dfc2e814c7658440319be2c09a0cf40509f906ff0059"
           "1e842444265757d6a65e3670ca18b5e662f9c0";
     const tz_fields_check fields_check[] = {
-        {"Fee",           false},
-        {"Storage limit", false},
-        {"Delegate",      false},
+        {"Fee",           false, 1},
+        {"Storage limit", false, 2},
+        {"Delegate",      false, 3},
     };
     check_field_complexity(data, str, fields_check, sizeof(fields_check));
 }
@@ -305,9 +315,9 @@ CTEST2(operation_parser, check_register_global_constant_complexity)
           "6f00ffdd6102321bc251e4a5190ad5b12b251069d9b4904e0203040000000a0707"
           "0100000001310002";
     const tz_fields_check fields_check[] = {
-        {"Fee",           false},
-        {"Storage limit", false},
-        {"Value",         true },
+        {"Fee",           false, 1},
+        {"Storage limit", false, 2},
+        {"Value",         true,  3},
     };
     check_field_complexity(data, str, fields_check, sizeof(fields_check));
 }
@@ -319,9 +329,9 @@ CTEST2(operation_parser, check_set_deposit_limite_complexity)
           "70027c252d3806e6519ed064026bdb98edf866117331e0d40304f80204ffa09c0"
           "1";
     const tz_fields_check fields_check[] = {
-        {"Fee",           false},
-        {"Storage limit", false},
-        {"Staking limit", false},
+        {"Fee",           false, 1},
+        {"Storage limit", false, 2},
+        {"Staking limit", false, 3},
     };
     check_field_complexity(data, str, fields_check, sizeof(fields_check));
 }
@@ -333,10 +343,10 @@ CTEST2(operation_parser, check_increase_paid_storage_complexity)
           "7100ffdd6102321bc251e4a5190ad5b12b251069d9b4904e020304050100000000"
           "0000000000000000000000000000000000";
     const tz_fields_check fields_check[] = {
-        {"Fee",           false},
-        {"Storage limit", false},
-        {"Amount",        false},
-        {"Destination",   false},
+        {"Fee",           false, 1},
+        {"Storage limit", false, 2},
+        {"Amount",        false, 3},
+        {"Destination",   false, 4},
     };
     check_field_complexity(data, str, fields_check, sizeof(fields_check));
 }
@@ -348,9 +358,9 @@ CTEST2(operation_parser, check_set_consensus_key_complexity)
           "7200c921d4487c90b4472da6cc566a58d79f0d991dbf904e02030400747884d9ab"
           "df16b3ab745158925f567e222f71225501826fa83347f6cbe9c393";
     const tz_fields_check fields_check[] = {
-        {"Fee",           false},
-        {"Storage limit", false},
-        {"Public key",    false},
+        {"Fee",           false, 1},
+        {"Storage limit", false, 2},
+        {"Public key",    false, 3},
     };
     check_field_complexity(data, str, fields_check, sizeof(fields_check));
 }
@@ -364,14 +374,14 @@ CTEST2(operation_parser, check_transfer_ticket_complexity)
           "69d9b4010100000000000000000000000000000000000000000000000007646566"
           "61756c74";
     const tz_fields_check fields_check[] = {
-        {"Fee",           false},
-        {"Storage limit", false},
-        {"Contents",      true },
-        {"Type",          true },
-        {"Ticketer",      false},
-        {"Amount",        false},
-        {"Destination",   false},
-        {"Entrypoint",    false},
+        {"Fee",           false, 1},
+        {"Storage limit", false, 2},
+        {"Contents",      true,  3},
+        {"Type",          true,  4},
+        {"Ticketer",      false, 5},
+        {"Amount",        false, 6},
+        {"Destination",   false, 7},
+        {"Entrypoint",    false, 8},
     };
     check_field_complexity(data, str, fields_check, sizeof(fields_check));
 }
@@ -383,9 +393,9 @@ CTEST2(operation_parser, check_sc_rollup_add_messages_complexity)
           "c900ffdd6102321bc251e4a5190ad5b12b251069d9b4904e020304000000140000"
           "000301234500000001670000000489abcdef";
     const tz_fields_check fields_check[] = {
-        {"Fee",           false},
-        {"Storage limit", false},
-        {"Message",       false},
+        {"Fee",           false, 1},
+        {"Storage limit", false, 2},
+        {"Message",       false, 3},
     };
     check_field_complexity(data, str, fields_check, sizeof(fields_check));
 }
@@ -404,11 +414,11 @@ CTEST2(operation_parser, check_sc_rollup_execute_outbox_message_complexity)
           "386166363230643463383632343764396431333264653162623664613233643566"
           "6639643864666664613232626139613834";
     const tz_fields_check fields_check[] = {
-        {"Fee",           false},
-        {"Storage limit", false},
-        {"Rollup",        false},
-        {"Commitment",    false},
-        {"Output proof",  true },
+        {"Fee",           false, 1},
+        {"Storage limit", false, 2},
+        {"Rollup",        false, 3},
+        {"Commitment",    false, 4},
+        {"Output proof",  true,  5},
     };
     check_field_complexity(data, str, fields_check, sizeof(fields_check));
 }
@@ -429,12 +439,12 @@ CTEST2(operation_parser, check_sc_rollup_originate_complexity)
           "06068a6f8106737461747573c87a31b1c8e3af61756b336bcfc3b0c292c89b40cc"
           "8a5080ba99c45463d110ce8b0000000a07070100000001310002";
     const tz_fields_check fields_check[] = {
-        {"Fee",           false},
-        {"Storage limit", false},
-        {"Kind",          false},
-        {"Kernel",        true },
-        {"Proof",         true },
-        {"Parameters",    true },
+        {"Fee",           false, 1},
+        {"Storage limit", false, 2},
+        {"Kind",          false, 3},
+        {"Kernel",        true,  4},
+        {"Proof",         true,  5},
+        {"Parameters",    true,  6},
     };
     check_field_complexity(data, str, fields_check, sizeof(fields_check));
 }
