@@ -21,6 +21,8 @@ dir_path=os.path.dirname(file_path)
 root_path=os.path.dirname(dir_path)
 sys.path.append(root_path)
 
+from conftest import requires_device
+
 from pathlib import Path
 
 from utils.app import Screen, DEFAULT_ACCOUNT
@@ -40,6 +42,7 @@ from utils.message import Message
 # S
 # S
 
+@requires_device("nanosp")
 def test_nanosp_regression_potential_empty_screen(app):
     test_name = Path(__file__).stem
 
