@@ -21,6 +21,8 @@ dir_path=os.path.dirname(file_path)
 root_path=os.path.dirname(dir_path)
 sys.path.append(root_path)
 
+from conftest import requires_device
+
 from pathlib import Path
 
 from utils.app import Screen, DEFAULT_ACCOUNT
@@ -28,6 +30,7 @@ from utils.message import Message
 
 # Expression: {IF_NONE {{SWAP;IF {DIP {{DROP 1;PUSH unit Unit;PUSH bool True;PUSH string ";L\\S?p$-Fq)VDg\n]te\no4v0_8)\""}}} {{DROP 2;PUSH unit Unit;PUSH bool False;PUSH string "Li-%*edF6~?E[5Kmu?dyviwJ^2\"\\d$FyQ>>!>D$g(Qg";PUSH string "*Tx<E`SiG6Yf*A^kZ\\=7?H[mOlQ\n]Ehs"}}}} {IF_NONE {DUP} {{DROP 4;PUSH unit Unit;PUSH bool True;PUSH string "\"\\6_4\n$k%";PUSH string "c^1\"\\?Ey_1!EVb~9;EX;YU\n#Kj2ZT8h`U!X "}}};SIZE}
 
+@requires_device("nanosp")
 def test_nanosp_regression_press_right_works_across_apdu_recieves(app):
     test_name = Path(__file__).stem
 

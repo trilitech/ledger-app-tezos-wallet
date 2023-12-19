@@ -21,6 +21,8 @@ dir_path=os.path.dirname(file_path)
 root_path=os.path.dirname(dir_path)
 sys.path.append(root_path)
 
+from conftest import requires_device
+
 from pathlib import Path
 
 from utils.app import Screen, DEFAULT_ACCOUNT
@@ -39,6 +41,7 @@ from utils.message import Message
 # Amount: 0.06 XTZ
 # Destination: KT1CYT8oACUcCSNTu2qfgB4fj5bD7szYrpti
 
+@requires_device("nanox")
 def test_nanox_regression_batched_ops(app):
     test_name = Path(__file__).stem
 

@@ -94,3 +94,9 @@ def backend(app_path: Path,
 @pytest.fixture(scope="function")
 def app(backend: SpeculosTezosBackend, golden_run: bool):
     return TezosAppScreen(backend, APP_KIND.WALLET, golden_run)
+
+def requires_device(device):
+    return pytest.mark.skipif(
+        f"config.getvalue('device') != '{ device }'",
+        reason=f"Test requires device to be { device }."
+    )
