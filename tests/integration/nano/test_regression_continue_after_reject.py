@@ -26,7 +26,7 @@ if __name__ == "__main__":
 
     with nano_app() as app:
 
-        app.assert_screen(Screen.Home)
+        app.setup_expert_mode()
 
         app.reject_public_key(DEFAULT_ACCOUNT, make_path("reject_public_key"))
 

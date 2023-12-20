@@ -96,6 +96,8 @@ let reject ppf () =
   expect_reject ppf ();
   Button.(press ppf Both)
 
+let set_expert_mode ppf () = Format.fprintf ppf "set_expert_mode@."
+
 type screen = { title : string; contents : string }
 
 let make_screen ~title contents = { title; contents }
@@ -109,6 +111,11 @@ let go_through_screens ppf screens =
       expected_screen ppf screen;
       Button.(press ppf Right))
     screens
+
+let need_expert_mode_screen ?(expert_mode = true) title =
+  if expert_mode then
+    { title = "Next field requires"; contents = "careful review" }
+  else { title; contents = "Needs Expert mode" }
 
 let sign ppf ~signer:Apdu.Signer.({ sk; pk; _ } as signer) ~watermark bin =
   let watermark = Tezos_crypto.Signature.bytes_of_watermark watermark in
@@ -240,12 +247,17 @@ let operation_to_screens
             make_screen ~title:"Delegate" "%a"
               (pp_opt_field Tezos_crypto.Signature.Public_key_hash.pp)
               delegate;
+            need_expert_mode_screen "Code";
             make_screen ~title:"Code" "%a" pp_lazy_expr code;
+            need_expert_mode_screen "Storage";
             make_screen ~title:"Storage" "%a" pp_lazy_expr storage;
           ]
     | Register_global_constant { value } ->
         aux ~kind:"Register global constant"
-          [ make_screen ~title:"Value" "%a" pp_lazy_expr value ]
+          [
+            need_expert_mode_screen "Value";
+            make_screen ~title:"Value" "%a" pp_lazy_expr value;
+          ]
     | Reveal public_key ->
         aux ~kind:"Reveal"
           [
@@ -265,6 +277,7 @@ let operation_to_screens
           then []
           else
             [
+              need_expert_mode_screen "Parameter";
               make_screen ~title:"Entrypoint" "%a" Entrypoint.pp entrypoint;
               make_screen ~title:"Parameter" "%a" pp_lazy_expr parameters;
             ]
@@ -279,7 +292,9 @@ let operation_to_screens
         { contents; ty; ticketer; amount; destination; entrypoint } ->
         aux ~kind:"Transfer ticket"
           [
+            need_expert_mode_screen "Contents";
             make_screen ~title:"Contents" "%a" pp_lazy_expr contents;
+            need_expert_mode_screen "Type";
             make_screen ~title:"Type" "%a" pp_lazy_expr ty;
             make_screen ~title:"Ticketer" "%a" Contract.pp ticketer;
             make_screen ~title:"Amount" "%s"
@@ -303,6 +318,7 @@ let operation_to_screens
             make_screen ~title:"Rollup" "%a" Sc_rollup_repr.Address.pp rollup;
             make_screen ~title:"Commitment" "%a" Sc_rollup.Commitment.Hash.pp
               cemented_commitment;
+            need_expert_mode_screen "Output proof";
             make_screen ~title:"Output proof" "%a" pp_string_binary output_proof;
           ]
     | Sc_rollup_originate
@@ -310,9 +326,12 @@ let operation_to_screens
         aux ~kind:"SR: originate"
           [
             make_screen ~title:"Kind" "%a" Sc_rollup.Kind.pp kind;
+            need_expert_mode_screen "Kernel";
             make_screen ~title:"Kernel" "%a" pp_string_binary boot_sector;
+            need_expert_mode_screen "Proof";
             make_screen ~title:"Proof" "%a" pp_serialized_proof
               origination_proof;
+            need_expert_mode_screen "Parameters";
             make_screen ~title:"Parameters" "%a" pp_lazy_expr parameters_ty;
           ]
     | _ -> assert false
@@ -493,7 +512,7 @@ let tz3_signers =
 
 let gen_signer = QCheck2.Gen.oneofl (tz1_signers @ tz2_signers @ tz3_signers)
 
-let gen_expect_test_sign ppf ~watermark bin screens =
+let gen_expect_test_sign ?(expert_mode = false) ppf ~watermark bin screens =
   Format.fprintf ppf "# full input: %a@." pp_hex_bytes bin;
   let signer = QCheck2.Gen.generate1 ~rand:Gen_utils.random_state gen_signer in
   Format.fprintf ppf "# signer: %a@." Tezos_crypto.Signature.Public_key_hash.pp
@@ -501,6 +520,7 @@ let gen_expect_test_sign ppf ~watermark bin screens =
   Format.fprintf ppf "# path: %a@." Apdu.Path.pp signer.path;
   start_speculos ppf signer.mnemonic;
   expected_home ppf ();
+  if expert_mode then set_expert_mode ppf ();
   sign ppf ~signer ~watermark bin;
   expected_review_operation ppf ();
   Button.(press ppf Right);
@@ -521,4 +541,5 @@ let gen_expect_test_sign_operation ppf bin =
     let op = Gen_operations.decode bin in
     operation_to_screens op
   in
-  gen_expect_test_sign ppf ~watermark:Gen_operations.watermark bin screens
+  gen_expect_test_sign ~expert_mode:true ppf ~watermark:Gen_operations.watermark
+    bin screens

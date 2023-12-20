@@ -160,11 +160,39 @@ refill_blo_im_full(void)
     TZ_PREAMBLE(("void"));
 
     global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
+
+#ifdef HAVE_BAGL
+    if (st->field_info.is_field_complex && !N_settings.expert_mode) {
+        tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, st->field_info.field_name,
+                          "Needs Expert mode", TZ_UI_LAYOUT_HOME_BP,
+                          TZ_UI_ICON_NONE);
+        tz_ui_stream_push(TZ_UI_STREAM_CB_REJECT, "Home", "",
+                          TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_BACK);
+        tz_ui_stream_close();
+    } else {
+        if (st->field_info.is_field_complex
+            && global.keys.apdu.sign.u.clear.last_field_index
+                   != st->field_info.field_index) {
+            tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Next field requires",
+                              "careful review", TZ_UI_LAYOUT_HOME_BP,
+                              TZ_UI_ICON_NONE);
+            global.keys.apdu.sign.u.clear.last_field_index
+                = st->field_info.field_index;
+        }
+        wrote = tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB,
+                                  st->field_info.field_name, global.line_buf,
+                                  TZ_UI_LAYOUT_BNP, TZ_UI_ICON_NONE);
+        tz_parser_flush_up_to(st, global.line_buf, TZ_UI_STREAM_CONTENTS_SIZE,
+                              wrote);
+    }
+#elif HAVE_NBGL
+    global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
     wrote = tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, st->field_info.field_name,
                               global.line_buf, TZ_UI_LAYOUT_BNP,
                               TZ_UI_ICON_NONE);
     tz_parser_flush_up_to(st, global.line_buf, TZ_UI_STREAM_CONTENTS_SIZE,
                           wrote);
+#endif
     TZ_POSTAMBLE;
 }
 

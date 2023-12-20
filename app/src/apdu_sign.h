@@ -58,6 +58,7 @@ typedef struct {
         struct {
             size_t          total_length;
             tz_parser_state parser_state;
+            uint8_t         last_field_index;
             bool            received_msg;
         } clear;
         struct {

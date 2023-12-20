@@ -30,7 +30,7 @@ if __name__ == "__main__":
     test_name = Path(__file__).stem
     with nano_app() as app:
 
-        app.assert_screen(Screen.Home)
+        app.setup_expert_mode()
 
         message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000006d00ffdd6102321bc251e4a5190ad5b12b251069d9b4904e020304a0c21e0000000002037a0000000a07650100000001310002")
 
