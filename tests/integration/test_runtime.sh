@@ -390,7 +390,6 @@ run_a_test() {
                         python3 $CMD \
                                 --device $TARGET \
                                 --port $PORT \
-                                --apdu-port 0 \
                                 --app $app_dir/app.elf
                     fi
                     ;;
