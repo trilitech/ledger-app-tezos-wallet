@@ -160,7 +160,6 @@ You can run an individual test from the test container. You should see the app p
 ./tests/integration/nano/<test_name>.py \
    --device $DEVICE \
    --port $PORT \
-   --display headless \
    --vnc-port 41000 \
    --app app/bin/app.elf
 ```

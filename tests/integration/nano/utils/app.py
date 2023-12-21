@@ -421,6 +421,11 @@ def nano_app(seed: str = DEFAULT_SEED) -> Generator[TezosAppScreen, None, None]:
                         type=int,
                         default=5000,
                         help="Port")
+    parser.add_argument("--display",
+                        action="store_const",
+                        const=True,
+                        default=False,
+                        help="Emulate the app")
     parser.add_argument("--golden-run",
                         action='store_const',
                         const=True,
@@ -433,10 +438,17 @@ def nano_app(seed: str = DEFAULT_SEED) -> Generator[TezosAppScreen, None, None]:
     args, unknown_args = parser.parse_known_args()
 
     firmware = next(fw for fw in FIRMWARES if fw.device == args.device)
-    speculos_args = [
+
+    speculos_args = unknown_args
+
+    if args.display:
+        speculos_args += ["--display", "qt"]
+
+    speculos_args += [
         "--api-port", f"{args.port}",
         "--seed", seed
-    ] + unknown_args
+    ]
+
     backend = SpeculosTezosBackend(args.app,
                                    firmware,
                                    port=args.port,
