@@ -38,12 +38,10 @@ if __name__ == "__main__":
     app.expect_apdu_return("9000")
 
     app.send_apdu("800f82004f63313162343430616334643334353564656462653465653064653135613861663632306434633836323437643964313332646531626236646132336435666639643864666664613232626139613834")
-
     app.assert_screen("tseom_review_01")
+
     app.review.tap()
-    app.enable_expert_mode()
-    app.review.tap()
-    app.assert_screen("expert_mode_splash")
+    app.expert_mode_splash()
 
 
     for i in range(4):

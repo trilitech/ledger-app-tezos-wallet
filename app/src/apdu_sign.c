@@ -431,7 +431,6 @@ stream_cb(tz_ui_cb_type_t cb_type)
     case TZ_UI_STREAM_CB_REFILL:             TZ_CHECK(refill());                   break;
     case TZ_UI_STREAM_CB_REJECT:             send_reject(EXC_REJECT);              break;
     case TZ_UI_STREAM_CB_BLINDSIGN_REJECT:   send_reject(EXC_PARSE_ERROR);         break;
-    case TZ_UI_STREAM_CB_EXPERT_MODE_REJECT: send_reject(EXC_REJECT);              break;
     case TZ_UI_STREAM_CB_CANCEL:             TZ_CHECK(send_cancel());              break;
     case TZ_UI_STREAM_CB_BLINDSIGN:          TZ_CHECK(pass_from_clear_to_blind()); break;
     default:                                 TZ_FAIL(EXC_UNKNOWN);                 break;

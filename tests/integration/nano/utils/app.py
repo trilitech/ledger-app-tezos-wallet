@@ -110,11 +110,8 @@ def send_and_navigate(send: Callable[[], bytes], navigate: Callable[[], None]) -
 
     result_queue: Queue = Queue()
     send_process = Process(target=_send, args=(result_queue,))
-    if navigate is not None:
-        navigate_process = Process(target=navigate)
-        run_simultaneously([navigate_process, send_process])
-    else:
-        run_simultaneously([send_process])
+    navigate_process = Process(target=navigate)
+    run_simultaneously([navigate_process, send_process])
     return result_queue.get()
 
 class SpeculosTezosBackend(TezosBackend, SpeculosBackend):
@@ -330,16 +327,6 @@ class TezosAppScreen():
             send=(lambda: self.backend.sign(account, message, with_hash)),
             navigate=(lambda: self.navigate_until_text(Screen_text.Sign_accept, path)))
 
-    def sign_with_manual_navigate(self,
-             account: Account,
-             message: Message,
-             with_hash: bool,
-             path: Union[str, Path]) -> bytes:
-
-        return send_and_navigate(
-            send=(lambda: self.backend.sign(account, message, with_hash)),
-            navigate=None)
-
     def blind_sign(self,
                    account: Account,
                    message: Message,
@@ -413,8 +400,7 @@ class TezosAppScreen():
 FIRMWARES = [
     Firmware.NANOS,
     Firmware.NANOSP,
-    Firmware.NANOX,
-    Firmware.STAX,
+    Firmware.NANOX
 ]
 
 DEFAULT_SEED = ('zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra')
@@ -429,7 +415,7 @@ def nano_app(seed: str = DEFAULT_SEED) -> Generator[TezosAppScreen, None, None]:
     parser.add_argument("-d", "--device",
                         type=str,
                         choices=list(map(lambda fw: fw.device, FIRMWARES)),
-                        help="Device type: nanos | nanosp | nanox | stax",
+                        help="Device type: nanos | nanosp | nanox ",
                         required=True)
     parser.add_argument("-p", "--port",
                         type=int,

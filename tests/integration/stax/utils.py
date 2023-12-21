@@ -137,10 +137,18 @@ class TezosAppScreen(metaclass=MetaScreen):
         self.review.tap()
         self.expect_apdu_return(expected_apdu)
 
-    def enable_expert_mode(self):
-        self.assert_screen("enable_expert_mode")
-        self.welcome.client.finger_touch(BUTTON_ABOVE_LOWER_MIDDLE.x, BUTTON_ABOVE_LOWER_MIDDLE.y)
-        self.assert_screen("enabled_expert_mode")
+    def enable_expert_mode(self, expert_enabled=False):
+        if not expert_enabled:
+            self.assert_screen("enable_expert_mode")
+            self.welcome.client.finger_touch(BUTTON_ABOVE_LOWER_MIDDLE.x, BUTTON_ABOVE_LOWER_MIDDLE.y)
+            self.assert_screen("enabled_expert_mode")
+
+    def expert_mode_splash(self, expert_enabled=False):
+        self.enable_expert_mode(expert_enabled)
+        self.review.tap()
+        self.assert_screen("expert_mode_splash")
+
+
 
     def review_reject_signing(self, confirmRejection = True):
         self.welcome.client.finger_touch(BUTTON_LOWER_LEFT.x, BUTTON_LOWER_RIGHT.y)

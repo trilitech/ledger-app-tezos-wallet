@@ -299,9 +299,6 @@ tz_ui_nav_cb(uint8_t page, nbgl_pageContent_t *content)
         s->current = s->total;
         result     = false;
 
-        if (s->current < s->total) {
-            s->current++;
-        }
     } else if (s->total >= 0) {
         PRINTF("[DEBUG] Display: curr=%d total=%d pr=%d\n", s->current,
                s->total, s->pressed_right);

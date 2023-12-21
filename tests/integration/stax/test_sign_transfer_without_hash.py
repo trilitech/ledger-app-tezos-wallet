@@ -39,10 +39,7 @@ if __name__ == "__main__":
     app.assert_screen("review_1")
 
     app.review.tap()
-    app.enable_expert_mode()
-
-    app.review.tap()
-    app.assert_screen("expert_mode_splash")
+    app.expert_mode_splash()
 
     app.review.tap()
     app.assert_screen("review_2")

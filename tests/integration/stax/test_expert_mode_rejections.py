@@ -63,10 +63,10 @@ if __name__ == "__main__":
     app.review.tap()
     app.enable_expert_mode()
     app.review.tap()
-    verify_reject_response(app, "tst_expert_splash")
+    verify_reject_response(app, "expert_mode_splash")
 
     # Now with expert mode enabled, reject from splash screen.
 
     sign_transfer_initialize(app)
     app.review.tap()
-    verify_reject_response(app, "tst_expert_splash")
+    verify_reject_response(app, "expert_mode_splash")
