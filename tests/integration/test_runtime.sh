@@ -379,7 +379,7 @@ run_a_test() {
                             COMMIT_BYTES=$COMMIT_BYTES\
                             VERSION_BYTES=$VERSION_BYTES\
                             python3 $CMD
-                    else
+                    elif [[ "$CMD" != *"conftest.py" ]]; then
                         if [ "$DBG" = "DEBUG" ]; then
                             tgz=$DTGZ
                         else
@@ -387,10 +387,10 @@ run_a_test() {
                         fi
                         app_dir="$(mktemp -d $DATA_DIR/appdir-XXXXXX)"
                         tar xfz "$tgz" -C $app_dir
-                        python3 $CMD \
-                                --device $TARGET \
-                                --port $PORT \
-                                --app $app_dir/app.elf
+                        pytest $CMD -v \
+                               --device $TARGET \
+                               --port $PORT \
+                               --app $app_dir/app.elf
                     fi
                     ;;
                 *.hex)
