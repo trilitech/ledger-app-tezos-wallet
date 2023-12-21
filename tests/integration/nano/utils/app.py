@@ -446,6 +446,7 @@ def nano_app(seed: str = DEFAULT_SEED) -> Generator[TezosAppScreen, None, None]:
 
     speculos_args += [
         "--api-port", f"{args.port}",
+        "--apdu-port", "0",
         "--seed", seed
     ]
 
