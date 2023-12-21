@@ -380,19 +380,17 @@ change_screen_right(void)
     redisplay();
     TZ_POSTAMBLE;
 }
-#endif  // HAVE_BAGL
 
 void
 tz_ui_stream_start(void)
 {
     FUNC_ENTER(("void"));
-#ifdef HAVE_BAGL
+
     redisplay();
-#endif
+
     FUNC_LEAVE();
 }
 
-#ifdef HAVE_BAGL
 void
 tz_ui_stream(void)
 {

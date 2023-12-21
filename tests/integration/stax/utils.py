@@ -137,6 +137,11 @@ class TezosAppScreen(metaclass=MetaScreen):
         self.review.tap()
         self.expect_apdu_return(expected_apdu)
 
+    def enable_expert_mode(self):
+        self.assert_screen("enable_expert_mode")
+        self.welcome.client.finger_touch(BUTTON_ABOVE_LOWER_MIDDLE.x, BUTTON_ABOVE_LOWER_MIDDLE.y)
+        self.assert_screen("enabled_expert_mode")
+
     def review_reject_signing(self, confirmRejection = True):
         self.welcome.client.finger_touch(BUTTON_LOWER_LEFT.x, BUTTON_LOWER_RIGHT.y)
         # Rejection confirmation page
@@ -185,3 +190,14 @@ def verify_err_reject_response(app, tag):
     app.welcome.client.resume_ticker()
     app.review.tap()
     assert_home_with_code(app, "9405")
+
+def verify_reject_response(app, tag):
+    app.assert_screen(tag)
+    app.review.reject()
+    app.assert_screen("reject_review")
+    app.welcome.client.pause_ticker()
+    app.welcome.client.finger_touch(BUTTON_ABOVE_LOWER_MIDDLE.x, BUTTON_ABOVE_LOWER_MIDDLE.y)
+    app.assert_screen("rejected")
+    app.review.tap()
+    app.welcome.client.resume_ticker()
+    assert_home_with_code(app, "6985")
