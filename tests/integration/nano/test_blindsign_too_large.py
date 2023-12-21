@@ -15,28 +15,27 @@
 
 from pathlib import Path
 
-from utils.app import nano_app, Screen, DEFAULT_ACCOUNT
+from utils.app import Screen, DEFAULT_ACCOUNT
 from utils.message import Message
 
 # Expression: 12345678901234567890123456789012345678901234567890123456789012345678901234567890
 
-if __name__ == "__main__":
+def test_blindsign_too_large(app):
     test_name = Path(__file__).stem
-    with nano_app() as app:
 
-        app.assert_screen(Screen.Home)
+    app.assert_screen(Screen.Home)
 
-        message = Message.from_bytes("050092abf8e3d9e5f8cfd9ae8a9fe5f28ea1d5b5abf1af82dae8a4b68df3d1889eb6f988f5e8d31a")
+    message = Message.from_bytes("050092abf8e3d9e5f8cfd9ae8a9fe5f28ea1d5b5abf1af82dae8a4b68df3d1889eb6f988f5e8d31a")
 
-        data = app.blind_sign(DEFAULT_ACCOUNT,
-                              message=message,
-                              with_hash=True,
-                              path=test_name)
+    data = app.blind_sign(DEFAULT_ACCOUNT,
+                          message=message,
+                          with_hash=True,
+                          path=test_name)
 
-        app.checker.check_signature(
-            account=DEFAULT_ACCOUNT,
-            message=message,
-            with_hash=True,
-            data=data)
+    app.checker.check_signature(
+        account=DEFAULT_ACCOUNT,
+        message=message,
+        with_hash=True,
+        data=data)
 
-        app.quit()
+    app.quit()

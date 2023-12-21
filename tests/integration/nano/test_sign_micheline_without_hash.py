@@ -15,28 +15,27 @@
 
 from pathlib import Path
 
-from utils.app import nano_app, Screen, DEFAULT_ACCOUNT
+from utils.app import Screen, DEFAULT_ACCOUNT
 from utils.message import Message
 
 # Expression: {"CACA";"POPO";"BOUDIN"}
 
-if __name__ == "__main__":
+def test_sign_micheline_without_hash(app):
     test_name = Path(__file__).stem
-    with nano_app() as app:
 
-        app.assert_screen(Screen.Home)
+    app.assert_screen(Screen.Home)
 
-        message = Message.from_bytes("05020000001d0100000004434143410100000004504f504f0100000006424f5544494e")
+    message = Message.from_bytes("05020000001d0100000004434143410100000004504f504f0100000006424f5544494e")
 
-        data = app.sign(DEFAULT_ACCOUNT,
-                        message,
-                        with_hash=False,
-                        path=test_name)
+    data = app.sign(DEFAULT_ACCOUNT,
+                    message,
+                    with_hash=False,
+                    path=test_name)
 
-        app.checker.check_signature(
-            account=DEFAULT_ACCOUNT,
-            message=message,
-            with_hash=False,
-            data=data)
+    app.checker.check_signature(
+        account=DEFAULT_ACCOUNT,
+        message=message,
+        with_hash=False,
+        data=data)
 
-        app.quit()
+    app.quit()

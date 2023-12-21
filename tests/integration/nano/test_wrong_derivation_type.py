@@ -14,21 +14,20 @@
 # limitations under the License.
 
 from utils.account import Account
-from utils.app import nano_app, Screen
+from utils.app import Screen
 from utils.backend import INS, StatusCode
 
-if __name__ == "__main__":
+def test_wrong_derivation_type(app):
     account = Account("m/44'/1729'/0'/0'", 0x04, "__unused__")
-    with nano_app() as app:
 
-        for sender in [lambda account: app.backend.get_public_key(account, with_prompt=False),
-                       lambda account: app.backend.get_public_key(account, with_prompt=True),
-                       lambda account: app.backend._ask_sign(INS.SIGN, account),
-                       lambda account: app.backend._ask_sign(INS.SIGN_WITH_HASH, account)]:
+    for sender in [lambda account: app.backend.get_public_key(account, with_prompt=False),
+                   lambda account: app.backend.get_public_key(account, with_prompt=True),
+                   lambda account: app.backend._ask_sign(INS.SIGN, account),
+                   lambda account: app.backend._ask_sign(INS.SIGN_WITH_HASH, account)]:
 
-            app.assert_screen(Screen.Home)
+        app.assert_screen(Screen.Home)
 
-            with app.expect_apdu_failure(StatusCode.WRONG_PARAM):
-                sender(account)
+        with app.expect_apdu_failure(StatusCode.WRONG_PARAM):
+            sender(account)
 
-        app.quit()
+    app.quit()
