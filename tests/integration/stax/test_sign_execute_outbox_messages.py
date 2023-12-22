@@ -35,11 +35,13 @@ if __name__ == "__main__":
     app.assert_screen("tseom_review_00")
 
     app.review.tap()
+    app.assert_screen("tseom_review_01")
+    app.review.tap()
     app.expect_apdu_return("9000")
 
     app.send_apdu("800f82004f63313162343430616334643334353564656462653465653064653135613861663632306434633836323437643964313332646531626236646132336435666639643864666664613232626139613834")
-    app.assert_screen("tseom_review_01")
 
+    app.assert_screen("tseom_review_02")
     app.review.tap()
     app.expert_mode_splash()
 
