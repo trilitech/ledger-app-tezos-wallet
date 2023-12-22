@@ -151,6 +151,82 @@ send_continue(void)
 
     TZ_POSTAMBLE;
 }
+#ifdef HAVE_NBGL
+
+static void
+cancel_operation(uint8_t reject_code)
+{
+    TZ_PREAMBLE(("void"));
+    global.keys.apdu.sign.received_last_msg = true;
+    stream_cb(reject_code);
+    global.step = ST_IDLE;
+    nbgl_useCaseStatus("Transaction rejected", false, ui_home_init);
+
+    TZ_POSTAMBLE;
+}
+
+static void
+cancel_operation_blindsign(void)
+{
+    cancel_operation(TZ_UI_STREAM_CB_BLINDSIGN_REJECT);
+}
+
+static void
+blindsign_splash(void)
+{
+    TZ_PREAMBLE(("void"));
+    nbgl_useCaseReviewStart(
+        &C_round_warning_64px, "Blind signing",
+        "This transaction can not be securely interpreted by Ledger Stax. It "
+        "might put your assets at risk.",
+        "Reject transaction", pass_from_clear_to_blind,
+        cancel_operation_blindsign);
+
+    TZ_POSTAMBLE;
+}
+
+static void
+handle_blindsigning(bool confirm)
+{
+    TZ_PREAMBLE(("void"));
+    if (confirm) {
+        if (!N_settings.blindsigning)
+            toggle_blindsigning();
+        nbgl_useCaseReviewStart(&C_round_check_64px, "Blind signing enabled",
+                                NULL, "Reject transaction", blindsign_splash,
+                                cancel_operation_blindsign);
+
+    } else {
+        cancel_operation_blindsign();
+    }
+    TZ_POSTAMBLE;
+}
+
+void
+switch_to_blindsigning(__attribute__((unused)) const char *err_type,
+                       const char                         *err_code)
+{
+    TZ_PREAMBLE(("void"));
+    PRINTF("[DEBUG] refill_error: global.step = %d\n", global.step);
+    TZ_ASSERT(EXC_UNEXPECTED_STATE, global.step == ST_CLEAR_SIGN);
+    global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
+    global.step                = ST_BLIND_SIGN;
+    if (N_settings.blindsigning) {
+        nbgl_useCaseReviewStart(&C_round_warning_64px,
+                                "Blind signing required:\nParsing Error",
+                                err_code, "Reject transaction",
+                                blindsign_splash, cancel_operation_blindsign);
+    } else {
+        nbgl_useCaseChoice(&C_round_warning_64px,
+                           "Enable blind signing to authorize this "
+                           "transaction:\nParsing Error",
+                           err_code, "Enable blind signing",
+                           "Reject transaction", handle_blindsigning);
+    }
+
+    TZ_POSTAMBLE;
+}
+#endif
 
 static void
 refill_blo_im_full(void)
@@ -169,6 +245,7 @@ refill_blo_im_full(void)
         tz_ui_stream_push(TZ_UI_STREAM_CB_REJECT, "Home", "",
                           TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_BACK);
         tz_ui_stream_close();
+        goto end;
     } else {
         if (st->field_info.is_field_complex
             && global.keys.apdu.sign.u.clear.last_field_index
@@ -179,20 +256,38 @@ refill_blo_im_full(void)
             global.keys.apdu.sign.u.clear.last_field_index
                 = st->field_info.field_index;
         }
-        wrote = tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB,
-                                  st->field_info.field_name, global.line_buf,
-                                  TZ_UI_LAYOUT_BNP, TZ_UI_ICON_NONE);
-        tz_parser_flush_up_to(st, global.line_buf, TZ_UI_STREAM_CONTENTS_SIZE,
-                              wrote);
     }
-#elif HAVE_NBGL
-    global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
+
     wrote = tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, st->field_info.field_name,
                               global.line_buf, TZ_UI_LAYOUT_BNP,
                               TZ_UI_ICON_NONE);
+#elif HAVE_NBGL
+    PRINTF("[DEBUG] field=%s complex=%d\n", st->field_info.field_name,
+           st->field_info.is_field_complex);
+    if (st->field_info.is_field_complex
+        && global.keys.apdu.sign.u.clear.last_field_index
+               != st->field_info.field_index) {
+        global.keys.apdu.sign.u.clear.last_field_index
+            = st->field_info.field_index;
+        if (!N_settings.expert_mode) {
+            tz_ui_stream_push_all(TZ_UI_STREAM_CB_EXPERT_MODE_ENABLE,
+                                  st->field_info.field_name, "complex",
+                                  TZ_UI_LAYOUT_BNP, TZ_UI_ICON_NONE);
+        }
+
+        wrote = tz_ui_stream_push_all(
+            TZ_UI_STREAM_CB_EXPERT_MODE_FIELD, st->field_info.field_name,
+            global.line_buf, TZ_UI_LAYOUT_BNP, TZ_UI_ICON_NONE);
+    } else {
+        wrote = tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB,
+                                  st->field_info.field_name, global.line_buf,
+                                  TZ_UI_LAYOUT_BNP, TZ_UI_ICON_NONE);
+    }
+
+#endif
+
     tz_parser_flush_up_to(st, global.line_buf, TZ_UI_STREAM_CONTENTS_SIZE,
                           wrote);
-#endif
     TZ_POSTAMBLE;
 }
 
@@ -218,77 +313,6 @@ refill_blo_done(void)
 
     TZ_POSTAMBLE;
 }
-
-#ifdef HAVE_NBGL
-
-static void
-cancel_operation(void)
-{
-    TZ_PREAMBLE(("void"));
-    global.keys.apdu.sign.received_last_msg = true;
-    stream_cb(TZ_UI_STREAM_CB_BLINDSIGN_REJECT);
-    global.step = ST_IDLE;
-    nbgl_useCaseStatus("Transaction rejected", false, ui_home_init);
-
-    TZ_POSTAMBLE;
-}
-
-static void
-blindsign_splash(void)
-{
-    TZ_PREAMBLE(("void"));
-    nbgl_useCaseReviewStart(
-        &C_round_warning_64px, "Blind signing",
-        "This transaction can not be securely interpreted by Ledger Stax. It "
-        "might put your assets at risk.",
-        "Reject transaction", pass_from_clear_to_blind, cancel_operation);
-
-    TZ_POSTAMBLE;
-}
-
-static void
-handle_blindsigning(bool confirm)
-{
-    TZ_PREAMBLE(("void"));
-    if (confirm) {
-        if (!N_settings.blindsigning)
-            toggle_blindsigning();
-        nbgl_useCaseReviewStart(&C_round_check_64px, "Blind signing enabled",
-                                NULL, "Reject transaction", blindsign_splash,
-                                cancel_operation);
-
-    } else {
-        cancel_operation();
-    }
-    TZ_POSTAMBLE;
-}
-
-void
-switch_to_blindsigning(__attribute__((unused)) const char *err_type,
-                       const char                         *err_code)
-{
-    TZ_PREAMBLE(("void"));
-    PRINTF("[DEBUG] refill_error: global.step = %d\n", global.step);
-    TZ_ASSERT(EXC_UNEXPECTED_STATE, global.step == ST_CLEAR_SIGN);
-    global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
-    global.step                = ST_BLIND_SIGN;
-    if (N_settings.blindsigning) {
-        nbgl_useCaseReviewStart(&C_round_warning_64px,
-                                "Blind signing required:\nParsing Error",
-                                err_code, "Reject transaction",
-                                blindsign_splash, cancel_operation);
-    } else {
-        nbgl_useCaseChoice(&C_round_warning_64px,
-                           "Enable blind signing to authorize this "
-                           "transaction:\nParsing Error",
-                           err_code, "Enable blind signing",
-                           "Reject transaction", handle_blindsigning);
-    }
-
-    TZ_POSTAMBLE;
-}
-
-#endif
 
 static void
 refill_error(void)
@@ -403,13 +427,13 @@ stream_cb(tz_ui_cb_type_t cb_type)
 
     // clang-format off
     switch (cb_type) {
-    case TZ_UI_STREAM_CB_ACCEPT:           TZ_CHECK(sign_packet());              break;
-    case TZ_UI_STREAM_CB_REFILL:           TZ_CHECK(refill());                   break;
-    case TZ_UI_STREAM_CB_REJECT:           send_reject(EXC_REJECT);              break;
-    case TZ_UI_STREAM_CB_BLINDSIGN_REJECT: send_reject(EXC_PARSE_ERROR);         break;
-    case TZ_UI_STREAM_CB_CANCEL:           TZ_CHECK(send_cancel());              break;
-    case TZ_UI_STREAM_CB_BLINDSIGN:        TZ_CHECK(pass_from_clear_to_blind()); break;
-    default:                               TZ_FAIL(EXC_UNKNOWN);                 break;
+    case TZ_UI_STREAM_CB_ACCEPT:             TZ_CHECK(sign_packet());              break;
+    case TZ_UI_STREAM_CB_REFILL:             TZ_CHECK(refill());                   break;
+    case TZ_UI_STREAM_CB_REJECT:             send_reject(EXC_REJECT);              break;
+    case TZ_UI_STREAM_CB_BLINDSIGN_REJECT:   send_reject(EXC_PARSE_ERROR);         break;
+    case TZ_UI_STREAM_CB_CANCEL:             TZ_CHECK(send_cancel());              break;
+    case TZ_UI_STREAM_CB_BLINDSIGN:          TZ_CHECK(pass_from_clear_to_blind()); break;
+    default:                                 TZ_FAIL(EXC_UNKNOWN);                 break;
     }
     // clang-format on
 

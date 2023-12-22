@@ -26,6 +26,7 @@
 
 bool tz_ui_nav_cb(uint8_t, nbgl_pageContent_t *);
 bool has_final_screen(void);
+void tz_ui_stream_start(void);
 
 void drop_last_screen(void);
 void push_str(const char *, size_t, char **);
@@ -68,6 +69,51 @@ tz_reject_ui(void)
 
     nbgl_useCaseConfirm("Reject transaction?", NULL, "Yes, Reject",
                         "Go back to transaction", tz_reject);
+
+    FUNC_LEAVE();
+}
+
+void
+expert_mode_splash(void)
+{
+    TZ_PREAMBLE(("void"));
+
+    nbgl_useCaseReviewStart(&C_round_warning_64px, "Expert mode",
+                            "Next screen requires careful review",
+                            "Reject transaction", tz_ui_stream_start,
+                            tz_reject_ui);
+
+    TZ_POSTAMBLE;
+}
+
+void
+handle_expert_mode(bool confirm)
+{
+    TZ_PREAMBLE(("void"));
+    if (confirm) {
+        if (!N_settings.expert_mode)
+            toggle_expert_mode();
+
+        nbgl_useCaseReviewStart(&C_round_check_64px, "Expert mode enabled",
+                                NULL, "Reject transaction",
+                                tz_ui_stream_start, tz_reject_ui);
+
+    } else {
+        tz_reject_ui();
+    }
+    TZ_POSTAMBLE;
+}
+
+void
+tz_enable_expert_mode_ui(void)
+{
+    FUNC_LEAVE();
+
+    nbgl_useCaseChoice(&C_round_warning_64px,
+                       "Enable expert mode to authorize this "
+                       "transaction",
+                       "", "Enable expert mode", "Reject transaction",
+                       handle_expert_mode);
 
     FUNC_LEAVE();
 }
@@ -176,6 +222,14 @@ tz_ui_stream_init(void (*cb)(uint8_t))
 }
 
 void
+tz_ui_stream_start(void)
+{
+    FUNC_ENTER(("void"));
+    tz_ui_stream_cb();
+    FUNC_LEAVE();
+}
+
+void
 tz_ui_stream_close(void)
 {
     tz_ui_stream_t *s = &global.stream;
@@ -244,6 +298,7 @@ tz_ui_nav_cb(uint8_t page, nbgl_pageContent_t *content)
     } else if (page == LAST_PAGE_FOR_REVIEW) {
         s->current = s->total;
         result     = false;
+
     } else if (s->total >= 0) {
         PRINTF("[DEBUG] Display: curr=%d total=%d pr=%d\n", s->current,
                s->total, s->pressed_right);
@@ -252,13 +307,23 @@ tz_ui_nav_cb(uint8_t page, nbgl_pageContent_t *content)
             s->current++;
         }
 
+        size_t bucket = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
+
         if (tz_ui_stream_get_cb_type() == TZ_UI_STREAM_CB_CANCEL) {
             // We hit an error in the parsing workflow...
             tz_cancel_ui();
             result = false;
+        } else if (tz_ui_stream_get_cb_type()
+                   == TZ_UI_STREAM_CB_EXPERT_MODE_ENABLE) {
+            tz_enable_expert_mode_ui();
+            result = false;
+        } else if (tz_ui_stream_get_cb_type()
+                   == TZ_UI_STREAM_CB_EXPERT_MODE_FIELD) {
+            expert_mode_splash();
+            s->current--;
+            s->screens[bucket].cb_type = TZ_UI_STREAM_CB_NOCB;
+            result                     = false;
         } else {
-            size_t bucket = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
-
             c->list.pairs             = s->screens[bucket].pairs;
             c->list.callback          = NULL;
             c->list.startIndex        = 0;
@@ -327,7 +392,11 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
             "are happening\n");
     }
 
-    if (cb_type == TZ_UI_STREAM_CB_CANCEL && idx > 0) {
+    if ((cb_type == TZ_UI_STREAM_CB_CANCEL
+         || cb_type == TZ_UI_STREAM_CB_EXPERT_MODE_ENABLE
+         || cb_type == TZ_UI_STREAM_CB_EXPERT_MODE_FIELD)
+        && idx > 0) {
+        PRINTF("[DEBUG] PUSH_TO_NEXT: %x\n", cb_type);
         push_to_next = true;
     } else {
         /* Are we continuing to construct or starting from scratch? */
@@ -346,7 +415,9 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
         if (max != -1)
             length = MIN(length, (size_t)max);
 
-        s->screens[bucket].cb_type = cb_type;
+        if (idx == 0) {
+            s->screens[bucket].cb_type = cb_type;
+        }
 
         char *out = NULL;
 
@@ -423,6 +494,7 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
     PRINTF("[DEBUG]        current:   %d -> %d\n", prev_current, s->current);
     PRINTF("[DEBUG]        last:      %d -> %d\n", prev_last, s->last);
     PRINTF("[DEBUG]        offset:    %d\n", offset);
+    PRINTF("[DEBUG]        cb:        %x\n", s->screens[bucket].cb_type);
 #endif  // TEZOS_DEBUG
 
     FUNC_LEAVE();

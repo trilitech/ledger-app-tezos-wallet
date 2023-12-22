@@ -109,11 +109,9 @@ def send_and_navigate(send: Callable[[], bytes], navigate: Callable[[], None]) -
         result_queue.put(res)
 
     result_queue: Queue = Queue()
-    navigate_process = Process(target=navigate)
     send_process = Process(target=_send, args=(result_queue,))
-
+    navigate_process = Process(target=navigate)
     run_simultaneously([navigate_process, send_process])
-
     return result_queue.get()
 
 class SpeculosTezosBackend(TezosBackend, SpeculosBackend):
@@ -402,7 +400,7 @@ class TezosAppScreen():
 FIRMWARES = [
     Firmware.NANOS,
     Firmware.NANOSP,
-    Firmware.NANOX,
+    Firmware.NANOX
 ]
 
 DEFAULT_SEED = ('zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra')
@@ -417,7 +415,7 @@ def nano_app(seed: str = DEFAULT_SEED) -> Generator[TezosAppScreen, None, None]:
     parser.add_argument("-d", "--device",
                         type=str,
                         choices=list(map(lambda fw: fw.device, FIRMWARES)),
-                        help="Device type: nanos | nanosp | nanox",
+                        help="Device type: nanos | nanosp | nanox ",
                         required=True)
     parser.add_argument("-p", "--port",
                         type=int,

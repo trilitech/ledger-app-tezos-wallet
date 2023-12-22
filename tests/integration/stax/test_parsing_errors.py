@@ -43,6 +43,10 @@ if __name__ == "__main__":
     app.review.tap()
     app.assert_screen("tpe_review_0_02_partial")
     app.review.tap()
+    app.expert_mode_splash()
+    app.review.tap()
+    app.assert_screen("tpe_review_0_03")
+    app.review.tap()
     verify_err_reject_response(app, "invalid_tag")
 
     print("Invalid input: 1 byte introduce at the end")
@@ -53,6 +57,11 @@ if __name__ == "__main__":
     app.review.tap()
     app.assert_screen("tpe_review_0_02_full")
     app.review.tap()
+    app.assert_screen("expert_mode_splash")
+    app.review.tap()
+    app.assert_screen("tpe_review_0_03_full")
+    app.review.tap()
+
     verify_err_reject_response(app, "invalid_tag")
 
     print("Invalid input: 1 byte introduced inside")

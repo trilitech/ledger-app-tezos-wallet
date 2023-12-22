@@ -20,66 +20,53 @@ from utils import *
 # signer: tz1dyX3B1CFYa2DfdFLyPtiJCfQRUgPVME6E
 # path: m/44'/1729'/0'/0'
 
+
+def sign_transfer_initialize(app):
+    app.assert_screen(SCREEN_HOME_DEFAULT)
+    app.send_apdu("800f000011048000002c800006c18000000080000000");
+    app.expect_apdu_return("9000");
+    app.assert_screen("review_request_sign_operation");
+    app.send_apdu("800f81005e0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316");
+    app.review.tap()
+    app.assert_screen(f"tst_review_001")
+    app.review.tap()
+    app.assert_screen("tst_review_002")
+
+
+
 if __name__ == "__main__":
     app = stax_app(__file__)
-
-    app.assert_screen(SCREEN_HOME_DEFAULT)
-
-    app.send_apdu("800f000011048000002c800006c18000000080000000");
-    app.expect_apdu_return("9000");
-
-    app.assert_screen("review_request_sign_operation");
-
-    app.send_apdu("800f81005e0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316");
-
+    #  Reject from enable expert mode
+    sign_transfer_initialize(app)
     app.review.tap()
-    app.assert_screen(f"tst_review_001")
+    verify_reject_response(app,"enable_expert_mode")
 
+    # Reject from enabled expert mode
+    sign_transfer_initialize(app)
     app.review.tap()
-    app.assert_screen("tst_review_002")
+    app.assert_screen("enable_expert_mode")
+    app.welcome.client.finger_touch(BUTTON_ABOVE_LOWER_MIDDLE.x, BUTTON_ABOVE_LOWER_MIDDLE.y)
+    verify_reject_response(app, "enabled_expert_mode")
 
+    #- Reject from expert mode splash screen
+
+    # In previous test, expert mode was enabled, disable it here.
+    app.welcome.info()
+    app.assert_screen(SCREEN_INFO_PAGE)
+    app.info.next()
+    app.assert_screen("settings_expert_on_blindsigning_off")
+    app.settings_toggle_expert_mode()
+    app.assert_screen("settings_expert_blindsiging_off")
+    app.info.multi_page_exit()
+
+    sign_transfer_initialize(app)
     app.review.tap()
     app.enable_expert_mode()
-
     app.review.tap()
-    app.assert_screen("tst_expert_splash")
+    verify_reject_response(app, "expert_mode_splash")
 
+    # Now with expert mode enabled, reject from splash screen.
+
+    sign_transfer_initialize(app)
     app.review.tap()
-    app.assert_screen("tst_review_003")
-
-    app.review.tap()
-    app.assert_screen("operation_sign")
-
-    expected_apdu = "f6d5fa0e79cac216e25104938ac873ca17ee9d7f06763719293b413cf2ed475cf63d045a1cc9f73eee5775c5d496fa9d3aa9ae57fb97217f746a8728639795b7b2220e84ce5759ed111399ea3263d810c230d6a4fffcb6e82797c5ca673a17089000"
-    app.review_confirm_signing(expected_apdu)
-
-    app.assert_screen(SCREEN_HOME_DEFAULT)
-
-    # Now with expert enabled
-    app.send_apdu("800f000011048000002c800006c18000000080000000");
-    app.expect_apdu_return("9000");
-
-    app.assert_screen("review_request_sign_operation");
-
-    app.send_apdu("800f81005e0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316");
-
-    app.review.tap()
-    app.assert_screen(f"tst_review_001")
-
-    app.review.tap()
-    app.assert_screen("tst_review_002")
-
-    app.review.tap()
-    app.assert_screen("tst_expert_splash")
-
-    app.review.tap()
-    app.assert_screen("tst_review_003")
-
-    app.review.tap()
-    app.assert_screen("operation_sign")
-
-    expected_apdu = "f6d5fa0e79cac216e25104938ac873ca17ee9d7f06763719293b413cf2ed475cf63d045a1cc9f73eee5775c5d496fa9d3aa9ae57fb97217f746a8728639795b7b2220e84ce5759ed111399ea3263d810c230d6a4fffcb6e82797c5ca673a17089000"
-    app.review_confirm_signing(expected_apdu)
-
-    app.assert_screen(SCREEN_HOME_DEFAULT)
-    app.quit()
+    verify_reject_response(app, "expert_mode_splash")
