@@ -2,7 +2,7 @@ import pytest
 
 from pathlib import Path
 from ragger.firmware import Firmware
-from typing import Callable, Generator, List, Optional, Tuple, Union
+from typing import Dict, Callable, Generator, List, Optional, Tuple, Union
 
 from utils.app import TezosAppScreen, SpeculosTezosBackend, DEFAULT_SEED
 from utils.backend import TezosBackend, APP_KIND
@@ -35,10 +35,49 @@ def pytest_addoption(parser):
                      const=True,
                      default=False,
                      help="Golden run")
+    parser.addoption("--log-dir",
+                     type=Path,
+                     help="Log dir")
     parser.addoption("--app",
                      type=str,
                      help="App",
                      required=True)
+
+global_log_dir: Union[Path, None] = None
+
+def pytest_configure(config):
+    global global_log_dir
+    log_dir = config.getoption("log_dir")
+    if log_dir is not None:
+        global_log_dir = Path(log_dir)
+
+logs : Dict[str, List[pytest.TestReport]] = {}
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_runtest_logstart(nodeid, location):
+    logs[location[2]] = []
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_runtest_logreport(report):
+    logs[report.head_line].append(report)
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_runtest_logfinish(nodeid, location):
+    if global_log_dir is not None:
+        log_dir = global_log_dir / Path(location[0]).stem
+        log_dir.mkdir(parents=True, exist_ok=True)
+        head_line = location[2]
+        log_file = log_dir / f"{head_line.replace(' ', '_')}.log"
+        with open(log_file, 'w') as writer:
+            for report in logs[head_line]:
+                writer.write(f"============================== {report.when.capitalize()} {report.outcome} ==============================\n")
+                writer.write(f"{report.longreprtext}\n")
+                for section in report.sections:
+                    if section[0].endswith(report.when):
+                        writer.write(f"------------------------------ {section[0]} ------------------------------\n")
+                        writer.write(f"{section[1]}\n")
+                        writer.write("\n")
+                writer.write("\n")
 
 @pytest.fixture(scope="session")
 def firmware(pytestconfig) -> Firmware :
