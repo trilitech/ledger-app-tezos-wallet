@@ -46,8 +46,11 @@ def firmware(pytestconfig) -> Firmware :
     return next(fw for fw in FIRMWARES if fw.device == device)
 
 @pytest.fixture(scope="session")
-def port(pytestconfig) -> int :
-    return pytestconfig.getoption("port")
+def port(pytestconfig, request, worker_id) -> int :
+    if worker_id == "master":
+        return pytestconfig.getoption("port")
+    # worker_id = gw0, gw1, ...
+    return 5000 + int(worker_id[2:])
 
 @pytest.fixture(scope="session")
 def display(pytestconfig) -> bool :

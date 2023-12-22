@@ -3,7 +3,7 @@ FROM ghcr.io/ledgerhq/speculos:sha-f9dfe87
 RUN apt update &&                                                                    \
     apt install -y curl jq build-essential libsodium-dev git xxd &&                  \
     pip install wheel setuptools pkginfo cryptography &&                             \
-    pip install jsonschema==4.3.2 base58 pytezos==3.10.2 GitPython &&                \
+    pip install jsonschema==4.3.2 base58 pytezos==3.10.2 GitPython pytest-xdist &&   \
     git clone --depth 1 --branch v1.11.4 https://github.com/ledgerHQ/ragger &&       \
     cd ragger &&                                                                     \
     pip install --extra-index-url https://test.pypi.org/simple/ '.[all_backends]' && \
