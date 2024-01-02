@@ -42,11 +42,16 @@ let to_string
       (Contents_list contents : Protocol.Alpha_context.packed_contents_list) ) =
   let open Protocol.Alpha_context in
   let manager_to_string (type t)
-      (Manager_operation { fee; operation; storage_limit; _ } :
+      (Manager_operation { source; fee; operation; storage_limit; _ } :
         t Kind.manager contents) =
     let aux ~kind operation_fields =
       let manager_fields =
-        [ kind; Format.asprintf "%a" pp_tz fee; Z.to_string storage_limit ]
+        [
+          kind;
+          Format.asprintf "%a" Tezos_crypto.Signature.Public_key_hash.pp source;
+          Format.asprintf "%a" pp_tz fee;
+          Z.to_string storage_limit;
+        ]
       in
       String.concat "" (manager_fields @ operation_fields)
     in

@@ -212,13 +212,15 @@ let operation_to_screens
     List.mapi aux values
   in
   let screen_of_manager n (type t)
-      (Manager_operation { fee; operation; storage_limit; _ } :
+      (Manager_operation { source; fee; operation; storage_limit; _ } :
         t Kind.manager contents) =
     let aux ~kind operation_screens =
       let operation_index = Format.asprintf "Operation (%d)" n in
       let manager_screens =
         [
           make_screen ~title:operation_index "%s" kind;
+          make_screen ~title:"Source" "%a"
+            Tezos_crypto.Signature.Public_key_hash.pp source;
           make_screen ~title:"Fee" "%a" pp_tz fee;
           make_screen ~title:"Storage limit" "%s" (Z.to_string storage_limit);
         ]

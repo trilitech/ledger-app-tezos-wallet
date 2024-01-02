@@ -98,6 +98,8 @@ if __name__ == "__main__":
     app.assert_screen("tpe_review_1_01")
     # No error screen <- issue with packet framing protocol
     app.review.tap()
+    app.assert_screen("tpe_review_1_02")
+    app.review.tap()
     app.expect_apdu_failure("9002")
 
     app.assert_screen(SCREEN_HOME_DEFAULT)
