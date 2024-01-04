@@ -51,7 +51,6 @@ static void send_reject(int);
 static void send_continue(void);
 static void send_cancel(void);
 static void refill(void);
-static void pass_from_clear_to_blind(void);
 static void stream_cb(tz_ui_cb_type_t);
 static void handle_first_apdu(command_t *);
 static void handle_first_apdu_clear(command_t *);
@@ -151,82 +150,6 @@ send_continue(void)
 
     TZ_POSTAMBLE;
 }
-#ifdef HAVE_NBGL
-
-static void
-cancel_operation(uint8_t reject_code)
-{
-    TZ_PREAMBLE(("void"));
-    global.keys.apdu.sign.received_last_msg = true;
-    stream_cb(reject_code);
-    global.step = ST_IDLE;
-    nbgl_useCaseStatus("Transaction rejected", false, ui_home_init);
-
-    TZ_POSTAMBLE;
-}
-
-static void
-cancel_operation_blindsign(void)
-{
-    cancel_operation(TZ_UI_STREAM_CB_BLINDSIGN_REJECT);
-}
-
-static void
-blindsign_splash(void)
-{
-    TZ_PREAMBLE(("void"));
-    nbgl_useCaseReviewStart(
-        &C_round_warning_64px, "Blind signing",
-        "This transaction can not be securely interpreted by Ledger Stax. It "
-        "might put your assets at risk.",
-        "Reject transaction", pass_from_clear_to_blind,
-        cancel_operation_blindsign);
-
-    TZ_POSTAMBLE;
-}
-
-static void
-handle_blindsigning(bool confirm)
-{
-    TZ_PREAMBLE(("void"));
-    if (confirm) {
-        if (!N_settings.blindsigning)
-            toggle_blindsigning();
-        nbgl_useCaseReviewStart(&C_round_check_64px, "Blind signing enabled",
-                                NULL, "Reject transaction", blindsign_splash,
-                                cancel_operation_blindsign);
-
-    } else {
-        cancel_operation_blindsign();
-    }
-    TZ_POSTAMBLE;
-}
-
-void
-switch_to_blindsigning(__attribute__((unused)) const char *err_type,
-                       const char                         *err_code)
-{
-    TZ_PREAMBLE(("void"));
-    PRINTF("[DEBUG] refill_error: global.step = %d\n", global.step);
-    TZ_ASSERT(EXC_UNEXPECTED_STATE, global.step == ST_CLEAR_SIGN);
-    global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
-    global.step                = ST_BLIND_SIGN;
-    if (N_settings.blindsigning) {
-        nbgl_useCaseReviewStart(&C_round_warning_64px,
-                                "Blind signing required:\nParsing Error",
-                                err_code, "Reject transaction",
-                                blindsign_splash, cancel_operation_blindsign);
-    } else {
-        nbgl_useCaseChoice(&C_round_warning_64px,
-                           "Enable blind signing to authorize this "
-                           "transaction:\nParsing Error",
-                           err_code, "Enable blind signing",
-                           "Reject transaction", handle_blindsigning);
-    }
-
-    TZ_POSTAMBLE;
-}
-#endif
 
 static void
 refill_blo_im_full(void)
@@ -658,8 +581,7 @@ reviewChoice(bool confirm)
     if (confirm) {
         nbgl_useCaseStatus("TRANSACTION\nSIGNED", true, accept_blindsign_cb);
     } else {
-        nbgl_useCaseStatus("Transaction rejected", false,
-                           reject_blindsign_cb);
+        tz_reject_ui();
     }
 
     FUNC_LEAVE();

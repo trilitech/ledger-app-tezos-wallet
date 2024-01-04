@@ -191,15 +191,12 @@ def send_payload(app, apdu):
     app.assert_screen("review_request_sign_operation");
 
 def verify_err_reject_response(app, tag):
-    app.assert_screen(tag)
-    app.welcome.client.pause_ticker()
-    app.review.reject()
-    app.assert_screen("reject_review")
-    app.welcome.client.resume_ticker()
-    app.review.tap()
-    assert_home_with_code(app, "9405")
+    verify_reject_response_common(app,tag,"9405")
 
 def verify_reject_response(app, tag):
+    verify_reject_response_common(app, tag,"6985")
+
+def verify_reject_response_common(app, tag, err_code):
     app.assert_screen(tag)
     app.review.reject()
     app.assert_screen("reject_review")
@@ -208,4 +205,4 @@ def verify_reject_response(app, tag):
     app.assert_screen("rejected")
     app.review.tap()
     app.welcome.client.resume_ticker()
-    assert_home_with_code(app, "6985")
+    assert_home_with_code(app, err_code)

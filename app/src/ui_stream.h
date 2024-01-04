@@ -177,3 +177,6 @@ void   tz_ui_stream_close(void);
 void   tz_ui_stream(void);
 void   tz_ui_stream_start(void);
 tz_ui_cb_type_t tz_ui_stream_get_cb_type(void);
+#ifdef HAVE_NBGL
+void tz_reject_ui(void);
+#endif
