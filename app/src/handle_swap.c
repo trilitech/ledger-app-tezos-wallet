@@ -33,8 +33,10 @@
 #include "parser/num_parser.h"
 
 // based on app-exchange
-#define TICKER_MAX_SIZE  9
+#define TICKER           "XTZ"
 #define ADDRESS_MAX_SIZE 63
+/* the smallest unit is microtez */
+#define DECIMALS         6
 
 /* Check check_address_parameters_t.address_to_check against specified
  * parameters.
@@ -102,15 +104,6 @@ swap_handle_get_printable_amount(get_printable_amount_parameters_t *params)
     FUNC_ENTER(("params=%p", params));
 
     uint64_t amount;
-    uint8_t  decimals;
-    char     ticker[TICKER_MAX_SIZE];
-
-    if (!swap_parse_config(params->coin_configuration,
-                           params->coin_configuration_length, ticker,
-                           sizeof(ticker), &decimals)) {
-        PRINTF("[ERROR] Fail to parse config\n");
-        goto error;
-    }
 
     if (!swap_str_to_u64(params->amount, params->amount_length, &amount)) {
         PRINTF("[ERROR] Fail to parse amount\n");
@@ -119,13 +112,13 @@ swap_handle_get_printable_amount(get_printable_amount_parameters_t *params)
 
     if (!format_fpu64_trimmed(params->printable_amount,
                               sizeof(params->printable_amount), amount,
-                              decimals)) {
+                              DECIMALS)) {
         PRINTF("[ERROR] Fail to print amount\n");
         goto error;
     }
 
     strlcat(params->printable_amount, " ", sizeof(params->printable_amount));
-    strlcat(params->printable_amount, ticker,
+    strlcat(params->printable_amount, TICKER,
             sizeof(params->printable_amount));
 
     FUNC_LEAVE();
