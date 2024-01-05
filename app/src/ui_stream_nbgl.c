@@ -30,6 +30,7 @@ void tz_ui_stream_start(void);
 
 void drop_last_screen(void);
 void push_str(const char *, size_t, char **);
+void switch_to_blindsigning(const char *, const char *);
 
 void
 tz_cancel_ui(void)
@@ -54,7 +55,11 @@ tz_reject(void)
     global.keys.apdu.sign.step              = SIGN_ST_WAIT_USER_INPUT;
     global.keys.apdu.sign.received_last_msg = true;
 
-    s->cb(TZ_UI_STREAM_CB_REJECT);
+    if (global.step == ST_BLIND_SIGN) {
+        s->cb(TZ_UI_STREAM_CB_BLINDSIGN_REJECT);
+    } else {
+        s->cb(TZ_UI_STREAM_CB_REJECT);
+    }
 
     global.step = ST_IDLE;
     nbgl_useCaseStatus("Transaction rejected", false, ui_home_init);
@@ -73,6 +78,70 @@ tz_reject_ui(void)
     FUNC_LEAVE();
 }
 
+static void
+start_blindsign(void)
+{
+    FUNC_ENTER(("void"));
+
+    tz_ui_stream_t *s = &global.stream;
+    s->cb(TZ_UI_STREAM_CB_BLINDSIGN);
+
+    FUNC_LEAVE();
+}
+
+static void
+blindsign_splash(void)
+{
+    TZ_PREAMBLE(("void"));
+    nbgl_useCaseReviewStart(
+        &C_round_warning_64px, "Blind signing",
+        "This transaction can not be securely interpreted by Ledger Stax. It "
+        "might put your assets at risk.",
+        "Reject transaction", start_blindsign, tz_reject_ui);
+
+    TZ_POSTAMBLE;
+}
+
+static void
+handle_blindsigning(bool confirm)
+{
+    TZ_PREAMBLE(("void"));
+    if (confirm) {
+        if (!N_settings.blindsigning)
+            toggle_blindsigning();
+        nbgl_useCaseReviewStart(&C_round_check_64px, "Blind signing enabled",
+                                NULL, "Reject transaction", blindsign_splash,
+                                tz_reject_ui);
+
+    } else {
+        tz_reject_ui();
+    }
+    TZ_POSTAMBLE;
+}
+
+void
+switch_to_blindsigning(__attribute__((unused)) const char *err_type,
+                       const char                         *err_code)
+{
+    TZ_PREAMBLE(("void"));
+    PRINTF("[DEBUG] refill_error: global.step = %d\n", global.step);
+    TZ_ASSERT(EXC_UNEXPECTED_STATE, global.step == ST_CLEAR_SIGN);
+    global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
+    global.step                = ST_BLIND_SIGN;
+    if (N_settings.blindsigning) {
+        nbgl_useCaseReviewStart(
+            &C_round_warning_64px, "Blind signing required:\nParsing Error",
+            err_code, "Reject transaction", blindsign_splash, tz_reject_ui);
+    } else {
+        nbgl_useCaseChoice(&C_round_warning_64px,
+                           "Enable blind signing to authorize this "
+                           "transaction:\nParsing Error",
+                           err_code, "Enable blind signing",
+                           "Reject transaction", handle_blindsigning);
+    }
+
+    TZ_POSTAMBLE;
+}
 void
 expert_mode_splash(void)
 {
