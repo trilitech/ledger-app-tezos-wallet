@@ -288,6 +288,7 @@ tz_operation_parser_init(tz_parser_state *state, uint16_t size,
     op->batch_index = 0;
 #ifdef HAVE_SWAP
     op->last_tag    = TZ_OPERATION_TAG_END;
+    op->nb_reveal   = 0;
     op->last_fee    = 0;
     op->last_amount = 0;
 #endif  // HAVE_SWAP
@@ -403,6 +404,8 @@ tz_operation_parser_step(tz_parser_state *state)
         tz_must(tz_parser_read(state, &t));
 #ifdef HAVE_SWAP
         op->last_tag = t;
+        if (t == TZ_OPERATION_TAG_REVEAL)
+            op->nb_reveal++;
 #endif  // HAVE_SWAP
         for (d = tz_operation_descriptors; d->tag != TZ_OPERATION_TAG_END;
              d++) {
