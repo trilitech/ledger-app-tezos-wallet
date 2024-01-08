@@ -157,6 +157,7 @@ typedef struct {
     uint16_t batch_index;      // to print a sequence number
 #ifdef HAVE_SWAP
     tz_operation_tag last_tag;
+    uint16_t         nb_reveal;
     uint64_t         last_fee;
     uint64_t         last_amount;
 #endif  // HAVE_SWAP
