@@ -30,6 +30,10 @@
 #include <parser.h>
 #include <ux.h>
 
+#ifdef HAVE_SWAP
+#include <swap.h>
+#endif
+
 #include "apdu.h"
 #include "apdu_sign.h"
 #include "globals.h"
@@ -157,33 +161,35 @@ refill_blo_im_full(void)
     tz_parser_state *st    = &global.keys.apdu.sign.u.clear.parser_state;
     size_t           wrote = 0;
     TZ_PREAMBLE(("void"));
-
-    global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
+#ifdef HAVE_SWAP
+    if (!G_called_from_swap) {
+#endif
+        global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
 
 #ifdef HAVE_BAGL
-    if (st->field_info.is_field_complex && !N_settings.expert_mode) {
-        tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, st->field_info.field_name,
-                          "Needs Expert mode", TZ_UI_LAYOUT_HOME_BP,
-                          TZ_UI_ICON_NONE);
-        tz_ui_stream_push(TZ_UI_STREAM_CB_REJECT, "Home", "",
-                          TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_BACK);
-        tz_ui_stream_close();
-        goto end;
-    } else {
-        if (st->field_info.is_field_complex
-            && global.keys.apdu.sign.u.clear.last_field_index
-                   != st->field_info.field_index) {
-            tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Next field requires",
-                              "careful review", TZ_UI_LAYOUT_HOME_BP,
+        if (st->field_info.is_field_complex && !N_settings.expert_mode) {
+            tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, st->field_info.field_name,
+                              "Needs Expert mode", TZ_UI_LAYOUT_HOME_BP,
                               TZ_UI_ICON_NONE);
-            global.keys.apdu.sign.u.clear.last_field_index
-                = st->field_info.field_index;
+            tz_ui_stream_push(TZ_UI_STREAM_CB_REJECT, "Home", "",
+                              TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_BACK);
+            tz_ui_stream_close();
+            goto end;
+        } else {
+            if (st->field_info.is_field_complex
+                && global.keys.apdu.sign.u.clear.last_field_index
+                       != st->field_info.field_index) {
+                tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Next field requires",
+                                  "careful review", TZ_UI_LAYOUT_HOME_BP,
+                                  TZ_UI_ICON_NONE);
+                global.keys.apdu.sign.u.clear.last_field_index
+                    = st->field_info.field_index;
+            }
         }
-    }
 
-    wrote = tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, st->field_info.field_name,
-                              global.line_buf, TZ_UI_LAYOUT_BNP,
-                              TZ_UI_ICON_NONE);
+        wrote = tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB,
+                                  st->field_info.field_name, global.line_buf,
+                                  TZ_UI_LAYOUT_BNP, TZ_UI_ICON_NONE);
 #elif HAVE_NBGL
     PRINTF("[DEBUG] field=%s complex=%d\n", st->field_info.field_name,
            st->field_info.is_field_complex);
@@ -208,7 +214,9 @@ refill_blo_im_full(void)
     }
 
 #endif
-
+#ifdef HAVE_SWAP
+    }
+#endif
     tz_parser_flush_up_to(st, global.line_buf, TZ_UI_STREAM_CONTENTS_SIZE,
                           wrote);
     TZ_POSTAMBLE;
@@ -228,12 +236,17 @@ refill_blo_done(void)
         refill_blo_im_full();
         TZ_SUCCEED();
     }
-    global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
-#ifdef HAVE_BAGL
-    tz_ui_stream_push_accept_reject();
+#ifdef HAVE_SWAP
+    if (!G_called_from_swap) {
 #endif
-    tz_ui_stream_close();
-
+        global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
+#ifdef HAVE_BAGL
+        tz_ui_stream_push_accept_reject();
+#endif
+        tz_ui_stream_close();
+#ifdef HAVE_SWAP
+    }
+#endif
     TZ_POSTAMBLE;
 }
 
@@ -242,40 +255,45 @@ refill_error(void)
 {
     tz_parser_state *st = &global.keys.apdu.sign.u.clear.parser_state;
     TZ_PREAMBLE(("void"));
-
-    global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
+#ifdef HAVE_SWAP
+    if (!G_called_from_swap) {
+#endif
+        global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
 
 #ifdef HAVE_BAGL
-    tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Parsing error",
-                          tz_parser_result_name(st->errno), TZ_UI_LAYOUT_BNP,
-                          TZ_UI_ICON_NONE);
+        tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Parsing error",
+                              tz_parser_result_name(st->errno),
+                              TZ_UI_LAYOUT_BNP, TZ_UI_ICON_NONE);
 
-    if (N_settings.blindsigning) {
+        if (N_settings.blindsigning) {
 #ifdef TARGET_NANOS
-        tz_ui_stream_push(TZ_UI_STREAM_CB_BLINDSIGN, "Switch to",
-                          "blindsigning", TZ_UI_LAYOUT_HOME_BP,
-                          TZ_UI_ICON_NONE);
-#else
-        tz_ui_stream_push(TZ_UI_STREAM_CB_BLINDSIGN, "Switch to",
-                          "blindsigning", TZ_UI_LAYOUT_HOME_PB,
-                          TZ_UI_ICON_TICK);
-#endif
-        tz_ui_stream_push(TZ_UI_STREAM_CB_CANCEL, "Reject", "",
-                          TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_CROSS);
-    } else {
-        tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Blindsigning",
-                              "not enabled", TZ_UI_LAYOUT_HOME_BP,
+            tz_ui_stream_push(TZ_UI_STREAM_CB_BLINDSIGN, "Switch to",
+                              "blindsigning", TZ_UI_LAYOUT_HOME_BP,
                               TZ_UI_ICON_NONE);
-        tz_ui_stream_push(TZ_UI_STREAM_CB_CANCEL, "Home", "",
-                          TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_BACK);
-    }
+#else
+            tz_ui_stream_push(TZ_UI_STREAM_CB_BLINDSIGN, "Switch to",
+                              "blindsigning", TZ_UI_LAYOUT_HOME_PB,
+                              TZ_UI_ICON_TICK);
+#endif
+            tz_ui_stream_push(TZ_UI_STREAM_CB_CANCEL, "Reject", "",
+                              TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_CROSS);
+        } else {
+            tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Blindsigning",
+                                  "not enabled", TZ_UI_LAYOUT_HOME_BP,
+                                  TZ_UI_ICON_NONE);
+            tz_ui_stream_push(TZ_UI_STREAM_CB_CANCEL, "Home", "",
+                              TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_BACK);
+        }
 #elif HAVE_NBGL
     tz_ui_stream_push_all(TZ_UI_STREAM_CB_CANCEL, "Parsing error",
                           tz_parser_result_name(st->errno), TZ_UI_LAYOUT_BNP,
                           TZ_UI_ICON_CROSS);
 #endif
 
-    tz_ui_stream_close();
+        tz_ui_stream_close();
+#ifdef HAVE_SWAP
+    }
+#endif
     TZ_POSTAMBLE;
 }
 
@@ -455,16 +473,22 @@ handle_first_apdu_clear(__attribute__((unused)) command_t *cmd)
 
     global.keys.apdu.sign.u.clear.received_msg = false;
 
-    tz_ui_stream_init(stream_cb);
+    // NO ui display during swap.
+#ifdef HAVE_SWAP
+    if (!G_called_from_swap) {
+#endif
+        tz_ui_stream_init(stream_cb);
 
 #ifdef TARGET_NANOS
-    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Review operation", "",
-                      TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_EYE);
+        tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Review operation", "",
+                          TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_EYE);
 #elif defined(HAVE_BAGL)
     tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Review", "operation",
                       TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_EYE);
 #endif
-
+#ifdef HAVE_SWAP
+    }
+#endif
     tz_operation_parser_init(st, TZ_UNKNOWN_SIZE, false);
     tz_parser_refill(st, NULL, 0);
     tz_parser_flush(st, global.line_buf, TZ_UI_STREAM_CONTENTS_SIZE);
@@ -532,7 +556,12 @@ handle_data_apdu_clear(command_t *cmd)
         tz_operation_parser_set_size(
             st, global.keys.apdu.sign.u.clear.total_length);
     TZ_CHECK(refill());
+#ifdef HAVE_SWAP
+    if (global.keys.apdu.sign.step == SIGN_ST_WAIT_USER_INPUT
+        && !G_called_from_swap)
+#else
     if (global.keys.apdu.sign.step == SIGN_ST_WAIT_USER_INPUT)
+#endif
         tz_ui_stream();
 
     TZ_POSTAMBLE;
