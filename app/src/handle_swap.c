@@ -219,7 +219,8 @@ swap_check_validity(void)
 
     PRINTF("[DEBUG] batch_index = %u, nb_reveal=%d, tag=%d\n",
            op->batch_index, op->nb_reveal, op->last_tag);
-    TZ_ASSERT(EXC_REJECT, op->batch_index == 1);
+    TZ_ASSERT(EXC_REJECT, op->nb_reveal <= 1);
+    TZ_ASSERT(EXC_REJECT, op->batch_index - op->nb_reveal == 1);
     TZ_ASSERT(EXC_REJECT, op->last_tag == TZ_OPERATION_TAG_TRANSACTION);
     TZ_ASSERT(EXC_REJECT, op->last_amount == G_swap_params.amount);
     TZ_ASSERT(EXC_REJECT, op->last_fee == G_swap_params.fee);
