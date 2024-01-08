@@ -58,17 +58,6 @@ swap_handle_check_address(check_address_parameters_t *params)
         goto error;
     }
 
-    if (params->extra_id_to_check == NULL) {
-        PRINTF("[ERROR] Extra id is null\n");
-        goto error;
-    }
-
-    if (params->extra_id_to_check[0] != '\0') {
-        PRINTF("[ERROR] Extra id is not empty: %s\n",
-               params->extra_id_to_check);
-        goto error;
-    }
-
     char address[TZ_CAPTURE_BUFFER_SIZE] = {0};
 
     // Always tz1
@@ -174,17 +163,6 @@ swap_copy_transaction_parameters(create_transaction_parameters_t *params)
             .destination_address[sizeof(params_copy.destination_address) - 1]
         != '\0') {
         PRINTF("[ERROR] Fail to copy destination address\n");
-        goto error;
-    }
-
-    if (params->destination_address_extra_id == NULL) {
-        PRINTF("[ERROR] Destination address extra id is null\n");
-        goto error;
-    }
-
-    if (params->destination_address_extra_id[0] != '\0') {
-        PRINTF("[ERROR] Destination address extra id is not empty: %s\n",
-               params->destination_address_extra_id);
         goto error;
     }
 
