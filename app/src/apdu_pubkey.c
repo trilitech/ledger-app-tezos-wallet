@@ -167,7 +167,8 @@ handle_apdu_get_public_key(command_t *cmd)
     bool prompt = cmd->ins == INS_PROMPT_PUBLIC_KEY;
     TZ_PREAMBLE(("cmd=%p", cmd));
 
-    TZ_ASSERT(EXC_UNEXPECTED_STATE, global.step == ST_IDLE);
+    TZ_ASSERT(EXC_UNEXPECTED_STATE,
+              global.step == ST_IDLE || global.step == ST_SWAP_SIGN);
     TZ_ASSERT(EXC_WRONG_PARAM, cmd->p1 == 0);
 
     // do not expose pks without prompt through U2F (permissionless legacy

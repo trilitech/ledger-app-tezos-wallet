@@ -286,7 +286,6 @@ tz_ui_stream_init(void (*cb)(uint8_t))
     nbgl_useCaseReviewStart(&C_tezos, "Review request to sign operation",
                             NULL, "Reject request", tz_ui_review_start,
                             tz_reject_ui);
-
     FUNC_LEAVE();
 }
 
