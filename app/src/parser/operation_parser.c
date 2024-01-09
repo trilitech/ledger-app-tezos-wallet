@@ -80,128 +80,87 @@ TZ_OPERATION_FIELDS(failing_noop_fields,
     TZ_OPERATION_FIELD("Message", TZ_OPERATION_FIELD_BINARY, true, false, false, false)
 );
 
+#define TZ_OPERATION_MANAGER_OPERATION_FIELDS                                                  \
+    TZ_OPERATION_FIELD("Source",        TZ_OPERATION_FIELD_SOURCE, true, false, false, false), \
+    TZ_OPERATION_FIELD("Fee",           TZ_OPERATION_FIELD_FEE,    true, false, false, false), \
+    TZ_OPERATION_FIELD("Counter",       TZ_OPERATION_FIELD_NAT,    true, true,  false, false), \
+    TZ_OPERATION_FIELD("Gas",           TZ_OPERATION_FIELD_NAT,    true, true,  false, false), \
+    TZ_OPERATION_FIELD("Storage limit", TZ_OPERATION_FIELD_NAT,    true, false, false, false)
+
 TZ_OPERATION_FIELDS(transaction_fields,
-    TZ_OPERATION_FIELD("Source",        TZ_OPERATION_FIELD_SOURCE,      true,  false, false, false),
-    TZ_OPERATION_FIELD("Fee",           TZ_OPERATION_FIELD_FEE,         true,  false, false, false),
-    TZ_OPERATION_FIELD("Counter",       TZ_OPERATION_FIELD_NAT,         true,  true,  false, false),
-    TZ_OPERATION_FIELD("Gas",           TZ_OPERATION_FIELD_NAT,         true,  true,  false, false),
-    TZ_OPERATION_FIELD("Storage limit", TZ_OPERATION_FIELD_NAT,         true,  false, false, false),
+    TZ_OPERATION_MANAGER_OPERATION_FIELDS,
     TZ_OPERATION_FIELD("Amount",        TZ_OPERATION_FIELD_AMOUNT,      true,  false, false, false),
     TZ_OPERATION_FIELD("Destination",   TZ_OPERATION_FIELD_DESTINATION, true,  false, false, false),
     TZ_OPERATION_FIELD("Parameter",     TZ_OPERATION_FIELD_PARAMETER,   false, false, false, true )
 );
 
 TZ_OPERATION_FIELDS(reveal_fields,
-    TZ_OPERATION_FIELD("Source",        TZ_OPERATION_FIELD_SOURCE, true, false, false, false),
-    TZ_OPERATION_FIELD("Fee",           TZ_OPERATION_FIELD_FEE,    true, false, false, false),
-    TZ_OPERATION_FIELD("Counter",       TZ_OPERATION_FIELD_NAT,    true, true,  false, false),
-    TZ_OPERATION_FIELD("Gas",           TZ_OPERATION_FIELD_NAT,    true, true,  false, false),
-    TZ_OPERATION_FIELD("Storage limit", TZ_OPERATION_FIELD_NAT,    true, false, false, false),
-    TZ_OPERATION_FIELD("Public key",    TZ_OPERATION_FIELD_PK,     true, false, false, false)
+    TZ_OPERATION_MANAGER_OPERATION_FIELDS,
+    TZ_OPERATION_FIELD("Public key", TZ_OPERATION_FIELD_PK, true, false, false, false)
 );
 
 TZ_OPERATION_FIELDS(delegation_fields,
-    TZ_OPERATION_FIELD("Source",        TZ_OPERATION_FIELD_SOURCE, true,  false, false, false),
-    TZ_OPERATION_FIELD("Fee",           TZ_OPERATION_FIELD_FEE,    true,  false, false, false),
-    TZ_OPERATION_FIELD("Counter",       TZ_OPERATION_FIELD_NAT,    true,  true,  false, false),
-    TZ_OPERATION_FIELD("Gas",           TZ_OPERATION_FIELD_NAT,    true,  true,  false, false),
-    TZ_OPERATION_FIELD("Storage limit", TZ_OPERATION_FIELD_NAT,    true,  false, false, false),
-    TZ_OPERATION_FIELD("Delegate",      TZ_OPERATION_FIELD_PKH,    false, false, true,  false)
+    TZ_OPERATION_MANAGER_OPERATION_FIELDS,
+    TZ_OPERATION_FIELD("Delegate", TZ_OPERATION_FIELD_PKH, false, false, true, false)
 );
 
 TZ_OPERATION_FIELDS(reg_glb_cst_fields,
-    TZ_OPERATION_FIELD("Source",        TZ_OPERATION_FIELD_SOURCE, true, false, false, false),
-    TZ_OPERATION_FIELD("Fee",           TZ_OPERATION_FIELD_FEE,    true, false, false, false),
-    TZ_OPERATION_FIELD("Counter",       TZ_OPERATION_FIELD_NAT,    true, true,  false, false),
-    TZ_OPERATION_FIELD("Gas",           TZ_OPERATION_FIELD_NAT,    true, true,  false, false),
-    TZ_OPERATION_FIELD("Storage limit", TZ_OPERATION_FIELD_NAT,    true, false, false, false),
-    TZ_OPERATION_FIELD("Value",         TZ_OPERATION_FIELD_EXPR,   true, false, false, true )
+    TZ_OPERATION_MANAGER_OPERATION_FIELDS,
+    TZ_OPERATION_FIELD("Value", TZ_OPERATION_FIELD_EXPR, true, false, false, true)
 );
 
 TZ_OPERATION_FIELDS(set_deposit_fields,
-    TZ_OPERATION_FIELD("Source",        TZ_OPERATION_FIELD_SOURCE, true,  false, false, false),
-    TZ_OPERATION_FIELD("Fee",           TZ_OPERATION_FIELD_FEE,    true,  false, false, false),
-    TZ_OPERATION_FIELD("Counter",       TZ_OPERATION_FIELD_NAT,    true,  true,  false, false),
-    TZ_OPERATION_FIELD("Gas",           TZ_OPERATION_FIELD_NAT,    true,  true,  false, false),
-    TZ_OPERATION_FIELD("Storage limit", TZ_OPERATION_FIELD_NAT,    true,  false, false, false),
-    TZ_OPERATION_FIELD("Staking limit", TZ_OPERATION_FIELD_AMOUNT, false, false, true,  false)
+    TZ_OPERATION_MANAGER_OPERATION_FIELDS,
+    TZ_OPERATION_FIELD("Staking limit", TZ_OPERATION_FIELD_AMOUNT, false, false, true, false)
 );
 
 TZ_OPERATION_FIELDS(inc_paid_stg_fields,
-    TZ_OPERATION_FIELD("Source",        TZ_OPERATION_FIELD_SOURCE,      true, false, false, false),
-    TZ_OPERATION_FIELD("Fee",           TZ_OPERATION_FIELD_FEE,         true, false, false, false),
-    TZ_OPERATION_FIELD("Counter",       TZ_OPERATION_FIELD_NAT,         true, true,  false, false),
-    TZ_OPERATION_FIELD("Gas",           TZ_OPERATION_FIELD_NAT,         true, true,  false, false),
-    TZ_OPERATION_FIELD("Storage limit", TZ_OPERATION_FIELD_NAT,         true, false, false, false),
-    TZ_OPERATION_FIELD("Amount",        TZ_OPERATION_FIELD_INT,         true, false, false, false),
-    TZ_OPERATION_FIELD("Destination",   TZ_OPERATION_FIELD_DESTINATION, true, false, false, false)
+    TZ_OPERATION_MANAGER_OPERATION_FIELDS,
+    TZ_OPERATION_FIELD("Amount",      TZ_OPERATION_FIELD_INT,         true, false, false, false),
+    TZ_OPERATION_FIELD("Destination", TZ_OPERATION_FIELD_DESTINATION, true, false, false, false)
 );
 
 TZ_OPERATION_FIELDS(update_ck_fields,
-    TZ_OPERATION_FIELD("Source",        TZ_OPERATION_FIELD_SOURCE, true, false, false, false),
-    TZ_OPERATION_FIELD("Fee",           TZ_OPERATION_FIELD_FEE,    true, false, false, false),
-    TZ_OPERATION_FIELD("Counter",       TZ_OPERATION_FIELD_NAT,    true, true,  false, false),
-    TZ_OPERATION_FIELD("Gas",           TZ_OPERATION_FIELD_NAT,    true, true,  false, false),
-    TZ_OPERATION_FIELD("Storage limit", TZ_OPERATION_FIELD_NAT,    true, false, false, false),
-    TZ_OPERATION_FIELD("Public key",    TZ_OPERATION_FIELD_PK,     true, false, false, false)
+    TZ_OPERATION_MANAGER_OPERATION_FIELDS,
+    TZ_OPERATION_FIELD("Public key", TZ_OPERATION_FIELD_PK, true, false, false, false)
 );
 
 TZ_OPERATION_FIELDS(origination_fields,
-    TZ_OPERATION_FIELD("Source",        TZ_OPERATION_FIELD_SOURCE, true,  false, false, false),
-    TZ_OPERATION_FIELD("Fee",           TZ_OPERATION_FIELD_FEE,    true,  false, false, false),
-    TZ_OPERATION_FIELD("Counter",       TZ_OPERATION_FIELD_NAT,    true,  true,  false, false),
-    TZ_OPERATION_FIELD("Gas",           TZ_OPERATION_FIELD_NAT,    true,  true,  false, false),
-    TZ_OPERATION_FIELD("Storage limit", TZ_OPERATION_FIELD_NAT,    true,  false, false, false),
-    TZ_OPERATION_FIELD("Balance",       TZ_OPERATION_FIELD_AMOUNT, true,  false, false, false),
-    TZ_OPERATION_FIELD("Delegate",      TZ_OPERATION_FIELD_PKH,    false, false, true,  false),
-    TZ_OPERATION_FIELD("Code",          TZ_OPERATION_FIELD_EXPR,   true,  false, false, true ),
-    TZ_OPERATION_FIELD("Storage",       TZ_OPERATION_FIELD_EXPR,   true,  false, false, true )
+    TZ_OPERATION_MANAGER_OPERATION_FIELDS,
+    TZ_OPERATION_FIELD("Balance",  TZ_OPERATION_FIELD_AMOUNT, true,  false, false, false),
+    TZ_OPERATION_FIELD("Delegate", TZ_OPERATION_FIELD_PKH,    false, false, true,  false),
+    TZ_OPERATION_FIELD("Code",     TZ_OPERATION_FIELD_EXPR,   true,  false, false, true ),
+    TZ_OPERATION_FIELD("Storage",  TZ_OPERATION_FIELD_EXPR,   true,  false, false, true )
 );
 
 TZ_OPERATION_FIELDS(transfer_tck_fields,
-    TZ_OPERATION_FIELD("Source",        TZ_OPERATION_FIELD_SOURCE,      true, false, false, false),
-    TZ_OPERATION_FIELD("Fee",           TZ_OPERATION_FIELD_FEE,         true, false, false, false),
-    TZ_OPERATION_FIELD("Counter",       TZ_OPERATION_FIELD_NAT,         true, true,  false, false),
-    TZ_OPERATION_FIELD("Gas",           TZ_OPERATION_FIELD_NAT,         true, true,  false, false),
-    TZ_OPERATION_FIELD("Storage limit", TZ_OPERATION_FIELD_NAT,         true, false, false, false),
-    TZ_OPERATION_FIELD("Contents",      TZ_OPERATION_FIELD_EXPR,        true, false, false, true ),
-    TZ_OPERATION_FIELD("Type",          TZ_OPERATION_FIELD_EXPR,        true, false, false, true ),
-    TZ_OPERATION_FIELD("Ticketer",      TZ_OPERATION_FIELD_DESTINATION, true, false, false, false),
-    TZ_OPERATION_FIELD("Amount",        TZ_OPERATION_FIELD_NAT,         true, false, false, false),
-    TZ_OPERATION_FIELD("Destination",   TZ_OPERATION_FIELD_DESTINATION, true, false, false, false),
-    TZ_OPERATION_FIELD("Entrypoint",    TZ_OPERATION_FIELD_STRING,      true, false, false, false)
+    TZ_OPERATION_MANAGER_OPERATION_FIELDS,
+    TZ_OPERATION_FIELD("Contents",    TZ_OPERATION_FIELD_EXPR,        true, false, false, true ),
+    TZ_OPERATION_FIELD("Type",        TZ_OPERATION_FIELD_EXPR,        true, false, false, true ),
+    TZ_OPERATION_FIELD("Ticketer",    TZ_OPERATION_FIELD_DESTINATION, true, false, false, false),
+    TZ_OPERATION_FIELD("Amount",      TZ_OPERATION_FIELD_NAT,         true, false, false, false),
+    TZ_OPERATION_FIELD("Destination", TZ_OPERATION_FIELD_DESTINATION, true, false, false, false),
+    TZ_OPERATION_FIELD("Entrypoint",  TZ_OPERATION_FIELD_STRING,      true, false, false, false)
 );
 
 TZ_OPERATION_FIELDS(soru_add_msg_fields,
-    TZ_OPERATION_FIELD("Source",        TZ_OPERATION_FIELD_SOURCE,        true, false, false, false),
-    TZ_OPERATION_FIELD("Fee",           TZ_OPERATION_FIELD_FEE,           true, false, false, false),
-    TZ_OPERATION_FIELD("Counter",       TZ_OPERATION_FIELD_NAT,           true, true,  false, false),
-    TZ_OPERATION_FIELD("Gas",           TZ_OPERATION_FIELD_NAT,           true, true,  false, false),
-    TZ_OPERATION_FIELD("Storage limit", TZ_OPERATION_FIELD_NAT,           true, false, false, false),
-    TZ_OPERATION_FIELD("Message",       TZ_OPERATION_FIELD_SORU_MESSAGES, true, false, false, false)
+    TZ_OPERATION_MANAGER_OPERATION_FIELDS,
+    TZ_OPERATION_FIELD("Message", TZ_OPERATION_FIELD_SORU_MESSAGES, true, false, false, false)
 );
 
 TZ_OPERATION_FIELDS(soru_exe_msg_fields,
-    TZ_OPERATION_FIELD("Source",        TZ_OPERATION_FIELD_SOURCE, true, false, false, false),
-    TZ_OPERATION_FIELD("Fee",           TZ_OPERATION_FIELD_FEE,    true, false, false, false),
-    TZ_OPERATION_FIELD("Counter",       TZ_OPERATION_FIELD_NAT,    true, true,  false, false),
-    TZ_OPERATION_FIELD("Gas",           TZ_OPERATION_FIELD_NAT,    true, true,  false, false),
-    TZ_OPERATION_FIELD("Storage limit", TZ_OPERATION_FIELD_NAT,    true, false, false, false),
-    TZ_OPERATION_FIELD("Rollup",        TZ_OPERATION_FIELD_SR,     true, false, false, false),
-    TZ_OPERATION_FIELD("Commitment",    TZ_OPERATION_FIELD_SRC,    true, false, false, false),
-    TZ_OPERATION_FIELD("Output proof",  TZ_OPERATION_FIELD_BINARY, true, false, false, true )
+    TZ_OPERATION_MANAGER_OPERATION_FIELDS,
+    TZ_OPERATION_FIELD("Rollup",       TZ_OPERATION_FIELD_SR,     true, false, false, false),
+    TZ_OPERATION_FIELD("Commitment",   TZ_OPERATION_FIELD_SRC,    true, false, false, false),
+    TZ_OPERATION_FIELD("Output proof", TZ_OPERATION_FIELD_BINARY, true, false, false, true )
 );
 
 TZ_OPERATION_FIELDS(soru_origin_fields,
-    TZ_OPERATION_FIELD("Source",        TZ_OPERATION_FIELD_SOURCE,    true, false, false, false),
-    TZ_OPERATION_FIELD("Fee",           TZ_OPERATION_FIELD_FEE,       true, false, false, false),
-    TZ_OPERATION_FIELD("Counter",       TZ_OPERATION_FIELD_NAT,       true, true,  false, false),
-    TZ_OPERATION_FIELD("Gas",           TZ_OPERATION_FIELD_NAT,       true, true,  false, false),
-    TZ_OPERATION_FIELD("Storage limit", TZ_OPERATION_FIELD_NAT,       true, false, false, false),
-    TZ_OPERATION_FIELD("Kind",          TZ_OPERATION_FIELD_SORU_KIND, true, false, false, false),
-    TZ_OPERATION_FIELD("Kernel",        TZ_OPERATION_FIELD_BINARY,    true, false, false, true ),
-    TZ_OPERATION_FIELD("Proof",         TZ_OPERATION_FIELD_BINARY,    true, false, false, true ),
-    TZ_OPERATION_FIELD("Parameters",    TZ_OPERATION_FIELD_EXPR,      true, false, false, true )
+    TZ_OPERATION_MANAGER_OPERATION_FIELDS,
+    TZ_OPERATION_FIELD("Kind",       TZ_OPERATION_FIELD_SORU_KIND, true, false, false, false),
+    TZ_OPERATION_FIELD("Kernel",     TZ_OPERATION_FIELD_BINARY,    true, false, false, true ),
+    TZ_OPERATION_FIELD("Proof",      TZ_OPERATION_FIELD_BINARY,    true, false, false, true ),
+    TZ_OPERATION_FIELD("Parameters", TZ_OPERATION_FIELD_EXPR,      true, false, false, true )
 );
 
 const tz_operation_descriptor tz_operation_descriptors[] = {
