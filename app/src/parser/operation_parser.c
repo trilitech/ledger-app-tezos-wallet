@@ -773,7 +773,7 @@ tz_step_operation(tz_parser_state *state)
     if (regs->oofs > 0)
         tz_stop(IM_FULL);
 
-    if (name == NULL) {
+    if (field->kind == TZ_OPERATION_FIELD_END) {
         state->field_info.is_field_complex = false;
         tz_must(pop_frame(state));
     } else {

@@ -62,7 +62,7 @@ typedef enum {
 } tz_operation_parser_step_kind;
 
 typedef enum {
-    TZ_OPERATION_FIELD_SKIP,  // not for use in field descriptors
+    TZ_OPERATION_FIELD_END = 0,  // not for use in field descriptors
     TZ_OPERATION_FIELD_BINARY,
     TZ_OPERATION_FIELD_INT,
     TZ_OPERATION_FIELD_NAT,
