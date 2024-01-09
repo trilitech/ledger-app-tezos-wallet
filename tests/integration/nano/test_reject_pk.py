@@ -15,14 +15,13 @@
 
 from pathlib import Path
 
-from utils.app import nano_app, Screen, DEFAULT_ACCOUNT
+from utils.app import Screen, DEFAULT_ACCOUNT
 
-if __name__ == "__main__":
+def test_reject_pk(app):
     test_name = Path(__file__).stem
-    with nano_app() as app:
 
-        app.assert_screen(Screen.Home)
+    app.assert_screen(Screen.Home)
 
-        app.reject_public_key(DEFAULT_ACCOUNT, test_name)
+    app.reject_public_key(DEFAULT_ACCOUNT, test_name)
 
-        app.quit()
+    app.quit()

@@ -14,32 +14,31 @@
 # limitations under the License.
 
 from utils.account import Account, SIGNATURE_TYPE
-from utils.app import nano_app, Screen
+from utils.app import Screen
 
-if __name__ == "__main__":
-    with nano_app() as app:
+def test_get_pk(app):
 
-        accounts = [
-            Account("m/44'/1729'/0'/0'",
-                    SIGNATURE_TYPE.ED25519,
-                    "edpkuXX2VdkdXzkN11oLCb8Aurdo1BTAtQiK8ZY9UPj2YMt3AHEpcY"),
-            Account("m/44'/1729'/0'/0'",
-                    SIGNATURE_TYPE.SECP256K1,
-                    "sppk7bVy617DmGvXsMqcwsiLtnedTN2trUi5ugXcNig7en4rHJyunK1"),
-            Account("m/44'/1729'/0'/0'",
-                    SIGNATURE_TYPE.SECP256R1,
-                    "p2pk67fq5pzuMMABZ9RDrooYbLrgmnQbLt8z7PTGM9mskf7LXS5tdBG"),
-            Account("m/44'/1729'/0'/0'",
-                    SIGNATURE_TYPE.BIP32_ED25519,
-                    "edpkumJgSsSxkpiB5hmTq6eZcrmc6BsJtLAhYceFTiziFqje4mongz")
-        ]
+    accounts = [
+        Account("m/44'/1729'/0'/0'",
+                SIGNATURE_TYPE.ED25519,
+                "edpkuXX2VdkdXzkN11oLCb8Aurdo1BTAtQiK8ZY9UPj2YMt3AHEpcY"),
+        Account("m/44'/1729'/0'/0'",
+                SIGNATURE_TYPE.SECP256K1,
+                "sppk7bVy617DmGvXsMqcwsiLtnedTN2trUi5ugXcNig7en4rHJyunK1"),
+        Account("m/44'/1729'/0'/0'",
+                SIGNATURE_TYPE.SECP256R1,
+                "p2pk67fq5pzuMMABZ9RDrooYbLrgmnQbLt8z7PTGM9mskf7LXS5tdBG"),
+        Account("m/44'/1729'/0'/0'",
+                SIGNATURE_TYPE.BIP32_ED25519,
+                "edpkumJgSsSxkpiB5hmTq6eZcrmc6BsJtLAhYceFTiziFqje4mongz")
+    ]
 
-        for account in accounts:
+    for account in accounts:
 
-            app.assert_screen(Screen.Home)
+        app.assert_screen(Screen.Home)
 
-            data = app.backend.get_public_key(account, with_prompt=False)
+        data = app.backend.get_public_key(account, with_prompt=False)
 
-            app.checker.check_public_key(account, data)
+        app.checker.check_public_key(account, data)
 
-        app.quit()
+    app.quit()

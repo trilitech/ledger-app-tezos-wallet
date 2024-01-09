@@ -16,37 +16,34 @@
 from pathlib import Path
 
 from utils.account import Account
-from utils.app import nano_app, send_and_navigate, Screen, Screen_text, DEFAULT_ACCOUNT
+from utils.app import send_and_navigate, Screen, Screen_text, DEFAULT_ACCOUNT
 from utils.message import Message
 
-if __name__ == "__main__":
+def test_sign_with_small_packet(app):
     test_name = Path(__file__).stem
-    with nano_app() as app:
 
-        app.setup_expert_mode()
+    app.setup_expert_mode()
 
-        def check_sign_with_small_packet(
-                account: Account,
-                message: Message,
-                path: str) -> None:
+    def check_sign_with_small_packet(
+            account: Account,
+            message: Message,
+            path: str) -> None:
 
-            app.assert_screen(Screen.Home)
+        app.assert_screen(Screen.Home)
 
-            data = send_and_navigate(
-                send=(lambda: app.backend.sign(account, message, apdu_size=10)),
-                navigate=(lambda: app.navigate_until_text(Screen_text.Sign_accept, path)))
+        data = send_and_navigate(
+            send=(lambda: app.backend.sign(account, message, apdu_size=10)),
+            navigate=(lambda: app.navigate_until_text(Screen_text.Sign_accept, path)))
 
-            app.checker.check_signature(
-                account,
-                message,
-                with_hash=False,
-                data=data)
+        app.checker.check_signature(
+            account,
+            message,
+            with_hash=False,
+            data=data)
 
-            app.assert_screen(Screen.Home)
+    check_sign_with_small_packet(
+        account=DEFAULT_ACCOUNT,
+        message=Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316"),
+        path=test_name)
 
-        check_sign_with_small_packet(
-            account=DEFAULT_ACCOUNT,
-            message=Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316"),
-            path=test_name)
-
-        app.quit()
+    app.quit()

@@ -13,15 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from utils.app import nano_app, Screen
+from utils.app import Screen
 
-if __name__ == "__main__":
-    with nano_app() as app:
+def test_git(app):
 
-        app.assert_screen(Screen.Home)
+    app.assert_screen(Screen.Home)
 
-        data = app.backend.git()
+    data = app.backend.git()
 
-        app.checker.check_commit(data)
+    app.checker.check_commit(data)
 
-        app.quit()
+    app.quit()

@@ -15,7 +15,7 @@
 
 from pathlib import Path
 
-from utils.app import nano_app, Screen, DEFAULT_ACCOUNT
+from utils.app import Screen, DEFAULT_ACCOUNT
 from utils.message import Message
 
 # Operation (0): Increase paid storage
@@ -24,23 +24,22 @@ from utils.message import Message
 # Amount: 5
 # Destination: KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT
 
-if __name__ == "__main__":
+def test_sign_increase_paid_storage(app):
     test_name = Path(__file__).stem
-    with nano_app() as app:
 
-        app.assert_screen(Screen.Home)
+    app.assert_screen(Screen.Home)
 
-        message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000007100ffdd6102321bc251e4a5190ad5b12b251069d9b4904e0203040501000000000000000000000000000000000000000000")
+    message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000007100ffdd6102321bc251e4a5190ad5b12b251069d9b4904e0203040501000000000000000000000000000000000000000000")
 
-        data = app.sign(DEFAULT_ACCOUNT,
-                        message,
-                        with_hash=True,
-                        path=test_name)
+    data = app.sign(DEFAULT_ACCOUNT,
+                    message,
+                    with_hash=True,
+                    path=test_name)
 
-        app.checker.check_signature(
-            account=DEFAULT_ACCOUNT,
-            message=message,
-            with_hash=True,
-            data=data)
+    app.checker.check_signature(
+        account=DEFAULT_ACCOUNT,
+        message=message,
+        with_hash=True,
+        data=data)
 
-        app.quit()
+    app.quit()

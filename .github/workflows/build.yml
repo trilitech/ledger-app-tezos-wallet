@@ -93,16 +93,26 @@ jobs:
             ./tests/integration/run_test_local.sh -F -m ${{ matrix.device }} \
               ./tests/integration/${{ matrix.device }}
           else
-            ./tests/integration/run_test_local.sh -F -m ${{ matrix.device }} \
-              ./tests/integration/nano ./tests/integration/nano/${{ matrix.device }}
+            TMP_DIR=$(mktemp -d /tmp/foo-XXXXXX)
+            tar xfz app_${{ matrix.device }}_dbg.tgz -C $TMP_DIR
+            pytest -n 32 tests/integration/nano/ --tb=no                \
+                   --device ${{ matrix.device }} --app $TMP_DIR/app.elf \
+                   --log-dir integration_tests_log
           fi
 
-      - name: Upload results
+      - name: Upload Stax results
         uses: actions/upload-artifact@v3
-        if: always()
+        if: always() && matrix.device == 'stax'
         with:
           name: integration_tests_${{ matrix.device }}.json
           path: ./integration_tests.json
+
+      - name: Upload Nano results
+        uses: actions/upload-artifact@v3
+        if: always() && matrix.device != 'stax'
+        with:
+          name: integration_tests_log_${{ matrix.device }}
+          path: ./integration_tests_log
 
   generate_samples_unit_tests:
     needs: [build_docker_tezos_ocaml]

@@ -94,12 +94,18 @@ integration_tests_basic_stax:	app_stax.tgz		\
 				tests/integration/stax/*
 	$(RUN_TEST_DOCKER) stax tests/integration/stax
 
-integration_tests_basic_%:	app_%.tgz			\
-				app_%_dbg.tgz			\
+integration_tests_basic_%:	app_%_dbg.tgz			\
 				tests/integration/*		\
 				tests/integration/nano/*	\
 				tests/integration/nano/%/*
-	$(RUN_TEST_DOCKER) $* tests/integration/nano tests/integration/nano/$*
+	docker run --user "$$(id -u)":"$$(id -g)" --rm -i -v "$(realpath .):/app" \
+	--entrypoint=/bin/sh ledger-app-tezos-integration-tests -c "              \
+		TMP_DIR=\$$(mktemp -d /tmp/foo-XXXXXX);                           \
+		cd /app;                                                          \
+		tar xfz app_$*_dbg.tgz -C \$$TMP_DIR;                             \
+		pytest -n 32 tests/integration/nano/ --tb=no                      \
+			--device $* --app \$$TMP_DIR/app.elf                      \
+			--log-dir integration_tests_log"
 
 integration_tests_basic:	integration_tests_basic_nanos	\
 				integration_tests_basic_nanosp	\

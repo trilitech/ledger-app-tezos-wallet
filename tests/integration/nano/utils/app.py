@@ -23,7 +23,6 @@ from pathlib import Path
 from requests.exceptions import ConnectionError
 from ragger.backend import SpeculosBackend
 from ragger.error import ExceptionRAPDU
-from ragger.firmware import Firmware
 from ragger.navigator import NavInsID, NanoNavigator
 from typing import Callable, Generator, List, Optional, Tuple, Union
 
@@ -397,49 +396,8 @@ class TezosAppScreen():
                               StatusCode.PARSE_ERROR,
                               path)
 
-FIRMWARES = [
-    Firmware.NANOS,
-    Firmware.NANOSP,
-    Firmware.NANOX
-]
-
 DEFAULT_SEED = ('zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra')
 
 DEFAULT_ACCOUNT = Account("m/44'/1729'/0'/0'",
                           SIGNATURE_TYPE.ED25519,
                           "edpkuXX2VdkdXzkN11oLCb8Aurdo1BTAtQiK8ZY9UPj2YMt3AHEpcY")
-
-@contextmanager
-def nano_app(seed: str = DEFAULT_SEED) -> Generator[TezosAppScreen, None, None]:
-    parser = argparse.ArgumentParser(description="Launch a nano speculos backend for the tezos app")
-    parser.add_argument("-d", "--device",
-                        type=str,
-                        choices=list(map(lambda fw: fw.device, FIRMWARES)),
-                        help="Device type: nanos | nanosp | nanox ",
-                        required=True)
-    parser.add_argument("-p", "--port",
-                        type=int,
-                        default=5000,
-                        help="Port")
-    parser.add_argument("--golden-run",
-                        action='store_const',
-                        const=True,
-                        default=False,
-                        help="Golden run")
-    parser.add_argument("--app",
-                        type=str,
-                        help="App",
-                        required=True)
-    args, unknown_args = parser.parse_known_args()
-
-    firmware = next(fw for fw in FIRMWARES if fw.device == args.device)
-    speculos_args = [
-        "--api-port", f"{args.port}",
-        "--seed", seed
-    ] + unknown_args
-    backend = SpeculosTezosBackend(args.app,
-                                   firmware,
-                                   port=args.port,
-                                   args=speculos_args)
-    with TezosAppScreen(backend, APP_KIND.WALLET, args.golden_run) as app:
-        yield app
