@@ -1084,28 +1084,20 @@ tz_step_read_protos(tz_parser_state *state)
     tz_continue;
 }
 
-/* Print a string */
+/* Print a string
+ * if partial is true, then the string is not yet complete
+ */
 static tz_parser_result
-tz_step_print(tz_parser_state *state)
+tz_step_print(tz_parser_state *state, bool partial)
 {
-    ASSERT_STEP(state, PRINT);
-    tz_operation_state *op  = &state->operation;
-    const char         *str = PIC(op->frame->step_print.str);
-    if (*str) {
-        tz_must(tz_parser_put(state, *str));
-        op->frame->step_print.str++;
-    } else {
-        tz_must(pop_frame(state));
-        tz_stop(IM_FULL);
+    if (state->operation.frame->step != TZ_OPERATION_STEP_PRINT
+        && state->operation.frame->step != TZ_OPERATION_STEP_PARTIAL_PRINT) {
+        PRINTF("[DEBUG] expected step %s or step %s but got step %s)\n",
+               STRING_STEP(TZ_OPERATION_STEP_PRINT),
+               STRING_STEP(TZ_OPERATION_STEP_PARTIAL_PRINT),
+               STRING_STEP(state->operation.frame->step));
+        tz_raise(INVALID_STATE);
     }
-    tz_continue;
-}
-
-/* Start printing a string  */
-static tz_parser_result
-tz_step_partial_print(tz_parser_state *state)
-{
-    ASSERT_STEP(state, PARTIAL_PRINT);
     tz_operation_state *op  = &state->operation;
     const char         *str = PIC(op->frame->step_print.str);
     if (*str) {
@@ -1113,6 +1105,8 @@ tz_step_partial_print(tz_parser_state *state)
         op->frame->step_print.str++;
     } else {
         tz_must(pop_frame(state));
+        if (!partial)
+            tz_stop(IM_FULL);
     }
     tz_continue;
 }
@@ -1193,10 +1187,9 @@ tz_operation_parser_step(tz_parser_state *state)
         tz_must(tz_step_read_protos(state));
         break;
     case TZ_OPERATION_STEP_PRINT:
-        tz_must(tz_step_print(state));
-        break;
     case TZ_OPERATION_STEP_PARTIAL_PRINT:
-        tz_must(tz_step_partial_print(state));
+        tz_must(tz_step_print(
+            state, op->frame->step == TZ_OPERATION_STEP_PARTIAL_PRINT));
         break;
     default:
         tz_raise(INVALID_STATE);
