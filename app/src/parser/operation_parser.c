@@ -33,6 +33,7 @@ const char *const tz_operation_parser_step_name[] = {"MAGIC",
                                                      "BATCH",
                                                      "TAG",
                                                      "SIZE",
+                                                     "FIELD",
                                                      "OPERATION",
                                                      "PRINT",
                                                      "PARTIAL_PRINT",
@@ -767,184 +768,206 @@ tz_step_operation(tz_parser_state *state)
     const tz_operation_field_descriptor *field
         = PIC(&op->frame->step_operation
                    .fields[op->frame->step_operation.field_index]);
-    const char *name = PIC(field->name);
 
     // Remaining content from previous section - display this first.
     if (regs->oofs > 0)
         tz_stop(IM_FULL);
 
     if (field->kind == TZ_OPERATION_FIELD_END) {
+        // is_field_complex is reset after reaching the last field
         state->field_info.is_field_complex = false;
         tz_must(pop_frame(state));
     } else {
-        uint8_t present = 1;
-        if (!field->required)
-            tz_must(tz_parser_read(state, &present));
-        if (!field->skip) {
-            STRLCPY(state->field_info.field_name, name);
-            state->field_info.is_field_complex = field->complex;
-            state->field_info.field_index++;
-        }
         op->frame->step_operation.field_index++;
-        if (!present) {
-            if (field->display_none) {
-                if (field->skip)
-                    tz_raise(INVALID_STATE);
-                tz_must(push_frame(state, TZ_OPERATION_STEP_PRINT));
-                op->frame->step_print.str = (char *)unset_message;
-            }
-            tz_continue;
+        tz_must(push_frame(state, TZ_OPERATION_STEP_FIELD));
+        op->frame->step_field.field = field;
+    }
+    tz_continue;
+}
+
+/* Update the state in order to read a field of an operation based on its kind
+ * If the field is not ignored, update the field_info with the field
+ * information
+ */
+static tz_parser_result
+tz_step_field(tz_parser_state *state)
+{
+    ASSERT_STEP(state, FIELD);
+    tz_operation_state                  *op    = &state->operation;
+    const tz_operation_field_descriptor *field = op->frame->step_field.field;
+    const char                          *name  = PIC(field->name);
+
+    uint8_t present = 1;
+    if (!field->required)
+        tz_must(tz_parser_read(state, &present));
+
+    // is_field_complex is reset after reaching TZ_OPERATION_FIELD_END
+    if (!field->skip) {
+        STRLCPY(state->field_info.field_name, name);
+        state->field_info.is_field_complex = field->complex;
+        state->field_info.field_index++;
+    }
+
+    if (!present) {
+        if (field->display_none) {
+            if (field->skip)
+                tz_raise(INVALID_STATE);
+            op->frame->step           = TZ_OPERATION_STEP_PRINT;
+            op->frame->step_print.str = (char *)unset_message;
+        } else {
+            tz_must(pop_frame(state));
         }
-        switch (field->kind) {
-        case TZ_OPERATION_FIELD_BINARY: {
-            tz_must(push_frame(state, TZ_OPERATION_STEP_READ_BINARY));
-            op->frame->step_read_string.ofs  = 0;
-            op->frame->step_read_string.skip = field->skip;
-            tz_must(push_frame(state, TZ_OPERATION_STEP_SIZE));
-            op->frame->step_size.size     = 0;
-            op->frame->step_size.size_len = 4;
-            break;
-        }
-        case TZ_OPERATION_FIELD_SOURCE:
-        case TZ_OPERATION_FIELD_PKH: {
-            tz_must(push_frame(state, TZ_OPERATION_STEP_READ_BYTES));
-            op->frame->step_read_bytes.kind = field->kind;
-            op->frame->step_read_bytes.skip = field->skip;
-            op->frame->step_read_bytes.ofs  = 0;
-            op->frame->step_read_bytes.len  = 21;
-            break;
-        }
-        case TZ_OPERATION_FIELD_PK: {
-            tz_must(push_frame(state, TZ_OPERATION_STEP_READ_PK));
-            op->frame->step_read_bytes.skip = field->skip;
-            break;
-        }
-        case TZ_OPERATION_FIELD_SR: {
-            tz_must(push_frame(state, TZ_OPERATION_STEP_READ_BYTES));
-            op->frame->step_read_bytes.kind = field->kind;
-            op->frame->step_read_bytes.skip = field->skip;
-            op->frame->step_read_bytes.ofs  = 0;
-            op->frame->step_read_bytes.len  = 20;
-            break;
-        }
-        case TZ_OPERATION_FIELD_SRC: {
-            tz_must(push_frame(state, TZ_OPERATION_STEP_READ_BYTES));
-            op->frame->step_read_bytes.kind = field->kind;
-            op->frame->step_read_bytes.skip = field->skip;
-            op->frame->step_read_bytes.ofs  = 0;
-            op->frame->step_read_bytes.len  = 32;
-            break;
-        }
-        case TZ_OPERATION_FIELD_PROTO: {
-            tz_must(push_frame(state, TZ_OPERATION_STEP_READ_BYTES));
-            op->frame->step_read_bytes.kind = field->kind;
-            op->frame->step_read_bytes.skip = field->skip;
-            op->frame->step_read_bytes.ofs  = 0;
-            op->frame->step_read_bytes.len  = 32;
-            break;
-        }
-        case TZ_OPERATION_FIELD_PROTOS: {
-            tz_must(push_frame(state, TZ_OPERATION_STEP_READ_PROTOS));
-            op->frame->step_read_list.name  = name;
-            op->frame->step_read_list.index = 0;
-            op->frame->step_read_list.skip  = field->skip;
-            tz_must(push_frame(state, TZ_OPERATION_STEP_SIZE));
-            op->frame->step_size.size     = 0;
-            op->frame->step_size.size_len = 4;
-            break;
-        }
-        case TZ_OPERATION_FIELD_DESTINATION: {
-            tz_must(push_frame(state, TZ_OPERATION_STEP_READ_BYTES));
-            op->frame->step_read_bytes.kind = field->kind;
-            op->frame->step_read_bytes.skip = field->skip;
-            op->frame->step_read_bytes.ofs  = 0;
-            op->frame->step_read_bytes.len  = 22;
-            break;
-        }
-        case TZ_OPERATION_FIELD_NAT:
-        case TZ_OPERATION_FIELD_FEE:
-        case TZ_OPERATION_FIELD_AMOUNT: {
-            tz_must(push_frame(state, TZ_OPERATION_STEP_READ_NUM));
-            tz_parse_num_state_init(&state->buffers.num,
-                                    &op->frame->step_read_num.state);
-            op->frame->step_read_num.kind    = field->kind;
-            op->frame->step_read_num.skip    = field->skip;
-            op->frame->step_read_num.natural = 1;
-            break;
-        }
-        case TZ_OPERATION_FIELD_INT: {
-            tz_must(push_frame(state, TZ_OPERATION_STEP_READ_NUM));
-            tz_parse_num_state_init(&state->buffers.num,
-                                    &op->frame->step_read_num.state);
-            op->frame->step_read_num.kind    = field->kind;
-            op->frame->step_read_num.skip    = field->skip;
-            op->frame->step_read_num.natural = 0;
-            break;
-        }
-        case TZ_OPERATION_FIELD_INT32: {
-            tz_must(push_frame(state, TZ_OPERATION_STEP_READ_INT32));
-            op->frame->step_read_int32.value = 0;
-            op->frame->step_read_int32.ofs   = 0;
-            op->frame->step_read_int32.skip  = field->skip;
-            break;
-        }
-        case TZ_OPERATION_FIELD_PARAMETER: {
-            tz_must(push_frame(state, TZ_OPERATION_STEP_READ_MICHELINE));
-            op->frame->step_read_micheline.inited = 0;
-            op->frame->step_read_micheline.skip   = field->skip;
-            op->frame->step_read_micheline.name   = name;
-            tz_must(push_frame(state, TZ_OPERATION_STEP_SIZE));
-            op->frame->step_size.size     = 0;
-            op->frame->step_size.size_len = 4;
-            tz_must(
-                push_frame(state, TZ_OPERATION_STEP_READ_SMART_ENTRYPOINT));
-            STRLCPY(state->field_info.field_name, "Entrypoint");
-            op->frame->step_read_string.ofs  = 0;
-            op->frame->step_read_string.skip = field->skip;
-            break;
-        }
-        case TZ_OPERATION_FIELD_EXPR: {
-            tz_must(push_frame(state, TZ_OPERATION_STEP_READ_MICHELINE));
-            op->frame->step_read_micheline.inited = 0;
-            op->frame->step_read_micheline.skip   = field->skip;
-            op->frame->step_read_micheline.name   = name;
-            tz_must(push_frame(state, TZ_OPERATION_STEP_SIZE));
-            op->frame->step_size.size     = 0;
-            op->frame->step_size.size_len = 4;
-            break;
-        }
-        case TZ_OPERATION_FIELD_STRING: {
-            tz_must(push_frame(state, TZ_OPERATION_STEP_READ_STRING));
-            op->frame->step_read_string.ofs  = 0;
-            op->frame->step_read_string.skip = field->skip;
-            tz_must(push_frame(state, TZ_OPERATION_STEP_SIZE));
-            op->frame->step_size.size     = 0;
-            op->frame->step_size.size_len = 4;
-            break;
-        }
-        case TZ_OPERATION_FIELD_SORU_MESSAGES: {
-            tz_must(push_frame(state, TZ_OPERATION_STEP_READ_SORU_MESSAGES));
-            op->frame->step_read_list.name  = name;
-            op->frame->step_read_list.index = 0;
-            op->frame->step_read_list.skip  = field->skip;
-            tz_must(push_frame(state, TZ_OPERATION_STEP_SIZE));
-            op->frame->step_size.size     = 0;
-            op->frame->step_size.size_len = 4;
-            break;
-        }
-        case TZ_OPERATION_FIELD_SORU_KIND: {
-            tz_must(push_frame(state, TZ_OPERATION_STEP_READ_SORU_KIND));
-            op->frame->step_read_string.skip = field->skip;
-            break;
-        }
-        case TZ_OPERATION_FIELD_BALLOT: {
-            tz_must(push_frame(state, TZ_OPERATION_STEP_READ_BALLOT));
-            op->frame->step_read_string.skip = field->skip;
-            break;
-        }
-        default:
-            tz_raise(INVALID_STATE);
-        }
+        tz_continue;
+    }
+
+    switch (field->kind) {
+    case TZ_OPERATION_FIELD_BINARY: {
+        op->frame->step                  = TZ_OPERATION_STEP_READ_BINARY;
+        op->frame->step_read_string.ofs  = 0;
+        op->frame->step_read_string.skip = field->skip;
+        tz_must(push_frame(state, TZ_OPERATION_STEP_SIZE));
+        op->frame->step_size.size     = 0;
+        op->frame->step_size.size_len = 4;
+        break;
+    }
+    case TZ_OPERATION_FIELD_SOURCE:
+    case TZ_OPERATION_FIELD_PKH: {
+        op->frame->step                 = TZ_OPERATION_STEP_READ_BYTES;
+        op->frame->step_read_bytes.kind = field->kind;
+        op->frame->step_read_bytes.skip = field->skip;
+        op->frame->step_read_bytes.ofs  = 0;
+        op->frame->step_read_bytes.len  = 21;
+        break;
+    }
+    case TZ_OPERATION_FIELD_PK: {
+        op->frame->step                 = TZ_OPERATION_STEP_READ_PK;
+        op->frame->step_read_bytes.skip = field->skip;
+        break;
+    }
+    case TZ_OPERATION_FIELD_SR: {
+        op->frame->step                 = TZ_OPERATION_STEP_READ_BYTES;
+        op->frame->step_read_bytes.kind = field->kind;
+        op->frame->step_read_bytes.skip = field->skip;
+        op->frame->step_read_bytes.ofs  = 0;
+        op->frame->step_read_bytes.len  = 20;
+        break;
+    }
+    case TZ_OPERATION_FIELD_SRC: {
+        op->frame->step                 = TZ_OPERATION_STEP_READ_BYTES;
+        op->frame->step_read_bytes.kind = field->kind;
+        op->frame->step_read_bytes.skip = field->skip;
+        op->frame->step_read_bytes.ofs  = 0;
+        op->frame->step_read_bytes.len  = 32;
+        break;
+    }
+    case TZ_OPERATION_FIELD_PROTO: {
+        op->frame->step                 = TZ_OPERATION_STEP_READ_BYTES;
+        op->frame->step_read_bytes.kind = field->kind;
+        op->frame->step_read_bytes.skip = field->skip;
+        op->frame->step_read_bytes.ofs  = 0;
+        op->frame->step_read_bytes.len  = 32;
+        break;
+    }
+    case TZ_OPERATION_FIELD_PROTOS: {
+        op->frame->step                 = TZ_OPERATION_STEP_READ_PROTOS;
+        op->frame->step_read_list.name  = name;
+        op->frame->step_read_list.index = 0;
+        op->frame->step_read_list.skip  = field->skip;
+        tz_must(push_frame(state, TZ_OPERATION_STEP_SIZE));
+        op->frame->step_size.size     = 0;
+        op->frame->step_size.size_len = 4;
+        break;
+    }
+    case TZ_OPERATION_FIELD_DESTINATION: {
+        op->frame->step                 = TZ_OPERATION_STEP_READ_BYTES;
+        op->frame->step_read_bytes.kind = field->kind;
+        op->frame->step_read_bytes.skip = field->skip;
+        op->frame->step_read_bytes.ofs  = 0;
+        op->frame->step_read_bytes.len  = 22;
+        break;
+    }
+    case TZ_OPERATION_FIELD_NAT:
+    case TZ_OPERATION_FIELD_FEE:
+    case TZ_OPERATION_FIELD_AMOUNT: {
+        op->frame->step = TZ_OPERATION_STEP_READ_NUM;
+        tz_parse_num_state_init(&state->buffers.num,
+                                &op->frame->step_read_num.state);
+        op->frame->step_read_num.kind    = field->kind;
+        op->frame->step_read_num.skip    = field->skip;
+        op->frame->step_read_num.natural = 1;
+        break;
+    }
+    case TZ_OPERATION_FIELD_INT: {
+        op->frame->step = TZ_OPERATION_STEP_READ_NUM;
+        tz_parse_num_state_init(&state->buffers.num,
+                                &op->frame->step_read_num.state);
+        op->frame->step_read_num.kind    = field->kind;
+        op->frame->step_read_num.skip    = field->skip;
+        op->frame->step_read_num.natural = 0;
+        break;
+    }
+    case TZ_OPERATION_FIELD_INT32: {
+        op->frame->step                  = TZ_OPERATION_STEP_READ_INT32;
+        op->frame->step_read_int32.value = 0;
+        op->frame->step_read_int32.ofs   = 0;
+        op->frame->step_read_int32.skip  = field->skip;
+        break;
+    }
+    case TZ_OPERATION_FIELD_PARAMETER: {
+        op->frame->step = TZ_OPERATION_STEP_READ_MICHELINE;
+        op->frame->step_read_micheline.inited = 0;
+        op->frame->step_read_micheline.skip   = field->skip;
+        op->frame->step_read_micheline.name   = name;
+        tz_must(push_frame(state, TZ_OPERATION_STEP_SIZE));
+        op->frame->step_size.size     = 0;
+        op->frame->step_size.size_len = 4;
+        tz_must(push_frame(state, TZ_OPERATION_STEP_READ_SMART_ENTRYPOINT));
+        STRLCPY(state->field_info.field_name, "Entrypoint");
+        op->frame->step_read_string.ofs  = 0;
+        op->frame->step_read_string.skip = field->skip;
+        break;
+    }
+    case TZ_OPERATION_FIELD_EXPR: {
+        op->frame->step = TZ_OPERATION_STEP_READ_MICHELINE;
+        op->frame->step_read_micheline.inited = 0;
+        op->frame->step_read_micheline.skip   = field->skip;
+        op->frame->step_read_micheline.name   = name;
+        tz_must(push_frame(state, TZ_OPERATION_STEP_SIZE));
+        op->frame->step_size.size     = 0;
+        op->frame->step_size.size_len = 4;
+        break;
+    }
+    case TZ_OPERATION_FIELD_STRING: {
+        op->frame->step                  = TZ_OPERATION_STEP_READ_STRING;
+        op->frame->step_read_string.ofs  = 0;
+        op->frame->step_read_string.skip = field->skip;
+        tz_must(push_frame(state, TZ_OPERATION_STEP_SIZE));
+        op->frame->step_size.size     = 0;
+        op->frame->step_size.size_len = 4;
+        break;
+    }
+    case TZ_OPERATION_FIELD_SORU_MESSAGES: {
+        op->frame->step                = TZ_OPERATION_STEP_READ_SORU_MESSAGES;
+        op->frame->step_read_list.name = name;
+        op->frame->step_read_list.index = 0;
+        op->frame->step_read_list.skip  = field->skip;
+        tz_must(push_frame(state, TZ_OPERATION_STEP_SIZE));
+        op->frame->step_size.size     = 0;
+        op->frame->step_size.size_len = 4;
+        break;
+    }
+    case TZ_OPERATION_FIELD_SORU_KIND: {
+        op->frame->step                  = TZ_OPERATION_STEP_READ_SORU_KIND;
+        op->frame->step_read_string.skip = field->skip;
+        break;
+    }
+    case TZ_OPERATION_FIELD_BALLOT: {
+        op->frame->step                  = TZ_OPERATION_STEP_READ_BALLOT;
+        op->frame->step_read_string.skip = field->skip;
+        break;
+    }
+    default:
+        tz_raise(INVALID_STATE);
     }
     tz_continue;
 }
@@ -1167,6 +1190,9 @@ tz_operation_parser_step(tz_parser_state *state)
         break;
     case TZ_OPERATION_STEP_READ_SMART_ENTRYPOINT:
         tz_must(tz_step_read_smart_entrypoint(state));
+        break;
+    case TZ_OPERATION_STEP_FIELD:
+        tz_must(tz_step_field(state));
         break;
     case TZ_OPERATION_STEP_OPERATION:
         tz_must(tz_step_operation(state));
