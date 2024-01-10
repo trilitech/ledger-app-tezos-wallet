@@ -27,7 +27,8 @@ static tz_parser_result push_frame(tz_parser_state *,
 static tz_parser_result pop_frame(tz_parser_state *);
 
 #ifdef TEZOS_DEBUG
-const char *const tz_operation_parser_step_name[] = {"MAGIC",
+const char *const tz_operation_parser_step_name[] = {"OPTION",
+                                                     "MAGIC",
                                                      "READ_BINARY",
                                                      "BRANCH",
                                                      "BATCH",
@@ -58,14 +59,18 @@ const char *const tz_operation_parser_step_name[] = {"MAGIC",
 
 // Default .skip=false, .complex=false
 #define TZ_OPERATION_FIELD(name_v, kind_v, ...) \
-  {.name=name_v, .kind=kind_v, .required=true, .display_none=false, __VA_ARGS__}
+  {.name=name_v, .kind=kind_v, __VA_ARGS__}
 
 #define TZ_OPERATION_LAST_FIELD {0}
 
 // Default .skip=false, .complex=false
-// Default .display_none should be provided
-#define TZ_OPERATION_OPTION_FIELD(name_v, kind_v, ...) \
-  {.name=name_v, .kind=kind_v, .required=false, __VA_ARGS__}
+#define TZ_OPERATION_OPTION_FIELD(name_v, field_v, display_none, ...) \
+  {.name=name_v, .kind=TZ_OPERATION_FIELD_OPTION,                     \
+   .field_option={                                                    \
+       .field=&(const tz_operation_field_descriptor)field_v,          \
+       display_none                                                   \
+   },                                                                 \
+   __VA_ARGS__}
 
 #define TZ_OPERATION_FIELDS(name, ...) \
   const tz_operation_field_descriptor name[] = { __VA_ARGS__, TZ_OPERATION_LAST_FIELD}
@@ -96,10 +101,11 @@ TZ_OPERATION_FIELDS(failing_noop_fields,
 
 TZ_OPERATION_FIELDS(transaction_fields,
     TZ_OPERATION_MANAGER_OPERATION_FIELDS,
-    TZ_OPERATION_FIELD("Amount",            TZ_OPERATION_FIELD_AMOUNT),
-    TZ_OPERATION_FIELD("Destination",       TZ_OPERATION_FIELD_DESTINATION),
-    TZ_OPERATION_OPTION_FIELD("_Parameter", TZ_OPERATION_FIELD_PARAMETER,
-        .display_none=false, .complex=true)
+    TZ_OPERATION_FIELD("Amount",      TZ_OPERATION_FIELD_AMOUNT),
+    TZ_OPERATION_FIELD("Destination", TZ_OPERATION_FIELD_DESTINATION),
+    TZ_OPERATION_OPTION_FIELD("_Parameters",
+        TZ_OPERATION_FIELD("Parameter", TZ_OPERATION_FIELD_PARAMETER, .complex=true),
+        .display_none=false)
 );
 
 TZ_OPERATION_FIELDS(reveal_fields,
@@ -109,7 +115,9 @@ TZ_OPERATION_FIELDS(reveal_fields,
 
 TZ_OPERATION_FIELDS(delegation_fields,
     TZ_OPERATION_MANAGER_OPERATION_FIELDS,
-    TZ_OPERATION_OPTION_FIELD("Delegate", TZ_OPERATION_FIELD_PKH, .display_none=true)
+    TZ_OPERATION_OPTION_FIELD("Delegate",
+        TZ_OPERATION_FIELD("Delegate", TZ_OPERATION_FIELD_PKH),
+        .display_none=true)
 );
 
 TZ_OPERATION_FIELDS(reg_glb_cst_fields,
@@ -119,7 +127,9 @@ TZ_OPERATION_FIELDS(reg_glb_cst_fields,
 
 TZ_OPERATION_FIELDS(set_deposit_fields,
     TZ_OPERATION_MANAGER_OPERATION_FIELDS,
-    TZ_OPERATION_OPTION_FIELD("Staking limit", TZ_OPERATION_FIELD_AMOUNT, .display_none=true)
+    TZ_OPERATION_OPTION_FIELD("Staking limit",
+        TZ_OPERATION_FIELD("Staking limit", TZ_OPERATION_FIELD_AMOUNT),
+        .display_none=true)
 );
 
 TZ_OPERATION_FIELDS(inc_paid_stg_fields,
@@ -135,10 +145,12 @@ TZ_OPERATION_FIELDS(update_ck_fields,
 
 TZ_OPERATION_FIELDS(origination_fields,
     TZ_OPERATION_MANAGER_OPERATION_FIELDS,
-    TZ_OPERATION_FIELD("Balance",         TZ_OPERATION_FIELD_AMOUNT),
-    TZ_OPERATION_OPTION_FIELD("Delegate", TZ_OPERATION_FIELD_PKH, .display_none=true),
-    TZ_OPERATION_FIELD("Code",            TZ_OPERATION_FIELD_EXPR, .complex=true),
-    TZ_OPERATION_FIELD("Storage",         TZ_OPERATION_FIELD_EXPR, .complex=true)
+    TZ_OPERATION_FIELD("Balance", TZ_OPERATION_FIELD_AMOUNT),
+    TZ_OPERATION_OPTION_FIELD("Delegate",
+        TZ_OPERATION_FIELD("Delegate", TZ_OPERATION_FIELD_PKH),
+        .display_none=true),
+    TZ_OPERATION_FIELD("Code",    TZ_OPERATION_FIELD_EXPR, .complex=true),
+    TZ_OPERATION_FIELD("Storage", TZ_OPERATION_FIELD_EXPR, .complex=true)
 );
 
 TZ_OPERATION_FIELDS(transfer_tck_fields,
@@ -294,6 +306,30 @@ tz_print_string(tz_parser_state *state)
             tz_raise(INVALID_STATE);                                         \
         }                                                                    \
     } while (0)
+
+/* Update the state in order to read the field if it is present */
+static tz_parser_result
+tz_step_option(tz_parser_state *state)
+{
+    ASSERT_STEP(state, OPTION);
+    tz_operation_state *op = &state->operation;
+    uint8_t             present;
+    tz_must(tz_parser_read(state, &present));
+    if (!present) {
+        if (op->frame->step_option.display_none) {
+            if (op->frame->step_option.field->skip)
+                tz_raise(INVALID_STATE);
+            op->frame->step           = TZ_OPERATION_STEP_PRINT;
+            op->frame->step_print.str = (char *)unset_message;
+        } else {
+            tz_must(pop_frame(state));
+        }
+    } else {
+        op->frame->step             = TZ_OPERATION_STEP_FIELD;
+        op->frame->step_field.field = op->frame->step_option.field;
+    }
+    tz_continue;
+}
 
 /* Update the state in order to read an operation or a micheline expression
  * based on a magic byte */
@@ -742,10 +778,6 @@ tz_step_field(tz_parser_state *state)
     const tz_operation_field_descriptor *field = op->frame->step_field.field;
     const char                          *name  = PIC(field->name);
 
-    uint8_t present = 1;
-    if (!field->required)
-        tz_must(tz_parser_read(state, &present));
-
     // is_field_complex is reset after reaching TZ_OPERATION_FIELD_END
     if (!field->skip) {
         STRLCPY(state->field_info.field_name, name);
@@ -753,19 +785,14 @@ tz_step_field(tz_parser_state *state)
         state->field_info.field_index++;
     }
 
-    if (!present) {
-        if (field->display_none) {
-            if (field->skip)
-                tz_raise(INVALID_STATE);
-            op->frame->step           = TZ_OPERATION_STEP_PRINT;
-            op->frame->step_print.str = (char *)unset_message;
-        } else {
-            tz_must(pop_frame(state));
-        }
-        tz_continue;
-    }
-
     switch (field->kind) {
+    case TZ_OPERATION_FIELD_OPTION: {
+        op->frame->step              = TZ_OPERATION_STEP_OPTION;
+        op->frame->step_option.field = PIC(field->field_option.field);
+        op->frame->step_option.display_none
+            = field->field_option.display_none;
+        break;
+    }
     case TZ_OPERATION_FIELD_BINARY: {
         op->frame->step                  = TZ_OPERATION_STEP_READ_BINARY;
         op->frame->step_read_string.ofs  = 0;
@@ -1100,6 +1127,9 @@ tz_operation_parser_step(tz_parser_state *state)
         STRING_STEP(op->frame->step), tz_parser_result_name(state->errno));
 
     switch (op->frame->step) {
+    case TZ_OPERATION_STEP_OPTION:
+        tz_must(tz_step_option(state));
+        break;
     case TZ_OPERATION_STEP_MAGIC:
         tz_must(tz_step_magic(state));
         break;

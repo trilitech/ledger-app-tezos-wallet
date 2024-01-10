@@ -39,6 +39,7 @@ typedef enum {
 } tz_operation_tag;
 
 typedef enum {
+    TZ_OPERATION_STEP_OPTION,
     TZ_OPERATION_STEP_MAGIC,
     TZ_OPERATION_STEP_READ_BINARY,
     TZ_OPERATION_STEP_BRANCH,
@@ -64,6 +65,7 @@ typedef enum {
 
 typedef enum {
     TZ_OPERATION_FIELD_END = 0,  // not for use in field descriptors
+    TZ_OPERATION_FIELD_OPTION,
     TZ_OPERATION_FIELD_BINARY,
     TZ_OPERATION_FIELD_INT,
     TZ_OPERATION_FIELD_NAT,
@@ -88,10 +90,20 @@ typedef enum {
     TZ_OPERATION_FIELD_BALLOT
 } tz_operation_field_kind;
 
+struct tz_operation_field_descriptor;
+
 typedef struct {
+    const struct tz_operation_field_descriptor *field;
+    uint8_t                                     display_none : 1;
+} tz_operation_option_field_descriptor;
+
+typedef struct tz_operation_field_descriptor {
     const char             *name;
     tz_operation_field_kind kind : 5;
-    uint8_t required : 1, skip : 1, display_none : 1, complex : 1;
+    union {
+        tz_operation_option_field_descriptor field_option;
+    };
+    uint8_t skip : 1, complex : 1;
 } tz_operation_field_descriptor;
 
 typedef struct {
@@ -104,6 +116,7 @@ typedef struct {
     tz_operation_parser_step_kind step : 5;
     uint16_t                      stop;
     union {
+        tz_operation_option_field_descriptor step_option;
         struct {
             uint8_t  size_len;
             uint16_t size;
