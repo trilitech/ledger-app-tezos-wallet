@@ -418,9 +418,9 @@ tz_step_tag(tz_parser_state *state)
 #endif  // HAVE_SWAP
     for (d = tz_operation_descriptors; d->tag != TZ_OPERATION_TAG_END; d++) {
         if (d->tag == t) {
-            op->frame->step = TZ_OPERATION_STEP_OPERATION;
-            op->frame->step_operation.descriptor = d;
-            op->frame->step_operation.field      = 0;
+            op->frame->step                  = TZ_OPERATION_STEP_OPERATION;
+            op->frame->step_operation.fields = d->fields;
+            op->frame->step_operation.field_index = 0;
             tz_must(push_frame(state, TZ_OPERATION_STEP_PRINT));
             snprintf(state->field_info.field_name, 30, "Operation (%d)",
                      op->batch_index);
@@ -762,11 +762,11 @@ static tz_parser_result
 tz_step_operation(tz_parser_state *state)
 {
     ASSERT_STEP(state, OPERATION);
-    tz_operation_state            *op   = &state->operation;
-    tz_parser_regs                *regs = &state->regs;
-    const tz_operation_descriptor *d = op->frame->step_operation.descriptor;
+    tz_operation_state                  *op   = &state->operation;
+    tz_parser_regs                      *regs = &state->regs;
     const tz_operation_field_descriptor *field
-        = PIC(&d->fields[op->frame->step_operation.field]);
+        = PIC(&op->frame->step_operation
+                   .fields[op->frame->step_operation.field_index]);
     const char *name = PIC(field->name);
 
     // Remaining content from previous section - display this first.
@@ -785,7 +785,7 @@ tz_step_operation(tz_parser_state *state)
             state->field_info.is_field_complex = field->complex;
             state->field_info.field_index++;
         }
-        op->frame->step_operation.field++;
+        op->frame->step_operation.field_index++;
         if (!present) {
             if (field->display_none) {
                 if (field->skip)

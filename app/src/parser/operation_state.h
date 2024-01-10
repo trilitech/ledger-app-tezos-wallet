@@ -108,8 +108,8 @@ typedef struct {
             uint16_t size;
         } step_size;
         struct {
-            const tz_operation_descriptor *descriptor;
-            uint8_t                        field;
+            const tz_operation_field_descriptor *fields;
+            uint8_t                              field_index;
         } step_operation;
         struct {
             const char *str;
