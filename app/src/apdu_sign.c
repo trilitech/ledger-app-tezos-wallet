@@ -261,6 +261,7 @@ refill_error(void)
     global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
 #ifdef HAVE_SWAP
     if (G_called_from_swap) {
+        global.keys.apdu.sign.u.clear.received_msg = false;
         TZ_FAIL(EXC_PARSE_ERROR);
     }
 #endif
@@ -570,7 +571,7 @@ handle_data_apdu_clear(command_t *cmd)
     if (global.step == ST_SWAP_SIGN) {
         do {
             TZ_CHECK(refill());
-        } while (global.step == ST_SWAP_SIGN);
+        } while (global.keys.apdu.sign.u.clear.received_msg);
     } else {
         TZ_CHECK(refill());
         if (global.keys.apdu.sign.step == SIGN_ST_WAIT_USER_INPUT
