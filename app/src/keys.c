@@ -163,6 +163,23 @@ public_key_hash(uint8_t *hash_out, size_t hash_out_size,
     TZ_POSTAMBLE;
 }
 
+/**
+ * @brief   Sign a hash with eddsa using the device seed derived from the
+ * specified bip32 path and seed key.
+ *
+ * @param[in]  derivation_type Derivation type, ex. ED25519
+ *
+ * @param[in]  path            Bip32 path to use for derivation.
+ *
+ * @param[in]  hash            Digest of the message to be signed.
+ *
+ * @param[in]  hash_len        Length of the digest in octets.
+ *
+ * @param[out] sig             Buffer where to store the signature.
+ *
+ * @param[in]  sig_len         Length of the signature buffer, updated with
+ * signature length.
+ */
 void
 sign(derivation_type_t derivation_type, const bip32_path_t *path,
      const uint8_t *hash, size_t hashlen, uint8_t *sig, size_t *siglen)

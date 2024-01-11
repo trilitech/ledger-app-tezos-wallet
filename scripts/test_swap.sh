@@ -139,7 +139,7 @@ build_app_ethereum() {
 build_app_tezos() {
     _assert_tezos_repo
 
-    _build_side_app $1 "tezos_new" $APP_TEZOS_REPO/app
+    _build_side_app $1 "tezos" $APP_TEZOS_REPO/app
 }
 
 run_tests() {
@@ -153,7 +153,7 @@ run_tests() {
                ledger-app-tezos-integration-tests -c              \
                "cd /app &&                                        \
                 pip install -r test/python/requirements.txt &&    \
-                pytest test/python $*"
+                pip install protobuf==3.20.3 && pytest test/python $*"
     )
 }
 
@@ -163,7 +163,7 @@ run_tests_all() {
     device=$1
     shift
 
-    run_tests --device $device -k "tezos_new" $*
+    run_tests --device $device -k "tezos" $*
 }
 
 update() {

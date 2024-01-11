@@ -24,7 +24,9 @@
 #include <cx.h>
 #include <io.h>
 #include <parser.h>
-
+#ifdef HAVE_SWAP
+#include <swap.h>
+#endif
 #include "apdu.h"
 #include "app_main.h"
 #include "globals.h"
@@ -124,9 +126,15 @@ app_main(void)
 
     /* ST_ERROR implies that we are completely unknown and need to reset */
     global.step = ST_ERROR;
-
     for (;;) {
         TZ_PREAMBLE(("void"));
+#ifdef HAVE_SWAP
+        if (G_called_from_swap) {
+            global.step = ST_SWAP_SIGN;
+        }
+        PRINTF("[SWAP] : G_called_from_swap = %d , global.step = %d",
+               G_called_from_swap, global.step);
+#endif
         if (global.step == ST_ERROR) {
             global.step = ST_IDLE;
             ui_home_init();
