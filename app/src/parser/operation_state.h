@@ -40,6 +40,7 @@ typedef enum {
 
 typedef enum {
     TZ_OPERATION_STEP_OPTION,
+    TZ_OPERATION_STEP_TUPLE,
     TZ_OPERATION_STEP_MAGIC,
     TZ_OPERATION_STEP_READ_BINARY,
     TZ_OPERATION_STEP_BRANCH,
@@ -47,7 +48,6 @@ typedef enum {
     TZ_OPERATION_STEP_TAG,
     TZ_OPERATION_STEP_SIZE,
     TZ_OPERATION_STEP_FIELD,
-    TZ_OPERATION_STEP_OPERATION,
     TZ_OPERATION_STEP_PRINT,
     TZ_OPERATION_STEP_PARTIAL_PRINT,
     TZ_OPERATION_STEP_READ_NUM,
@@ -127,7 +127,7 @@ typedef struct {
         struct {
             const tz_operation_field_descriptor *fields;
             uint8_t                              field_index;
-        } step_operation;
+        } step_tuple;
         struct {
             const char *str;
         } step_print;

@@ -28,6 +28,7 @@ static tz_parser_result pop_frame(tz_parser_state *);
 
 #ifdef TEZOS_DEBUG
 const char *const tz_operation_parser_step_name[] = {"OPTION",
+                                                     "TUPLE",
                                                      "MAGIC",
                                                      "READ_BINARY",
                                                      "BRANCH",
@@ -35,7 +36,6 @@ const char *const tz_operation_parser_step_name[] = {"OPTION",
                                                      "TAG",
                                                      "SIZE",
                                                      "FIELD",
-                                                     "OPERATION",
                                                      "PRINT",
                                                      "PARTIAL_PRINT",
                                                      "READ_NUM",
@@ -331,6 +331,32 @@ tz_step_option(tz_parser_state *state)
     tz_continue;
 }
 
+/* Update the state in order to read the fields in a field tuple */
+static tz_parser_result
+tz_step_tuple(tz_parser_state *state)
+{
+    ASSERT_STEP(state, TUPLE);
+    tz_operation_state                  *op    = &state->operation;
+    tz_parser_regs                      *regs  = &state->regs;
+    const tz_operation_field_descriptor *field = PIC(
+        &op->frame->step_tuple.fields[op->frame->step_tuple.field_index]);
+
+    // Remaining content from previous section - display this first.
+    if (regs->oofs > 0)
+        tz_stop(IM_FULL);
+
+    if (field->kind == TZ_OPERATION_FIELD_END) {
+        // is_field_complex is reset after reaching the last field
+        state->field_info.is_field_complex = false;
+        tz_must(pop_frame(state));
+    } else {
+        op->frame->step_tuple.field_index++;
+        tz_must(push_frame(state, TZ_OPERATION_STEP_FIELD));
+        op->frame->step_field.field = field;
+    }
+    tz_continue;
+}
+
 /* Update the state in order to read an operation or a micheline expression
  * based on a magic byte */
 static tz_parser_result
@@ -400,9 +426,9 @@ tz_step_tag(tz_parser_state *state)
 #endif  // HAVE_SWAP
     for (d = tz_operation_descriptors; d->tag != TZ_OPERATION_TAG_END; d++) {
         if (d->tag == t) {
-            op->frame->step                  = TZ_OPERATION_STEP_OPERATION;
-            op->frame->step_operation.fields = d->fields;
-            op->frame->step_operation.field_index = 0;
+            op->frame->step                   = TZ_OPERATION_STEP_TUPLE;
+            op->frame->step_tuple.fields      = d->fields;
+            op->frame->step_tuple.field_index = 0;
             tz_must(push_frame(state, TZ_OPERATION_STEP_PRINT));
             snprintf(state->field_info.field_name, 30, "Operation (%d)",
                      op->batch_index);
@@ -735,33 +761,6 @@ tz_step_read_smart_entrypoint(tz_parser_state *state)
         break;
     default:
         tz_raise(INVALID_TAG);
-    }
-    tz_continue;
-}
-
-/* Update the state in order to read fields of an operation */
-static tz_parser_result
-tz_step_operation(tz_parser_state *state)
-{
-    ASSERT_STEP(state, OPERATION);
-    tz_operation_state                  *op   = &state->operation;
-    tz_parser_regs                      *regs = &state->regs;
-    const tz_operation_field_descriptor *field
-        = PIC(&op->frame->step_operation
-                   .fields[op->frame->step_operation.field_index]);
-
-    // Remaining content from previous section - display this first.
-    if (regs->oofs > 0)
-        tz_stop(IM_FULL);
-
-    if (field->kind == TZ_OPERATION_FIELD_END) {
-        // is_field_complex is reset after reaching the last field
-        state->field_info.is_field_complex = false;
-        tz_must(pop_frame(state));
-    } else {
-        op->frame->step_operation.field_index++;
-        tz_must(push_frame(state, TZ_OPERATION_STEP_FIELD));
-        op->frame->step_field.field = field;
     }
     tz_continue;
 }
@@ -1130,6 +1129,9 @@ tz_operation_parser_step(tz_parser_state *state)
     case TZ_OPERATION_STEP_OPTION:
         tz_must(tz_step_option(state));
         break;
+    case TZ_OPERATION_STEP_TUPLE:
+        tz_must(tz_step_tuple(state));
+        break;
     case TZ_OPERATION_STEP_MAGIC:
         tz_must(tz_step_magic(state));
         break;
@@ -1168,9 +1170,6 @@ tz_operation_parser_step(tz_parser_state *state)
         break;
     case TZ_OPERATION_STEP_FIELD:
         tz_must(tz_step_field(state));
-        break;
-    case TZ_OPERATION_STEP_OPERATION:
-        tz_must(tz_step_operation(state));
         break;
     case TZ_OPERATION_STEP_READ_PK:
         tz_must(tz_step_read_pk(state));
