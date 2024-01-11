@@ -66,6 +66,7 @@ typedef enum {
 typedef enum {
     TZ_OPERATION_FIELD_END = 0,  // not for use in field descriptors
     TZ_OPERATION_FIELD_OPTION,
+    TZ_OPERATION_FIELD_TUPLE,
     TZ_OPERATION_FIELD_BINARY,
     TZ_OPERATION_FIELD_INT,
     TZ_OPERATION_FIELD_NAT,
@@ -81,7 +82,7 @@ typedef enum {
     TZ_OPERATION_FIELD_PROTO,
     TZ_OPERATION_FIELD_PROTOS,
     TZ_OPERATION_FIELD_DESTINATION,
-    TZ_OPERATION_FIELD_PARAMETER,
+    TZ_OPERATION_FIELD_SMART_ENTRYPOINT,
     TZ_OPERATION_FIELD_EXPR,
     TZ_OPERATION_FIELD_OPH,
     TZ_OPERATION_FIELD_BH,
@@ -102,6 +103,9 @@ typedef struct tz_operation_field_descriptor {
     tz_operation_field_kind kind : 5;
     union {
         tz_operation_option_field_descriptor field_option;
+        struct {
+            const struct tz_operation_field_descriptor *fields;
+        } field_tuple;
     };
     uint8_t skip : 1, complex : 1;
 } tz_operation_field_descriptor;

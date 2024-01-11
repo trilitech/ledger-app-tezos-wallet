@@ -72,6 +72,16 @@ const char *const tz_operation_parser_step_name[] = {"OPTION",
    },                                                                 \
    __VA_ARGS__}
 
+#define TZ_OPERATION_TUPLE_FIELD(name_v, ...)           \
+  {.name=name_v, .kind=TZ_OPERATION_FIELD_TUPLE,        \
+   .field_tuple={                                       \
+       .fields=(const tz_operation_field_descriptor[]){ \
+           __VA_ARGS__,                                 \
+           TZ_OPERATION_LAST_FIELD                      \
+       }                                                \
+   }                                                    \
+  }
+
 #define TZ_OPERATION_FIELDS(name, ...) \
   const tz_operation_field_descriptor name[] = { __VA_ARGS__, TZ_OPERATION_LAST_FIELD}
 
@@ -104,7 +114,9 @@ TZ_OPERATION_FIELDS(transaction_fields,
     TZ_OPERATION_FIELD("Amount",      TZ_OPERATION_FIELD_AMOUNT),
     TZ_OPERATION_FIELD("Destination", TZ_OPERATION_FIELD_DESTINATION),
     TZ_OPERATION_OPTION_FIELD("_Parameters",
-        TZ_OPERATION_FIELD("Parameter", TZ_OPERATION_FIELD_PARAMETER, .complex=true),
+        TZ_OPERATION_TUPLE_FIELD("_Parameters",
+            TZ_OPERATION_FIELD("Entrypoint", TZ_OPERATION_FIELD_SMART_ENTRYPOINT, .complex=true),
+            TZ_OPERATION_FIELD("Parameter",  TZ_OPERATION_FIELD_EXPR)),
         .display_none=false)
 );
 
@@ -792,6 +804,12 @@ tz_step_field(tz_parser_state *state)
             = field->field_option.display_none;
         break;
     }
+    case TZ_OPERATION_FIELD_TUPLE: {
+        op->frame->step                   = TZ_OPERATION_STEP_TUPLE;
+        op->frame->step_tuple.fields      = field->field_tuple.fields;
+        op->frame->step_tuple.field_index = 0;
+        break;
+    }
     case TZ_OPERATION_FIELD_BINARY: {
         op->frame->step                  = TZ_OPERATION_STEP_READ_BINARY;
         op->frame->step_read_string.ofs  = 0;
@@ -884,16 +902,8 @@ tz_step_field(tz_parser_state *state)
         op->frame->step_read_int32.skip  = field->skip;
         break;
     }
-    case TZ_OPERATION_FIELD_PARAMETER: {
-        op->frame->step = TZ_OPERATION_STEP_READ_MICHELINE;
-        op->frame->step_read_micheline.inited = 0;
-        op->frame->step_read_micheline.skip   = field->skip;
-        op->frame->step_read_micheline.name   = name;
-        tz_must(push_frame(state, TZ_OPERATION_STEP_SIZE));
-        op->frame->step_size.size     = 0;
-        op->frame->step_size.size_len = 4;
-        tz_must(push_frame(state, TZ_OPERATION_STEP_READ_SMART_ENTRYPOINT));
-        STRLCPY(state->field_info.field_name, "Entrypoint");
+    case TZ_OPERATION_FIELD_SMART_ENTRYPOINT: {
+        op->frame->step = TZ_OPERATION_STEP_READ_SMART_ENTRYPOINT;
         op->frame->step_read_string.ofs  = 0;
         op->frame->step_read_string.skip = field->skip;
         break;
