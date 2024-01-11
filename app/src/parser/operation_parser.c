@@ -116,7 +116,7 @@ TZ_OPERATION_FIELDS(transaction_fields,
     TZ_OPERATION_OPTION_FIELD("_Parameters",
         TZ_OPERATION_TUPLE_FIELD("_Parameters",
             TZ_OPERATION_FIELD("Entrypoint", TZ_OPERATION_FIELD_SMART_ENTRYPOINT, .complex=true),
-            TZ_OPERATION_FIELD("Parameter",  TZ_OPERATION_FIELD_EXPR)),
+            TZ_OPERATION_FIELD("Parameter",  TZ_OPERATION_FIELD_EXPR,             .complex=true)),
         .display_none=false)
 );
 

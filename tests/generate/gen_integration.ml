@@ -279,8 +279,9 @@ let operation_to_screens
           then []
           else
             [
-              need_expert_mode_screen "Parameter";
+              need_expert_mode_screen "Entrypoint";
               make_screen ~title:"Entrypoint" "%a" Entrypoint.pp entrypoint;
+              need_expert_mode_screen "Parameter";
               make_screen ~title:"Parameter" "%a" pp_lazy_expr parameters;
             ]
         in

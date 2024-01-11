@@ -45,6 +45,12 @@ if __name__ == "__main__":
     app.assert_screen("review_2")
 
     app.review.tap()
+    app.assert_screen("expert_mode_splash")
+
+    app.review.tap()
+    app.assert_screen("review_3")
+
+    app.review.tap()
     app.assert_screen("operation_sign")
 
     expected_apdu = "f63d045a1cc9f73eee5775c5d496fa9d3aa9ae57fb97217f746a8728639795b7b2220e84ce5759ed111399ea3263d810c230d6a4fffcb6e82797c5ca673a17089000"
