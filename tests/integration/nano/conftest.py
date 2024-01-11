@@ -38,6 +38,9 @@ def pytest_addoption(parser):
     parser.addoption("--log-dir",
                      type=Path,
                      help="Log dir")
+    parser.addoption("--speculos-args",
+                     type=str,
+                     help="Speculos arguments")
     parser.addoption("--app",
                      type=str,
                      help="App",
@@ -103,6 +106,13 @@ def golden_run(pytestconfig) -> bool:
 def app_path(pytestconfig) -> Path:
     return Path(pytestconfig.getoption("app"))
 
+@pytest.fixture(scope="session")
+def speculos_args(pytestconfig) -> List[str]:
+    speculos_args = pytestconfig.getoption("speculos_args")
+    if speculos_args is None:
+        return []
+    return speculos_args.split()
+
 @pytest.fixture(scope="function")
 def seed(request) -> str:
     param = getattr(request, "param", None)
@@ -114,7 +124,7 @@ def backend(app_path: Path,
             port: int,
             display: bool,
             seed: str,
-            speculos_args: List[str] = []) -> Generator[SpeculosTezosBackend, None, None]:
+            speculos_args: List[str]) -> Generator[SpeculosTezosBackend, None, None]:
 
     if display:
         speculos_args += ["--display", "qt"]
