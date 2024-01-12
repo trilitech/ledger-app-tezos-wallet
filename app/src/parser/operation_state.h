@@ -39,13 +39,15 @@ typedef enum {
 } tz_operation_tag;
 
 typedef enum {
+    TZ_OPERATION_STEP_OPTION,
+    TZ_OPERATION_STEP_TUPLE,
     TZ_OPERATION_STEP_MAGIC,
     TZ_OPERATION_STEP_READ_BINARY,
     TZ_OPERATION_STEP_BRANCH,
     TZ_OPERATION_STEP_BATCH,
     TZ_OPERATION_STEP_TAG,
     TZ_OPERATION_STEP_SIZE,
-    TZ_OPERATION_STEP_OPERATION,
+    TZ_OPERATION_STEP_FIELD,
     TZ_OPERATION_STEP_PRINT,
     TZ_OPERATION_STEP_PARTIAL_PRINT,
     TZ_OPERATION_STEP_READ_NUM,
@@ -62,7 +64,9 @@ typedef enum {
 } tz_operation_parser_step_kind;
 
 typedef enum {
-    TZ_OPERATION_FIELD_SKIP,  // not for use in field descriptors
+    TZ_OPERATION_FIELD_END = 0,  // not for use in field descriptors
+    TZ_OPERATION_FIELD_OPTION,
+    TZ_OPERATION_FIELD_TUPLE,
     TZ_OPERATION_FIELD_BINARY,
     TZ_OPERATION_FIELD_INT,
     TZ_OPERATION_FIELD_NAT,
@@ -78,7 +82,7 @@ typedef enum {
     TZ_OPERATION_FIELD_PROTO,
     TZ_OPERATION_FIELD_PROTOS,
     TZ_OPERATION_FIELD_DESTINATION,
-    TZ_OPERATION_FIELD_PARAMETER,
+    TZ_OPERATION_FIELD_SMART_ENTRYPOINT,
     TZ_OPERATION_FIELD_EXPR,
     TZ_OPERATION_FIELD_OPH,
     TZ_OPERATION_FIELD_BH,
@@ -87,10 +91,23 @@ typedef enum {
     TZ_OPERATION_FIELD_BALLOT
 } tz_operation_field_kind;
 
+struct tz_operation_field_descriptor;
+
 typedef struct {
+    const struct tz_operation_field_descriptor *field;
+    uint8_t                                     display_none : 1;
+} tz_operation_option_field_descriptor;
+
+typedef struct tz_operation_field_descriptor {
     const char             *name;
     tz_operation_field_kind kind : 5;
-    uint8_t required : 1, skip : 1, display_none : 1, complex : 1;
+    union {
+        tz_operation_option_field_descriptor field_option;
+        struct {
+            const struct tz_operation_field_descriptor *fields;
+        } field_tuple;
+    };
+    uint8_t skip : 1, complex : 1;
 } tz_operation_field_descriptor;
 
 typedef struct {
@@ -103,14 +120,18 @@ typedef struct {
     tz_operation_parser_step_kind step : 5;
     uint16_t                      stop;
     union {
+        tz_operation_option_field_descriptor step_option;
         struct {
             uint8_t  size_len;
             uint16_t size;
         } step_size;
         struct {
-            const tz_operation_descriptor *descriptor;
-            uint8_t                        field;
-        } step_operation;
+            const tz_operation_field_descriptor *field;
+        } step_field;
+        struct {
+            const tz_operation_field_descriptor *fields;
+            uint8_t                              field_index;
+        } step_tuple;
         struct {
             const char *str;
         } step_print;

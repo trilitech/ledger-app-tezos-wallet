@@ -61,6 +61,10 @@ if __name__ == "__main__":
     app.review.tap()
     app.assert_screen("tpe_review_0_03_full")
     app.review.tap()
+    app.assert_screen("expert_mode_splash")
+    app.review.tap()
+    app.assert_screen("tpe_review_0_04_full")
+    app.review.tap()
 
     verify_err_reject_response(app, "invalid_tag")
 

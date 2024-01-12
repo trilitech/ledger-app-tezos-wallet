@@ -234,6 +234,7 @@ CTEST2(operation_parser, check_simple_transaction_complexity)
         {"Storage limit", false, 3},
         {"Amount",        false, 4},
         {"Destination",   false, 5},
+ //     {"Option",        _,     6},
     };
     check_field_complexity(data, str, fields_check, sizeof(fields_check));
 }
@@ -250,8 +251,10 @@ CTEST2(operation_parser, check_transaction_complexity)
         {"Storage limit", false, 3},
         {"Amount",        false, 4},
         {"Destination",   false, 5},
-        {"Entrypoint",    true,  6},
-        {"Parameter",     true,  6},
+ //     {"Option",        _,     6},
+  //    {"Tuple",         _,     7},
+        {"Entrypoint",    true,  8},
+        {"Parameter",     true,  9},
     };
     check_field_complexity(data, str, fields_check, sizeof(fields_check));
 }
@@ -270,14 +273,16 @@ CTEST2(operation_parser, check_double_transaction_complexity)
         {"Storage limit", false, 3 },
         {"Amount",        false, 4 },
         {"Destination",   false, 5 },
- // {"None"     ,   false, 6 },
+ //     {"Option",        _,     6 },
         {"Source",        false, 7 },
         {"Fee",           false, 8 },
         {"Storage limit", false, 9 },
         {"Amount",        false, 10},
         {"Destination",   false, 11},
-        {"Entrypoint",    true,  12},
-        {"Parameter",     true,  12},
+ //     {"Option",        _,     12},
+  //    {"Tuple",         _,     13},
+        {"Entrypoint",    true,  14},
+        {"Parameter",     true,  15},
     };
     check_field_complexity(data, str, fields_check, sizeof(fields_check));
 }
@@ -293,7 +298,7 @@ CTEST2(operation_parser, check_origination_complexity)
         {"Fee",           false, 2},
         {"Storage limit", false, 3},
         {"Balance",       false, 4},
-        {"Delegate",      false, 5},
+        {"Delegate",      false, 5}, // None
         {"Code",          true,  6},
         {"Storage",       true,  7},
     };
@@ -310,7 +315,8 @@ CTEST2(operation_parser, check_delegation_complexity)
         {"Source",        false, 1},
         {"Fee",           false, 2},
         {"Storage limit", false, 3},
-        {"Delegate",      false, 4},
+ //     {"Option",        _,     4},
+        {"Delegate",      false, 5},
     };
     check_field_complexity(data, str, fields_check, sizeof(fields_check));
 }
@@ -330,7 +336,7 @@ CTEST2(operation_parser, check_register_global_constant_complexity)
     check_field_complexity(data, str, fields_check, sizeof(fields_check));
 }
 
-CTEST2(operation_parser, check_set_deposit_limite_complexity)
+CTEST2(operation_parser, check_set_deposit_limit_complexity)
 {
     char str[]
         = "030000000000000000000000000000000000000000000000000000000000000000"
@@ -340,7 +346,8 @@ CTEST2(operation_parser, check_set_deposit_limite_complexity)
         {"Source",        false, 1},
         {"Fee",           false, 2},
         {"Storage limit", false, 3},
-        {"Staking limit", false, 4},
+ //     {"Option",        _,     4},
+        {"Staking limit", false, 5},
     };
     check_field_complexity(data, str, fields_check, sizeof(fields_check));
 }
