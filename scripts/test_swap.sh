@@ -105,7 +105,7 @@ _build_app() {
         cd $repo
 
         docker run --rm -ti -v "$(realpath .):/app" --privileged            \
-               ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder:3.11.0 \
+               ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder:3.12.0 \
                bash -c "make clean && make -j $params BOLOS_SDK=\$$sdk"
     )
 }
