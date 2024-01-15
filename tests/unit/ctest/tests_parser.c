@@ -253,7 +253,7 @@ CTEST2(operation_parser, check_transaction_complexity)
         {"Destination",   false, 5},
  //     {"Option",        _,     6},
   //    {"Tuple",         _,     7},
-        {"Entrypoint",    true,  8},
+        {"Entrypoint",    false, 8},
         {"Parameter",     true,  9},
     };
     check_field_complexity(data, str, fields_check, sizeof(fields_check));
@@ -281,7 +281,7 @@ CTEST2(operation_parser, check_double_transaction_complexity)
         {"Destination",   false, 11},
  //     {"Option",        _,     12},
   //    {"Tuple",         _,     13},
-        {"Entrypoint",    true,  14},
+        {"Entrypoint",    false, 14},
         {"Parameter",     true,  15},
     };
     check_field_complexity(data, str, fields_check, sizeof(fields_check));

@@ -31,6 +31,8 @@ def sign_transfer_initialize(app):
     app.assert_screen(f"tst_review_001")
     app.review.tap()
     app.assert_screen("tst_review_002")
+    app.review.tap()
+    app.assert_screen("tst_review_003")
 
 
 
