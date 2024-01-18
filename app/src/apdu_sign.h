@@ -66,7 +66,3 @@ typedef struct {
         } blind;
     } u;
 } apdu_sign_state_t;
-
-#ifdef HAVE_NBGL
-void switch_to_blindsigning(const char *, const char *);
-#endif
