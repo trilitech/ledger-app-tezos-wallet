@@ -59,7 +59,10 @@ provide_pubkey(void)
 static void
 format_pkh(cx_ecfp_public_key_t *pubkey, char *buffer, size_t len)
 {
-    derive_pkh(pubkey, global.path_with_curve.derivation_type, buffer, len);
+    TZ_PREAMBLE(("buffer=%p, len=%u", buffer, len));
+    TZ_LIB_CHECK(derive_pkh(pubkey, global.path_with_curve.derivation_type,
+                            buffer, len));
+    TZ_POSTAMBLE;
 }
 
 static void
@@ -179,14 +182,14 @@ handle_apdu_get_public_key(command_t *cmd)
     global.path_with_curve.derivation_type = cmd->p2;
     TZ_ASSERT(EXC_WRONG_PARAM,
               check_derivation_type(global.path_with_curve.derivation_type));
-    TZ_CHECK(read_bip32_path(&global.path_with_curve.bip32_path, cmd->data,
-                             cmd->lc));
+    TZ_LIB_CHECK(read_bip32_path(&global.path_with_curve.bip32_path,
+                                 cmd->data, cmd->lc));
 
     // Derive public key and store it on global.keys.pubkey
 
-    TZ_CHECK(derive_pk(&global.keys.pubkey,
-                       global.path_with_curve.derivation_type,
-                       &global.path_with_curve.bip32_path));
+    TZ_LIB_CHECK(derive_pk(&global.keys.pubkey,
+                           global.path_with_curve.derivation_type,
+                           &global.path_with_curve.bip32_path));
     if (prompt)
         prompt_address();
     else

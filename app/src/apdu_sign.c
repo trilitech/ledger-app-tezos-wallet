@@ -446,8 +446,8 @@ handle_first_apdu(command_t *cmd)
     TZ_ASSERT_NOTNULL(cmd);
     APDU_SIGN_ASSERT_STEP(SIGN_ST_IDLE);
 
-    TZ_CHECK(read_bip32_path(&global.path_with_curve.bip32_path, cmd->data,
-                             cmd->lc));
+    TZ_LIB_CHECK(read_bip32_path(&global.path_with_curve.bip32_path,
+                                 cmd->data, cmd->lc));
     global.path_with_curve.derivation_type = cmd->p2;
     TZ_ASSERT(EXC_WRONG_PARAM,
               check_derivation_type(global.path_with_curve.derivation_type));
