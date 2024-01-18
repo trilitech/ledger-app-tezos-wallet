@@ -33,8 +33,9 @@
 #include "keys.h"
 #include "globals.h"
 
-static void public_key_hash(uint8_t *, size_t, cx_ecfp_public_key_t *,
-                            derivation_type_t, const cx_ecfp_public_key_t *);
+static tz_exc public_key_hash(uint8_t *, size_t, cx_ecfp_public_key_t *,
+                              derivation_type_t,
+                              const cx_ecfp_public_key_t *);
 
 static cx_curve_t
 derivation_type_to_cx_curve(derivation_type_t derivation_type)
@@ -50,7 +51,7 @@ derivation_type_to_cx_curve(derivation_type_t derivation_type)
     // clang-format on
 }
 
-void
+tz_exc
 read_bip32_path(bip32_path_t *out, const uint8_t *in, size_t in_size)
 {
     buffer_t cdata = {in, in_size, 0};
@@ -63,10 +64,10 @@ read_bip32_path(bip32_path_t *out, const uint8_t *in, size_t in_size)
                   // Assert entire bip32_path consumed
                   && (sizeof(uint8_t) + sizeof(uint32_t) * out->length
                       == cdata.offset));
-    TZ_POSTAMBLE;
+    TZ_LIB_POSTAMBLE;
 }
 
-void
+tz_exc
 derive_pk(cx_ecfp_public_key_t *public_key, derivation_type_t derivation_type,
           const bip32_path_t *bip32_path)
 {
@@ -90,17 +91,18 @@ derive_pk(cx_ecfp_public_key_t *public_key, derivation_type_t derivation_type,
         public_key->W_len = 33;
     }
 
-    TZ_POSTAMBLE;
+    TZ_LIB_POSTAMBLE;
 }
 
-void
+tz_exc
 derive_pkh(cx_ecfp_public_key_t *pubkey, derivation_type_t derivation_type,
            char *buffer, size_t len)
 {
     uint8_t hash[21];
     TZ_PREAMBLE(("buffer=%p, len=%u", buffer, len));
     TZ_ASSERT_NOTNULL(buffer);
-    TZ_CHECK(public_key_hash(hash + 1, 20, NULL, derivation_type, pubkey));
+    TZ_LIB_CHECK(
+        public_key_hash(hash + 1, 20, NULL, derivation_type, pubkey));
     // clang-format off
     switch (derivation_type) {
     case DERIVATION_TYPE_SECP256K1: hash[0] = 1; break;
@@ -114,12 +116,12 @@ derive_pkh(cx_ecfp_public_key_t *pubkey, derivation_type_t derivation_type,
     if (tz_format_pkh(hash, 21, buffer, len))
         TZ_FAIL(EXC_UNKNOWN);
 
-    TZ_POSTAMBLE;
+    TZ_LIB_POSTAMBLE;
 }
 
 #define HASH_SIZE 20
 
-static void
+static tz_exc
 public_key_hash(uint8_t *hash_out, size_t hash_out_size,
                 cx_ecfp_public_key_t       *compressed_out,
                 derivation_type_t           derivation_type,
@@ -160,7 +162,7 @@ public_key_hash(uint8_t *hash_out, size_t hash_out_size,
         memmove(compressed_out, &compressed, sizeof(*compressed_out));
     }
 
-    TZ_POSTAMBLE;
+    TZ_LIB_POSTAMBLE;
 }
 
 /**
