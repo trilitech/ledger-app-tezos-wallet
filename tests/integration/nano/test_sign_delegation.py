@@ -15,7 +15,7 @@
 
 from pathlib import Path
 
-from utils.app import nano_app, Screen, DEFAULT_ACCOUNT
+from utils.app import Screen, DEFAULT_ACCOUNT
 from utils.message import Message
 
 # Operation (0): Delegation
@@ -23,23 +23,22 @@ from utils.message import Message
 # Storage limit: 889
 # Delegate: tz1TmFPVZsGQ8MnrBJtnECJgkFUwLa6EWYDm
 
-if __name__ == "__main__":
+def test_sign_delegation(app):
     test_name = Path(__file__).stem
-    with nano_app() as app:
 
-        app.assert_screen(Screen.Home)
+    app.assert_screen(Screen.Home)
 
-        message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000006e01774d99da021b92d8c3dfc2e814c7658440319be2c09a0cf40509f906ff00591e842444265757d6a65e3670ca18b5e662f9c0")
+    message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000006e01774d99da021b92d8c3dfc2e814c7658440319be2c09a0cf40509f906ff00591e842444265757d6a65e3670ca18b5e662f9c0")
 
-        data = app.sign(DEFAULT_ACCOUNT,
-                        message,
-                        with_hash=True,
-                        path=test_name)
+    data = app.sign(DEFAULT_ACCOUNT,
+                    message,
+                    with_hash=True,
+                    path=test_name)
 
-        app.checker.check_signature(
-            account=DEFAULT_ACCOUNT,
-            message=message,
-            with_hash=True,
-            data=data)
+    app.checker.check_signature(
+        account=DEFAULT_ACCOUNT,
+        message=message,
+        with_hash=True,
+        data=data)
 
-        app.quit()
+    app.quit()

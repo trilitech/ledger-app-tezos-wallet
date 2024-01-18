@@ -14,34 +14,33 @@
 # limitations under the License.
 
 from utils.account import SIGNATURE_TYPE
-from utils.app import nano_app, Screen
+from utils.app import Screen
 from utils.backend import INDEX, INS, StatusCode
 
-if __name__ == "__main__":
-    with nano_app() as app:
+def test_wrong_class(app):
 
-        app.assert_screen(Screen.Home)
+    app.assert_screen(Screen.Home)
 
-        raw = \
-            int(0x00).to_bytes(1, 'big') + \
-            int(INS.VERSION).to_bytes(1, 'big') + \
-            int(INDEX.FIRST).to_bytes(1, 'big') + \
-            int(SIGNATURE_TYPE.ED25519).to_bytes(1, 'big') + \
-            int(0x00).to_bytes(1, 'big')
+    raw = \
+        int(0x00).to_bytes(1, 'big') + \
+        int(INS.VERSION).to_bytes(1, 'big') + \
+        int(INDEX.FIRST).to_bytes(1, 'big') + \
+        int(SIGNATURE_TYPE.ED25519).to_bytes(1, 'big') + \
+        int(0x00).to_bytes(1, 'big')
 
-        with app.expect_apdu_failure(StatusCode.CLASS):
-            app.backend.exchange_raw(raw)
+    with app.expect_apdu_failure(StatusCode.CLASS):
+        app.backend.exchange_raw(raw)
 
-        app.assert_screen(Screen.Home)
+    app.assert_screen(Screen.Home)
 
-        raw = \
-            int(0x81).to_bytes(1, 'big') + \
-            int(INS.VERSION).to_bytes(1, 'big') + \
-            int(INDEX.FIRST).to_bytes(1, 'big') + \
-            int(SIGNATURE_TYPE.ED25519).to_bytes(1, 'big') + \
-            int(0x00).to_bytes(1, 'big')
+    raw = \
+        int(0x81).to_bytes(1, 'big') + \
+        int(INS.VERSION).to_bytes(1, 'big') + \
+        int(INDEX.FIRST).to_bytes(1, 'big') + \
+        int(SIGNATURE_TYPE.ED25519).to_bytes(1, 'big') + \
+        int(0x00).to_bytes(1, 'big')
 
-        with app.expect_apdu_failure(StatusCode.CLASS):
-            app.backend.exchange_raw(raw)
+    with app.expect_apdu_failure(StatusCode.CLASS):
+        app.backend.exchange_raw(raw)
 
-        app.quit()
+    app.quit()

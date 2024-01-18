@@ -13,28 +13,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from utils.app import nano_app, Screen
+from utils.app import Screen
 from utils.backend import INS, StatusCode
 
-if __name__ == "__main__":
-    with nano_app() as app:
+def test_unimplemented_commands(app):
 
-        for ins in \
-            [INS.AUTHORIZE_BAKING, \
-             INS.SIGN_UNSAFE, \
-             INS.RESET, \
-             INS.QUERY_AUTH_KEY, \
-             INS.QUERY_MAIN_HWM, \
-             INS.SETUP, \
-             INS.QUERY_ALL_HWM, \
-             INS.DEAUTHORIZE, \
-             INS.QUERY_AUTH_KEY_WITH_CURVE, \
-             INS.HMAC, \
-             0xff]:
+    for ins in \
+        [INS.AUTHORIZE_BAKING, \
+         INS.SIGN_UNSAFE, \
+         INS.RESET, \
+         INS.QUERY_AUTH_KEY, \
+         INS.QUERY_MAIN_HWM, \
+         INS.SETUP, \
+         INS.QUERY_ALL_HWM, \
+         INS.DEAUTHORIZE, \
+         INS.QUERY_AUTH_KEY_WITH_CURVE, \
+         INS.HMAC, \
+         0xff]:
 
-            app.assert_screen(Screen.Home)
+        app.assert_screen(Screen.Home)
 
-            with app.expect_apdu_failure(StatusCode.INVALID_INS):
-                app.backend._exchange(ins)
+        with app.expect_apdu_failure(StatusCode.INVALID_INS):
+            app.backend._exchange(ins)
 
-        app.quit()
+    app.quit()

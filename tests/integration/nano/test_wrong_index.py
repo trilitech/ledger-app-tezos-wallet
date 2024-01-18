@@ -13,22 +13,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from utils.app import nano_app, DEFAULT_ACCOUNT, Screen
+from utils.app import DEFAULT_ACCOUNT, Screen
 from utils.backend import INDEX, INS, StatusCode
 
-if __name__ == "__main__":
-    with nano_app() as app:
-        for ins in [INS.GET_PUBLIC_KEY,
-                    INS.PROMPT_PUBLIC_KEY]:
-            for index in [INDEX.OTHER,
-                          INDEX.LAST]:
+def test_wrong_index(app):
+    for ins in [INS.GET_PUBLIC_KEY,
+                INS.PROMPT_PUBLIC_KEY]:
+        for index in [INDEX.OTHER,
+                      INDEX.LAST]:
 
-                app.assert_screen(Screen.Home)
+            app.assert_screen(Screen.Home)
 
-                with app.expect_apdu_failure(StatusCode.WRONG_PARAM):
-                    app.backend._exchange(ins,
-                                          index=index,
-                                          sig_type=DEFAULT_ACCOUNT.sig_type,
-                                          payload=DEFAULT_ACCOUNT.path)
+            with app.expect_apdu_failure(StatusCode.WRONG_PARAM):
+                app.backend._exchange(ins,
+                                      index=index,
+                                      sig_type=DEFAULT_ACCOUNT.sig_type,
+                                      payload=DEFAULT_ACCOUNT.path)
 
-        app.quit()
+    app.quit()
