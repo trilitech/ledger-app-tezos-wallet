@@ -1,0 +1,8 @@
+wheel
+setuptools
+pkginfo
+cryptography
+base58
+pytezos==3.10.3
+GitPython
+pytest-xdist

@@ -168,7 +168,7 @@ def stax_app(prefix) -> TezosAppScreen:
     commit = os.environ["COMMIT_BYTES"]
     version = os.environ["VERSION_BYTES"]
     golden = os.getenv("GOLDEN") != None
-    backend = SpeculosBackend("__unused__", Firmware.STAX, port = port)
+    backend = SpeculosBackend("__unused__", Firmware.STAX,args=["--api-port", port])
     app = TezosAppScreen(backend, Firmware.STAX, commit, version, prefix)
 
     if golden:

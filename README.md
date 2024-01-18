@@ -18,8 +18,7 @@ The docker images can be built using the provided Makefile:
 :; make docker-images
 ```
 
-This pulls down two images, `ghcr.io/ledgerhq/speculos` and
-`ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder:latest`.  It
+This pulls down following image, `ghcr.io/ledgerhq/ledger-app-dev-tools`. It
 also builds an image via `docker/Dockerfile.ocaml`.
 
 We do not make the builds of the software conditional on these docker
