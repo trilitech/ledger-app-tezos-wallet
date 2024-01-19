@@ -148,11 +148,11 @@ run_tests() {
     (
         cd $APP_EXCHANGE_REPO
 
-        docker run --privileged  --entrypoint /bin/bash           \
-               --rm -v "$(realpath .):/app"                       \
-               ledger-app-tezos-integration-tests -c              \
-               "cd /app &&                                        \
-                pip install -r test/python/requirements.txt &&    \
+        docker run --privileged  --entrypoint /bin/bash                 \
+               --rm -v "$(realpath .):/app"                             \
+               ledger-app-tezos-integration-tests -c                    \
+               "cd /app &&                                              \
+                pip install -r test/python/requirements.txt -q &&    \
                 pip install protobuf==3.20.3 && pytest test/python $*"
     )
 }
