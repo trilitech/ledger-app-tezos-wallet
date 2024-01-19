@@ -37,7 +37,7 @@ start_speculos_runner() {
 
     app_dir="$(mktemp -d $DATA_DIR/appdir-XXXXXX)"
     tar xfz "$tgz" -C $app_dir
-    $SPECULOS --display headless --apdu-port 0 --api-port $PORT          \
+    python3 -m $SPECULOS --display headless --apdu-port 0 --api-port $PORT          \
               --seed "$seed" -m $TARGET $app_dir/app.elf                 \
                 > $SPECULOG 2>&1 < /dev/null &
     speculos_pid=$!
@@ -54,9 +54,12 @@ kill_speculos_runner() {
 
 
 exited() {
+    echo "speculos_pid: $speculos_pid"
     if ps $speculos_pid > /dev/null 2>&1 ; then
+        echo "\n Speculos Still running \n"
         return 1
     else
+        echo "\n Speculos Exited   \n"
         return 0
     fi
 }

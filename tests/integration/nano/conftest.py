@@ -137,7 +137,6 @@ def backend(app_path: Path,
 
     backend = SpeculosTezosBackend(app_path,
                                    firmware,
-                                   port=port,
                                    args=speculos_args)
 
     with backend as b:

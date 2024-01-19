@@ -25,8 +25,8 @@ docker_speculos:
 	$(DOCKER) image tag $(LEDGERHQ)/speculos speculos
 
 docker_ledger_app_builder:
-	$(DOCKER) pull $(LEDGERHQ)/ledger-app-builder/ledger-app-builder:3.12.0
-	$(DOCKER) image tag $(LEDGERHQ)/ledger-app-builder/ledger-app-builder:3.12.0 \
+	$(DOCKER) pull $(LEDGERHQ)/ledger-app-builder/ledger-app-dev-tools:latest
+	$(DOCKER) image tag $(LEDGERHQ)/ledger-app-builder/ledger-app-dev-tools:latest \
 			ledger-app-builder
 
 docker_ledger_app_ocaml:
@@ -34,8 +34,9 @@ docker_ledger_app_ocaml:
 			-f docker/Dockerfile.ocaml docker --platform linux/$(CPU)
 
 docker_ledger_app_integration_tests:
-	$(DOCKER) build -t ledger-app-tezos-integration-tests \
-			-f docker/Dockerfile.integration-tests docker --platform linux/$(CPU)
+	$(DOCKER) pull $(LEDGERHQ)/ledger-app-builder/ledger-app-dev-tools:latest
+	$(DOCKER) image tag $(LEDGERHQ)/ledger-app-builder/ledger-app-dev-tools:latest \
+			ledger-app-tezos-integration-tests
 
 docker_images: docker_speculos		\
 	docker_ledger_app_builder	\
@@ -94,17 +95,22 @@ integration_tests_basic_stax:	app_stax.tgz		\
 				tests/integration/stax/*
 	$(RUN_TEST_DOCKER) stax tests/integration/stax
 
-integration_tests_basic_%:	app_%_dbg.tgz			\
+integration_tests_basic_%:	app_%.tgz   \
+				app_%_dbg.tgz			\
 				tests/integration/*		\
 				tests/integration/nano/*	\
 				tests/integration/nano/%/*
-	docker run --user "$$(id -u)":"$$(id -g)" --rm -i -v "$(realpath .):/app" \
-	--entrypoint=/bin/sh ledger-app-tezos-integration-tests -c "              \
-		TMP_DIR=\$$(mktemp -d /tmp/foo-XXXXXX);                           \
-		cd /app;                                                          \
-		tar xfz app_$*_dbg.tgz -C \$$TMP_DIR;                             \
-		pytest -n 32 tests/integration/nano/ --tb=no                      \
-			--device $* --app \$$TMP_DIR/app.elf                      \
+	docker run --rm -i -v "$(realpath .):/app" \
+	--entrypoint=/bin/sh ledger-app-tezos-integration-tests -c "  \
+		TMP_DIR=\$$(mktemp -d /tmp/foo-XXXXXX);                   \
+		cd /app;                                                  \
+		tar xfz app_$*_dbg.tgz -C \$$TMP_DIR;                     \
+		apk add gmp-dev curl jq libsodium-dev git xxd procps;     \
+		python3 -m venv tezos_test_env --system-site-package;     \
+		source ./tezos_test_env/bin/activate;                     \
+		python3 -m pip install -r tests/requirements.txt -q ;  \
+		python3 -m pytest -n 32 tests/integration/nano/ --tb=no   \
+			--device $* --app \$$TMP_DIR/app.elf                  \
 			--log-dir integration_tests_log"
 
 integration_tests_basic:	integration_tests_basic_nanos	\
