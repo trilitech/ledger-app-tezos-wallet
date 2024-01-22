@@ -29,6 +29,8 @@
 // https://www.eftlab.com/knowledge-base/complete-list-of-apdu-responses
 // https://docs.zondax.ch/ledger-apps/starkware/APDU
 
+typedef uint16_t tz_exc;
+
 #define EXC_WRONG_PARAM               0x6B00
 #define EXC_WRONG_LENGTH              0x6C00
 #define EXC_INVALID_INS               0x6D00
@@ -80,9 +82,9 @@
  */
 
 #define TZ_PREAMBLE(_args)          \
-    uint16_t _sw_ret_code = 0x0000; \
+    tz_exc   _sw_ret_code = 0x0000; \
     cx_err_t error        = CX_OK;  \
-    if (0)                          \
+    if (error != CX_OK)             \
         goto bail;                  \
     if (0)                          \
         goto end;                   \
@@ -100,6 +102,16 @@
         io_send_sw(_sw_ret_code);                     \
     }                                                 \
     FUNC_LEAVE();
+
+#define TZ_LIB_POSTAMBLE                              \
+    end:                                              \
+    if (error != CX_OK) {                             \
+        _sw_ret_code = EXC_UNKNOWN_CX_ERR;            \
+        PRINTF("CX_CHECK failed with 0x%08x", error); \
+    }                                                 \
+    bail:                                             \
+    FUNC_LEAVE();                                     \
+    return _sw_ret_code
 
 #define TZ_FAIL(_sw_code)        \
     do {                         \
@@ -129,6 +141,16 @@
                    __LINE__);                                       \
             goto bail;                                              \
         }                                                           \
+    } while (0)
+
+#define TZ_LIB_CHECK(_call)                                             \
+    do {                                                                \
+        _sw_ret_code = (_call);                                         \
+        if (_sw_ret_code) {                                             \
+            PRINTF("TZ_LIB_CHECK(\"%s\") on %s:%u\n", #_call, __FILE__, \
+                   __LINE__);                                           \
+            goto bail;                                                  \
+        }                                                               \
     } while (0)
 
 #define TZ_ASSERT_NOTNULL(_x) TZ_ASSERT(EXC_MEMORY_ERROR, (_x) != NULL)

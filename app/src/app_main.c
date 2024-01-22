@@ -36,6 +36,7 @@
 void
 app_exit(void)
 {
+    PRINTF("[DEBUG] Trying to exit the app. \n");
     os_sched_exit(-1);
 }
 

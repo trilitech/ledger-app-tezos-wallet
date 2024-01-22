@@ -18,8 +18,7 @@ The docker images can be built using the provided Makefile:
 :; make docker-images
 ```
 
-This pulls down two images, `ghcr.io/ledgerhq/speculos` and
-`ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder:latest`.  It
+This pulls down following image, `ghcr.io/ledgerhq/ledger-app-dev-tools`. It
 also builds an image via `docker/Dockerfile.ocaml`.
 
 We do not make the builds of the software conditional on these docker
@@ -157,11 +156,10 @@ make app_nanox_dbg.tgz
 You can run an individual test from the test container. You should see the app progress on the vnc viewer.
 
 ```sh
-./tests/integration/nano/<test_name>.py \
+pytest tests/integration/nano/<test_name>.py \
    --device $DEVICE \
    --port $PORT \
-   --display headless \
-   --vnc-port 41000 \
+   --speculos-args="--vnc-port 41000" \
    --app app/bin/app.elf
 ```
 

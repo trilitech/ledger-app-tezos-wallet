@@ -45,17 +45,17 @@
 void
 swap_handle_check_address(check_address_parameters_t *params)
 {
-    FUNC_ENTER(("params=%p", params));
+    TZ_PREAMBLE(("params=%p", params));
 
     if (params->address_to_check == NULL) {
         PRINTF("[ERROR] Address to check is null\n");
-        goto error;
+        goto bail;
     }
 
     if (params->address_parameters_length == 0
         || params->address_parameters == NULL) {
         PRINTF("[ERROR] Address parameters is null\n");
-        goto error;
+        goto bail;
     }
 
     char address[TZ_CAPTURE_BUFFER_SIZE] = {0};
@@ -64,21 +64,22 @@ swap_handle_check_address(check_address_parameters_t *params)
     derivation_type_t derivation_type = DERIVATION_TYPE_ED25519;
     bip32_path_t      bip32_path;
 
-    TZ_CHECK(read_bip32_path(&bip32_path, params->address_parameters,
-                             params->address_parameters_length));
+    TZ_LIB_CHECK(read_bip32_path(&bip32_path, params->address_parameters,
+                                 params->address_parameters_length));
     cx_ecfp_public_key_t pubkey;
-    TZ_CHECK(derive_pk(&pubkey, derivation_type, &bip32_path));
-    TZ_CHECK(derive_pkh(&pubkey, derivation_type, address, sizeof(address)));
+    TZ_LIB_CHECK(derive_pk(&pubkey, derivation_type, &bip32_path));
+    TZ_LIB_CHECK(
+        derive_pkh(&pubkey, derivation_type, address, sizeof(address)));
     if (strcmp(params->address_to_check, address) != 0) {
         PRINTF("[ERROR] Check address fail: %s !=  %s\n",
                params->address_to_check, address);
-        goto error;
+        goto bail;
     }
 
     params->result = 1;
     FUNC_LEAVE();
     return;
-error:
+end:
 bail:
     params->result = 0;
     FUNC_LEAVE();

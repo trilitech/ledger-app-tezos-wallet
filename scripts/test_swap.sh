@@ -105,7 +105,7 @@ _build_app() {
         cd $repo
 
         docker run --rm -ti -v "$(realpath .):/app" --privileged            \
-               ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder:3.12.0 \
+               ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools:latest \
                bash -c "make clean && make -j $params BOLOS_SDK=\$$sdk"
     )
 }
@@ -148,11 +148,11 @@ run_tests() {
     (
         cd $APP_EXCHANGE_REPO
 
-        docker run --privileged  --entrypoint /bin/bash           \
-               --rm -v "$(realpath .):/app"                       \
-               ledger-app-tezos-integration-tests -c              \
-               "cd /app &&                                        \
-                pip install -r test/python/requirements.txt &&    \
+        docker run --privileged  --entrypoint /bin/bash                 \
+               --rm -v "$(realpath .):/app"                             \
+               ledger-app-tezos-integration-tests -c                    \
+               "cd /app &&                                              \
+                pip install -r test/python/requirements.txt -q &&    \
                 pip install protobuf==3.20.3 && pytest test/python $*"
     )
 }

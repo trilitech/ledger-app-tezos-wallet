@@ -10,8 +10,10 @@
 /app/src/glyphs.h
 /app_*.tgz
 /integration_tests.json
+/integration_tests_log
 /pattern_registry
 /tests/samples
+/*env/
 
 tags
 __pycache__
