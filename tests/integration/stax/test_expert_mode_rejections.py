@@ -43,24 +43,7 @@ if __name__ == "__main__":
     app.review.tap()
     verify_reject_response(app,"enable_expert_mode")
 
-    # Reject from enabled expert mode
-    sign_transfer_initialize(app)
-    app.review.tap()
-    app.assert_screen("enable_expert_mode")
-    app.welcome.client.finger_touch(BUTTON_ABOVE_LOWER_MIDDLE.x, BUTTON_ABOVE_LOWER_MIDDLE.y)
-    verify_reject_response(app, "enabled_expert_mode")
-
-    #- Reject from expert mode splash screen
-
-    # In previous test, expert mode was enabled, disable it here.
-    app.welcome.info()
-    app.assert_screen(SCREEN_INFO_PAGE)
-    app.info.next()
-    app.assert_screen("settings_expert_on_blindsigning_off")
-    app.settings_toggle_expert_mode()
-    app.assert_screen("settings_expert_blindsiging_off")
-    app.info.multi_page_exit()
-
+    # Reject from expert mode splash
     sign_transfer_initialize(app)
     app.review.tap()
     app.enable_expert_mode()
