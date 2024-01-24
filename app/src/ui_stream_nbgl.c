@@ -109,10 +109,7 @@ handle_blindsigning(bool confirm)
     if (confirm) {
         if (!N_settings.blindsigning)
             toggle_blindsigning();
-        nbgl_useCaseReviewStart(&C_round_check_64px, "Blind signing enabled",
-                                NULL, "Reject transaction", blindsign_splash,
-                                tz_reject_ui);
-
+        nbgl_useCaseStatus("BLIND SIGNING\nENABLED", true, blindsign_splash);
     } else {
         tz_reject_ui();
     }
@@ -163,9 +160,7 @@ handle_expert_mode(bool confirm)
         if (!N_settings.expert_mode)
             toggle_expert_mode();
 
-        nbgl_useCaseReviewStart(&C_round_check_64px, "Expert mode enabled",
-                                NULL, "Reject transaction",
-                                tz_ui_stream_start, tz_reject_ui);
+        nbgl_useCaseStatus("EXPERT MODE\nENABLED", true, tz_ui_stream_start);
 
     } else {
         tz_reject_ui();
