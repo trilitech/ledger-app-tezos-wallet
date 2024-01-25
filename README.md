@@ -263,3 +263,12 @@ You can run :
 ./scripts/test_swap.sh update $DEVICE
 ```
 to perform all snapshot update steps based on your current Tezos repository.
+
+## Contributing
+
+The version of the app must be updated after every change. Following files need to be updated
+with a new version
+1. app/Makefile
+2. tests/integration/app_vars.sh
+3. tests/integration/nano/utils/app.py
+4. the snapshots (nano and stax)
