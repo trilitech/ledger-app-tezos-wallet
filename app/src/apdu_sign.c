@@ -117,8 +117,10 @@ sign_packet(void)
 
     /* If we aren't returning the hash, zero its buffer. */
     if (!global.keys.apdu.sign.return_hash) {
+        memset((void *)bufs[0].ptr, 0, bufs[0].size);
         bufs[0].size = 0;
     }
+
     io_send_response_buffers(bufs, 2, SW_OK);
     global.step = ST_IDLE;
 
