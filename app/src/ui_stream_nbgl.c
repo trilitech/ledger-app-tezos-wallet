@@ -273,11 +273,12 @@ tz_ui_stream_init(void (*cb)(tz_ui_cb_type_t cb_type))
 
     FUNC_ENTER(("cb=%p", cb));
     memset(s, 0x0, sizeof(*s));
-    s->cb      = cb;
-    s->full    = false;
-    s->last    = 0;
-    s->current = -1;
-    s->total   = -1;
+    s->cb            = cb;
+    s->full          = false;
+    s->last          = 0;
+    s->current       = -1;
+    s->total         = -1;
+    s->pressed_right = false;
 
     ui_strings_init();
 
@@ -347,9 +348,6 @@ tz_ui_nav_cb(uint8_t page, nbgl_pageContent_t *content)
         s->pressed_right, s->current, s->total, s->full, global.step);
 
     if (global.step == ST_ERROR) {
-        // TODO: this is handled by change_screen_right except we disable it
-        // to use it here. We should make ui_stream fully compatible with
-        // exception.h
         global.step = ST_IDLE;
         ui_home_init();
         result = false;
