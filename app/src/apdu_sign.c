@@ -115,11 +115,10 @@ sign_packet(void)
                   &global.path_with_curve.bip32_path, bufs[0].ptr,
                   bufs[0].size, sig, &bufs[1].size));
 
-    /* If we aren't returning the hash, zero its buffer... */
+    /* If we aren't returning the hash, zero its buffer. */
     if (!global.keys.apdu.sign.return_hash) {
         bufs[0].size = 0;
     }
-
     io_send_response_buffers(bufs, 2, SW_OK);
     global.step = ST_IDLE;
 
@@ -724,8 +723,6 @@ handle_data_apdu_blind(void)
     STRLCPY(hash, obuf);
     continue_blindsign_cb();
 #endif
-
-    /* XXXrcd: the logic here need analysis. */
     TZ_POSTAMBLE;
 }
 #undef FINAL_HASH

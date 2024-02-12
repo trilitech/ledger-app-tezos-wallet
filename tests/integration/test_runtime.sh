@@ -65,7 +65,6 @@ compare_strings() {
     STR2="$2"
 
     if [ "nanox" = "$TARGET" ]; then
-        # TODO: raise issue on speculos?
         STR1="$(echo $1 | sed 's/Parsing errorERR//g')"
         STR2="$(echo $2 | sed 's/Parsing errorERR//g')"
     fi

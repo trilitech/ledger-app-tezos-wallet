@@ -151,9 +151,7 @@ typedef struct {
     int16_t               total;
     int16_t               last;
     bool                  full;
-    // FIXME: workaround for issue with non-local control flow. Remove once
-    // fixed see !66
-    bool pressed_right;
+    bool                  pressed_right;
 #ifdef HAVE_NBGL
     tz_ui_stream_display_t current_screen;
     char                   verify_address[TZ_BASE58CHECK_BUFFER_SIZE(20, 3)];

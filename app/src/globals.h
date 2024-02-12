@@ -118,5 +118,3 @@ extern const settings_t N_settings_real;
 extern unsigned int app_stack_canary;  // From SDK
 
 extern unsigned char G_io_seproxyhal_spi_buffer[IO_SEPROXYHAL_BUFFER_SIZE_B];
-
-// extern const uint32_t mainnet_chain_id = 0x7A06A770 // NetXdQprcVkpaWU

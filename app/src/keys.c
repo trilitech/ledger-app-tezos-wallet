@@ -1,7 +1,5 @@
 /* Tezos Ledger application - Signature primitives
 
-   TODO: cleanup/refactor
-
    Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
    Copyright 2023 Functori <contact@functori.com>
 

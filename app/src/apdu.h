@@ -1,7 +1,5 @@
 /* Tezos Ledger application - Some common primitives and some command handlers
 
-   TODO: split this file (apdu primitives and apdu handlers)
-
    Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
 
    With code excerpts from:
