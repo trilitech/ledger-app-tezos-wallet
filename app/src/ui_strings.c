@@ -136,9 +136,6 @@ ui_strings_can_fit(size_t len, bool *can_fit)
 /* @param in: ptr to char[] to copy into the buffer
    @param in_len: number of of chars to copy. in_len <= strlen(in)
    @param out: will be set to the start of the char[] in the buffer
-
-   // TODO: for future, when appending is a possibility
-   @param out_len: strlen(out) 0 < out_len <= in_len
 */
 void
 ui_strings_push(const char *in, size_t len, char **out)
