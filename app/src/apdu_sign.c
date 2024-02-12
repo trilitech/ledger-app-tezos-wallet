@@ -488,15 +488,14 @@ handle_first_apdu_clear(__attribute__((unused)) command_t *cmd)
 #endif
         tz_ui_stream_init(stream_cb);
         global.step = ST_CLEAR_SIGN;
-        if (global.step == ST_CLEAR_SIGN) {
+
 #ifdef TARGET_NANOS
-            tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Review operation", "",
-                              TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_EYE);
-#elif defined(HAVE_BAGL)
-        tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Review", "operation",
+        tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Review operation", "",
                           TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_EYE);
+#elif defined(HAVE_BAGL)
+    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Review", "operation",
+                      TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_EYE);
 #endif
-        }
 #ifdef HAVE_SWAP
     } else {
         PRINTF("[DEBUG] If called from SWAP : global.step =%d\n",
