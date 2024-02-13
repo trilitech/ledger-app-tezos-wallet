@@ -172,13 +172,13 @@ handle_apdu_get_public_key(command_t *cmd)
     TZ_PREAMBLE(("cmd=%p", cmd));
 
     TZ_ASSERT(EXC_UNEXPECTED_STATE,
-              global.step == ST_IDLE || global.step == ST_SWAP_SIGN);
+              (global.step == ST_IDLE) || (global.step == ST_SWAP_SIGN));
     TZ_ASSERT(EXC_WRONG_PARAM, cmd->p1 == 0);
 
     // do not expose pks without prompt through U2F (permissionless legacy
     // comm in browser)
     TZ_ASSERT(EXC_HID_REQUIRED,
-              prompt || G_io_apdu_media != IO_APDU_MEDIA_U2F);
+              prompt || (G_io_apdu_media != IO_APDU_MEDIA_U2F));
 
     global.path_with_curve.derivation_type = cmd->p2;
     TZ_ASSERT(EXC_WRONG_PARAM,
