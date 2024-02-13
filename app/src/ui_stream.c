@@ -162,8 +162,9 @@ cb(unsigned int                         button_mask,
         change_screen_right();
         break;
     case BUTTON_EVT_RELEASED | BUTTON_LEFT | BUTTON_RIGHT:
-        if (cb_type)
+        if (cb_type) {
             s->cb(cb_type);
+        }
         if (cb_type & TZ_UI_STREAM_CB_MAINMASK) {
             global.step = ST_IDLE;
             ui_home_init();
@@ -201,14 +202,16 @@ display_init(bagl_element_t init[UI_INIT_ARRAY_LEN])
     /* If we aren't on the first screen, we can go back */
     if (s->current > 0) {
         /* Unless we can't... */
-        if (s->current == s->total - TZ_UI_STREAM_HISTORY_SCREENS + 1)
+        if (s->current == s->total - TZ_UI_STREAM_HISTORY_SCREENS + 1) {
             init[1].text = (const char *)&C_icon_go_forbid;
-        else
+        } else {
             init[1].text = (const char *)&C_icon_go_left;
+        }
     }
     /* If we aren't full or aren't on the last page, we can go right */
-    if (!s->full || s->current < s->total)
+    if (!s->full || s->current < s->total) {
         init[2].text = (const char *)&C_icon_go_right;
+    }
 
     DISPLAY(init, cb, UI_INIT_ARRAY_LEN)
     FUNC_LEAVE();
@@ -295,10 +298,11 @@ redisplay_screen(tz_ui_layout_type_t layout, uint8_t icon_pos)
         for (int i = txt_start_line + 1; i < UI_INIT_ARRAY_LEN; i++) {
             init[i].component         = init[icon_pos + 1].component;
             init[i].component.font_id = BOLD;
-            if (i == txt_start_line + 1)
+            if (i == txt_start_line + 1) {
                 init[i].text = s->screens[bucket].title;
-            else
+            } else {
                 init[i].text = s->screens[bucket].body[i - 5];
+            }
             init[i].component.x = 8;
             init[i].component.y
                 = init[txt_start_line].component.y + 16 + 8 + ((i - 4) * 12);
@@ -310,8 +314,9 @@ redisplay_screen(tz_ui_layout_type_t layout, uint8_t icon_pos)
         init[icon_pos].text = find_icon(icon);
 #ifdef TARGET_NANOS
         // Make sure text does not overflow on icon line in non-PB layouts.
-        if (layout != TZ_UI_LAYOUT_HOME_PB)
+        if (layout != TZ_UI_LAYOUT_HOME_PB) {
             init[icon_pos - 1].text = NULL;
+        }
 #endif
     }
 
@@ -398,8 +403,9 @@ tz_ui_stream(void)
     FUNC_ENTER(("void"));
 
     tz_ui_stream_t *s = &global.stream;
-    if (s->pressed_right)
+    if (s->pressed_right) {
         succ();
+    }
 
     redisplay();
     FUNC_LEAVE();
@@ -414,8 +420,9 @@ tz_ui_max_line_chars(const char *value, int length)
 
     /* Wrap on newline */
     const char *tmp = memchr(value, '\n', will_fit);
-    if (tmp && (tmp - value) <= will_fit)
+    if (tmp && (tmp - value) <= will_fit) {
         will_fit = (tmp - value);
+    }
 
 #ifdef TARGET_NANOS
     will_fit = se_get_cropped_length(value, will_fit, BAGL_WIDTH,
@@ -467,8 +474,9 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
     }
 
     /* drop the previous screen text in our bucket */
-    if (s->total > 0 && bucket == (s->last % TZ_UI_STREAM_HISTORY_SCREENS))
+    if (s->total > 0 && bucket == (s->last % TZ_UI_STREAM_HISTORY_SCREENS)) {
         drop_last_screen();
+    }
 
     push_str(title, strlen(title), &s->screens[bucket].title);
 
@@ -476,8 +484,9 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
     size_t length = strlen(value);
     size_t offset = 0;
 
-    if (max != -1)
+    if (max != -1) {
         length = MIN(length, (size_t)max);
+    }
 
     s->screens[bucket].cb_type     = cb_type;
     s->screens[bucket].layout_type = layout_type;
@@ -487,8 +496,9 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
     while (offset < length && line < TZ_UI_STREAM_CONTENTS_LINES) {
         uint8_t will_fit;
 
-        if (value[offset] == '\n')
+        if (value[offset] == '\n') {
             offset++;
+        }
 
         will_fit = tz_ui_max_line_chars(&value[offset], length - offset);
 
@@ -507,13 +517,14 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
     PRINTF("[DEBUG] tz_ui_stream_pushl(%s, %s, %u)\n", title, value, max);
     PRINTF("[DEBUG]        bucket     %d\n", bucket);
     PRINTF("[DEBUG]        title:     \"%s\"\n", s->screens[bucket].title);
-    for (line = 0; line < TZ_UI_STREAM_CONTENTS_LINES; line++)
+    for (line = 0; line < TZ_UI_STREAM_CONTENTS_LINES; line++) {
         if (s->screens[bucket].body[line]) {
             PRINTF("[DEBUG]        value[%d]:  \"%s\"\n", line,
                    s->screens[bucket].body[line]);
         } else {
             PRINTF("[DEBUG]        value[%d]:  \"\"\n", line);
         }
+    }
     PRINTF("[DEBUG]        total:     %d -> %d\n", prev_total, s->total);
     PRINTF("[DEBUG]        current:   %d -> %d\n", prev_current, s->current);
     PRINTF("[DEBUG]        last:      %d -> %d\n", prev_last, s->last);
@@ -532,8 +543,9 @@ drop_last_screen(void)
     TZ_PREAMBLE(("last: %d", s->last));
 
     size_t i;
-    if (s->screens[bucket].title)
+    if (s->screens[bucket].title) {
         TZ_CHECK(ui_strings_drop(&s->screens[bucket].title));
+    }
     for (i = 0; i < TZ_UI_STREAM_CONTENTS_LINES; i++) {
         if (s->screens[bucket].body[i]) {
             TZ_CHECK(ui_strings_drop(&s->screens[bucket].body[i]));

@@ -76,8 +76,9 @@ dispatch(command_t *cmd)
     tz_handler_t f;
     TZ_PREAMBLE(("cmd=0x%p {cla=0x02x ins=%u ...}", cmd, cmd->cla, cmd->ins));
 
-    if (cmd->cla != CLA)
+    if (cmd->cla != CLA) {
         TZ_FAIL(EXC_CLASS);
+    }
 
     if (tz_ui_stream_get_cb_type() == SCREEN_QUIT) {
         PRINTF("[ERROR] received instruction whilst on Quit screen\n");

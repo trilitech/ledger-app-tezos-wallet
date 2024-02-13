@@ -184,8 +184,9 @@ const char *const tz_michelson_op_names_ordered[TZ_LAST_MICHELSON_OPCODE + 1]
 const char *
 tz_michelson_op_name(uint8_t op_code)
 {
-    if (op_code > TZ_LAST_MICHELSON_OPCODE)
+    if (op_code > TZ_LAST_MICHELSON_OPCODE) {
         return NULL;
+    }
     return PIC(tz_michelson_op_names_ordered[op_code]);
 }
 
@@ -216,8 +217,9 @@ tz_format_base58(const uint8_t *n, size_t l, char *obuf, size_t olen)
 
     memset(obuf, 0, obuf_len);
 
-    while (zcount < l && !n[zcount])
+    while (zcount < l && !n[zcount]) {
         ++zcount;
+    }
 
     for (i = zcount, high = obuf_len - 1; i < l; ++i, high = j) {
         carry = n[i];
@@ -228,13 +230,16 @@ tz_format_base58(const uint8_t *n, size_t l, char *obuf, size_t olen)
         }
     }
 
-    if (zcount)
+    if (zcount) {
         memset(obuf, '1', zcount);
+    }
 
-    for (j = 0; !obuf[j]; ++j)
-        ;
-    for (i = 0; j < obuf_len; ++i, ++j)
+    for (j = 0; !obuf[j]; ++j) {
+        // Find the last index of obuf
+    }
+    for (i = 0; j < obuf_len; ++i, ++j) {
         obuf[i] = tz_b58digits_ordered[(unsigned)obuf[j]];
+    }
     obuf[i] = '\0';
     return 0;
 }
@@ -253,8 +258,9 @@ tz_format_decimal(const uint8_t *n, size_t l, char *obuf, size_t olen)
 
     memset(obuf, 0, obuf_len);
 
-    while (zcount < l && !n[l - zcount - 1])
+    while (zcount < l && !n[l - zcount - 1]) {
         ++zcount;
+    }
 
     if (zcount == l) {
         obuf[0] = '0';
@@ -270,10 +276,12 @@ tz_format_decimal(const uint8_t *n, size_t l, char *obuf, size_t olen)
         }
     }
 
-    for (j = 0; !obuf[j]; ++j)
-        ;
-    for (i = 0; j < obuf_len; ++i, ++j)
+    for (j = 0; !obuf[j]; ++j) {
+        // Find the last index of obuf
+    }
+    for (i = 0; j < obuf_len; ++i, ++j) {
         obuf[i] = '0' + obuf[j];
+    }
     obuf[i] = '\0';
     return 0;
 }
@@ -327,8 +335,9 @@ cx_hash_sha256(uint8_t *data, size_t size, uint8_t *out, size_t size_out)
 // clang-format off
 #define B58_PREFIX(_s, _p, _pl, _dl) do {       \
             if (!strcmp((_s), s)) {             \
-                if ((_dl) != dl)                \
-                    return 1;                   \
+                if ((_dl) != dl) {              \
+                      return 1;                 \
+                }                               \
                 (*p)  = (const uint8_t *)(_p);  \
                 (*pl) = (_pl);                  \
                 return 0;                       \
@@ -385,8 +394,9 @@ tz_format_base58check(const char *sprefix, const uint8_t *data, size_t size,
     const uint8_t *prefix = NULL;
     size_t         prefix_len;
 
-    if (find_prefix(sprefix, &prefix, &prefix_len, size))
+    if (find_prefix(sprefix, &prefix, &prefix_len, size)) {
         return 1;
+    }
 
     /* In order to avoid vla, we have a maximum buffer size of 64 */
     uint8_t prepared[64];
@@ -412,8 +422,9 @@ tz_format_pkh(const uint8_t *data, size_t size, char *obuf, size_t olen)
 {
     const char *prefix;
 
-    if (size < 1)
+    if (size < 1) {
         return 1;
+    }
     // clang-format off
     switch (data[0]) {
     case 0:  prefix = "tz1"; break;
@@ -432,8 +443,9 @@ tz_format_pk(const uint8_t *data, size_t size, char *obuf, size_t olen)
 {
     const char *prefix;
 
-    if (size < 1)
+    if (size < 1) {
         return 1;
+    }
     // clang-format off
     switch (data[0]) {
     case 0:  prefix = "edpk"; break;
@@ -466,8 +478,9 @@ tz_format_address(const uint8_t *data, size_t size, char *obuf, size_t olen)
 {
     const char *prefix;
 
-    if (size < 1)
+    if (size < 1) {
         return 1;
+    }
     // clang-format off
     switch (data[0]) {
     case 1:  prefix = "KT1";  break;

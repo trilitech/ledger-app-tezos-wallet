@@ -84,10 +84,12 @@ typedef uint16_t tz_exc;
 #define TZ_PREAMBLE(_args)           \
     tz_exc   _sw_ret_code = 0x0000u; \
     cx_err_t error        = CX_OK;   \
-    if (error != CX_OK)              \
+    if (error != CX_OK) {            \
         goto bail;                   \
-    if (0)                           \
+    }                                \
+    if (0) {                         \
         goto end;                    \
+    }                                \
     FUNC_ENTER(_args)
 
 #define TZ_POSTAMBLE                                  \

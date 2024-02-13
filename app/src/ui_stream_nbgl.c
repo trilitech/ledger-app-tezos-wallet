@@ -107,8 +107,9 @@ handle_blindsigning(bool confirm)
 {
     TZ_PREAMBLE(("void"));
     if (confirm) {
-        if (!N_settings.blindsigning)
+        if (!N_settings.blindsigning) {
             toggle_blindsigning();
+        }
         nbgl_useCaseStatus("BLIND SIGNING\nENABLED", true, blindsign_splash);
     } else {
         tz_reject_ui();
@@ -157,8 +158,9 @@ handle_expert_mode(bool confirm)
 {
     TZ_PREAMBLE(("void"));
     if (confirm) {
-        if (!N_settings.expert_mode)
+        if (!N_settings.expert_mode) {
             toggle_expert_mode();
+        }
 
         nbgl_useCaseStatus("EXPERT MODE\nENABLED", true, tz_ui_stream_start);
 
@@ -243,8 +245,9 @@ tz_ui_stream(void)
     tz_ui_stream_t *s = &global.stream;
     FUNC_ENTER(("void"));
 
-    if (s->stream_cb)
+    if (s->stream_cb) {
         s->stream_cb();
+    }
 
     FUNC_LEAVE();
     return;
@@ -468,15 +471,18 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
         }
 
         if (idx > 0
-            && 0 == strcmp(title, s->screens[bucket].pairs[idx - 1].item))
+            && 0 == strcmp(title, s->screens[bucket].pairs[idx - 1].item)) {
             append = true;
+        }
 
-        if (!append)
+        if (!append) {
             push_str(title, strlen(title),
                      (char **)&s->screens[bucket].pairs[idx].item);
+        }
 
-        if (max != -1)
+        if (max != -1) {
             length = MIN(length, (size_t)max);
+        }
 
         if (idx == 0) {
             s->screens[bucket].cb_type = cb_type;
@@ -487,8 +493,9 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
         if (append) {
             bool can_fit = false;
             ui_strings_can_fit(length, &can_fit);
-            if (!can_fit)
+            if (!can_fit) {
                 drop_last_screen();
+            }
 
             offset = ui_strings_append_last(&value[offset], length, &out);
             idx--;
@@ -575,12 +582,14 @@ drop_last_screen(void)
     TZ_PREAMBLE(("last: %d", s->last));
 
     for (i = 0; i < s->screens[bucket].nb_pairs; i++) {
-        if (s->screens[bucket].pairs[i].item)
+        if (s->screens[bucket].pairs[i].item) {
             TZ_CHECK(
                 ui_strings_drop((char **)&s->screens[bucket].pairs[i].item));
-        if (s->screens[bucket].pairs[i].value)
+        }
+        if (s->screens[bucket].pairs[i].value) {
             TZ_CHECK(
                 ui_strings_drop((char **)&s->screens[bucket].pairs[i].value));
+        }
     }
     s->screens[bucket].nb_pairs = 0;
 

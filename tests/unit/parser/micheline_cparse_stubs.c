@@ -41,8 +41,9 @@ micheline_cparse_init(value size)
     *((tz_parser_state **)Data_abstract_val(r)) = state;
     tz_micheline_parser_init(state);
     size_t s = Long_val(size);
-    if (s >= 0xFFFF)
+    if (s >= 0xFFFF) {
         caml_failwith("micheline_cparse_init: size too large");
+    }
     tz_operation_parser_init(state, (uint16_t)s, 1);
     CAMLreturn(r);
 }
@@ -71,8 +72,9 @@ micheline_cparse_step(value mlstate, value input, value output)
     state->regs.oofs = oofs;
     state->regs.olen = olen;
 
-    while (!TZ_IS_BLOCKED(tz_micheline_parser_step(state)))
-        ;
+    while (!TZ_IS_BLOCKED(tz_micheline_parser_step(state))) {
+        // Loop while the result is successful and not blocking
+    }
 
     int read    = ilen - state->regs.ilen;
     int written = olen - state->regs.olen;
@@ -137,8 +139,9 @@ operation_cparse_step(value mlstate, value input, value output)
     state->regs.oofs = oofs;
     state->regs.olen = olen;
 
-    while (!TZ_IS_BLOCKED(tz_operation_parser_step(state)))
-        ;
+    while (!TZ_IS_BLOCKED(tz_operation_parser_step(state))) {
+        // Loop while the result is successful and not blocking
+    }
 
     int read    = ilen - state->regs.ilen;
     int written = olen - state->regs.olen;

@@ -98,8 +98,9 @@ check_field_complexity(struct ctest_operation_parser_data *data, char *str,
     bool   already_seen = false;
 
     while (true) {
-        while (!TZ_IS_BLOCKED(tz_operation_parser_step(st)))
-            ;
+        while (!TZ_IS_BLOCKED(tz_operation_parser_step(st))) {
+            // Loop while the result is successful and not blocking
+        }
 
         switch (st->errno) {
         case TZ_BLO_FEED_ME:
@@ -144,11 +145,12 @@ check_field_complexity(struct ctest_operation_parser_data *data, char *str,
             continue;
 
         case TZ_BLO_DONE:
-            if (fields_check_len != idx + 1)
+            if (fields_check_len != idx + 1) {
                 CTEST_ERR(
                     "%s:%d all the field have not been seen, %d fields "
                     "expected but got %d seen",
                     __FILE__, __LINE__, (int)fields_check_len, (int)idx);
+            }
             ASSERT_TRUE(result);
             break;
 

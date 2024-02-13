@@ -48,8 +48,9 @@ tz_parse_num_step(tz_num_parser_buffer *buffers, tz_num_parser_regs *regs,
     buffers->bytes[lo_idx] |= lo;
     if (hi_idx >= TZ_NUM_BUFFER_SIZE / 8) {
         // accept and dismiss a few trailing zeroes
-        if (hi || cont)
+        if (hi || cont) {
             return TZ_ERR_TOO_LARGE;
+        }
         regs->size = TZ_NUM_BUFFER_SIZE;
     } else {
         buffers->bytes[hi_idx] = hi;

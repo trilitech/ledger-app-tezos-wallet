@@ -79,8 +79,9 @@ derive_pk(cx_ecfp_public_key_t *public_key, derivation_type_t derivation_type,
     public_key->curve = derivation_type_to_cx_curve(derivation_type);
 
     int derivation_mode = HDW_NORMAL;
-    if (derivation_type == DERIVATION_TYPE_ED25519)
+    if (derivation_type == DERIVATION_TYPE_ED25519) {
         derivation_mode = HDW_ED25519_SLIP10;
+    }
 
     CX_CHECK(bip32_derive_with_seed_get_pubkey_256(
         derivation_mode, public_key->curve, bip32_path->components,
@@ -114,8 +115,9 @@ derive_pkh(cx_ecfp_public_key_t *pubkey, derivation_type_t derivation_type,
     }
     // clang-format on
 
-    if (tz_format_pkh(hash, 21, buffer, len))
+    if (tz_format_pkh(hash, 21, buffer, len)) {
         TZ_FAIL(EXC_UNKNOWN);
+    }
 
     TZ_LIB_POSTAMBLE;
 }
@@ -203,8 +205,9 @@ sign(derivation_type_t derivation_type, const bip32_path_t *path,
     case DERIVATION_TYPE_BIP32_ED25519:
     case DERIVATION_TYPE_ED25519:
         derivation_mode = HDW_NORMAL;
-        if (derivation_type == DERIVATION_TYPE_ED25519)
+        if (derivation_type == DERIVATION_TYPE_ED25519) {
             derivation_mode = HDW_ED25519_SLIP10;
+        }
         CX_CHECK(bip32_derive_with_seed_eddsa_sign_hash_256(
             derivation_mode, curve, path->components, path->length, CX_SHA512,
             hash, hashlen, sig, siglen, NULL, 0));
@@ -214,8 +217,9 @@ sign(derivation_type_t derivation_type, const bip32_path_t *path,
         CX_CHECK(bip32_derive_ecdsa_sign_hash_256(
             curve, path->components, path->length, CX_RND_RFC6979 | CX_LAST,
             CX_SHA256, hash, hashlen, sig, siglen, &info));
-        if (info & CX_ECCINFO_PARITY_ODD)
+        if (info & CX_ECCINFO_PARITY_ODD) {
             sig[0] |= 0x01;
+        }
         break;
     default:
         TZ_FAIL(EXC_WRONG_VALUES);
