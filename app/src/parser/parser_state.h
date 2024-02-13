@@ -121,8 +121,9 @@ tz_parser_result tz_parser_set_errno(tz_parser_state *state,
 #define tz_must(cond)                 \
     do {                              \
         tz_parser_result _err = cond; \
-        if (_err)                     \
+        if (_err) {                   \
             tz_return(_err);          \
+        }                             \
     } while (0)
 #define tz_continue tz_return(TZ_CONTINUE)
 #define tz_break    tz_return(TZ_BREAK)

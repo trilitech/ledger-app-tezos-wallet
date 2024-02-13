@@ -165,8 +165,9 @@ ui_strings_push(const char *in, size_t len, char **out)
 
     s->end = ws + len + 1;
 
-    if (s->end > s->internal_end)
+    if (s->end > s->internal_end) {
         s->internal_end = s->end;
+    }
 
     *out = ws;
     PRINTF("[DEBUG] Pushed '%s' to %p\n", *out, *out);
@@ -303,8 +304,9 @@ ui_strings_append_last(const char *str, size_t max, char **out)
 
     s->end += appended;
 
-    if (s->end > s->start)
+    if (s->end > s->start) {
         s->internal_end = s->end;
+    }
 
     PRINTF("[DEBUG] appended=%d, end=%p, out=%p, end?=%p\n", appended, s->end,
            *out, *out + appended);
@@ -368,8 +370,9 @@ ui_strings_print(void)
         PRINTF("[DEBUG] START\tstart->\t%p %s\n", s->start, s->start);
         while (true) {
             ui_strings_next(&p);
-            if (!p)
+            if (!p) {
                 break;
+            }
             PRINTF("[DEBUG] \t\t%p %s\n", p, p);
         }
         if (s->end < BUFF_END) {
@@ -395,10 +398,11 @@ ui_strings_print(void)
         PRINTF("[DEBUG] \tstart->\t%p %s\n", p, p);
         while (true) {
             ui_strings_next(&p);
-            if (p >= s->start)
+            if (p >= s->start) {
                 PRINTF("[DEBUG] \t\t%p %s\n", p, p);
-            else
+            } else {
                 break;
+            }
         }
         PRINTF("[DEBUG] END\t\t%p\n", BUFF_END);
     } else {
@@ -407,8 +411,9 @@ ui_strings_print(void)
         PRINTF("[DEBUG] \tstart->\t%p %s\n", p, p);
         while (true) {
             ui_strings_next(&p);
-            if (!p)
+            if (!p) {
                 break;
+            }
             PRINTF("[DEBUG] \t\t%p %s\n", p, p);
         }
         if (s->end < BUFF_END) {

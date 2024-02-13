@@ -81,9 +81,9 @@ navigation_cb_wallet(__attribute__((unused)) uint8_t page,
 static void
 controls_callback(int token, __attribute__((unused)) uint8_t index)
 {
-    if (token == BLIND_SIGNING_TOKEN)
+    if (token == BLIND_SIGNING_TOKEN) {
         toggle_blindsigning();
-    else if (token == EXPERT_MODE_TOKEN) {
+    } else if (token == EXPERT_MODE_TOKEN) {
         toggle_expert_mode();
     }
 }

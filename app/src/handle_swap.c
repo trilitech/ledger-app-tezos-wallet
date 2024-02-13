@@ -189,11 +189,13 @@ swap_check_validity(void)
     char dstaddr[ADDRESS_MAX_SIZE];
     TZ_PREAMBLE((""));
 
-    if (!G_called_from_swap)
+    if (!G_called_from_swap) {
         TZ_SUCCEED();
+    }
 
-    if (G_swap_response_ready)
+    if (G_swap_response_ready) {
         os_sched_exit(-1);
+    }
     G_swap_response_ready = true;
 
     PRINTF("[DEBUG] batch_index = %u, nb_reveal=%d, tag=%d\n",

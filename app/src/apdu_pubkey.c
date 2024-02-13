@@ -191,10 +191,11 @@ handle_apdu_get_public_key(command_t *cmd)
     TZ_LIB_CHECK(derive_pk(&global.keys.pubkey,
                            global.path_with_curve.derivation_type,
                            &global.path_with_curve.bip32_path));
-    if (prompt)
+    if (prompt) {
         prompt_address();
-    else
+    } else {
         provide_pubkey();
+    }
 
     TZ_POSTAMBLE;
 }
