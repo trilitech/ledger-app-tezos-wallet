@@ -52,8 +52,8 @@ typedef struct {
 } tz_ui_strings_t;
 
 void   ui_strings_init(void);
-void   ui_strings_push(const char *, size_t, char **);
-void   ui_strings_drop(char **);
-void   ui_strings_drop_last(char **);
-void   ui_strings_can_fit(size_t, bool *);
-size_t ui_strings_append_last(const char *, size_t, char **);
+void   ui_strings_push(const char *str, size_t len, char **out);
+void   ui_strings_drop(char **str);
+void   ui_strings_drop_last(char **str);
+void   ui_strings_can_fit(size_t len, bool *can_fit);
+size_t ui_strings_append_last(const char *str, size_t max, char **out);

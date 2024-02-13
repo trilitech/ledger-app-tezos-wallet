@@ -21,7 +21,7 @@
 
 #include "globals.h"
 
-static void cb(tz_ui_cb_type_t);
+static void cb(tz_ui_cb_type_t cb_type);
 
 #define EXPERT_MODE   0x01
 #define BLIND_SIGNING 0x02

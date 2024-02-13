@@ -35,8 +35,9 @@
 
 static void provide_pubkey(void);
 static void prompt_address(void);
-static void format_pkh(cx_ecfp_public_key_t *, char *, size_t);
-static void stream_cb(tz_ui_cb_type_t);
+static void format_pkh(cx_ecfp_public_key_t *pubkey, char *buffer,
+                       size_t len);
+static void stream_cb(tz_ui_cb_type_t cb_type);
 
 static void
 provide_pubkey(void)

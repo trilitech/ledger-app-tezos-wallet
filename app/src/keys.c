@@ -33,9 +33,10 @@
 #include "keys.h"
 #include "globals.h"
 
-static tz_exc public_key_hash(uint8_t *, size_t, cx_ecfp_public_key_t *,
-                              derivation_type_t,
-                              const cx_ecfp_public_key_t *);
+static tz_exc public_key_hash(uint8_t *hash_out, size_t hash_out_size,
+                              cx_ecfp_public_key_t       *compressed_out,
+                              derivation_type_t           derivation_type,
+                              const cx_ecfp_public_key_t *public_key);
 
 static cx_curve_t
 derivation_type_to_cx_curve(derivation_type_t derivation_type)

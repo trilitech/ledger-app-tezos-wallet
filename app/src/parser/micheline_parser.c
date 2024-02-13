@@ -24,13 +24,13 @@
 
 /* Prototypes */
 
-static tz_parser_result push_frame(tz_parser_state *,
-                                   tz_micheline_parser_step_kind);
-static tz_parser_result pop_frame(tz_parser_state *);
-static tz_parser_result begin_sized(tz_parser_state *);
-static tz_parser_result print_escaped(tz_parser_state *, uint8_t);
-static tz_parser_result parser_put(tz_parser_state *, char);
-static tz_parser_result tag_selection(tz_parser_state *, uint8_t);
+static tz_parser_result push_frame(tz_parser_state              *state,
+                                   tz_micheline_parser_step_kind step);
+static tz_parser_result pop_frame(tz_parser_state *state);
+static tz_parser_result begin_sized(tz_parser_state *state);
+static tz_parser_result print_escaped(tz_parser_state *state, uint8_t b);
+static tz_parser_result parser_put(tz_parser_state *state, char c);
+static tz_parser_result tag_selection(tz_parser_state *state, uint8_t t);
 
 #ifdef TEZOS_DEBUG
 const char *const tz_micheline_parser_step_name[]
