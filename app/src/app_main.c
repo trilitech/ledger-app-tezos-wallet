@@ -118,7 +118,7 @@ app_main(void)
     command_t cmd;
     int       rx;
 
-    app_stack_canary = 0xDEADBEEF;
+    app_stack_canary = 0xDEADBEEFu;
     FUNC_ENTER(("void"));
 
     print_memory_layout();

@@ -18,7 +18,7 @@
 
 #include "parser_state.h"
 
-#define TZ_UNKNOWN_SIZE 0xFFFF
+#define TZ_UNKNOWN_SIZE 0xFFFFu
 void tz_operation_parser_init(tz_parser_state *state, uint16_t size,
                               bool skip_magic);
 void tz_operation_parser_set_size(tz_parser_state *state, uint16_t size);
