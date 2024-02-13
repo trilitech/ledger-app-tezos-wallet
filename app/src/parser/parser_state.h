@@ -64,7 +64,7 @@ typedef enum {
 #define TZ_IS_BLOCKED(code) (code >= 100)
 #define TZ_IS_ERR(code)     (code >= 200)
 
-const char *tz_parser_result_name(tz_parser_result);
+const char *tz_parser_result_name(tz_parser_result code);
 
 typedef struct {
     tz_parser_regs regs;
@@ -87,19 +87,21 @@ typedef struct {
     tz_operation_state operation;
 } tz_parser_state;
 
-void tz_parser_init(tz_parser_state *);
-void tz_parser_flush(tz_parser_state *, char *, size_t);
-void tz_parser_flush_up_to(tz_parser_state *, char *, size_t, size_t);
-void tz_parser_refill(tz_parser_state *, uint8_t *, size_t);
-void tz_parser_skip(tz_parser_state *);
+void tz_parser_init(tz_parser_state *state);
+void tz_parser_flush(tz_parser_state *state, char *obuf, size_t olen);
+void tz_parser_flush_up_to(tz_parser_state *state, char *obuf, size_t olen,
+                           size_t up_to);
+void tz_parser_refill(tz_parser_state *state, uint8_t *ibuf, size_t ilen);
+void tz_parser_skip(tz_parser_state *state);
 
-tz_parser_result tz_parser_put(tz_parser_state *, char);
-tz_parser_result tz_parser_read(tz_parser_state *, uint8_t *);
-tz_parser_result tz_parser_peek(tz_parser_state *, uint8_t *);
+tz_parser_result tz_parser_put(tz_parser_state *state, char c);
+tz_parser_result tz_parser_read(tz_parser_state *state, uint8_t *out);
+tz_parser_result tz_parser_peek(tz_parser_state *state, uint8_t *out);
 
 // error handling utils
 
-tz_parser_result tz_parser_set_errno(tz_parser_state *, tz_parser_result);
+tz_parser_result tz_parser_set_errno(tz_parser_state *state,
+                                     tz_parser_result code);
 #ifdef TEZOS_DEBUG
 #define tz_return(e)                                               \
     do {                                                           \

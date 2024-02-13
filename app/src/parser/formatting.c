@@ -288,9 +288,10 @@ struct sha256_ctx {
     uint8_t  buf[128];
     uint32_t h[8];
 };
-extern void digestif_sha256_init(struct sha256_ctx *);
-extern void digestif_sha256_update(struct sha256_ctx *, uint8_t *, uint32_t);
-extern void digestif_sha256_finalize(struct sha256_ctx *, uint8_t *);
+extern void digestif_sha256_init(struct sha256_ctx *ctx);
+extern void digestif_sha256_update(struct sha256_ctx *ctx, uint8_t *data,
+                                   uint32_t size);
+extern void digestif_sha256_finalize(struct sha256_ctx *ctx, uint8_t *out);
 static void
 cx_hash_sha256(uint8_t *data, size_t size, uint8_t *out, size_t size_out)
 {

@@ -25,8 +25,9 @@
 #define UI_INIT_ARRAY_LEN (4 + TZ_SCREEN_LINES_11PX)
 
 #ifdef HAVE_BAGL
-static unsigned int cb(unsigned int, unsigned int);
-static const char  *find_icon(tz_ui_icon_t);
+static unsigned int cb(unsigned int button_mask,
+                       unsigned int button_mask_counter);
+static const char  *find_icon(tz_ui_icon_t icon);
 static void         pred(void);
 static void         succ(void);
 static void         change_screen_left(void);
@@ -37,13 +38,13 @@ const bagl_icon_details_t C_icon_rien = {0, 0, 1, NULL, NULL};
 #endif  // HAVE_BAGL
 
 void drop_last_screen(void);
-void push_str(const char *, size_t, char **);
+void push_str(const char *text, size_t len, char **out);
 
 // Model
 
 #ifdef HAVE_BAGL
 void
-tz_ui_stream_init(void (*cb)(uint8_t))
+tz_ui_stream_init(void (*cb)(tz_ui_cb_type_t cb_type))
 {
     tz_ui_stream_t *s = &global.stream;
 

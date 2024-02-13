@@ -51,16 +51,16 @@
 /* Prototypes */
 
 static void sign_packet(void);
-static void send_reject(int);
+static void send_reject(int error_code);
 static void send_continue(void);
 static void send_cancel(void);
 static void refill(void);
-static void stream_cb(tz_ui_cb_type_t);
-static void handle_first_apdu(command_t *);
-static void handle_first_apdu_clear(command_t *);
+static void stream_cb(tz_ui_cb_type_t cb_type);
+static void handle_first_apdu(command_t *cmd);
+static void handle_first_apdu_clear(command_t *cmd);
 static void init_blind_stream(void);
-static void handle_data_apdu(command_t *);
-static void handle_data_apdu_clear(command_t *);
+static void handle_data_apdu(command_t *cmd);
+static void handle_data_apdu_clear(command_t *cmd);
 static void handle_data_apdu_blind(void);
 
 /* Macros */
@@ -387,7 +387,7 @@ stream_cb(tz_ui_cb_type_t cb_type)
 #define FINAL_HASH global.keys.apdu.hash.final_hash
 #ifdef HAVE_BAGL
 static void
-bs_push_next()
+bs_push_next(void)
 {
     char              obuf[TZ_BASE58_BUFFER_SIZE(sizeof(FINAL_HASH))];
     blindsign_step_t *step = &global.keys.apdu.sign.u.blind.step;

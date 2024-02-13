@@ -24,13 +24,13 @@
 #include "globals.h"
 #include "ui_stream.h"
 
-bool tz_ui_nav_cb(uint8_t, nbgl_pageContent_t *);
+bool tz_ui_nav_cb(uint8_t page, nbgl_pageContent_t *content);
 bool has_final_screen(void);
 void tz_ui_stream_start(void);
 
 void drop_last_screen(void);
-void push_str(const char *, size_t, char **);
-void switch_to_blindsigning(const char *, const char *);
+void push_str(const char *text, size_t len, char **out);
+void switch_to_blindsigning(const char *err_type, const char *err_code);
 
 void
 tz_cancel_ui(void)
@@ -251,7 +251,7 @@ tz_ui_stream(void)
 }
 
 void
-tz_ui_review_start()
+tz_ui_review_start(void)
 {
     tz_ui_stream_t *s = &global.stream;
 
@@ -264,7 +264,7 @@ tz_ui_review_start()
 }
 
 void
-tz_ui_stream_init(void (*cb)(uint8_t))
+tz_ui_stream_init(void (*cb)(tz_ui_cb_type_t cb_type))
 {
     tz_ui_stream_t *s = &global.stream;
 

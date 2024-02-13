@@ -54,12 +54,15 @@ typedef struct {
     derivation_type_t derivation_type;
 } bip32_path_with_curve_t;
 
-tz_exc read_bip32_path(bip32_path_t *, const uint8_t *, size_t);
-tz_exc derive_pk(cx_ecfp_public_key_t *, derivation_type_t,
-                 const bip32_path_t *);
-tz_exc derive_pkh(cx_ecfp_public_key_t *, derivation_type_t, char *, size_t);
-void   sign(derivation_type_t, const bip32_path_t *, const uint8_t *, size_t,
-            uint8_t *, size_t *);
+tz_exc read_bip32_path(bip32_path_t *out, const uint8_t *in, size_t in_size);
+tz_exc derive_pk(cx_ecfp_public_key_t *public_key,
+                 derivation_type_t     derivation_type,
+                 const bip32_path_t   *bip32_path);
+tz_exc derive_pkh(cx_ecfp_public_key_t *pubkey,
+                  derivation_type_t derivation_type, char *buffer,
+                  size_t len);
+void   sign(derivation_type_t derivation_type, const bip32_path_t *path,
+            const uint8_t *hash, size_t hashlen, uint8_t *sig, size_t *siglen);
 
 static inline bool
 check_derivation_type(derivation_type_t code)

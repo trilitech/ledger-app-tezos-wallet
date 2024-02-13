@@ -82,7 +82,7 @@
  *
  */
 
-typedef void(tz_handler)(command_t *);
+typedef void(tz_handler)(command_t *cmd);
 typedef tz_handler *tz_handler_t;
 
 tz_handler handle_unimplemented;
