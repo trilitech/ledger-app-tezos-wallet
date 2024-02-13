@@ -78,18 +78,18 @@
  */
 
 typedef uint8_t tz_ui_cb_type_t;
-#define TZ_UI_STREAM_CB_NOCB               0x00
-#define TZ_UI_STREAM_CB_BLINDSIGN          0x0e
-#define TZ_UI_STREAM_CB_REFILL             0xef
-#define TZ_UI_STREAM_CB_MAINMASK           0xf0
-#define TZ_UI_STREAM_CB_EXPERT_MODE_FIELD  0xfa
-#define TZ_UI_STREAM_CB_EXPERT_MODE_ENABLE 0xfb
-#define TZ_UI_STREAM_CB_BLINDSIGN_REJECT   0xfc
-#define TZ_UI_STREAM_CB_CANCEL             0xfd
-#define TZ_UI_STREAM_CB_REJECT             0xfe
-#define TZ_UI_STREAM_CB_ACCEPT             0xff
+#define TZ_UI_STREAM_CB_NOCB               0x00u
+#define TZ_UI_STREAM_CB_BLINDSIGN          0x0Eu
+#define TZ_UI_STREAM_CB_REFILL             0xEFu
+#define TZ_UI_STREAM_CB_MAINMASK           0xF0u
+#define TZ_UI_STREAM_CB_EXPERT_MODE_FIELD  0xFAu
+#define TZ_UI_STREAM_CB_EXPERT_MODE_ENABLE 0xFBu
+#define TZ_UI_STREAM_CB_BLINDSIGN_REJECT   0xFCu
+#define TZ_UI_STREAM_CB_CANCEL             0xFDu
+#define TZ_UI_STREAM_CB_REJECT             0xFEu
+#define TZ_UI_STREAM_CB_ACCEPT             0xFFu
 
-#define TZ_UI_LAYOUT_HOME_MASK 0x80
+#define TZ_UI_LAYOUT_HOME_MASK 0x80u
 /**
  * Layout type:
  * BNP - refers to Bold Title, normal text/picture below the title.
