@@ -135,10 +135,6 @@ CFLAGS   += -Wwrite-strings
 ########################################
 # See SDK `include/appflags.h` for the purpose of each permission
 #HAVE_APPLICATION_FLAG_DERIVE_MASTER = 1
-ifneq ($(TARGET_NAME), TARGET_NANOS)
-HAVE_APPLICATION_FLAG_GLOBAL_PIN = 1
-HAVE_APPLICATION_FLAG_BOLOS_SETTINGS = 1
-endif
 HAVE_APPLICATION_FLAG_LIBRARY = 1
 
 ########################################
