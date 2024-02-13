@@ -52,8 +52,8 @@ swap_handle_check_address(check_address_parameters_t *params)
         goto bail;
     }
 
-    if (params->address_parameters_length == 0
-        || params->address_parameters == NULL) {
+    if ((params->address_parameters_length == 0)
+        || (params->address_parameters == NULL)) {
         PRINTF("[ERROR] Address parameters is null\n");
         goto bail;
     }
@@ -189,17 +189,19 @@ swap_check_validity(void)
     char dstaddr[ADDRESS_MAX_SIZE];
     TZ_PREAMBLE((""));
 
-    if (!G_called_from_swap)
+    if (!G_called_from_swap) {
         TZ_SUCCEED();
+    }
 
-    if (G_swap_response_ready)
+    if (G_swap_response_ready) {
         os_sched_exit(-1);
+    }
     G_swap_response_ready = true;
 
     PRINTF("[DEBUG] batch_index = %u, nb_reveal=%d, tag=%d\n",
            op->batch_index, op->nb_reveal, op->last_tag);
     TZ_ASSERT(EXC_REJECT, op->nb_reveal <= 1);
-    TZ_ASSERT(EXC_REJECT, op->batch_index - op->nb_reveal == 1);
+    TZ_ASSERT(EXC_REJECT, (op->batch_index - op->nb_reveal) == 1);
     TZ_ASSERT(EXC_REJECT, op->last_tag == TZ_OPERATION_TAG_TRANSACTION);
     TZ_ASSERT(EXC_REJECT, op->last_amount == G_swap_params.amount);
     TZ_ASSERT(EXC_REJECT, op->last_fee == G_swap_params.fee);

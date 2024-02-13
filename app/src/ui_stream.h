@@ -78,18 +78,18 @@
  */
 
 typedef uint8_t tz_ui_cb_type_t;
-#define TZ_UI_STREAM_CB_NOCB               0x00
-#define TZ_UI_STREAM_CB_BLINDSIGN          0x0e
-#define TZ_UI_STREAM_CB_REFILL             0xef
-#define TZ_UI_STREAM_CB_MAINMASK           0xf0
-#define TZ_UI_STREAM_CB_EXPERT_MODE_FIELD  0xfa
-#define TZ_UI_STREAM_CB_EXPERT_MODE_ENABLE 0xfb
-#define TZ_UI_STREAM_CB_BLINDSIGN_REJECT   0xfc
-#define TZ_UI_STREAM_CB_CANCEL             0xfd
-#define TZ_UI_STREAM_CB_REJECT             0xfe
-#define TZ_UI_STREAM_CB_ACCEPT             0xff
+#define TZ_UI_STREAM_CB_NOCB               0x00u
+#define TZ_UI_STREAM_CB_BLINDSIGN          0x0Eu
+#define TZ_UI_STREAM_CB_REFILL             0xEFu
+#define TZ_UI_STREAM_CB_MAINMASK           0xF0u
+#define TZ_UI_STREAM_CB_EXPERT_MODE_FIELD  0xFAu
+#define TZ_UI_STREAM_CB_EXPERT_MODE_ENABLE 0xFBu
+#define TZ_UI_STREAM_CB_BLINDSIGN_REJECT   0xFCu
+#define TZ_UI_STREAM_CB_CANCEL             0xFDu
+#define TZ_UI_STREAM_CB_REJECT             0xFEu
+#define TZ_UI_STREAM_CB_ACCEPT             0xFFu
 
-#define TZ_UI_LAYOUT_HOME_MASK 0x80
+#define TZ_UI_LAYOUT_HOME_MASK 0x80u
 /**
  * Layout type:
  * BNP - refers to Bold Title, normal text/picture below the title.
@@ -144,7 +144,7 @@ typedef struct {
 #endif  // HAVE_NBGL
 
 typedef struct {
-    void (*cb)(tz_ui_cb_type_t);
+    void (*cb)(tz_ui_cb_type_t cb_type);
     tz_ui_stream_screen_t screens[TZ_UI_STREAM_HISTORY_SCREENS];
     tz_ui_strings_t       strings;
     int16_t               current;
@@ -161,18 +161,22 @@ typedef struct {
 #endif  // HAVE_NBGL
 } tz_ui_stream_t;
 
-void tz_ui_stream_init(void (*)(tz_ui_cb_type_t));
+void tz_ui_stream_init(void (*cb)(tz_ui_cb_type_t cb_type));
 /* Push title & content to screen
  *
  * content may not always fit on screen entirely - returns total
  * bytes of content written.
  */
-size_t tz_ui_stream_push(tz_ui_cb_type_t, const char *, const char *,
-                         tz_ui_layout_type_t, tz_ui_icon_t);
-size_t tz_ui_stream_pushl(tz_ui_cb_type_t, const char *, const char *,
-                          ssize_t, tz_ui_layout_type_t, tz_ui_icon_t);
-size_t tz_ui_stream_push_all(tz_ui_cb_type_t, const char *, const char *,
-                             tz_ui_layout_type_t, tz_ui_icon_t);
+size_t tz_ui_stream_push(tz_ui_cb_type_t cb_type, const char *title,
+                         const char *value, tz_ui_layout_type_t layout_type,
+                         tz_ui_icon_t icon);
+size_t tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
+                          const char *value, ssize_t max,
+                          tz_ui_layout_type_t layout_type, tz_ui_icon_t icon);
+size_t tz_ui_stream_push_all(tz_ui_cb_type_t cb_type, const char *title,
+                             const char         *value,
+                             tz_ui_layout_type_t layout_type,
+                             tz_ui_icon_t        icon);
 void   tz_ui_stream_close(void);
 void   tz_ui_stream(void);
 void   tz_ui_stream_start(void);

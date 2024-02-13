@@ -22,9 +22,9 @@
 
 /* Prototypes */
 
-static tz_parser_result push_frame(tz_parser_state *,
-                                   tz_operation_parser_step_kind);
-static tz_parser_result pop_frame(tz_parser_state *);
+static tz_parser_result push_frame(tz_parser_state              *state,
+                                   tz_operation_parser_step_kind step);
+static tz_parser_result pop_frame(tz_parser_state *state);
 
 #ifdef TEZOS_DEBUG
 const char *const tz_operation_parser_step_name[] = {"OPTION",
@@ -223,8 +223,9 @@ push_frame(tz_parser_state *state, tz_operation_parser_step_kind step)
 {
     tz_operation_state *op = &state->operation;
 
-    if (op->frame >= &op->stack[TZ_OPERATION_STACK_DEPTH - 1])
+    if (op->frame >= &op->stack[TZ_OPERATION_STACK_DEPTH - 1]) {
         tz_raise(TOO_DEEP);
+    }
     op->frame++;
     op->frame->step = step;
     tz_continue;
@@ -329,8 +330,9 @@ tz_step_option(tz_parser_state *state)
     tz_must(tz_parser_read(state, &present));
     if (!present) {
         if (op->frame->step_option.display_none) {
-            if (op->frame->step_option.field->skip)
+            if (op->frame->step_option.field->skip) {
                 tz_raise(INVALID_STATE);
+            }
             op->frame->step           = TZ_OPERATION_STEP_PRINT;
             op->frame->step_print.str = (char *)unset_message;
         } else {
@@ -354,8 +356,9 @@ tz_step_tuple(tz_parser_state *state)
         &op->frame->step_tuple.fields[op->frame->step_tuple.field_index]);
 
     // Remaining content from previous section - display this first.
-    if (regs->oofs > 0)
+    if (regs->oofs > 0) {
         tz_stop(IM_FULL);
+    }
 
     if (field->kind == TZ_OPERATION_FIELD_END) {
         // is_field_complex is reset after reaching the last field
@@ -411,9 +414,10 @@ tz_step_size(tz_parser_state *state)
     tz_operation_state *op = &state->operation;
     uint8_t             b;
     tz_must(tz_parser_read(state, &b));
-    if (op->frame->step_size.size > 255)
+    if (op->frame->step_size.size > 255) {
         tz_raise(TOO_LARGE);  // enforce 16-bit restriction
-    op->frame->step_size.size = op->frame->step_size.size << 8 | b;
+    }
+    op->frame->step_size.size = (op->frame->step_size.size << 8) | b;
     op->frame->step_size.size_len--;
     if (op->frame->step_size.size_len <= 0) {
         op->frame[-1].stop = state->ofs + op->frame->step_size.size;
@@ -433,8 +437,9 @@ tz_step_tag(tz_parser_state *state)
     tz_must(tz_parser_read(state, &t));
 #ifdef HAVE_SWAP
     op->last_tag = t;
-    if (t == TZ_OPERATION_TAG_REVEAL)
+    if (t == TZ_OPERATION_TAG_REVEAL) {
         op->nb_reveal++;
+    }
 #endif  // HAVE_SWAP
     for (d = tz_operation_descriptors; d->tag != TZ_OPERATION_TAG_END; d++) {
         if (d->tag == t) {
@@ -466,13 +471,15 @@ tz_step_read_micheline(tz_parser_state *state)
     }
     tz_micheline_parser_step(state);
     if (state->errno == TZ_BLO_DONE) {
-        if (op->frame->stop != 0 && state->ofs != op->frame->stop)
+        if ((op->frame->stop != 0) && (state->ofs != op->frame->stop)) {
             tz_raise(TOO_LARGE);
+        }
         tz_must(pop_frame(state));
-        if (regs->oofs > 0)
+        if (regs->oofs > 0) {
             tz_stop(IM_FULL);
-        else
+        } else {
             tz_continue;
+        }
     }
     tz_reraise;
 }
@@ -491,8 +498,9 @@ tz_step_read_num(tz_parser_state *state)
     if (op->frame->step_read_num.state.stop) {
 #ifdef HAVE_SWAP
         uint64_t value;
-        if (!tz_string_to_mutez(state->buffers.num.decimal, &value))
+        if (!tz_string_to_mutez(state->buffers.num.decimal, &value)) {
             tz_raise(INVALID_DATA);
+        }
         switch (op->frame->step_read_num.kind) {
         case TZ_OPERATION_FIELD_AMOUNT:
             op->last_amount = value;
@@ -517,32 +525,38 @@ tz_step_read_num(tz_parser_state *state)
         case TZ_OPERATION_FIELD_FEE:
         case TZ_OPERATION_FIELD_AMOUNT: {
             int len = 0;
-            while (str[len])
+            while (str[len]) {
                 len++;
-            if (len == 1 && str[0] == 0)
+            }
+            if ((len == 1) && (str[0] == 0)) {
                 // just 0
                 goto add_currency;
+            }
             if (len < 7) {
                 // less than one tez, pad left up to the '0.'
                 int j;
                 int pad = 7 - len;
-                for (j = len; j >= 0; j--)
+                for (j = len; j >= 0; j--) {
                     str[j + pad] = str[j];
-                for (j = 0; j < pad; j++)
+                }
+                for (j = 0; j < pad; j++) {
                     str[j] = '0';
+                }
                 len = 7;
             }
             int no_decimals = 1;
-            for (int i = 0; i < 6; i++)
+            for (int i = 0; i < 6; i++) {
                 no_decimals &= (str[len - 1 - i] == '0');
+            }
             if (no_decimals) {
                 // integral value, don't include the decimal part (no '.'_
                 str[len - 6] = 0;
                 len -= 6;
             } else {
                 // more than one tez, add the '.'
-                for (int i = 0; i < 6; i++)
+                for (int i = 0; i < 6; i++) {
                     str[len - i] = str[len - i - 1];
+                }
                 str[len - 6] = '.';
                 len++;
                 str[len] = 0;
@@ -579,7 +593,7 @@ tz_step_read_int32(tz_parser_state *state)
     uint32_t           *value = &op->frame->step_read_int32.value;
     if (op->frame->step_read_int32.ofs < 4) {
         tz_must(tz_parser_read(state, &b));
-        *value = *value << 8 | b;
+        *value = (*value << 8) | b;
         op->frame->step_read_int32.ofs++;
     } else {
         snprintf((char *)CAPTURE, sizeof(CAPTURE), "%d", *value);
@@ -610,42 +624,52 @@ tz_step_read_bytes(tz_parser_state *state)
             memcpy(op->source, CAPTURE, 22);
             __attribute__((fallthrough));
         case TZ_OPERATION_FIELD_PKH:
-            if (tz_format_pkh(CAPTURE, 21, (char *)CAPTURE, sizeof(CAPTURE)))
+            if (tz_format_pkh(CAPTURE, 21, (char *)CAPTURE,
+                              sizeof(CAPTURE))) {
                 tz_raise(INVALID_TAG);
+            }
             break;
         case TZ_OPERATION_FIELD_PK:
             if (tz_format_pk(CAPTURE, op->frame->step_read_bytes.len,
-                             (char *)CAPTURE, sizeof(CAPTURE)))
+                             (char *)CAPTURE, sizeof(CAPTURE))) {
                 tz_raise(INVALID_TAG);
+            }
             break;
         case TZ_OPERATION_FIELD_SR:
             if (tz_format_base58check("sr1", CAPTURE, 20, (char *)CAPTURE,
-                                      sizeof(CAPTURE)))
+                                      sizeof(CAPTURE))) {
                 tz_raise(INVALID_TAG);
+            }
             break;
         case TZ_OPERATION_FIELD_SRC:
             if (tz_format_base58check("src1", CAPTURE, 32, (char *)CAPTURE,
-                                      sizeof(CAPTURE)))
+                                      sizeof(CAPTURE))) {
                 tz_raise(INVALID_TAG);
+            }
             break;
         case TZ_OPERATION_FIELD_PROTO:
             if (tz_format_base58check("proto", CAPTURE, 32, (char *)CAPTURE,
-                                      sizeof(CAPTURE)))
+                                      sizeof(CAPTURE))) {
                 tz_raise(INVALID_TAG);
+            }
             break;
         case TZ_OPERATION_FIELD_DESTINATION:
             memcpy(op->destination, CAPTURE, 22);
             if (tz_format_address(CAPTURE, 22, (char *)CAPTURE,
-                                  sizeof(CAPTURE)))
+                                  sizeof(CAPTURE))) {
                 tz_raise(INVALID_TAG);
+            }
             break;
         case TZ_OPERATION_FIELD_OPH:
-            if (tz_format_oph(CAPTURE, 32, (char *)CAPTURE, sizeof(CAPTURE)))
+            if (tz_format_oph(CAPTURE, 32, (char *)CAPTURE,
+                              sizeof(CAPTURE))) {
                 tz_raise(INVALID_TAG);
+            }
             break;
         case TZ_OPERATION_FIELD_BH:
-            if (tz_format_bh(CAPTURE, 32, (char *)CAPTURE, sizeof(CAPTURE)))
+            if (tz_format_bh(CAPTURE, 32, (char *)CAPTURE, sizeof(CAPTURE))) {
                 tz_raise(INVALID_TAG);
+            }
             break;
         default:
             tz_raise(INVALID_STATE);
@@ -713,7 +737,7 @@ tz_step_read_binary(tz_parser_state *state)
     if (state->ofs == op->frame->stop) {
         CAPTURE[op->frame->step_read_string.ofs] = 0;
         tz_must(tz_print_string(state));
-    } else if (op->frame->step_read_string.ofs + 2
+    } else if ((op->frame->step_read_string.ofs + 2)
                >= TZ_CAPTURE_BUFFER_SIZE) {
         CAPTURE[op->frame->step_read_string.ofs] = 0;
         op->frame->step_read_string.ofs          = 0;
@@ -995,8 +1019,9 @@ tz_step_read_soru_messages(tz_parser_state *state)
     uint16_t            index = op->frame->step_read_list.index;
 
     // Remaining content from previous message - display this first.
-    if (regs->oofs > 0)
+    if (regs->oofs > 0) {
         tz_stop(IM_FULL);
+    }
 
     if (op->frame->stop == state->ofs) {
         tz_must(pop_frame(state));
@@ -1071,8 +1096,9 @@ tz_step_read_protos(tz_parser_state *state)
     uint16_t            index = op->frame->step_read_list.index;
 
     // Remaining content from previous proto - display this first.
-    if (regs->oofs > 0)
+    if (regs->oofs > 0) {
         tz_stop(IM_FULL);
+    }
 
     if (op->frame->stop == state->ofs) {
         tz_must(pop_frame(state));
@@ -1094,8 +1120,9 @@ tz_step_read_protos(tz_parser_state *state)
 static tz_parser_result
 tz_step_print(tz_parser_state *state, bool partial)
 {
-    if (state->operation.frame->step != TZ_OPERATION_STEP_PRINT
-        && state->operation.frame->step != TZ_OPERATION_STEP_PARTIAL_PRINT) {
+    if ((state->operation.frame->step != TZ_OPERATION_STEP_PRINT)
+        && (state->operation.frame->step
+            != TZ_OPERATION_STEP_PARTIAL_PRINT)) {
         PRINTF("[DEBUG] expected step %s or step %s but got step %s)\n",
                STRING_STEP(TZ_OPERATION_STEP_PRINT),
                STRING_STEP(TZ_OPERATION_STEP_PARTIAL_PRINT),
@@ -1109,8 +1136,9 @@ tz_step_print(tz_parser_state *state, bool partial)
         op->frame->step_print.str++;
     } else {
         tz_must(pop_frame(state));
-        if (!partial)
+        if (!partial) {
             tz_stop(IM_FULL);
+        }
     }
     tz_continue;
 }
@@ -1121,12 +1149,14 @@ tz_operation_parser_step(tz_parser_state *state)
     tz_operation_state *op = &state->operation;
 
     // cannot restart after error
-    if (TZ_IS_ERR(state->errno))
+    if (TZ_IS_ERR(state->errno)) {
         tz_reraise;
+    }
 
     // nothing else to do
-    if (op->frame == NULL)
+    if (op->frame == NULL) {
         tz_stop(DONE);
+    }
 
     PRINTF(
         "[DEBUG] operation(frame: %d, offset:%d/%d, ilen: %d, olen: %d, "

@@ -24,7 +24,7 @@
 // Tezos protocol upgrade to support new opcodes, the existing opcodes
 // are guaranteed to stay unchanged, so not updating does not break
 // security.
-const char *tz_michelson_op_name(uint8_t);
+const char *tz_michelson_op_name(uint8_t op_code);
 #define TZ_LAST_MICHELSON_OPCODE 154
 
 // Should be kept in sync with the last protocol update, including
@@ -192,14 +192,14 @@ typedef enum {
 // stored in little-endian order in the first `l` bytes of `n`. The
 // output buffer `obuf` must be at least `DECIMAL_BUFFER_SIZE(l)`
 // (caller responsibility).
-int tz_format_decimal(const uint8_t *, size_t, char *, size_t);
-#define TZ_DECIMAL_BUFFER_SIZE(_l) ((_l)*241 / 100 + 1)
+int tz_format_decimal(const uint8_t *n, size_t l, char *obuf, size_t olen);
+#define TZ_DECIMAL_BUFFER_SIZE(_l) ((((_l)*241) / 100) + 1)
 
 // Formats a data `n` of size `l` in base58 using Tezos' alphabet
 // order (same as Bitcoin). The output buffer `obuf` must be at least
 // `BASE58_BUFFER_SIZE(l)` (caller responsibility).
-int tz_format_base58(const uint8_t *, size_t, char *, size_t);
-#define TZ_BASE58_BUFFER_SIZE(_l) ((_l)*138 / 100 + 1)
+int tz_format_base58(const uint8_t *n, size_t l, char *obuf, size_t olen);
+#define TZ_BASE58_BUFFER_SIZE(_l) ((((_l)*138) / 100) + 1)
 
 // Looks up the prefix from the provided string (arg1), e.g. "B",
 // "o", "expr", "tz2", etc.  This indexes into a table which finds
@@ -209,10 +209,10 @@ int tz_format_base58(const uint8_t *, size_t, char *, size_t);
 // double-sha256 of this concatenation, and call `format_base58`. The
 // output buffer `obuf` must be at least `BASE58CHECK_BUFFER_SIZE(l,
 // prefix_len)` (caller responsibility).
-int tz_format_base58check(const char *, const uint8_t *, size_t, char *,
-                          size_t);
+int tz_format_base58check(const char *prefix, const uint8_t *ibuf,
+                          size_t ilen, char *obuf, size_t olen);
 #define TZ_BASE58CHECK_BUFFER_SIZE(_l, _p) \
-    TZ_BASE58_BUFFER_SIZE((_p) + (_l) + 4)
+    TZ_BASE58_BUFFER_SIZE(((_p) + (_l)) + 4)
 
 // Some Tezos-specific base58check formatters. These functions
 // deconstruct the Tezos binary header to figure out the kind within
@@ -225,13 +225,13 @@ int tz_format_base58check(const char *, const uint8_t *, size_t, char *,
 // tag 1: tz2(36)
 // tag 2: tz3(36)
 // tag 3: tz4(36)
-int tz_format_pkh(const uint8_t *, size_t, char *, size_t);
+int tz_format_pkh(const uint8_t *ibuf, size_t ilen, char *obuf, size_t olen);
 
 // size 32, o(51)
-int tz_format_oph(const uint8_t *, size_t, char *, size_t);
+int tz_format_oph(const uint8_t *ibuf, size_t ilen, char *obuf, size_t olen);
 
 // size 32, B(51)
-int tz_format_bh(const uint8_t *, size_t, char *, size_t);
+int tz_format_bh(const uint8_t *ibuf, size_t ilen, char *obuf, size_t olen);
 
 // size 22: tag(1) + data(21)
 // tag 0: tag(1) + pkh(20) (tz1, tz2, tz3, tz4, see format_pkh)
@@ -239,11 +239,12 @@ int tz_format_bh(const uint8_t *, size_t, char *, size_t);
 // tag 2: txrolluph(20) + padding(1), txr1(36)
 // tag 3: rolluph(20) + padding(1), scr1(36)
 // tag 4: zkrolluph(20) + padding(1), zkr1(36)
-int tz_format_address(const uint8_t *, size_t, char *, size_t);
+int tz_format_address(const uint8_t *ibuf, size_t ilen, char *obuf,
+                      size_t olen);
 
 // size 33/34/49: tag(1) + data(32/33/48)
 // tag 0: pk(32), edpk(54)
 // tag 1: pk(33), sppk(55)
 // tag 2: pk(33), p2pk(55)
 // tag 3: pk(48), BLpk(76)
-int tz_format_pk(const uint8_t *, size_t, char *, size_t);
+int tz_format_pk(const uint8_t *ibuf, size_t ilen, char *obuf, size_t olen);

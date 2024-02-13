@@ -26,7 +26,7 @@
 #ifdef HAVE_BAGL
 /* Prototypes */
 
-static void cb(tz_ui_cb_type_t);
+static void cb(tz_ui_cb_type_t cb_type);
 
 static void
 cb(tz_ui_cb_type_t cb_type)

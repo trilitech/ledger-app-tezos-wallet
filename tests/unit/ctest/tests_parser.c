@@ -58,7 +58,7 @@ refill(struct ctest_operation_parser_data *data)
 {
     data->ilen = 0;
     while (
-        (data->str_ofs < data->str_len || data->ilen < data->max_ilen)
+        ((data->str_ofs < data->str_len) || (data->ilen < data->max_ilen))
         && sscanf(data->str + data->str_ofs, "%2hhx", &data->ibuf[data->ilen])
                == 1) {
         data->str_ofs += 2;
@@ -98,8 +98,9 @@ check_field_complexity(struct ctest_operation_parser_data *data, char *str,
     bool   already_seen = false;
 
     while (true) {
-        while (!TZ_IS_BLOCKED(tz_operation_parser_step(st)))
-            ;
+        while (!TZ_IS_BLOCKED(tz_operation_parser_step(st))) {
+            // Loop while the result is successful and not blocking
+        }
 
         switch (st->errno) {
         case TZ_BLO_FEED_ME:
@@ -117,10 +118,10 @@ check_field_complexity(struct ctest_operation_parser_data *data, char *str,
             }
             if (strstr(st->field_info.field_name, fields_check[idx].name)
                 != NULL) {
-                if (fields_check[idx].complex
-                        != st->field_info.is_field_complex
-                    || fields_check[idx].field_index
-                           != st->field_info.field_index) {
+                if ((fields_check[idx].complex
+                     != st->field_info.is_field_complex)
+                    || (fields_check[idx].field_index
+                        != st->field_info.field_index)) {
                     CTEST_LOG(
                         "%s:%d '%s' field expected to have complex: %s "
                         "index: %d but "
@@ -144,11 +145,12 @@ check_field_complexity(struct ctest_operation_parser_data *data, char *str,
             continue;
 
         case TZ_BLO_DONE:
-            if (fields_check_len != idx + 1)
+            if (fields_check_len != (idx + 1)) {
                 CTEST_ERR(
                     "%s:%d all the field have not been seen, %d fields "
                     "expected but got %d seen",
                     __FILE__, __LINE__, (int)fields_check_len, (int)idx);
+            }
             ASSERT_TRUE(result);
             break;
 

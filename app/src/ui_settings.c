@@ -21,7 +21,7 @@
 
 #include "globals.h"
 
-static void cb(tz_ui_cb_type_t);
+static void cb(tz_ui_cb_type_t cb_type);
 
 #define EXPERT_MODE   0x01
 #define BLIND_SIGNING 0x02
@@ -54,11 +54,13 @@ ui_settings_init(int16_t page)
 
     FUNC_ENTER(("void"));
 
-    if (N_settings.blindsigning)
+    if (N_settings.blindsigning) {
         bsigning = "ENABLED";
+    }
 
-    if (N_settings.expert_mode)
+    if (N_settings.expert_mode) {
         exp_mode = "ENABLED";
+    }
 
     tz_ui_stream_init(cb);
     tz_ui_stream_push(EXPERT_MODE, "Expert mode", exp_mode,

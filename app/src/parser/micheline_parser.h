@@ -18,5 +18,5 @@
 
 #include "parser_state.h"
 
-void             tz_micheline_parser_init(tz_parser_state *);
-tz_parser_result tz_micheline_parser_step(tz_parser_state *);
+void             tz_micheline_parser_init(tz_parser_state *state);
+tz_parser_result tz_micheline_parser_step(tz_parser_state *state);
