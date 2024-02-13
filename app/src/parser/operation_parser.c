@@ -417,7 +417,7 @@ tz_step_size(tz_parser_state *state)
     if (op->frame->step_size.size > 255) {
         tz_raise(TOO_LARGE);  // enforce 16-bit restriction
     }
-    op->frame->step_size.size = op->frame->step_size.size << 8 | b;
+    op->frame->step_size.size = (op->frame->step_size.size << 8) | b;
     op->frame->step_size.size_len--;
     if (op->frame->step_size.size_len <= 0) {
         op->frame[-1].stop = state->ofs + op->frame->step_size.size;
@@ -471,7 +471,7 @@ tz_step_read_micheline(tz_parser_state *state)
     }
     tz_micheline_parser_step(state);
     if (state->errno == TZ_BLO_DONE) {
-        if (op->frame->stop != 0 && state->ofs != op->frame->stop) {
+        if ((op->frame->stop != 0) && (state->ofs != op->frame->stop)) {
             tz_raise(TOO_LARGE);
         }
         tz_must(pop_frame(state));
@@ -528,7 +528,7 @@ tz_step_read_num(tz_parser_state *state)
             while (str[len]) {
                 len++;
             }
-            if (len == 1 && str[0] == 0) {
+            if ((len == 1) && (str[0] == 0)) {
                 // just 0
                 goto add_currency;
             }
@@ -593,7 +593,7 @@ tz_step_read_int32(tz_parser_state *state)
     uint32_t           *value = &op->frame->step_read_int32.value;
     if (op->frame->step_read_int32.ofs < 4) {
         tz_must(tz_parser_read(state, &b));
-        *value = *value << 8 | b;
+        *value = (*value << 8) | b;
         op->frame->step_read_int32.ofs++;
     } else {
         snprintf((char *)CAPTURE, sizeof(CAPTURE), "%d", *value);
@@ -737,7 +737,7 @@ tz_step_read_binary(tz_parser_state *state)
     if (state->ofs == op->frame->stop) {
         CAPTURE[op->frame->step_read_string.ofs] = 0;
         tz_must(tz_print_string(state));
-    } else if (op->frame->step_read_string.ofs + 2
+    } else if ((op->frame->step_read_string.ofs + 2)
                >= TZ_CAPTURE_BUFFER_SIZE) {
         CAPTURE[op->frame->step_read_string.ofs] = 0;
         op->frame->step_read_string.ofs          = 0;
@@ -1120,8 +1120,9 @@ tz_step_read_protos(tz_parser_state *state)
 static tz_parser_result
 tz_step_print(tz_parser_state *state, bool partial)
 {
-    if (state->operation.frame->step != TZ_OPERATION_STEP_PRINT
-        && state->operation.frame->step != TZ_OPERATION_STEP_PARTIAL_PRINT) {
+    if ((state->operation.frame->step != TZ_OPERATION_STEP_PRINT)
+        && (state->operation.frame->step
+            != TZ_OPERATION_STEP_PARTIAL_PRINT)) {
         PRINTF("[DEBUG] expected step %s or step %s but got step %s)\n",
                STRING_STEP(TZ_OPERATION_STEP_PRINT),
                STRING_STEP(TZ_OPERATION_STEP_PARTIAL_PRINT),

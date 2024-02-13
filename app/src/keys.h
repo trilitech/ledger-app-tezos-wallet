@@ -67,5 +67,6 @@ void   sign(derivation_type_t derivation_type, const bip32_path_t *path,
 static inline bool
 check_derivation_type(derivation_type_t code)
 {
-    return (code >= DERIVATION_TYPE_ED25519 && code < DERIVATION_TYPE_MAX);
+    return ((code >= DERIVATION_TYPE_ED25519)
+            && (code < DERIVATION_TYPE_MAX));
 }

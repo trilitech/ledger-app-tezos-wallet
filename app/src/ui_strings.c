@@ -95,13 +95,16 @@ ui_strings_fit_up_to(size_t len, char **write_start)
     } else if (s->start < s->end) {
         /* start < end */
         size_t chars_at_start = MIN((size_t)(s->start - BUFF_START), len + 1);
-        chars_at_start
-            = chars_at_start > 0 ? chars_at_start - 1 : chars_at_start;
+        if (chars_at_start > 0) {
+            chars_at_start--;
+        }
 
         size_t chars_at_end = MIN((size_t)(BUFF_END - s->end), len + 1);
-        chars_at_end = chars_at_end > 0 ? chars_at_end - 1 : chars_at_end;
+        if (chars_at_end > 0) {
+            chars_at_end--;
+        }
 
-        if (chars_at_end == len || chars_at_end >= chars_at_start) {
+        if ((chars_at_end == len) || (chars_at_end >= chars_at_start)) {
             *write_start = s->end;
             out_len      = chars_at_end;
         } else {
@@ -236,7 +239,7 @@ ui_strings_drop_last(char **in)
     size_t len = strlen(*in);
     TZ_ASSERT(EXC_MEMORY_ERROR, (len > 0));
     TZ_ASSERT(EXC_MEMORY_ERROR, (!ui_strings_is_empty()));
-    TZ_ASSERT(EXC_MEMORY_ERROR, (*in + len == s->end - 1));
+    TZ_ASSERT(EXC_MEMORY_ERROR, ((*in + len) == (s->end - 1)));
     /* Internal checks */
     TZ_ASSERT(EXC_MEMORY_ERROR, (s->start < s->internal_end));
     TZ_ASSERT(EXC_MEMORY_ERROR, (s->end <= s->internal_end));
@@ -320,7 +323,7 @@ bool
 ui_strings_is_empty(void)
 {
     tz_ui_strings_t *s = UI_STRINGS;
-    return s->start == s->end && s->count == 0; /* check COUNT is zero! */
+    return (s->start == s->end) && (s->count == 0); /* check COUNT is zero! */
 }
 
 #ifdef TEZOS_DEBUG

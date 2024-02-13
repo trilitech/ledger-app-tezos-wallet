@@ -33,7 +33,7 @@ tz_parse_num_step(tz_num_parser_buffer *buffers, tz_num_parser_regs *regs,
 {
     uint8_t v, cont, s;
     cont = b >> 7;
-    if (regs->size == 0 && !natural) {
+    if ((regs->size == 0) && !natural) {
         v          = b & 0x3F;
         regs->sign = (b >> 6) & 1;
         s          = 6;
@@ -46,7 +46,7 @@ tz_parse_num_step(tz_num_parser_buffer *buffers, tz_num_parser_regs *regs,
     int     lo_idx = regs->size / 8;
     int     hi_idx = lo_idx + 1;
     buffers->bytes[lo_idx] |= lo;
-    if (hi_idx >= TZ_NUM_BUFFER_SIZE / 8) {
+    if (hi_idx >= (TZ_NUM_BUFFER_SIZE / 8)) {
         // accept and dismiss a few trailing zeroes
         if (hi || cont) {
             return TZ_ERR_TOO_LARGE;
@@ -81,18 +81,18 @@ tz_parse_nat_step(tz_num_parser_buffer *buffers, tz_num_parser_regs *regs,
 bool
 tz_string_to_mutez(const char *str, uint64_t *res)
 {
-    if (str == NULL || res == NULL) {
+    if ((str == NULL) || (res == NULL)) {
         PRINTF("[ERROR] Null parameter\n");
         return false;
     }
 
     *res = 0;
     for (int i = 0; str[i] != '\0'; i++) {
-        if (str[i] < '0' || str[i] > '9') {
+        if ((str[i] < '0') || (str[i] > '9')) {
             PRINTF("[ERROR] Non-digit character: %c\n", str[i]);
             return false;
         }
-        *res = *res * 10 + (str[i] - '0');
+        *res = (*res * 10) + (str[i] - '0');
     }
 
     return true;

@@ -58,7 +58,7 @@ refill(struct ctest_operation_parser_data *data)
 {
     data->ilen = 0;
     while (
-        (data->str_ofs < data->str_len || data->ilen < data->max_ilen)
+        ((data->str_ofs < data->str_len) || (data->ilen < data->max_ilen))
         && sscanf(data->str + data->str_ofs, "%2hhx", &data->ibuf[data->ilen])
                == 1) {
         data->str_ofs += 2;
@@ -118,10 +118,10 @@ check_field_complexity(struct ctest_operation_parser_data *data, char *str,
             }
             if (strstr(st->field_info.field_name, fields_check[idx].name)
                 != NULL) {
-                if (fields_check[idx].complex
-                        != st->field_info.is_field_complex
-                    || fields_check[idx].field_index
-                           != st->field_info.field_index) {
+                if ((fields_check[idx].complex
+                     != st->field_info.is_field_complex)
+                    || (fields_check[idx].field_index
+                        != st->field_info.field_index)) {
                     CTEST_LOG(
                         "%s:%d '%s' field expected to have complex: %s "
                         "index: %d but "
@@ -145,7 +145,7 @@ check_field_complexity(struct ctest_operation_parser_data *data, char *str,
             continue;
 
         case TZ_BLO_DONE:
-            if (fields_check_len != idx + 1) {
+            if (fields_check_len != (idx + 1)) {
                 CTEST_ERR(
                     "%s:%d all the field have not been seen, %d fields "
                     "expected but got %d seen",

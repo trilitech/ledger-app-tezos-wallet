@@ -217,7 +217,7 @@ tz_format_base58(const uint8_t *n, size_t l, char *obuf, size_t olen)
 
     memset(obuf, 0, obuf_len);
 
-    while (zcount < l && !n[zcount]) {
+    while ((zcount < l) && !n[zcount]) {
         ++zcount;
     }
 
@@ -258,7 +258,7 @@ tz_format_decimal(const uint8_t *n, size_t l, char *obuf, size_t olen)
 
     memset(obuf, 0, obuf_len);
 
-    while (zcount < l && !n[l - zcount - 1]) {
+    while ((zcount < l) && !n[l - zcount - 1]) {
         ++zcount;
     }
 
@@ -400,7 +400,7 @@ tz_format_base58check(const char *sprefix, const uint8_t *data, size_t size,
 
     /* In order to avoid vla, we have a maximum buffer size of 64 */
     uint8_t prepared[64];
-    if (prefix_len + size + 4 > sizeof(prepared)) {
+    if ((prefix_len + size + 4) > sizeof(prepared)) {
         PRINTF(
             "[WARNING] tz_format_base58check() failed: fixed size "
             "array is too small need: %u\n",

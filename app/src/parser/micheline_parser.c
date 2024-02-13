@@ -102,9 +102,9 @@ print_escaped(tz_parser_state *state, uint8_t b)
     case '\n': strncpy(buf,"\\n",TZ_CAPTURE_BUFFER_SIZE);  break;
     case '\t': strncpy(buf,"\\t",TZ_CAPTURE_BUFFER_SIZE);  break;
     default:
-        buf[0] = '0' + b/100;
-        buf[1] = '0' + (b/10)%10;
-        buf[2] = '0' + b%10;
+        buf[0] = '0' + (b/100);
+        buf[1] = '0' + ((b/10)%10);
+        buf[2] = '0' + (b%10);
         buf[3] = 0;
         break;
     }
@@ -131,7 +131,7 @@ tag_selection(tz_parser_state *state, uint8_t t)
     case TZ_MICHELINE_TAG_INT:
         m->frame->step = TZ_MICHELINE_STEP_INT;
         tz_parse_num_state_init(&state->buffers.num, &m->frame->step_int);
-        for (int i = 0; i < TZ_NUM_BUFFER_SIZE / 8; i++) {
+        for (int i = 0; i < (TZ_NUM_BUFFER_SIZE / 8); i++) {
             state->buffers.num.bytes[i] = 0;
         }
         break;
@@ -160,12 +160,12 @@ tag_selection(tz_parser_state *state, uint8_t t)
         nargs = (t - 3) >> 1;
         annot = (~t & 1);
         wrap  = (m->frame > m->stack)
-               && m->frame[-1].step == TZ_MICHELINE_STEP_PRIM
-               && (nargs > 0 || annot);
+               && (m->frame[-1].step == TZ_MICHELINE_STEP_PRIM)
+               && ((nargs > 0) || annot);
         goto common_prim;
     case TZ_MICHELINE_TAG_PRIM_N:
         wrap = (m->frame > m->stack)
-               && m->frame[-1].step == TZ_MICHELINE_STEP_PRIM;
+               && (m->frame[-1].step == TZ_MICHELINE_STEP_PRIM);
         nargs = 3;
         annot = true;
     common_prim:
@@ -233,7 +233,7 @@ tz_micheline_parser_step(tz_parser_state *state)
         if (m->frame->step_size.size > 255) {
             tz_raise(TOO_LARGE);  // enforce 16-bit restriction
         }
-        m->frame->step_size.size = m->frame->step_size.size << 8 | b;
+        m->frame->step_size.size = (m->frame->step_size.size << 8) | b;
         if (m->frame->stop == state->ofs) {
             m->frame[-1].stop = state->ofs + m->frame->step_size.size;
             tz_must(pop_frame(state));
@@ -298,7 +298,7 @@ tz_micheline_parser_step(tz_parser_state *state)
             tz_must(pop_frame(state));
         } else {
             tz_must(tz_parser_peek(state, &b));
-            if (b >= 0x20 && b < 0x80 && b != '\"' && b != '\\') {
+            if ((b >= 0x20) && (b < 0x80) && (b != '\"') && (b != '\\')) {
                 tz_must(parser_put(state, b));
                 tz_parser_skip(state);
             } else {
@@ -352,9 +352,9 @@ tz_micheline_parser_step(tz_parser_state *state)
         }
         break;
     case TZ_MICHELINE_STEP_PRIM:
-        if (m->frame->step_prim.nargs == 0
-            || (m->frame->step_prim.nargs == 3
-                && m->frame->stop == state->ofs)) {
+        if ((m->frame->step_prim.nargs == 0)
+            || ((m->frame->step_prim.nargs == 3)
+                && (m->frame->stop == state->ofs))) {
             if (m->frame->step_prim.annot) {
                 m->frame->step_prim.annot = false;
                 tz_must(push_frame(state, TZ_MICHELINE_STEP_ANNOT));

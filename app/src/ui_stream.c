@@ -122,7 +122,7 @@ pred(void)
     tz_ui_stream_t *s = &global.stream;
 
     FUNC_ENTER(("void"));
-    if (s->current >= 1 && s->current > s->last) {
+    if ((s->current >= 1) && (s->current > s->last)) {
         s->current--;
     }
     FUNC_LEAVE();
@@ -202,14 +202,14 @@ display_init(bagl_element_t init[UI_INIT_ARRAY_LEN])
     /* If we aren't on the first screen, we can go back */
     if (s->current > 0) {
         /* Unless we can't... */
-        if (s->current == s->total - TZ_UI_STREAM_HISTORY_SCREENS + 1) {
+        if (s->current == (s->total - TZ_UI_STREAM_HISTORY_SCREENS + 1)) {
             init[1].text = (const char *)&C_icon_go_forbid;
         } else {
             init[1].text = (const char *)&C_icon_go_left;
         }
     }
     /* If we aren't full or aren't on the last page, we can go right */
-    if (!s->full || s->current < s->total) {
+    if (!s->full || (s->current < s->total)) {
         init[2].text = (const char *)&C_icon_go_right;
     }
 
@@ -276,29 +276,30 @@ redisplay_screen(tz_ui_layout_type_t layout, uint8_t icon_pos)
         = 3;  /// first three lines are for black rectangle, left screen icon
               /// and right screen icon.
 
-    if (layout == TZ_UI_LAYOUT_BP || layout == TZ_UI_LAYOUT_HOME_BP) {
+    if ((layout == TZ_UI_LAYOUT_BP) || (layout == TZ_UI_LAYOUT_HOME_BP)) {
         // Change the contents to bold.
         for (int i = txt_start_line + 1; i < icon_pos; i++) {
             init[i].component.font_id = BOLD;
         }
-    } else if (layout == TZ_UI_LAYOUT_NP || layout == TZ_UI_LAYOUT_HOME_NP) {
+    } else if ((layout == TZ_UI_LAYOUT_NP)
+               || (layout == TZ_UI_LAYOUT_HOME_NP)) {
         // Set title to Regular.
         init[txt_start_line].component.font_id = REGULAR;
     } else if (layout == TZ_UI_LAYOUT_HOME_PB) {
         // Icon will be at txt_start_line.
         // modify the x,y coordinates for index txt_start_line to end.
         init[txt_start_line].component   = init[icon_pos].component;
-        init[txt_start_line].component.x = BAGL_WIDTH / 2 - 8;
+        init[txt_start_line].component.x = (BAGL_WIDTH / 2) - 8;
 #ifdef TARGET_NANOS
-        init[txt_start_line].component.y = BAGL_HEIGHT / 2 - 14;
+        init[txt_start_line].component.y = (BAGL_HEIGHT / 2) - 14;
 #else
-        init[txt_start_line].component.y = BAGL_HEIGHT / 2 - 20;
+        init[txt_start_line].component.y = (BAGL_HEIGHT / 2) - 20;
 #endif
         icon_pos = txt_start_line;
         for (int i = txt_start_line + 1; i < UI_INIT_ARRAY_LEN; i++) {
             init[i].component         = init[icon_pos + 1].component;
             init[i].component.font_id = BOLD;
-            if (i == txt_start_line + 1) {
+            if (i == (txt_start_line + 1)) {
                 init[i].text = s->screens[bucket].title;
             } else {
                 init[i].text = s->screens[bucket].body[i - 5];
@@ -323,15 +324,15 @@ redisplay_screen(tz_ui_layout_type_t layout, uint8_t icon_pos)
     // if the screen layout type is home , set the left and right arrows to
     // middle of screen.
     if (layout & TZ_UI_LAYOUT_HOME_MASK) {
-        init[1].component.y = BAGL_HEIGHT / 2 - 3;
-        init[2].component.y = BAGL_HEIGHT / 2 - 3;
+        init[1].component.y = (BAGL_HEIGHT / 2) - 3;
+        init[2].component.y = (BAGL_HEIGHT / 2) - 3;
         // as icon_pos = txt_start_line in TZ_UI_LAYOUT_HOME_PB layout,
         // following changes dont affect it.
         for (int i = txt_start_line; i < icon_pos; i++) {
             init[i].component.x     = 8;
             init[i].component.width = 112;
             init[i].component.y
-                = BAGL_HEIGHT / 2 - 3 + ((i - txt_start_line) * 13);
+                = (BAGL_HEIGHT / 2) - 3 + ((i - txt_start_line) * 13);
         }
     }
 
@@ -369,7 +370,7 @@ change_screen_right(void)
 
     TZ_PREAMBLE(("void"));
     s->pressed_right = true;
-    if (!s->full && s->current == s->total) {
+    if (!s->full && (s->current == s->total)) {
         PRINTF("[DEBUG] Looping in change_screen_right\n");
         s->cb(TZ_UI_STREAM_CB_REFILL);
         PRINTF("[DEBUG] step=%d\n", global.keys.apdu.sign.step);
@@ -466,7 +467,7 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
     s->total++;
     int bucket = s->total % TZ_UI_STREAM_HISTORY_SCREENS;
 
-    if (s->total > 0
+    if ((s->total > 0)
         && (s->current % TZ_UI_STREAM_HISTORY_SCREENS) == bucket) {
         PRINTF(
             "[ERROR] PANIC!!!! Overwriting current screen, some bad things "
@@ -474,7 +475,8 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
     }
 
     /* drop the previous screen text in our bucket */
-    if (s->total > 0 && bucket == (s->last % TZ_UI_STREAM_HISTORY_SCREENS)) {
+    if ((s->total > 0)
+        && (bucket == (s->last % TZ_UI_STREAM_HISTORY_SCREENS))) {
         drop_last_screen();
     }
 
@@ -493,7 +495,7 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
     s->screens[bucket].icon        = icon;
 
     int line = 0;
-    while (offset < length && line < TZ_UI_STREAM_CONTENTS_LINES) {
+    while ((offset < length) && (line < TZ_UI_STREAM_CONTENTS_LINES)) {
         uint8_t will_fit;
 
         if (value[offset] == '\n') {
