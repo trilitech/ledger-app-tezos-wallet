@@ -24,6 +24,7 @@
 
 #include <format.h>
 #include <io.h>
+#include <string.h>
 #include <swap.h>
 
 #include "handle_swap.h"
