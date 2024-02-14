@@ -44,15 +44,16 @@
 #include "utils.h"
 
 #include "parser/parser_state.h"
-
-// Zeros out all application-specific globals and SDK-specific
-// UI/exchange buffers.
+/**
+ * @brief  Zeros out all application-specific globals and SDK-specific
+ * UI/exchange buffers.
+ */
 void init_globals(void);
 
-// Toggles the persisted expert_mode setting
+/// Toggles the persisted expert_mode setting
 void toggle_expert_mode(void);
 
-// Toggles the persisted blindsigning setting
+/// Toggles the persisted blindsigning setting
 void toggle_blindsigning(void);
 
 #define MAX_APDU_SIZE      235

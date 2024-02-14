@@ -134,10 +134,6 @@ ui_strings_can_fit(size_t len, bool *can_fit)
     TZ_POSTAMBLE;
 }
 
-/* @param in: ptr to char[] to copy into the buffer
-   @param in_len: number of of chars to copy. in_len <= strlen(in)
-   @param out: will be set to the start of the char[] in the buffer
-*/
 void
 ui_strings_push(const char *in, size_t len, char **out)
 {
@@ -265,11 +261,6 @@ ui_strings_drop_last(char **in)
     PRINT_STRINGS;
 }
 
-/* Append as much as possible from str to the last string in the buffer.
- * This WILL NOT move `last` in the buffer.
- *
- * @param out: the start of the copied chars in the buffer.
- */
 size_t
 ui_strings_append_last(const char *str, size_t max, char **out)
 {

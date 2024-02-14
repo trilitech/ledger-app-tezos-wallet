@@ -25,7 +25,10 @@
 #include <os.h>
 #include <os_io_seproxyhal.h>
 #include <ux.h>
-
+/**
+ * @brief Macro to display navigation icons and set associated callback.
+ *
+ */
 #define DISPLAY(elts, cb, len)                                              \
     memcpy(global.ux.bagls, elts, len * sizeof(bagl_element_t));            \
     G_ux.stack[0].element_arrays[0].element_array        = global.ux.bagls; \

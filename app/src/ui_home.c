@@ -28,6 +28,10 @@
 
 static void cb(tz_ui_cb_type_t cb_type);
 
+/**
+ * @brief Callback for home screen stream.
+ *
+ * @param cb_type one of the 4 home screens (HOME, VERSION, SETTINGS, QUIT) */
 static void
 cb(tz_ui_cb_type_t cb_type)
 {
