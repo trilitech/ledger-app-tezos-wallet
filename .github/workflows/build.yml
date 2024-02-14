@@ -21,7 +21,7 @@ jobs:
         device: [nanos, nanosp, nanox, stax]
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools:3.14.0
+      image: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools:latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
