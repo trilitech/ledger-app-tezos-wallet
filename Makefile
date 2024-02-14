@@ -25,8 +25,8 @@ docker_speculos:
 	$(DOCKER) image tag $(LEDGERHQ)/speculos speculos
 
 docker_ledger_app_builder:
-	$(DOCKER) pull $(LEDGERHQ)/ledger-app-builder/ledger-app-dev-tools:3.14.0
-	$(DOCKER) image tag $(LEDGERHQ)/ledger-app-builder/ledger-app-dev-tools:3.14.0 \
+	$(DOCKER) pull $(LEDGERHQ)/ledger-app-builder/ledger-app-dev-tools:latest
+	$(DOCKER) image tag $(LEDGERHQ)/ledger-app-builder/ledger-app-dev-tools:latest \
 			ledger-app-builder
 
 docker_ledger_app_ocaml:
