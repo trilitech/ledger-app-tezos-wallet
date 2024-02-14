@@ -486,6 +486,60 @@ tz_step_read_micheline(tz_parser_state *state)
     tz_reraise;
 }
 
+static void
+tz_format_amount(char *str)
+{
+    int len = 0;
+    while (str[len]) {
+        len++;
+    }
+    if ((len == 1) && (str[0] == 0)) {
+        // just 0
+        goto add_currency;
+    }
+    if (len < 7) {
+        // less than one tez, pad left up to the '0.'
+        int j;
+        int pad = 7 - len;
+        for (j = len; j >= 0; j--) {
+            str[j + pad] = str[j];
+        }
+        for (j = 0; j < pad; j++) {
+            str[j] = '0';
+        }
+        len = 7;
+    }
+    int no_decimals = 1;
+    for (int i = 0; i < 6; i++) {
+        no_decimals &= (str[len - 1 - i] == '0');
+    }
+    if (no_decimals) {
+        // integral value, don't include the decimal part (no '.'_
+        str[len - 6] = 0;
+        len -= 6;
+    } else {
+        // more than one tez, add the '.'
+        for (int i = 0; i < 6; i++) {
+            str[len - i] = str[len - i - 1];
+        }
+        str[len - 6] = '.';
+        len++;
+        str[len] = 0;
+        // drop trailing non significant zeroes
+        while (str[len - 1] == '0') {
+            len--;
+            str[len] = 0;
+        }
+    }
+add_currency:
+    str[len]     = ' ';
+    str[len + 1] = 'X';
+    str[len + 2] = 'T';
+    str[len + 3] = 'Z';
+    len += 4;
+    str[len] = 0;
+}
+
 /* Read a number */
 static tz_parser_result
 tz_step_read_num(tz_parser_state *state)
@@ -526,55 +580,7 @@ tz_step_read_num(tz_parser_state *state)
             break;
         case TZ_OPERATION_FIELD_FEE:
         case TZ_OPERATION_FIELD_AMOUNT: {
-            int len = 0;
-            while (str[len]) {
-                len++;
-            }
-            if ((len == 1) && (str[0] == 0)) {
-                // just 0
-                goto add_currency;
-            }
-            if (len < 7) {
-                // less than one tez, pad left up to the '0.'
-                int j;
-                int pad = 7 - len;
-                for (j = len; j >= 0; j--) {
-                    str[j + pad] = str[j];
-                }
-                for (j = 0; j < pad; j++) {
-                    str[j] = '0';
-                }
-                len = 7;
-            }
-            int no_decimals = 1;
-            for (int i = 0; i < 6; i++) {
-                no_decimals &= (str[len - 1 - i] == '0');
-            }
-            if (no_decimals) {
-                // integral value, don't include the decimal part (no '.'_
-                str[len - 6] = 0;
-                len -= 6;
-            } else {
-                // more than one tez, add the '.'
-                for (int i = 0; i < 6; i++) {
-                    str[len - i] = str[len - i - 1];
-                }
-                str[len - 6] = '.';
-                len++;
-                str[len] = 0;
-                // drop trailing non significant zeroes
-                while (str[len - 1] == '0') {
-                    len--;
-                    str[len] = 0;
-                }
-            }
-        add_currency:
-            str[len]     = ' ';
-            str[len + 1] = 'X';
-            str[len + 2] = 'T';
-            str[len + 3] = 'Z';
-            len += 4;
-            str[len] = 0;
+            tz_format_amount(str);
             break;
         }
         default:
