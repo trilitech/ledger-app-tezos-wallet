@@ -147,8 +147,8 @@ typedef struct {
             uint8_t                 skip : 1, natural : 1;
         } step_read_num;
         struct {
-            uint32_t value;
-            uint8_t  skip : 1, ofs : 3;
+            int32_t value;
+            uint8_t skip : 1, ofs : 3;
         } step_read_int32;
         struct {
             uint16_t ofs;

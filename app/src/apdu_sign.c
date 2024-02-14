@@ -115,8 +115,9 @@ sign_packet(void)
                   &global.path_with_curve.bip32_path, bufs[0].ptr,
                   bufs[0].size, sig, &bufs[1].size));
 
-    /* If we aren't returning the hash, zero its buffer... */
+    /* If we aren't returning the hash, zero its buffer. */
     if (!global.keys.apdu.sign.return_hash) {
+        memset((void *)bufs[0].ptr, 0, bufs[0].size);
         bufs[0].size = 0;
     }
 
@@ -487,15 +488,14 @@ handle_first_apdu_clear(__attribute__((unused)) command_t *cmd)
 #endif
         tz_ui_stream_init(stream_cb);
         global.step = ST_CLEAR_SIGN;
-        if (global.step == ST_CLEAR_SIGN) {
+
 #ifdef TARGET_NANOS
-            tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Review operation", "",
-                              TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_EYE);
-#elif defined(HAVE_BAGL)
-        tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Review", "operation",
+        tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Review operation", "",
                           TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_EYE);
+#elif defined(HAVE_BAGL)
+    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Review", "operation",
+                      TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_EYE);
 #endif
-        }
 #ifdef HAVE_SWAP
     } else {
         PRINTF("[DEBUG] If called from SWAP : global.step =%d\n",
@@ -724,8 +724,6 @@ handle_data_apdu_blind(void)
     STRLCPY(hash, obuf);
     continue_blindsign_cb();
 #endif
-
-    /* XXXrcd: the logic here need analysis. */
     TZ_POSTAMBLE;
 }
 #undef FINAL_HASH
