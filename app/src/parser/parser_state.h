@@ -41,7 +41,7 @@ typedef struct {
 
 // Parser state
 
-#define TZ_FIELD_NAME_SIZE     80
+#define TZ_FIELD_NAME_SIZE     30
 #define TZ_CAPTURE_BUFFER_SIZE 256
 
 typedef enum {
