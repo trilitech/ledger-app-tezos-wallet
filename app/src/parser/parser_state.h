@@ -47,19 +47,19 @@ typedef struct {
 typedef enum {
     // success and non blocking, should loop again
     TZ_CONTINUE = 0,  // fall through rest of current step
-    TZ_BREAK,         // signals caller to return, errno should be CONTINUE
+    TZ_BREAK    = 1,  // signals caller to return, errno should be CONTINUE
     // success but parsing blocked
-    TZ_BLO_DONE = 100,  // parsing complete
-    TZ_BLO_FEED_ME,     // blocked on read from input
-    TZ_BLO_IM_FULL,     // blocked on output space
+    TZ_BLO_DONE    = 100,  // parsing complete
+    TZ_BLO_FEED_ME = 101,  // blocked on read from input
+    TZ_BLO_IM_FULL = 102,  // blocked on output space
     // everything below is an error
-    TZ_ERR_INVALID_TAG = 200,
-    TZ_ERR_INVALID_OP,
-    TZ_ERR_INVALID_DATA,
-    TZ_ERR_UNSUPPORTED,
-    TZ_ERR_TOO_LARGE,
-    TZ_ERR_TOO_DEEP,
-    TZ_ERR_INVALID_STATE,
+    TZ_ERR_INVALID_TAG   = 200,
+    TZ_ERR_INVALID_OP    = 201,
+    TZ_ERR_INVALID_DATA  = 202,
+    TZ_ERR_UNSUPPORTED   = 203,
+    TZ_ERR_TOO_LARGE     = 204,
+    TZ_ERR_TOO_DEEP      = 205,
+    TZ_ERR_INVALID_STATE = 206,
 } tz_parser_result;
 #define TZ_IS_BLOCKED(code) (code >= 100)
 #define TZ_IS_ERR(code)     (code >= 200)

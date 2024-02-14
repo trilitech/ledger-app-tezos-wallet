@@ -50,13 +50,13 @@ typedef enum {
 } tz_micheline_parser_step_kind;
 
 typedef enum {
-    TZ_CAP_STREAM_ANY = 0,
-    TZ_CAP_STREAM_BYTES,
-    TZ_CAP_STREAM_INT,
-    TZ_CAP_STREAM_STRING,
-    TZ_CAP_ADDRESS,
-    TZ_CAP_LIST = 62,
-    TZ_CAP_OR
+    TZ_CAP_STREAM_ANY    = 0,
+    TZ_CAP_STREAM_BYTES  = 1,
+    TZ_CAP_STREAM_INT    = 2,
+    TZ_CAP_STREAM_STRING = 3,
+    TZ_CAP_ADDRESS       = 4,
+    TZ_CAP_LIST          = 62,
+    TZ_CAP_OR            = 63
 } tz_micheline_capture_kind;
 
 typedef struct {
