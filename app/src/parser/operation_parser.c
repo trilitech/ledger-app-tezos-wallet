@@ -788,6 +788,22 @@ tz_step_read_smart_entrypoint(tz_parser_state *state)
         strlcpy((char *)CAPTURE, "deposit", sizeof(CAPTURE));
         tz_must(tz_print_string(state));
         break;
+    case 6:
+        strlcpy((char *)CAPTURE, "stake", sizeof(CAPTURE));
+        tz_must(tz_print_string(state));
+        break;
+    case 7:
+        strlcpy((char *)CAPTURE, "unstake", sizeof(CAPTURE));
+        tz_must(tz_print_string(state));
+        break;
+    case 8:
+        strlcpy((char *)CAPTURE, "finalize_unstake", sizeof(CAPTURE));
+        tz_must(tz_print_string(state));
+        break;
+    case 9:
+        strlcpy((char *)CAPTURE, "set_delegate_parameters", sizeof(CAPTURE));
+        tz_must(tz_print_string(state));
+        break;
     case 0xFF:
         op->frame->step                 = TZ_OPERATION_STEP_READ_STRING;
         op->frame->step_read_string.ofs = 0;
