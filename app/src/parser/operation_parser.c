@@ -52,6 +52,10 @@ const char *const tz_operation_parser_step_name[] = {"OPTION",
                                                      "READ_BALLOT",
                                                      "READ_PROTOS"};
 
+/**
+ * @brief Get the string format of an operations step
+ *
+ */
 #define STRING_STEP(step) \
     (const char *)PIC(tz_operation_parser_step_name[step])
 
@@ -60,12 +64,29 @@ const char *const tz_operation_parser_step_name[] = {"OPTION",
 // clang-format off
 
 // Default .skip=false, .complex=false
+
+/**
+ * @brief Helper to create an operation field descriptor
+ *
+ * @required name: name of the field
+ * @required kind: kind of the field
+ *
+ *        By default .skip=false, .complex=false
+ */
 #define TZ_OPERATION_FIELD(name_v, kind_v, ...) \
   {.name=name_v, .kind=kind_v, __VA_ARGS__}
 
-#define TZ_OPERATION_LAST_FIELD {0}
+#define TZ_OPERATION_LAST_FIELD {0} /// Empty field with an END step
 
-// Default .skip=false, .complex=false
+/**
+ * @brief Helper to create an operation option field descriptor
+ *
+ * @required name: name of the option field
+ * @required field: field of the option field
+ * @required display_none: display if is none
+ *
+ *        By default .skip=false, .complex=false
+ */
 #define TZ_OPERATION_OPTION_FIELD(name_v, field_v, display_none, ...) \
   {.name=name_v, .kind=TZ_OPERATION_FIELD_OPTION,                     \
    .field_option={                                                    \
@@ -74,6 +95,12 @@ const char *const tz_operation_parser_step_name[] = {"OPTION",
    },                                                                 \
    __VA_ARGS__}
 
+/**
+ * @brief Helper to create an operation tuple field descriptor
+ *
+ * @required name: name of the tuple field
+ * @required fields: fields of the tuple field
+ */
 #define TZ_OPERATION_TUPLE_FIELD(name_v, ...)           \
   {.name=name_v, .kind=TZ_OPERATION_FIELD_TUPLE,        \
    .field_tuple={                                       \
@@ -84,6 +111,12 @@ const char *const tz_operation_parser_step_name[] = {"OPTION",
    }                                                    \
   }
 
+/**
+ * @brief Helper to create an operation descriptor
+ *
+ * @required name: name of the operation
+ * @required fields: fields of the operation
+ */
 #define TZ_OPERATION_FIELDS(name, ...) \
   const tz_operation_field_descriptor name[] = { __VA_ARGS__, TZ_OPERATION_LAST_FIELD}
 
@@ -104,6 +137,9 @@ TZ_OPERATION_FIELDS(failing_noop_fields,
     TZ_OPERATION_FIELD("Message", TZ_OPERATION_FIELD_BINARY)
 );
 
+/**
+ * @brief Set of fields for manager operations
+ */
 #define TZ_OPERATION_MANAGER_OPERATION_FIELDS                                \
     TZ_OPERATION_FIELD("Source",        TZ_OPERATION_FIELD_SOURCE),          \
     TZ_OPERATION_FIELD("Fee",           TZ_OPERATION_FIELD_FEE),             \
@@ -197,6 +233,9 @@ TZ_OPERATION_FIELDS(soru_origin_fields,
     TZ_OPERATION_FIELD("Parameters", TZ_OPERATION_FIELD_EXPR,   .complex=true)
 );
 
+/**
+ * @brief Array of all handled operations
+ */
 const tz_operation_descriptor tz_operation_descriptors[] = {
     {TZ_OPERATION_TAG_PROPOSALS,    "Proposals",                  proposals_fields   },
     {TZ_OPERATION_TAG_BALLOT,       "Ballot",                     ballot_fields      },
@@ -217,9 +256,16 @@ const tz_operation_descriptor tz_operation_descriptors[] = {
 };
 // clang-format on
 
-static const char *expression_name = "Expression";
-static const char *unset_message   = "Field unset";
+static const char *expression_name = "Expression";   /// title for micheline
+static const char *unset_message   = "Field unset";  /// title for unset field
 
+/**
+ * @brief Push a new frame onto the operations parser stack
+ *
+ * @param state: parser state
+ * @param step: step of the new frame
+ * @return tz_parser_result: parser result
+ */
 static tz_parser_result
 push_frame(tz_parser_state *state, tz_operation_parser_step_kind step)
 {
@@ -233,6 +279,12 @@ push_frame(tz_parser_state *state, tz_operation_parser_step_kind step)
     tz_continue;
 }
 
+/**
+ * @brief Pop the operations parser stack
+ *
+ * @param state: parser state
+ * @return tz_parser_result: parser result
+ */
 static tz_parser_result
 pop_frame(tz_parser_state *state)
 {
@@ -294,9 +346,14 @@ tz_operation_parser_init(tz_parser_state *state, uint16_t size,
  * the size of the buffer.  This allows us to more idiomatically
  * check the size of buffers.
  */
-
 #define CAPTURE (state->buffers.capture)
 
+/**
+ * @brief Ask to print what has been captured
+ *
+ * @param state: parser state
+ * @return tz_parser_result: parser result
+ */
 static tz_parser_result
 tz_print_string(tz_parser_state *state)
 {
@@ -311,6 +368,9 @@ tz_print_string(tz_parser_state *state)
     tz_continue;
 }
 
+/**
+ * @brief Helper to assert the current step
+ */
 #define ASSERT_STEP(state, expected_step)                                    \
     do {                                                                     \
         tz_operation_parser_step_kind step = (state)->operation.frame->step; \
@@ -322,7 +382,14 @@ tz_print_string(tz_parser_state *state)
         }                                                                    \
     } while (0)
 
-/* Update the state in order to read the field if it is present */
+/**
+ * @brief Try to read an optionnal field
+ *
+ *        If the field is present, ask to read it.
+ *
+ * @param state: parser state
+ * @return tz_parser_result: parser result
+ */
 static tz_parser_result
 tz_step_option(tz_parser_state *state)
 {
@@ -347,7 +414,12 @@ tz_step_option(tz_parser_state *state)
     tz_continue;
 }
 
-/* Update the state in order to read the fields in a field tuple */
+/**
+ * @brief Ask to read remaining fields of a tuple field
+ *
+ * @param state: parser state
+ * @return tz_parser_result: parser result
+ */
 static tz_parser_result
 tz_step_tuple(tz_parser_state *state)
 {
@@ -376,6 +448,15 @@ tz_step_tuple(tz_parser_state *state)
 
 /* Update the state in order to read an operation or a micheline expression
  * based on a magic byte */
+/**
+ * @brief Read a magic byte and plan nexts steps
+ *
+ *        The magic byte identifies if the data to read is a micheline
+ *        expression or a batch of operations
+ *
+ * @param state: parser state
+ * @return tz_parser_result: parser result
+ */
 static tz_parser_result
 tz_step_magic(tz_parser_state *state)
 {
@@ -408,7 +489,12 @@ tz_step_magic(tz_parser_state *state)
     tz_continue;
 }
 
-/* Read a 4-byte size */
+/**
+ * @brief Read a 4-bytes size
+ *
+ * @param state: parser state
+ * @return tz_parser_result: parser result
+ */
 static tz_parser_result
 tz_step_size(tz_parser_state *state)
 {
@@ -428,7 +514,13 @@ tz_step_size(tz_parser_state *state)
     tz_continue;
 }
 
-/* Update the state in order to read an operation based on a tag byte */
+/**
+ * @brief Find the operation associated to the operation tag and ask
+ *        to read its fields
+ *
+ * @param state: parser state
+ * @return tz_parser_result: parser result
+ */
 static tz_parser_result
 tz_step_tag(tz_parser_state *state)
 {
@@ -458,7 +550,12 @@ tz_step_tag(tz_parser_state *state)
     tz_raise(INVALID_TAG);
 }
 
-/* Read a micheline expression */
+/**
+ * @brief Read a micheline expression
+ *
+ * @param state: parser state
+ * @return tz_parser_result: parser result
+ */
 static tz_parser_result
 tz_step_read_micheline(tz_parser_state *state)
 {
@@ -486,6 +583,11 @@ tz_step_read_micheline(tz_parser_state *state)
     tz_reraise;
 }
 
+/**
+ * @brief Format a string as an amount
+ *
+ * @param str: string to format
+ */
 static void
 tz_format_amount(char *str)
 {
@@ -540,7 +642,12 @@ add_currency:
     str[len] = 0;
 }
 
-/* Read a number */
+/**
+ * @brief Read a number
+ *
+ * @param state: parser state
+ * @return tz_parser_result: parser result
+ */
 static tz_parser_result
 tz_step_read_num(tz_parser_state *state)
 {
@@ -591,7 +698,12 @@ tz_step_read_num(tz_parser_state *state)
     tz_continue;
 }
 
-/* Read an int32 */
+/**
+ * @brief Read an int32
+ *
+ * @param state: parser state
+ * @return tz_parser_result: parser result
+ */
 static tz_parser_result
 tz_step_read_int32(tz_parser_state *state)
 {
@@ -611,7 +723,12 @@ tz_step_read_int32(tz_parser_state *state)
     tz_continue;
 }
 
-/* Read bytes */
+/**
+ * @brief Read bytes
+ *
+ * @param state: parser state
+ * @return tz_parser_result: parser result
+ */
 static tz_parser_result
 tz_step_read_bytes(tz_parser_state *state)
 {
@@ -688,7 +805,12 @@ tz_step_read_bytes(tz_parser_state *state)
     tz_continue;
 }
 
-/* Update the state in order to read a batch of operations */
+/**
+ * @brief Plan the steps to read a batch of operations
+ *
+ * @param state: parser state
+ * @return tz_parser_result: parser result
+ */
 static tz_parser_result
 tz_step_branch(tz_parser_state *state)
 {
@@ -699,8 +821,11 @@ tz_step_branch(tz_parser_state *state)
     tz_continue;
 }
 
-/* Update the state in order to read the next operation in a batch of
- * operations
+/**
+ * @brief Ask to read remaining operations of a batch of operations
+ *
+ * @param state: parser state
+ * @return tz_parser_result: parser result
  */
 static tz_parser_result
 tz_step_batch(tz_parser_state *state)
@@ -718,7 +843,12 @@ tz_step_batch(tz_parser_state *state)
     tz_continue;
 }
 
-/* Read a string */
+/**
+ * @brief Read a string
+ *
+ * @param state: parser state
+ * @return tz_parser_result: parser result
+ */
 static tz_parser_result
 tz_step_read_string(tz_parser_state *state)
 {
@@ -736,7 +866,12 @@ tz_step_read_string(tz_parser_state *state)
     tz_continue;
 }
 
-/* Read a binary */
+/**
+ * @brief Read a binary
+ *
+ * @param state: parser state
+ * @return tz_parser_result: parser result
+ */
 static tz_parser_result
 tz_step_read_binary(tz_parser_state *state)
 {
@@ -763,7 +898,12 @@ tz_step_read_binary(tz_parser_state *state)
     tz_continue;
 }
 
-/* Read an entrypoint */
+/**
+ * @brief Read a smart entrypoint
+ *
+ * @param state: parser state
+ * @return tz_parser_result: parser result
+ */
 static tz_parser_result
 tz_step_read_smart_entrypoint(tz_parser_state *state)
 {
@@ -825,9 +965,14 @@ tz_step_read_smart_entrypoint(tz_parser_state *state)
     tz_continue;
 }
 
-/* Update the state in order to read a field of an operation based on its kind
- * If the field is not ignored, update the field_info with the field
- * information
+/**
+ * @brief Plan the steps required to read the current operation field
+ *
+ *        Update the current field info only if the field is not
+ *        ignored
+ *
+ * @param state: parser state
+ * @return tz_parser_result: parser result
  */
 static tz_parser_result
 tz_step_field(tz_parser_state *state)
@@ -1001,7 +1146,12 @@ tz_step_field(tz_parser_state *state)
     tz_continue;
 }
 
-/* Read a public key */
+/**
+ * @brief Read a public key
+ *
+ * @param state: parser state
+ * @return tz_parser_result: parser result
+ */
 static tz_parser_result
 tz_step_read_pk(tz_parser_state *state)
 {
@@ -1031,7 +1181,12 @@ tz_step_read_pk(tz_parser_state *state)
     tz_continue;
 }
 
-/* Read soru messages */
+/**
+ * @brief Read soru messages
+ *
+ * @param state: parser state
+ * @return tz_parser_result: parser result
+ */
 static tz_parser_result
 tz_step_read_soru_messages(tz_parser_state *state)
 {
@@ -1063,7 +1218,12 @@ tz_step_read_soru_messages(tz_parser_state *state)
     tz_continue;
 }
 
-/* Read a soru kind */
+/**
+ * @brief Read a soru kind
+ *
+ * @param state: parser state
+ * @return tz_parser_result: parser result
+ */
 static tz_parser_result
 tz_step_read_soru_kind(tz_parser_state *state)
 {
@@ -1084,7 +1244,12 @@ tz_step_read_soru_kind(tz_parser_state *state)
     tz_continue;
 }
 
-/* Read a ballot */
+/**
+ * @brief Read a ballot
+ *
+ * @param state: parser state
+ * @return tz_parser_result: parser result
+ */
 static tz_parser_result
 tz_step_read_ballot(tz_parser_state *state)
 {
@@ -1108,7 +1273,12 @@ tz_step_read_ballot(tz_parser_state *state)
     tz_continue;
 }
 
-/* Read protocols */
+/**
+ * @brief Read a protocol list
+ *
+ * @param state: parser state
+ * @return tz_parser_result: parser result
+ */
 static tz_parser_result
 tz_step_read_protos(tz_parser_state *state)
 {
@@ -1138,8 +1308,13 @@ tz_step_read_protos(tz_parser_state *state)
     tz_continue;
 }
 
-/* Print a string
- * if partial is true, then the string is not yet complete
+/**
+ * @brief Print a string
+ *
+ * @param state: parser state
+ * @param partial: If partial true, then the string is not yet
+ *                 complete
+ * @return tz_parser_result: parser result
  */
 static tz_parser_result
 tz_step_print(tz_parser_state *state, bool partial)
