@@ -18,9 +18,16 @@
 
 #include "parser_state.h"
 
+/**
+ * @brief Helper to handle parser result case
+ */
 #define TZ_LABEL(_x) \
     case TZ_##_x:    \
         return #_x
+
+/**
+ * @brief Helper to handle blocking parser result case
+ */
 #define BLO_LABEL(_x) \
     case TZ_BLO_##_x: \
         return #_x
