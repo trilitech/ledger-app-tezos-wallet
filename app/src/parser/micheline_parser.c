@@ -49,6 +49,13 @@ tz_micheline_parser_init(tz_parser_state *state)
     m->stack[0].step = TZ_MICHELINE_STEP_TAG;
 }
 
+/**
+ * @brief Push a new frame onto the micheline parser stack
+ *
+ * @param state: parser state
+ * @param step: step of the new frame
+ * @return tz_parser_result: parser result
+ */
 static tz_parser_result
 push_frame(tz_parser_state *state, tz_micheline_parser_step_kind step)
 {
@@ -62,6 +69,12 @@ push_frame(tz_parser_state *state, tz_micheline_parser_step_kind step)
     tz_continue;
 }
 
+/**
+ * @brief Pop the micheline parser stack
+ *
+ * @param state: parser state
+ * @return tz_parser_result: parser result
+ */
 static tz_parser_result
 pop_frame(tz_parser_state *state)
 {
@@ -75,6 +88,12 @@ pop_frame(tz_parser_state *state)
     tz_continue;
 }
 
+/**
+ * @brief Ask to read a 4-bytes size
+ *
+ * @param state: parser state
+ * @return tz_parser_result: parser result
+ */
 static tz_parser_result
 begin_sized(tz_parser_state *state)
 {
@@ -88,6 +107,13 @@ begin_sized(tz_parser_state *state)
     tz_continue;
 }
 
+/**
+ * @brief Ask to print an escape character
+ *
+ * @param state: parser state
+ * @param b: escape character
+ * @return tz_parser_result: parser result
+ */
 static tz_parser_result
 print_escaped(tz_parser_state *state, uint8_t b)
 {
@@ -112,6 +138,13 @@ print_escaped(tz_parser_state *state, uint8_t b)
     tz_continue;
 }
 
+/**
+ * @brief Print a character
+ *
+ * @param state: parser state
+ * @param c: character
+ * @return tz_parser_result: parser result
+ */
 static tz_parser_result
 parser_put(tz_parser_state *state, char c)
 {
@@ -119,6 +152,14 @@ parser_put(tz_parser_state *state, char c)
     return tz_parser_put(state, c);
 }
 
+/**
+ * @brief Plan the steps required to read the micheline value
+ *        associated to the micheline tag
+ *
+ * @param state: parser state
+ * @param t: micheline tag
+ * @return tz_parser_result: parser result
+ */
 static tz_parser_result
 tag_selection(tz_parser_state *state, uint8_t t)
 {
