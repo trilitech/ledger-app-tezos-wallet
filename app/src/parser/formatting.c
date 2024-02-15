@@ -16,12 +16,16 @@
 
 #include "formatting.h"
 
-// Should be kept in sync with the last protocol update, including
-// order, currently defined in the `michelson_v1_primitives.ml` file
-// in the Tezos protocol code.
-//
-// NEVER REORDER elements of this array as the index is used as a
-// selector by `michelson_op_name`.
+/**
+ * @brief Ordered array of names for michelson primitives
+ *
+ * Should be kept in sync with the last protocol update, including
+ * order, currently defined in the `michelson_v1_primitives.ml` file
+ * in the Tezos protocol code.
+ *
+ * NEVER REORDER elements of this array as the index is used as a
+ * selector by `michelson_op_name`.
+ */
 const char *const tz_michelson_op_names_ordered[TZ_LAST_MICHELSON_OPCODE + 1]
     = {
         "parameter",                       // 0
@@ -203,6 +207,15 @@ tz_michelson_op_name(uint8_t op_code)
 static const char tz_b58digits_ordered[]
     = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
+/**
+ * @brief Get the base58 format of a number
+ *
+ * @param n: input number
+ * @param l: length of the input buffer
+ * @param obuf: output buffer
+ * @param olen: length of the output buffer
+ * @return int: 0 on success
+ */
 int
 tz_format_base58(const uint8_t *n, size_t l, char *obuf, size_t olen)
 {
@@ -291,15 +304,49 @@ tz_format_decimal(const uint8_t *n, size_t l, char *obuf, size_t olen)
 // package does not publish their C header file for others to use, so
 // we are forced to piggy import the external definitions in order to
 // access them.
+
+/**
+ * @brief This struct represents the sha256 context
+ */
 struct sha256_ctx {
     uint64_t sz;
     uint8_t  buf[128];
     uint32_t h[8];
 };
+
+/**
+ * @brief Initialize a sha256 context
+ *
+ * @param ctx: sha256 context
+ */
 extern void digestif_sha256_init(struct sha256_ctx *ctx);
+
+/**
+ * @brief Update the sha256 context with data
+ *
+ * @param ctx: sha256 context
+ * @param data: data
+ * @param size: length of the data
+ */
 extern void digestif_sha256_update(struct sha256_ctx *ctx, uint8_t *data,
                                    uint32_t size);
+
+/**
+ * @brief Finalize to digest the sha256 context
+ *
+ * @param ctx: sha256 context
+ * @param out: output buffer
+ */
 extern void digestif_sha256_finalize(struct sha256_ctx *ctx, uint8_t *out);
+
+/**
+ * @brief Get the hash sha256 of a data
+ *
+ * @param data: data
+ * @param size: length of the data
+ * @param out: output buffer
+ * @param size_out: length of the output buffer
+ */
 static void
 cx_hash_sha256(uint8_t *data, size_t size, uint8_t *out, size_t size_out)
 {
@@ -311,26 +358,6 @@ cx_hash_sha256(uint8_t *data, size_t size, uint8_t *out, size_t size_out)
     memcpy(out, res, size_out);
 }
 #endif
-
-/*
- * find_prefix() is passed in:
- *     s:  the prefix we are looking for
- *     p:  an out parameter which is the binary prefix we matched
- *     pl: another out parameter: the length of the returned binary prefix
- *     dl: the data length which we got
- *
- * To save lines and make things easier to read and modify, we implement
- * find_prefix() as a series of invocations of the macro B58_PREFIX().
- * This macro takes 4 arguments: which correspond the the arguments of
- * our function directly.  It matches the textual prefixes and if they
- * do match, it sets the output parameters and validates that the length
- * is correct.
- *
- * find_prefix() returns successfully if it finds a definition and the
- * length is correct.
- *
- * We turn off clang format for this so that we can line everything up.
- */
 
 // clang-format off
 #define B58_PREFIX(_s, _p, _pl, _dl) do {       \
@@ -344,6 +371,26 @@ cx_hash_sha256(uint8_t *data, size_t size, uint8_t *out, size_t size_out)
             }                                   \
         } while (0)
 
+/**
+ * @brief Get base58 prefix information
+ *
+ *        To save lines and make things easier to read and modify, we
+ *        implement find_prefix() as a series of invocations of the
+ *        macro B58_PREFIX().  This macro takes 4 arguments: which
+ *        correspond the the arguments of our function directly.  It
+ *        matches the textual prefixes and if they do match, it sets
+ *        the output parameters and validates that the length is
+ *        correct.
+ *
+ *        find_prefix() returns successfully if it finds a definition
+ *        and the length is correct.
+ *
+ * @param s: prefix we are looking for
+ * @param p: an out parameter which is the binary prefix we matched
+ * @param pl: another out parameter: the length of the returned binary prefix
+ * @param dl: data length which we got
+ * @return int: 0 on success
+ */
 static int
 find_prefix(const char *s, const uint8_t **p, size_t *pl, size_t dl)
 {
@@ -459,14 +506,12 @@ tz_format_pk(const uint8_t *data, size_t size, char *obuf, size_t olen)
     return tz_format_base58check(prefix, data + 1, size - 1, obuf, olen);
 }
 
-/* Deprecated, use tz_format_base58check("o", ...) instead */
 int
 tz_format_oph(const uint8_t *data, size_t size, char *obuf, size_t olen)
 {
     return tz_format_base58check("o", data, size, obuf, olen);
 }
 
-/* Deprecated, use tz_format_base58check("B", ...) instead */
 int
 tz_format_bh(const uint8_t *data, size_t size, char *obuf, size_t olen)
 {
