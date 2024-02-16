@@ -1,21 +1,22 @@
-FROM   ocaml/opam:alpine-3.17-ocaml-4.14
+FROM   ocaml/opam:alpine-3.18-ocaml-4.14
 
 RUN    sudo cp /usr/bin/opam-2.1 /usr/bin/opam;                                         \
-       OCTEZ_VERSION=17.1;                                                              \
+       opam remote add opam https://opam.ocaml.org;                                     \
+       RUSTUP_TOOLCHAIN=1.71.1;                                                         \
+       OCTEZ_VERSION=19.1;                                                              \
        OCTEZ_REPO=https://gitlab.com/tezos/tezos.git;                                   \
        OCTEZ_COMMIT=`git ls-remote $OCTEZ_REPO v$OCTEZ_VERSION | cut -f 1`;             \
        OCTEZ_URL=$OCTEZ_REPO#$OCTEZ_COMMIT;                                             \
+       wget https://sh.rustup.rs/rustup-init.sh;                                        \
+       chmod +x rustup-init.sh;                                                         \
+       ./rustup-init.sh --profile minimal --default-toolchain $RUSTUP_TOOLCHAIN -y;     \
+       source "$HOME/.cargo/env";                                                       \
        opam install                                                                     \
-           tezos-client-017-PtNairob.$OCTEZ_VERSION                                     \
-           terminal_size                                                                \
-           octez-codec.$OCTEZ_VERSION                                                   \
-           tezos-test-helpers.$OCTEZ_VERSION;                                           \
-       opam pin tezos-benchmark.$OCTEZ_VERSION                              $OCTEZ_URL; \
+           octez-protocol-018-Proxford-libs.$OCTEZ_VERSION                              \
+           terminal_size;                                                               \
        opam pin tezos-micheline-rewriting.$OCTEZ_VERSION                    $OCTEZ_URL; \
-       opam pin tezos-benchmark-type-inference-017-PtNairob.$OCTEZ_VERSION  $OCTEZ_URL; \
-       opam pin tezos-017-PtNairob-test-helpers.$OCTEZ_VERSION              $OCTEZ_URL; \
-       opam pin tezos-benchmark-017-PtNairob.$OCTEZ_VERSION                 $OCTEZ_URL; \
-       opam pin tezos-shell-benchmarks.$OCTEZ_VERSION                       $OCTEZ_URL; \
-       opam pin tezos-benchmarks-proto-017-PtNairob.$OCTEZ_VERSION          $OCTEZ_URL; \
+       opam pin tezos-benchmark-type-inference-018-Proxford.$OCTEZ_VERSION  $OCTEZ_URL; \
+       opam pin tezos-benchmark-018-Proxford.$OCTEZ_VERSION                 $OCTEZ_URL; \
+       opam pin tezos-benchmarks-proto-018-Proxford.$OCTEZ_VERSION          $OCTEZ_URL; \
        rm -rf opam-repository .opam/download-cache .opam/repo \
               .opam/4.14/.opam-switch/build .opam/4.14/.opam-switch/sources;

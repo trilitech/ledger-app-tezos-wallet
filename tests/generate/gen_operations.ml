@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License. *)
 
-open Tezos_protocol_017_PtNairob
+open Tezos_protocol_018_Proxford
 
 let gen_lazy_expr =
   let open QCheck2.Gen in
@@ -144,7 +144,7 @@ let some_sc_rollup_hash =
 let gen_sc_rollup_hash =
   let open QCheck2.Gen in
   let+ sc_h = oneofl some_sc_rollup_hash in
-  Protocol.Alpha_context.Sc_rollup_repr.Address.of_b58check_exn sc_h
+  Protocol.Alpha_context.Sc_rollup.Address.of_b58check_exn sc_h
 
 let some_sc_rollup_commiment_hash =
   [
@@ -175,6 +175,7 @@ let some_protocol_hash =
     "PtLimaPtLMwfNinJi9rCfDPWea8dFgTZ1MeJ9f1m2SRic6ayiwW";
     "PtMumbai2TmsJHNGRkD8v8YDbtao7BLUC3wjASn1inAKLFCjaH1";
     "PtNairobiyssHuh87hEhfVBGCVrK3WnS8Z2FT4ymB5tAa4r1nQf";
+    "ProxfordYmVfjWnRcgjWH36fW6PArwqykTFzotUxRs6gmTcZDuH";
     "ProtoALphaALphaALphaALphaALphaALphaALphaALphaDdp3zK";
     "ProtoALphaALphaALphaALphaALphaALphaALpha61322gcLUGH";
     "ProtoALphaALphaALphaALphaALphaALphaALphabc2a7ebx6WB";
@@ -279,6 +280,10 @@ let gen_entrypoint =
         set_delegate;
         remove_delegate;
         deposit;
+        stake;
+        unstake;
+        finalize_unstake;
+        set_delegate_parameters;
         of_string_strict_exn "jean_bob";
       ]
 
@@ -367,18 +372,13 @@ let gen_sc_rollup_execute_outbox_message =
 let gen_sc_rollup_originate =
   let open Protocol.Alpha_context in
   let open QCheck2.Gen in
-  let* kind = oneofl Sc_rollup.Kind.[ Example_arith; Wasm_2_0_0 ] in
+  let* kind = oneofl Sc_rollup.Kind.[ Example_arith; Wasm_2_0_0; Riscv ] in
   let* boot_sector = string_size small_nat in
-  let* origination_proof = string_size small_nat in
-  let origination_proof =
-    Data_encoding.(
-      origination_proof
-      |> Binary.to_bytes_exn (string' Hex)
-      |> Binary.of_bytes_exn Sc_rollup.Proof.serialized_encoding)
-  in
   let* parameters_ty = gen_lazy_expr in
-  return
-    (Sc_rollup_originate { kind; boot_sector; origination_proof; parameters_ty })
+  let* whitelist =
+    QCheck2.Gen.option @@ list_size small_nat gen_public_key_hash
+  in
+  return (Sc_rollup_originate { kind; boot_sector; parameters_ty; whitelist })
 
 let gen_proposals =
   let open Protocol.Alpha_context in
