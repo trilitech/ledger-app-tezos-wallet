@@ -16,6 +16,7 @@
 
 #include <io.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include "globals.h"
 #include "ui_strings.h"
