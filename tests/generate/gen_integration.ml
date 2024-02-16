@@ -144,7 +144,7 @@ let sign ppf ~signer:Apdu.Signer.({ sk; pk; _ } as signer) ~watermark bin =
   in
   send_async_apdus ppf async_apdus
 
-open Tezos_protocol_017_PtNairob
+open Tezos_protocol_018_Proxford
 open Tezos_micheline
 
 let rec pp_node ~wrap ppf (node : Protocol.Script_repr.node) =
@@ -317,25 +317,29 @@ let operation_to_screens
         { rollup; cemented_commitment; output_proof } ->
         aux ~kind:"SR: execute outbox message"
           [
-            make_screen ~title:"Rollup" "%a" Sc_rollup_repr.Address.pp rollup;
+            make_screen ~title:"Rollup" "%a" Sc_rollup.Address.pp rollup;
             make_screen ~title:"Commitment" "%a" Sc_rollup.Commitment.Hash.pp
               cemented_commitment;
             need_expert_mode_screen "Output proof";
             make_screen ~title:"Output proof" "%a" pp_string_binary output_proof;
           ]
-    | Sc_rollup_originate
-        { kind; boot_sector; origination_proof; parameters_ty } ->
+    | Sc_rollup_originate { kind; boot_sector; parameters_ty; whitelist } ->
+        let whitelist =
+          match whitelist with
+          | None | Some [] -> []
+          | Some whitelist ->
+              make_screens ~title:"Whitelist"
+                Tezos_crypto.Signature.Public_key_hash.pp whitelist
+        in
         aux ~kind:"SR: originate"
-          [
-            make_screen ~title:"Kind" "%a" Sc_rollup.Kind.pp kind;
-            need_expert_mode_screen "Kernel";
-            make_screen ~title:"Kernel" "%a" pp_string_binary boot_sector;
-            need_expert_mode_screen "Proof";
-            make_screen ~title:"Proof" "%a" pp_serialized_proof
-              origination_proof;
-            need_expert_mode_screen "Parameters";
-            make_screen ~title:"Parameters" "%a" pp_lazy_expr parameters_ty;
-          ]
+          ([
+             make_screen ~title:"Kind" "%a" Sc_rollup.Kind.pp kind;
+             need_expert_mode_screen "Kernel";
+             make_screen ~title:"Kernel" "%a" pp_string_binary boot_sector;
+             need_expert_mode_screen "Parameters";
+             make_screen ~title:"Parameters" "%a" pp_lazy_expr parameters_ty;
+           ]
+          @ whitelist)
     | _ -> assert false
   in
   let screen_of_operation (type t) (operation : t contents) =

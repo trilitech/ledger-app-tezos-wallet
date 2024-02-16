@@ -1,8 +1,8 @@
 (executable
         (name test_c_parser)
         (modules test_c_parser_utils test_micheline_c_parser test_operations_c_parser test_c_parser)
-        (libraries "tezos-protocol-017-PtNairob"
-                   "tezos-benchmarks-proto-017-PtNairob"
+        (libraries "octez-protocol-018-Proxford-libs.client"
+                   "tezos-benchmarks-proto-018-Proxford"
                    "terminal_size")
         (foreign_stubs
                 (language c)
