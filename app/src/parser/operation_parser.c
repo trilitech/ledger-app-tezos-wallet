@@ -1237,6 +1237,9 @@ tz_step_read_soru_kind(tz_parser_state *state)
     case 1:
         strlcpy((char *)CAPTURE, "wasm_2_0_0", sizeof(CAPTURE));
         break;
+    case 2:  /// Present in encoding, not activated in Oxford
+        strlcpy((char *)CAPTURE, "riscv", sizeof(CAPTURE));
+        break;
     default:
         tz_raise(INVALID_TAG);
     }
