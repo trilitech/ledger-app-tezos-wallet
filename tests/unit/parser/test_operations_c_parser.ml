@@ -91,13 +91,23 @@ let to_string
         aux ~kind:"Set deposit limit"
           [ Format.asprintf "%a" (pp_opt_field pp_tz) tez_opt ]
     | Transaction { amount; entrypoint; destination; parameters } ->
+        let parameters =
+          if
+            Protocol.Script_repr.is_unit_parameter parameters
+            && Entrypoint.is_default entrypoint
+          then []
+          else
+            [
+              Format.asprintf "%a" Entrypoint.pp entrypoint;
+              Format.asprintf "%a" pp_lazy_expr parameters;
+            ]
+        in
         aux ~kind:"Transaction"
-          [
-            Format.asprintf "%a" pp_tz amount;
-            Format.asprintf "%a" Contract.pp destination;
-            Format.asprintf "%a" Entrypoint.pp entrypoint;
-            Format.asprintf "%a" pp_lazy_expr parameters;
-          ]
+          ([
+             Format.asprintf "%a" pp_tz amount;
+             Format.asprintf "%a" Contract.pp destination;
+           ]
+          @ parameters)
     | Transfer_ticket
         { contents; ty; ticketer; amount; destination; entrypoint } ->
         aux ~kind:"Transfer ticket"
