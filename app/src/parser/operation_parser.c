@@ -50,7 +50,8 @@ const char *const tz_operation_parser_step_name[] = {"OPTION",
                                                      "READ_SORU_MESSAGES",
                                                      "READ_SORU_KIND",
                                                      "READ_BALLOT",
-                                                     "READ_PROTOS"};
+                                                     "READ_PROTOS",
+                                                     "READ_PKH_LIST"};
 
 /**
  * @brief Get the string format of an operations step
@@ -229,7 +230,10 @@ TZ_OPERATION_FIELDS(soru_origin_fields,
     TZ_OPERATION_MANAGER_OPERATION_FIELDS,
     TZ_OPERATION_FIELD("Kind",       TZ_OPERATION_FIELD_SORU_KIND),
     TZ_OPERATION_FIELD("Kernel",     TZ_OPERATION_FIELD_BINARY, .complex=true),
-    TZ_OPERATION_FIELD("Parameters", TZ_OPERATION_FIELD_EXPR,   .complex=true)
+    TZ_OPERATION_FIELD("Parameters", TZ_OPERATION_FIELD_EXPR,   .complex=true),
+    TZ_OPERATION_OPTION_FIELD("Whitelist",
+        TZ_OPERATION_FIELD("Whitelist",  TZ_OPERATION_FIELD_PKH_LIST),
+        .display_none=false)
 );
 
 /**
@@ -1134,6 +1138,16 @@ tz_step_field(tz_parser_state *state)
         op->frame->step_read_string.skip = field->skip;
         break;
     }
+    case TZ_OPERATION_FIELD_PKH_LIST: {
+        op->frame->step                 = TZ_OPERATION_STEP_READ_PKH_LIST;
+        op->frame->step_read_list.name  = name;
+        op->frame->step_read_list.index = 0;
+        op->frame->step_read_list.skip  = field->skip;
+        tz_must(push_frame(state, TZ_OPERATION_STEP_SIZE));
+        op->frame->step_size.size     = 0;
+        op->frame->step_size.size_len = 4;
+        break;
+    }
     case TZ_OPERATION_FIELD_BALLOT: {
         op->frame->step                  = TZ_OPERATION_STEP_READ_BALLOT;
         op->frame->step_read_string.skip = field->skip;
@@ -1177,6 +1191,42 @@ tz_step_read_pk(tz_parser_state *state)
         tz_raise(INVALID_TAG);
     }
     op->frame->step = TZ_OPERATION_STEP_READ_BYTES;
+    tz_continue;
+}
+
+/**
+ * @brief Read a list of public key hash
+ *
+ * @param state: parser state
+ * @return tz_parser_result: parser result
+ */
+static tz_parser_result
+tz_step_read_pkh_list(tz_parser_state *state)
+{
+    ASSERT_STEP(state, READ_PKH_LIST);
+    tz_operation_state *op    = &state->operation;
+    tz_parser_regs     *regs  = &state->regs;
+    uint8_t             skip  = op->frame->step_read_list.skip;
+    const char         *name  = op->frame->step_read_list.name;
+    uint16_t            index = op->frame->step_read_list.index;
+
+    // Remaining content from previous public key hash - display this first.
+    if (regs->oofs > 0) {
+        tz_stop(IM_FULL);
+    }
+
+    if (op->frame->stop == state->ofs) {
+        tz_must(pop_frame(state));
+    } else {
+        op->frame->step_read_list.index++;
+        tz_must(push_frame(state, TZ_OPERATION_STEP_READ_BYTES));
+        snprintf(state->field_info.field_name, TZ_FIELD_NAME_SIZE, "%s (%d)",
+                 name, index);
+        op->frame->step_read_bytes.kind = TZ_OPERATION_FIELD_PKH;
+        op->frame->step_read_bytes.skip = skip;
+        op->frame->step_read_bytes.ofs  = 0;
+        op->frame->step_read_bytes.len  = 21;
+    }
     tz_continue;
 }
 
@@ -1426,6 +1476,9 @@ tz_operation_parser_step(tz_parser_state *state)
         break;
     case TZ_OPERATION_STEP_READ_PROTOS:
         tz_must(tz_step_read_protos(state));
+        break;
+    case TZ_OPERATION_STEP_READ_PKH_LIST:
+        tz_must(tz_step_read_pkh_list(state));
         break;
     case TZ_OPERATION_STEP_PRINT:
     case TZ_OPERATION_STEP_PARTIAL_PRINT:
