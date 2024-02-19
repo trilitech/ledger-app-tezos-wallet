@@ -18,5 +18,17 @@
 
 #include "parser_state.h"
 
-void             tz_micheline_parser_init(tz_parser_state *state);
+/**
+ * @brief Initialize a micheline parser state
+ *
+ * @param state: parser state
+ */
+void tz_micheline_parser_init(tz_parser_state *state);
+
+/**
+ * @brief Apply one step to the micheline parser
+ *
+ * @param state: parser state
+ * @return tz_parser_result: parser result
+ */
 tz_parser_result tz_micheline_parser_step(tz_parser_state *state);
