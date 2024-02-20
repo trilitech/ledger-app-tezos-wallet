@@ -23,7 +23,7 @@
  *
  *        Should be kept in sync with the last protocol update.
  */
-#define TZ_LAST_MICHELSON_OPCODE 154
+#define TZ_LAST_MICHELSON_OPCODE 157
 
 /**
  * @brief Get the human readable name of a Michelson op_code if valid

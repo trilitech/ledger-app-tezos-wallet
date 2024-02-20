@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License. *)
 
-open Tezos_protocol_017_PtNairob
+open Tezos_protocol_018_Proxford
 open Tezos_micheline
 open Test_c_parser_utils
 

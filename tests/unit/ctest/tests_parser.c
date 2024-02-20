@@ -457,18 +457,18 @@ CTEST2(operation_parser, check_sc_rollup_originate_complexity)
           "396333333439653539633133623930383166316331316234343061633464333435"
           "356465646265346565306465313561386166363230643463383632343764396431"
           "333264653162623664613233643566663964386466666461323262613961383400"
-          "00006c030002104135165622d08b0c6eac951c9d4fd65109585907bc30ef0617f6"
-          "c26853c6ba724af04dd3e4b5861efae3166ebc12ef5781df9715c20943e8d0b7bc"
-          "06068a6f8106737461747573c87a31b1c8e3af61756b336bcfc3b0c292c89b40cc"
-          "8a5080ba99c45463d110ce8b0000000a07070100000001310002";
+          "00000a07070100000001310002ff0000003f00ffdd6102321bc251e4a5190ad5b1"
+          "2b251069d9b401f6552df4f5ff51c3d13347cab045cfdb8b9bd8030278eb8b6ab9"
+          "a768579cd5146b480789650c83f28e";
     const tz_fields_check fields_check[] = {
         {"Source",        false, 1},
         {"Fee",           false, 2},
         {"Storage limit", false, 3},
         {"Kind",          false, 4},
         {"Kernel",        true,  5},
-        {"Proof",         true,  6},
-        {"Parameters",    true,  7},
+        {"Parameters",    true,  6},
+ //     {"Option",        _,     7},
+        {"Whitelist",     false, 8},
     };
     check_field_complexity(data, str, fields_check, sizeof(fields_check));
 }

@@ -182,7 +182,9 @@ const char *const tz_michelson_op_names_ordered[TZ_LAST_MICHELSON_OPCODE + 1]
         "EMIT",                            // 151
         "Lambda_rec",                      // 152
         "LAMBDA_REC",                      // 153
-        "TICKET"                           // 154
+        "TICKET",                          // 154
+        "BYTES",                           // 155
+        "NAT",                             // 156
 };
 
 const char *
