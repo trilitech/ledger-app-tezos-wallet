@@ -44,20 +44,24 @@
 #include "utils.h"
 
 #include "parser/parser_state.h"
-
-// Zeros out all application-specific globals and SDK-specific
-// UI/exchange buffers.
+/**
+ * @brief  Zeros out all application-specific globals and SDK-specific
+ * UI/exchange buffers.
+ */
 void init_globals(void);
 
-// Toggles the persisted expert_mode setting
+/// Toggles the persisted expert_mode setting
 void toggle_expert_mode(void);
 
-// Toggles the persisted blindsigning setting
+/// Toggles the persisted blindsigning setting
 void toggle_blindsigning(void);
 
 #define MAX_APDU_SIZE      235
 #define MAX_SIGNATURE_SIZE 100
-
+/**
+ * @brief Home screen pages in order
+ *
+ */
 typedef enum {
 #ifdef HAVE_BAGL
     SCREEN_HOME = 0,
@@ -70,24 +74,33 @@ typedef enum {
     SCREEN_QUIT,
 } screen_t;
 
+/**
+ * @brief State of the app
+ *
+ */
 typedef enum {
-    ST_IDLE,
-    ST_CLEAR_SIGN,
-    ST_BLIND_SIGN,
-    ST_PROMPT,
-    ST_SWAP_SIGN,
-    ST_ERROR
+    ST_IDLE,        /// Idle state
+    ST_CLEAR_SIGN,  /// Clearsigning an operation
+    ST_BLIND_SIGN,  /// blindisigning an operation
+    ST_PROMPT,      /// Waiting for user prompt
+    ST_SWAP_SIGN,   /// Performing swap operations
+    ST_ERROR        /// In error state.
 } main_step_t;
 
+/**
+ * @brief Global structure holding state of operations and buffer of the data
+ * to be processed.
+ *
+ */
 typedef struct {
     /* State */
-    main_step_t             step;
-    tz_ui_stream_t          stream;
-    bip32_path_with_curve_t path_with_curve;
+    main_step_t             step;    /// Current operational state of app.
+    tz_ui_stream_t          stream;  /// UX and display related information
+    bip32_path_with_curve_t path_with_curve;  /// Derivation path
     union {
         struct {
-            apdu_hash_state_t hash;
-            apdu_sign_state_t sign;
+            apdu_hash_state_t hash;  /// Transaction hash
+            apdu_sign_state_t sign;  ///  state of sign operation.
         } apdu;
         /** Warning: Use this pubkey only when apdu-hash/sign
          * is not being used.
@@ -96,19 +109,20 @@ typedef struct {
          * */
         cx_ecfp_public_key_t pubkey;
     } keys;
-    char line_buf[TZ_UI_STREAM_CONTENTS_SIZE + 1];
+    char line_buf[TZ_UI_STREAM_CONTENTS_SIZE
+                  + 1];  /// Buffer to store incoming data.
 #ifdef HAVE_BAGL
     struct {
         bagl_element_t bagls[5 + TZ_SCREEN_LINES_11PX];
-    } ux;
+    } ux;  /// Config for history screens for nano devices.
 #endif
 } globals_t;
 
 /* Settings */
 typedef struct {
-    bool blindsigning;
-    bool expert_mode;
-} settings_t;
+    bool blindsigning;  /// enable blindsigning
+    bool expert_mode;   /// enable expert mode
+} settings_t;           /// Special settings available in the app.
 
 extern globals_t global;
 
@@ -116,5 +130,8 @@ extern const settings_t N_settings_real;
 #define N_settings (*(volatile settings_t *)PIC(&N_settings_real))
 
 extern unsigned int app_stack_canary;  // From SDK
-
+/**
+ * @brief IO buffer.
+ *
+ */
 extern unsigned char G_io_seproxyhal_spi_buffer[IO_SEPROXYHAL_BUFFER_SIZE_B];
