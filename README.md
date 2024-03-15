@@ -175,35 +175,28 @@ re-run the test normally afterwards, to ensure the snapshots have been set corre
 
 #### Preparation
 
-First, start a container for running individual tests:
-
-```sh
-docker run --rm -it --entrypoint /bin/bash -v $(pwd):/app --network host \
-  ledger-app-tezos-integration-tests
-
-cd /app/tests/integration/stax
-export PORT=5000
-
-git config --global --add safe.directory /app
-. ../app_vars.sh
-```
-
-Before running the test, start the app in a separate container (as each test will quit the app):
+First start the app in a terminal using following command:
 
 ```sh
 make app_stax_dbg.tgz
-
 TARGET=stax ./scripts/run_app.sh
 ```
+You should be able to see the stax display on your screen.
 
-You can view/interact with the app using a vnc client on port `41000`.
+Open a new terminal for running tests, run following commands to setup test environment
+
+```sh
+$ docker exec -it ledger-app-tezos-integration-tests bash;
+<docker>$ export PORT=5000
+<docker>$ . tests/integration/app_vars.sh
+```
 
 #### Running
 
-You can run an individual test from the test container. You should see the app progress on the vnc viewer.
+You can run an individual test from the test container. You should see the app progress on the display.
 
 ```sh
-./<test_name>.py
+./tests/integration/stax/<test_name>.py
 ```
 
 #### Setting goldimages
@@ -211,7 +204,7 @@ You can run an individual test from the test container. You should see the app p
 You can reset/set goldimages using the following:
 
 ```sh
-GOLDEN=1 ./<test_name>.py
+GOLDEN=1 ./tests/integration/stax/<test_name>.py
 ```
 
 If you are resetting goldimages for multiple tests, you can also use `export NOQUIT=1` to keep the app

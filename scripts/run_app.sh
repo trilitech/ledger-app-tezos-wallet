@@ -20,11 +20,5 @@ seed="zebra`for i in $(seq 1 23) ; do echo -n ' zebra' ; done`"
 
 set -e
 
-
-docker run --rm -it -v "$(realpath .):/app"              	\
-       --entrypoint=/bin/sh ledger-app-tezos-integration-tests	   \
-    -c " apk add gmp-dev curl jq libsodium-dev git xxd procps libvncserver; \
-		python3 -m venv tezos_test_env --system-site-package;      \
-		source ./tezos_test_env/bin/activate;                      \
-		python3 -m pip install -r tests/requirements.txt -q;
-              python3 -m speculos --display=headless --seed \"$seed\" -m $TARGET app/bin/app.elf"
+docker run --rm -it --user $(id -u):$(id -g) --privileged -e DISPLAY=$DISPLAY -v '/dev/bus/usb:/dev/bus/usb' -v '/tmp/.X11-unix:/tmp/.X11-unix' -v $(pwd):/app   --entrypoint=/bin/bash --name ledger-app-tezos-integration-tests ledger-app-tezos-integration-tests -c \
+"speculos --model $TARGET app/bin/app.elf"
