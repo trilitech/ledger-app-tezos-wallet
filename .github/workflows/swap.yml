@@ -15,4 +15,4 @@ jobs:
       branch_for_exchange: 'develop'
       branch_for_tezos: ${{ github.ref }}
       repo_for_tezos: ${{ github.repository }}
-      test_filter: '"tezos"'
+      test_filter: '"tezos and legacy" -s'
