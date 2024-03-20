@@ -20,4 +20,9 @@
 
 #pragma once
 
+/**
+ * @brief  Initialize home screen with the screen format of ledger.
+ * Internally call multiple initialization functions for Settings screen and
+ * other relevant display buffers.
+ */
 void ui_home_init(void);

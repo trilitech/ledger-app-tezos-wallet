@@ -12,7 +12,7 @@
    See the License for the specific language governing permissions and
    limitations under the License. *)
 
-open Tezos_protocol_017_PtNairob
+open Tezos_protocol_018_Proxford
 open Test_c_parser_utils
 
 let pp_opt_field pp ppf = function
@@ -91,13 +91,23 @@ let to_string
         aux ~kind:"Set deposit limit"
           [ Format.asprintf "%a" (pp_opt_field pp_tz) tez_opt ]
     | Transaction { amount; entrypoint; destination; parameters } ->
+        let parameters =
+          if
+            Protocol.Script_repr.is_unit_parameter parameters
+            && Entrypoint.is_default entrypoint
+          then []
+          else
+            [
+              Format.asprintf "%a" Entrypoint.pp entrypoint;
+              Format.asprintf "%a" pp_lazy_expr parameters;
+            ]
+        in
         aux ~kind:"Transaction"
-          [
-            Format.asprintf "%a" pp_tz amount;
-            Format.asprintf "%a" Contract.pp destination;
-            Format.asprintf "%a" Entrypoint.pp entrypoint;
-            Format.asprintf "%a" pp_lazy_expr parameters;
-          ]
+          ([
+             Format.asprintf "%a" pp_tz amount;
+             Format.asprintf "%a" Contract.pp destination;
+           ]
+          @ parameters)
     | Transfer_ticket
         { contents; ty; ticketer; amount; destination; entrypoint } ->
         aux ~kind:"Transfer ticket"
@@ -124,20 +134,27 @@ let to_string
         { rollup; cemented_commitment; output_proof } ->
         aux ~kind:"SR: execute outbox message"
           [
-            Format.asprintf "%a" Sc_rollup_repr.Address.pp rollup;
+            Format.asprintf "%a" Sc_rollup.Address.pp rollup;
             Format.asprintf "%a" Sc_rollup.Commitment.Hash.pp
               cemented_commitment;
             Format.asprintf "%a" pp_string_binary output_proof;
           ]
-    | Sc_rollup_originate
-        { kind; boot_sector; origination_proof; parameters_ty } ->
+    | Sc_rollup_originate { kind; boot_sector; parameters_ty; whitelist } ->
+        let whitelist =
+          match whitelist with
+          | None -> []
+          | Some whitelist ->
+              List.map
+                (Format.asprintf "%a" Tezos_crypto.Signature.Public_key_hash.pp)
+                whitelist
+        in
         aux ~kind:"SR: originate"
-          [
-            Format.asprintf "%a" Sc_rollup.Kind.pp kind;
-            Format.asprintf "%a" pp_string_binary boot_sector;
-            Format.asprintf "%a" pp_serialized_proof origination_proof;
-            Format.asprintf "%a" pp_lazy_expr parameters_ty;
-          ]
+          ([
+             Format.asprintf "%a" Sc_rollup.Kind.pp kind;
+             Format.asprintf "%a" pp_string_binary boot_sector;
+             Format.asprintf "%a" pp_lazy_expr parameters_ty;
+           ]
+          @ whitelist)
     | _ -> assert false
   in
   let operation_to_string (type t) (operation : t contents) =

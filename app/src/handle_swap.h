@@ -20,4 +20,11 @@
    See the License for the specific language governing permissions and
    limitations under the License. */
 
+#pragma once
+
+/**
+ * @brief Called to check the validity of swap params previously communicated
+ * by swap_copy_transaction_parameters which is called from Ledger SDK.
+ *
+ */
 void swap_check_validity(void);

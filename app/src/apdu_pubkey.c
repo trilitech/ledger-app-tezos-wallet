@@ -35,8 +35,9 @@
 
 static void provide_pubkey(void);
 static void prompt_address(void);
-static void format_pkh(cx_ecfp_public_key_t *, char *, size_t);
-static void stream_cb(tz_ui_cb_type_t);
+static void format_pkh(cx_ecfp_public_key_t *pubkey, char *buffer,
+                       size_t len);
+static void stream_cb(tz_ui_cb_type_t cb_type);
 
 static void
 provide_pubkey(void)
@@ -171,13 +172,13 @@ handle_apdu_get_public_key(command_t *cmd)
     TZ_PREAMBLE(("cmd=%p", cmd));
 
     TZ_ASSERT(EXC_UNEXPECTED_STATE,
-              global.step == ST_IDLE || global.step == ST_SWAP_SIGN);
+              (global.step == ST_IDLE) || (global.step == ST_SWAP_SIGN));
     TZ_ASSERT(EXC_WRONG_PARAM, cmd->p1 == 0);
 
     // do not expose pks without prompt through U2F (permissionless legacy
     // comm in browser)
     TZ_ASSERT(EXC_HID_REQUIRED,
-              prompt || G_io_apdu_media != IO_APDU_MEDIA_U2F);
+              prompt || (G_io_apdu_media != IO_APDU_MEDIA_U2F));
 
     global.path_with_curve.derivation_type = cmd->p2;
     TZ_ASSERT(EXC_WRONG_PARAM,
@@ -190,10 +191,11 @@ handle_apdu_get_public_key(command_t *cmd)
     TZ_LIB_CHECK(derive_pk(&global.keys.pubkey,
                            global.path_with_curve.derivation_type,
                            &global.path_with_curve.bip32_path));
-    if (prompt)
+    if (prompt) {
         prompt_address();
-    else
+    } else {
         provide_pubkey();
+    }
 
     TZ_POSTAMBLE;
 }

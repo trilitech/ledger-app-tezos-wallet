@@ -24,13 +24,13 @@
 #include "globals.h"
 #include "ui_stream.h"
 
-bool tz_ui_nav_cb(uint8_t, nbgl_pageContent_t *);
+bool tz_ui_nav_cb(uint8_t page, nbgl_pageContent_t *content);
 bool has_final_screen(void);
 void tz_ui_stream_start(void);
 
 void drop_last_screen(void);
-void push_str(const char *, size_t, char **);
-void switch_to_blindsigning(const char *, const char *);
+void push_str(const char *text, size_t len, char **out);
+void switch_to_blindsigning(const char *err_type, const char *err_code);
 
 void
 tz_cancel_ui(void)
@@ -107,12 +107,10 @@ handle_blindsigning(bool confirm)
 {
     TZ_PREAMBLE(("void"));
     if (confirm) {
-        if (!N_settings.blindsigning)
+        if (!N_settings.blindsigning) {
             toggle_blindsigning();
-        nbgl_useCaseReviewStart(&C_round_check_64px, "Blind signing enabled",
-                                NULL, "Reject transaction", blindsign_splash,
-                                tz_reject_ui);
-
+        }
+        nbgl_useCaseStatus("BLIND SIGNING\nENABLED", true, blindsign_splash);
     } else {
         tz_reject_ui();
     }
@@ -160,12 +158,11 @@ handle_expert_mode(bool confirm)
 {
     TZ_PREAMBLE(("void"));
     if (confirm) {
-        if (!N_settings.expert_mode)
+        if (!N_settings.expert_mode) {
             toggle_expert_mode();
+        }
 
-        nbgl_useCaseReviewStart(&C_round_check_64px, "Expert mode enabled",
-                                NULL, "Reject transaction",
-                                tz_ui_stream_start, tz_reject_ui);
+        nbgl_useCaseStatus("EXPERT MODE\nENABLED", true, tz_ui_stream_start);
 
     } else {
         tz_reject_ui();
@@ -248,15 +245,16 @@ tz_ui_stream(void)
     tz_ui_stream_t *s = &global.stream;
     FUNC_ENTER(("void"));
 
-    if (s->stream_cb)
+    if (s->stream_cb) {
         s->stream_cb();
+    }
 
     FUNC_LEAVE();
     return;
 }
 
 void
-tz_ui_review_start()
+tz_ui_review_start(void)
 {
     tz_ui_stream_t *s = &global.stream;
 
@@ -269,17 +267,18 @@ tz_ui_review_start()
 }
 
 void
-tz_ui_stream_init(void (*cb)(uint8_t))
+tz_ui_stream_init(void (*cb)(tz_ui_cb_type_t cb_type))
 {
     tz_ui_stream_t *s = &global.stream;
 
     FUNC_ENTER(("cb=%p", cb));
     memset(s, 0x0, sizeof(*s));
-    s->cb      = cb;
-    s->full    = false;
-    s->last    = 0;
-    s->current = -1;
-    s->total   = -1;
+    s->cb            = cb;
+    s->full          = false;
+    s->last          = 0;
+    s->current       = -1;
+    s->total         = -1;
+    s->pressed_right = false;
 
     ui_strings_init();
 
@@ -327,7 +326,7 @@ tz_ui_nav_cb(uint8_t page, nbgl_pageContent_t *content)
         "global.step= %d\n",
         s->pressed_right, s->current, s->total, s->full, global.step);
 
-    while ((s->total < 0 || (s->current == s->total && !s->full))
+    while (((s->total < 0) || ((s->current == s->total) && !s->full))
            && (st->errno < TZ_ERR_INVALID_TAG)) {
         PRINTF("tz_ui_nav_cb: Looping...\n");
         tz_ui_continue();
@@ -349,9 +348,6 @@ tz_ui_nav_cb(uint8_t page, nbgl_pageContent_t *content)
         s->pressed_right, s->current, s->total, s->full, global.step);
 
     if (global.step == ST_ERROR) {
-        // TODO: this is handled by change_screen_right except we disable it
-        // to use it here. We should make ui_stream fully compatible with
-        // exception.h
         global.step = ST_IDLE;
         ui_home_init();
         result = false;
@@ -453,17 +449,17 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
     size_t offset = 0;
     size_t length = strlen(value);
 
-    if (s->total >= 0
-        && (s->current % TZ_UI_STREAM_HISTORY_SCREENS) == bucket) {
+    if ((s->total >= 0)
+        && ((s->current % TZ_UI_STREAM_HISTORY_SCREENS) == bucket)) {
         PRINTF(
             "[ERROR] PANIC!!!! Overwriting current screen, some bad things "
             "are happening\n");
     }
 
-    if ((cb_type == TZ_UI_STREAM_CB_CANCEL
-         || cb_type == TZ_UI_STREAM_CB_EXPERT_MODE_ENABLE
-         || cb_type == TZ_UI_STREAM_CB_EXPERT_MODE_FIELD)
-        && idx > 0) {
+    if (((cb_type == TZ_UI_STREAM_CB_CANCEL)
+         || (cb_type == TZ_UI_STREAM_CB_EXPERT_MODE_ENABLE)
+         || (cb_type == TZ_UI_STREAM_CB_EXPERT_MODE_FIELD))
+        && (idx > 0)) {
         PRINTF("[DEBUG] PUSH_TO_NEXT: %x\n", cb_type);
         push_to_next = true;
     } else {
@@ -472,16 +468,19 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
             PRINTF("[ERROR] PANIC!!! we pushing to a screen that's full");
         }
 
-        if (idx > 0
-            && 0 == strcmp(title, s->screens[bucket].pairs[idx - 1].item))
+        if ((idx > 0)
+            && (0 == strcmp(title, s->screens[bucket].pairs[idx - 1].item))) {
             append = true;
+        }
 
-        if (!append)
+        if (!append) {
             push_str(title, strlen(title),
                      (char **)&s->screens[bucket].pairs[idx].item);
+        }
 
-        if (max != -1)
+        if (max != -1) {
             length = MIN(length, (size_t)max);
+        }
 
         if (idx == 0) {
             s->screens[bucket].cb_type = cb_type;
@@ -492,8 +491,9 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
         if (append) {
             bool can_fit = false;
             ui_strings_can_fit(length, &can_fit);
-            if (!can_fit)
+            if (!can_fit) {
                 drop_last_screen();
+            }
 
             offset = ui_strings_append_last(&value[offset], length, &out);
             idx--;
@@ -523,7 +523,7 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
 
         if (push_to_next) {
             /* We need to move to the next screen, retry */
-            if (append && offset > 0) {
+            if (append && (offset > 0)) {
                 ui_strings_drop_last(&out);
             } else {
                 ui_strings_drop_last(
@@ -537,12 +537,12 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
     }
 
     if (push_to_next
-        || (!append && ++(s->screens[bucket].nb_pairs) == max_pairs)
-        || (append && offset == 0)) {
+        || (!append && (++(s->screens[bucket].nb_pairs) == max_pairs))
+        || (append && (offset == 0))) {
         s->total++;
-        if (s->total > 0
-            && s->total % TZ_UI_STREAM_HISTORY_SCREENS
-                   == s->last % TZ_UI_STREAM_HISTORY_SCREENS) {
+        if ((s->total > 0)
+            && ((s->total % TZ_UI_STREAM_HISTORY_SCREENS)
+                == (s->last % TZ_UI_STREAM_HISTORY_SCREENS))) {
             drop_last_screen();
         }
     }
@@ -580,12 +580,14 @@ drop_last_screen(void)
     TZ_PREAMBLE(("last: %d", s->last));
 
     for (i = 0; i < s->screens[bucket].nb_pairs; i++) {
-        if (s->screens[bucket].pairs[i].item)
+        if (s->screens[bucket].pairs[i].item) {
             TZ_CHECK(
                 ui_strings_drop((char **)&s->screens[bucket].pairs[i].item));
-        if (s->screens[bucket].pairs[i].value)
+        }
+        if (s->screens[bucket].pairs[i].value) {
             TZ_CHECK(
                 ui_strings_drop((char **)&s->screens[bucket].pairs[i].value));
+        }
     }
     s->screens[bucket].nb_pairs = 0;
 
