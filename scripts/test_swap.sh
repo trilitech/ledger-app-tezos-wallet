@@ -104,8 +104,7 @@ _build_app() {
     (
         cd $repo
 
-        docker run --rm -ti -v "$(realpath .):/app" --privileged            \
-               ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder:3.11.0 \
+        docker run --rm -ti -v "$(realpath .):/app" --privileged ledger-app-builder:latest \
                bash -c "make clean && make -j $params BOLOS_SDK=\$$sdk"
     )
 }
@@ -139,7 +138,7 @@ build_app_ethereum() {
 build_app_tezos() {
     _assert_tezos_repo
 
-    _build_side_app $1 "tezos_new" $APP_TEZOS_REPO/app
+    _build_side_app $1 "tezos" $APP_TEZOS_REPO/app
 }
 
 run_tests() {
@@ -148,12 +147,12 @@ run_tests() {
     (
         cd $APP_EXCHANGE_REPO
 
-        docker run --privileged  --entrypoint /bin/bash           \
-               --rm -v "$(realpath .):/app"                       \
-               ledger-app-tezos-integration-tests -c              \
-               "cd /app &&                                        \
-                pip install -r test/python/requirements.txt &&    \
-                pytest test/python $*"
+        docker run --privileged  --entrypoint /bin/bash                 \
+               --rm -v "$(realpath .):/app"                             \
+               ledger-app-tezos-integration-tests -c                    \
+               "cd /app &&                                              \
+                pip install -r test/python/requirements.txt -q &&    \
+                pip install protobuf==3.20.3 && pytest test/python $*"
     )
 }
 
@@ -163,7 +162,7 @@ run_tests_all() {
     device=$1
     shift
 
-    run_tests --device $device -k "tezos_new" $*
+    run_tests --device $device -k "tezos" $*
 }
 
 update() {

@@ -19,7 +19,7 @@ set -e
 
 . "`dirname $0`/app_vars.sh"
 
-docker run --user "$(id -u)":"$(id -g)" --rm -i -v "$(realpath .):/app"              	\
+docker run --rm -it -v "$(realpath .):/app"              	\
        --env-file "`dirname $0`/err_codes.sh"           \
        -e VERSION_BYTES=$VERSION_BYTES                  \
        -e COMMIT_BYTES=$COMMIT_BYTES                    \
@@ -29,5 +29,9 @@ docker run --user "$(id -u)":"$(id -g)" --rm -i -v "$(realpath .):/app"         
        -e APPVERSION_P=$APPVERSION_P                    \
        -e APPVERSION=$APPVERSION                        \
        -e VERSION_BYTES=$VERSION_BYTES                  \
-    --entrypoint=/bin/sh ledger-app-tezos-integration-tests	\
-    -c "cd /app && ./tests/integration/run_test_local.sh -F -m $*"
+    --entrypoint=/bin/sh ledger-app-tezos-integration-tests	   \
+    -c " apk add gmp-dev curl jq libsodium-dev git xxd procps; \
+		python3 -m venv tezos_test_env --system-site-package;      \
+		source ./tezos_test_env/bin/activate;                      \
+		python3 -m pip install -r tests/requirements.txt -q;    \
+     ./tests/integration/run_test_local.sh -F -m $*"

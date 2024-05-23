@@ -15,7 +15,7 @@
 
 from pathlib import Path
 
-from utils.app import nano_app, Screen, DEFAULT_ACCOUNT
+from utils.app import Screen, DEFAULT_ACCOUNT
 from utils.message import Message
 
 # Operation (0): SR: send messages
@@ -25,23 +25,22 @@ from utils.message import Message
 # Message (1): 67
 # Message (2): 89abcdef
 
-if __name__ == "__main__":
+def test_sign_sc_rollup_add_messages(app):
     test_name = Path(__file__).stem
-    with nano_app() as app:
 
-        app.assert_screen(Screen.Home)
+    app.assert_screen(Screen.Home)
 
-        message = Message.from_bytes("030000000000000000000000000000000000000000000000000000000000000000c900ffdd6102321bc251e4a5190ad5b12b251069d9b4904e020304000000140000000301234500000001670000000489abcdef")
+    message = Message.from_bytes("030000000000000000000000000000000000000000000000000000000000000000c900ffdd6102321bc251e4a5190ad5b12b251069d9b4904e020304000000140000000301234500000001670000000489abcdef")
 
-        data = app.sign(DEFAULT_ACCOUNT,
-                        message,
-                        with_hash=True,
-                        path=test_name)
+    data = app.sign(DEFAULT_ACCOUNT,
+                    message,
+                    with_hash=True,
+                    path=test_name)
 
-        app.checker.check_signature(
-            account=DEFAULT_ACCOUNT,
-            message=message,
-            with_hash=True,
-            data=data)
+    app.checker.check_signature(
+        account=DEFAULT_ACCOUNT,
+        message=message,
+        with_hash=True,
+        data=data)
 
-        app.quit()
+    app.quit()

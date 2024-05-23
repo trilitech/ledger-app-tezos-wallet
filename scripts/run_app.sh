@@ -17,7 +17,8 @@
 
 seed="zebra`for i in $(seq 1 23) ; do echo -n ' zebra' ; done`"
 
-docker run --rm -it -v $(pwd)/app/bin:/speculos/apps \
-       -v $(pwd)/tests/integration:/tests --network host \
-       ledger-app-tezos-integration-tests --display=headless --vnc-port 41000 \
-       --seed "$seed" -m $TARGET apps/app.elf
+
+set -e
+
+docker run --rm -it --user $(id -u):$(id -g) --privileged -e DISPLAY=$DISPLAY -v '/dev/bus/usb:/dev/bus/usb' -v '/tmp/.X11-unix:/tmp/.X11-unix' -v $(pwd):/app   --entrypoint=/bin/bash --name ledger-app-tezos-integration-tests ledger-app-tezos-integration-tests -c \
+"speculos --model $TARGET app/bin/app.elf"

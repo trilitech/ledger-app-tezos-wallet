@@ -1,7 +1,5 @@
 /* Tezos Ledger application - Signature primitives
 
-   TODO: cleanup/refactor
-
    Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
 
    With code excerpts from:
@@ -34,8 +32,11 @@
 #define MAX_BIP32_LEN  10
 #define SIGN_HASH_SIZE 32
 
-/* The values in the following enum are from the on-the-wire protocol */
-
+/**
+ * @brief The derivation type values in the following enum are from the
+ * on-the-wire protocol
+ *
+ */
 typedef enum {
     DERIVATION_TYPE_ED25519       = 0,
     DERIVATION_TYPE_SECP256K1     = 1,
@@ -54,15 +55,42 @@ typedef struct {
     derivation_type_t derivation_type;
 } bip32_path_with_curve_t;
 
-void read_bip32_path(bip32_path_t *, const uint8_t *, size_t);
-void derive_pk(cx_ecfp_public_key_t *, derivation_type_t,
-               const bip32_path_t *);
-void derive_pkh(cx_ecfp_public_key_t *, derivation_type_t, char *, size_t);
-void sign(derivation_type_t, const bip32_path_t *, const uint8_t *, size_t,
-          uint8_t *, size_t *);
+tz_exc read_bip32_path(bip32_path_t *out, const uint8_t *in, size_t in_size);
 
+/**
+ * @brief Derive public key for given derivation type address.
+ *
+ * @param public_key Public key derived is stored in this struct.
+ * @param derivation_type Derivation type to be used
+ * @param bip32_path path to derive public key from
+ * @return tz_exc return success/failure using error code
+ */
+tz_exc derive_pk(cx_ecfp_public_key_t *public_key,
+                 derivation_type_t     derivation_type,
+                 const bip32_path_t   *bip32_path);
+/**
+ * @brief Derive hash of public key for given derivation type address.
+ *
+ * @param hash The hash of public key, output is stored in this buffer.
+ * @param derivation_type Derivation type to be used.
+ * @param bip32_path Path to derive public key from.
+ * @return tz_exc return Error code
+ */
+tz_exc derive_pkh(cx_ecfp_public_key_t *pubkey,
+                  derivation_type_t derivation_type, char *buffer,
+                  size_t len);
+void   sign(derivation_type_t derivation_type, const bip32_path_t *path,
+            const uint8_t *hash, size_t hashlen, uint8_t *sig, size_t *siglen);
+
+/**
+ * @brief Check if derivation type is valid enum
+ *
+ * @param code Derivation type to check.
+ * @return validity result
+ */
 static inline bool
 check_derivation_type(derivation_type_t code)
 {
-    return (code >= DERIVATION_TYPE_ED25519 && code < DERIVATION_TYPE_MAX);
+    return ((code >= DERIVATION_TYPE_ED25519)
+            && (code < DERIVATION_TYPE_MAX));
 }

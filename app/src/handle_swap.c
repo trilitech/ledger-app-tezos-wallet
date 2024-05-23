@@ -24,6 +24,7 @@
 
 #include <format.h>
 #include <io.h>
+#include <string.h>
 #include <swap.h>
 
 #include "handle_swap.h"
@@ -33,8 +34,10 @@
 #include "parser/num_parser.h"
 
 // based on app-exchange
-#define TICKER_MAX_SIZE  9
+#define TICKER           "XTZ"
 #define ADDRESS_MAX_SIZE 63
+/* the smallest unit is microtez */
+#define DECIMALS         6
 
 /* Check check_address_parameters_t.address_to_check against specified
  * parameters.
@@ -43,28 +46,17 @@
 void
 swap_handle_check_address(check_address_parameters_t *params)
 {
-    FUNC_ENTER(("params=%p", params));
+    TZ_PREAMBLE(("params=%p", params));
 
     if (params->address_to_check == NULL) {
         PRINTF("[ERROR] Address to check is null\n");
-        goto error;
+        goto bail;
     }
 
-    if (params->address_parameters_length == 0
-        || params->address_parameters == NULL) {
+    if ((params->address_parameters_length == 0)
+        || (params->address_parameters == NULL)) {
         PRINTF("[ERROR] Address parameters is null\n");
-        goto error;
-    }
-
-    if (params->extra_id_to_check == NULL) {
-        PRINTF("[ERROR] Extra id is null\n");
-        goto error;
-    }
-
-    if (params->extra_id_to_check[0] != '\0') {
-        PRINTF("[ERROR] Extra id is not empty: %s\n",
-               params->extra_id_to_check);
-        goto error;
+        goto bail;
     }
 
     char address[TZ_CAPTURE_BUFFER_SIZE] = {0};
@@ -73,21 +65,22 @@ swap_handle_check_address(check_address_parameters_t *params)
     derivation_type_t derivation_type = DERIVATION_TYPE_ED25519;
     bip32_path_t      bip32_path;
 
-    TZ_CHECK(read_bip32_path(&bip32_path, params->address_parameters,
-                             params->address_parameters_length));
+    TZ_LIB_CHECK(read_bip32_path(&bip32_path, params->address_parameters,
+                                 params->address_parameters_length));
     cx_ecfp_public_key_t pubkey;
-    TZ_CHECK(derive_pk(&pubkey, derivation_type, &bip32_path));
-    TZ_CHECK(derive_pkh(&pubkey, derivation_type, address, sizeof(address)));
+    TZ_LIB_CHECK(derive_pk(&pubkey, derivation_type, &bip32_path));
+    TZ_LIB_CHECK(
+        derive_pkh(&pubkey, derivation_type, address, sizeof(address)));
     if (strcmp(params->address_to_check, address) != 0) {
         PRINTF("[ERROR] Check address fail: %s !=  %s\n",
                params->address_to_check, address);
-        goto error;
+        goto bail;
     }
 
     params->result = 1;
     FUNC_LEAVE();
     return;
-error:
+end:
 bail:
     params->result = 0;
     FUNC_LEAVE();
@@ -102,15 +95,6 @@ swap_handle_get_printable_amount(get_printable_amount_parameters_t *params)
     FUNC_ENTER(("params=%p", params));
 
     uint64_t amount;
-    uint8_t  decimals;
-    char     ticker[TICKER_MAX_SIZE];
-
-    if (!swap_parse_config(params->coin_configuration,
-                           params->coin_configuration_length, ticker,
-                           sizeof(ticker), &decimals)) {
-        PRINTF("[ERROR] Fail to parse config\n");
-        goto error;
-    }
 
     if (!swap_str_to_u64(params->amount, params->amount_length, &amount)) {
         PRINTF("[ERROR] Fail to parse amount\n");
@@ -119,13 +103,13 @@ swap_handle_get_printable_amount(get_printable_amount_parameters_t *params)
 
     if (!format_fpu64_trimmed(params->printable_amount,
                               sizeof(params->printable_amount), amount,
-                              decimals)) {
+                              DECIMALS)) {
         PRINTF("[ERROR] Fail to print amount\n");
         goto error;
     }
 
     strlcat(params->printable_amount, " ", sizeof(params->printable_amount));
-    strlcat(params->printable_amount, ticker,
+    strlcat(params->printable_amount, TICKER,
             sizeof(params->printable_amount));
 
     FUNC_LEAVE();
@@ -184,17 +168,6 @@ swap_copy_transaction_parameters(create_transaction_parameters_t *params)
         goto error;
     }
 
-    if (params->destination_address_extra_id == NULL) {
-        PRINTF("[ERROR] Destination address extra id is null\n");
-        goto error;
-    }
-
-    if (params->destination_address_extra_id[0] != '\0') {
-        PRINTF("[ERROR] Destination address extra id is not empty: %s\n",
-               params->destination_address_extra_id);
-        goto error;
-    }
-
     os_explicit_zero_BSS_segment();
 
     G_swap_transaction_result = &params->result;
@@ -217,16 +190,19 @@ swap_check_validity(void)
     char dstaddr[ADDRESS_MAX_SIZE];
     TZ_PREAMBLE((""));
 
-    if (!G_called_from_swap)
+    if (!G_called_from_swap) {
         TZ_SUCCEED();
+    }
 
-    if (G_swap_response_ready)
+    if (G_swap_response_ready) {
         os_sched_exit(-1);
+    }
     G_swap_response_ready = true;
 
-    PRINTF("[DEBUG] batch_index = %u, tag=%d\n", op->batch_index,
-           op->last_tag);
-    TZ_ASSERT(EXC_REJECT, op->batch_index == 1);
+    PRINTF("[DEBUG] batch_index = %u, nb_reveal=%d, tag=%d\n",
+           op->batch_index, op->nb_reveal, op->last_tag);
+    TZ_ASSERT(EXC_REJECT, op->nb_reveal <= 1);
+    TZ_ASSERT(EXC_REJECT, (op->batch_index - op->nb_reveal) == 1);
     TZ_ASSERT(EXC_REJECT, op->last_tag == TZ_OPERATION_TAG_TRANSACTION);
     TZ_ASSERT(EXC_REJECT, op->last_amount == G_swap_params.amount);
     TZ_ASSERT(EXC_REJECT, op->last_fee == G_swap_params.fee);

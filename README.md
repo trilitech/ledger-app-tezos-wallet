@@ -18,8 +18,7 @@ The docker images can be built using the provided Makefile:
 :; make docker-images
 ```
 
-This pulls down two images, `ghcr.io/ledgerhq/speculos` and
-`ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder:latest`.  It
+This pulls down following image, `ghcr.io/ledgerhq/ledger-app-dev-tools`. It
 also builds an image via `docker/Dockerfile.ocaml`.
 
 We do not make the builds of the software conditional on these docker
@@ -157,11 +156,10 @@ make app_nanox_dbg.tgz
 You can run an individual test from the test container. You should see the app progress on the vnc viewer.
 
 ```sh
-./tests/integration/nano/<test_name>.py \
+pytest tests/integration/nano/<test_name>.py \
    --device $DEVICE \
    --port $PORT \
-   --display headless \
-   --vnc-port 41000 \
+   --speculos-args="--vnc-port 41000" \
    --app app/bin/app.elf
 ```
 
@@ -177,35 +175,28 @@ re-run the test normally afterwards, to ensure the snapshots have been set corre
 
 #### Preparation
 
-First, start a container for running individual tests:
-
-```sh
-docker run --rm -it --entrypoint /bin/bash -v $(pwd):/app --network host \
-  ledger-app-tezos-integration-tests
-
-cd /app/tests/integration/stax
-export PORT=5000
-
-git config --global --add safe.directory /app
-. ../app_vars.sh
-```
-
-Before running the test, start the app in a separate container (as each test will quit the app):
+First start the app in a terminal using following command:
 
 ```sh
 make app_stax_dbg.tgz
-
 TARGET=stax ./scripts/run_app.sh
 ```
+You should be able to see the stax display on your screen.
 
-You can view/interact with the app using a vnc client on port `41000`.
+Open a new terminal for running tests, run following commands to setup test environment
+
+```sh
+$ docker exec -it ledger-app-tezos-integration-tests bash;
+<docker>$ export PORT=5000
+<docker>$ . tests/integration/app_vars.sh
+```
 
 #### Running
 
-You can run an individual test from the test container. You should see the app progress on the vnc viewer.
+You can run an individual test from the test container. You should see the app progress on the display.
 
 ```sh
-./<test_name>.py
+./tests/integration/stax/<test_name>.py
 ```
 
 #### Setting goldimages
@@ -213,7 +204,7 @@ You can run an individual test from the test container. You should see the app p
 You can reset/set goldimages using the following:
 
 ```sh
-GOLDEN=1 ./<test_name>.py
+GOLDEN=1 ./tests/integration/stax/<test_name>.py
 ```
 
 If you are resetting goldimages for multiple tests, you can also use `export NOQUIT=1` to keep the app
@@ -265,3 +256,12 @@ You can run :
 ./scripts/test_swap.sh update $DEVICE
 ```
 to perform all snapshot update steps based on your current Tezos repository.
+
+## Contributing
+
+The version of the app must be updated after every change. Following files need to be updated
+with a new version
+1. app/Makefile
+2. tests/integration/app_vars.sh
+3. tests/integration/nano/utils/app.py
+4. the snapshots (nano and stax)

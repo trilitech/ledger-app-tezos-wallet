@@ -18,9 +18,16 @@
 
 #include "parser_state.h"
 
+/**
+ * @brief Helper to handle parser result case
+ */
 #define TZ_LABEL(_x) \
     case TZ_##_x:    \
         return #_x
+
+/**
+ * @brief Helper to handle blocking parser result case
+ */
 #define BLO_LABEL(_x) \
     case TZ_BLO_##_x: \
         return #_x
@@ -104,8 +111,9 @@ tz_parser_put(tz_parser_state *state, char c)
 {
     tz_parser_regs *regs = &state->regs;
 
-    if (regs->olen < 1)
+    if (regs->olen < 1) {
         tz_stop(IM_FULL);
+    }
     regs->obuf[regs->oofs] = c;
     regs->oofs++;
     regs->olen--;
@@ -117,8 +125,9 @@ tz_parser_read(tz_parser_state *state, uint8_t *r)
 {
     tz_parser_regs *regs = &state->regs;
 
-    if (regs->ilen < 1)
+    if (regs->ilen < 1) {
         tz_stop(FEED_ME);
+    }
     state->ofs++;
     regs->ilen--;
     *r = regs->ibuf[regs->iofs++];
@@ -130,8 +139,9 @@ tz_parser_peek(tz_parser_state *state, uint8_t *r)
 {
     tz_parser_regs *regs = &state->regs;
 
-    if (regs->ilen < 1)
+    if (regs->ilen < 1) {
         tz_stop(FEED_ME);
+    }
     *r = regs->ibuf[regs->iofs];
     tz_continue;
 }

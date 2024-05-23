@@ -58,7 +58,7 @@ refill(struct ctest_operation_parser_data *data)
 {
     data->ilen = 0;
     while (
-        (data->str_ofs < data->str_len || data->ilen < data->max_ilen)
+        ((data->str_ofs < data->str_len) || (data->ilen < data->max_ilen))
         && sscanf(data->str + data->str_ofs, "%2hhx", &data->ibuf[data->ilen])
                == 1) {
         data->str_ofs += 2;
@@ -98,8 +98,9 @@ check_field_complexity(struct ctest_operation_parser_data *data, char *str,
     bool   already_seen = false;
 
     while (true) {
-        while (!TZ_IS_BLOCKED(tz_operation_parser_step(st)))
-            ;
+        while (!TZ_IS_BLOCKED(tz_operation_parser_step(st))) {
+            // Loop while the result is successful and not blocking
+        }
 
         switch (st->errno) {
         case TZ_BLO_FEED_ME:
@@ -117,10 +118,10 @@ check_field_complexity(struct ctest_operation_parser_data *data, char *str,
             }
             if (strstr(st->field_info.field_name, fields_check[idx].name)
                 != NULL) {
-                if (fields_check[idx].complex
-                        != st->field_info.is_field_complex
-                    || fields_check[idx].field_index
-                           != st->field_info.field_index) {
+                if ((fields_check[idx].complex
+                     != st->field_info.is_field_complex)
+                    || (fields_check[idx].field_index
+                        != st->field_info.field_index)) {
                     CTEST_LOG(
                         "%s:%d '%s' field expected to have complex: %s "
                         "index: %d but "
@@ -144,11 +145,12 @@ check_field_complexity(struct ctest_operation_parser_data *data, char *str,
             continue;
 
         case TZ_BLO_DONE:
-            if (fields_check_len != idx + 1)
+            if (fields_check_len != (idx + 1)) {
                 CTEST_ERR(
                     "%s:%d all the field have not been seen, %d fields "
                     "expected but got %d seen",
                     __FILE__, __LINE__, (int)fields_check_len, (int)idx);
+            }
             ASSERT_TRUE(result);
             break;
 
@@ -234,6 +236,7 @@ CTEST2(operation_parser, check_simple_transaction_complexity)
         {"Storage limit", false, 3},
         {"Amount",        false, 4},
         {"Destination",   false, 5},
+ //     {"Option",        _,     6},
     };
     check_field_complexity(data, str, fields_check, sizeof(fields_check));
 }
@@ -250,8 +253,10 @@ CTEST2(operation_parser, check_transaction_complexity)
         {"Storage limit", false, 3},
         {"Amount",        false, 4},
         {"Destination",   false, 5},
-        {"Entrypoint",    true,  6},
-        {"Parameter",     true,  6},
+ //     {"Option",        _,     6},
+  //    {"Tuple",         _,     7},
+        {"Entrypoint",    false, 8},
+        {"Parameter",     true,  9},
     };
     check_field_complexity(data, str, fields_check, sizeof(fields_check));
 }
@@ -270,14 +275,16 @@ CTEST2(operation_parser, check_double_transaction_complexity)
         {"Storage limit", false, 3 },
         {"Amount",        false, 4 },
         {"Destination",   false, 5 },
- // {"None"     ,   false, 6 },
+ //     {"Option",        _,     6 },
         {"Source",        false, 7 },
         {"Fee",           false, 8 },
         {"Storage limit", false, 9 },
         {"Amount",        false, 10},
         {"Destination",   false, 11},
-        {"Entrypoint",    true,  12},
-        {"Parameter",     true,  12},
+ //     {"Option",        _,     12},
+  //    {"Tuple",         _,     13},
+        {"Entrypoint",    false, 14},
+        {"Parameter",     true,  15},
     };
     check_field_complexity(data, str, fields_check, sizeof(fields_check));
 }
@@ -293,7 +300,7 @@ CTEST2(operation_parser, check_origination_complexity)
         {"Fee",           false, 2},
         {"Storage limit", false, 3},
         {"Balance",       false, 4},
-        {"Delegate",      false, 5},
+        {"Delegate",      false, 5}, // None
         {"Code",          true,  6},
         {"Storage",       true,  7},
     };
@@ -310,7 +317,8 @@ CTEST2(operation_parser, check_delegation_complexity)
         {"Source",        false, 1},
         {"Fee",           false, 2},
         {"Storage limit", false, 3},
-        {"Delegate",      false, 4},
+ //     {"Option",        _,     4},
+        {"Delegate",      false, 5},
     };
     check_field_complexity(data, str, fields_check, sizeof(fields_check));
 }
@@ -330,7 +338,7 @@ CTEST2(operation_parser, check_register_global_constant_complexity)
     check_field_complexity(data, str, fields_check, sizeof(fields_check));
 }
 
-CTEST2(operation_parser, check_set_deposit_limite_complexity)
+CTEST2(operation_parser, check_set_deposit_limit_complexity)
 {
     char str[]
         = "030000000000000000000000000000000000000000000000000000000000000000"
@@ -340,7 +348,8 @@ CTEST2(operation_parser, check_set_deposit_limite_complexity)
         {"Source",        false, 1},
         {"Fee",           false, 2},
         {"Storage limit", false, 3},
-        {"Staking limit", false, 4},
+ //     {"Option",        _,     4},
+        {"Staking limit", false, 5},
     };
     check_field_complexity(data, str, fields_check, sizeof(fields_check));
 }
@@ -448,18 +457,18 @@ CTEST2(operation_parser, check_sc_rollup_originate_complexity)
           "396333333439653539633133623930383166316331316234343061633464333435"
           "356465646265346565306465313561386166363230643463383632343764396431"
           "333264653162623664613233643566663964386466666461323262613961383400"
-          "00006c030002104135165622d08b0c6eac951c9d4fd65109585907bc30ef0617f6"
-          "c26853c6ba724af04dd3e4b5861efae3166ebc12ef5781df9715c20943e8d0b7bc"
-          "06068a6f8106737461747573c87a31b1c8e3af61756b336bcfc3b0c292c89b40cc"
-          "8a5080ba99c45463d110ce8b0000000a07070100000001310002";
+          "00000a07070100000001310002ff0000003f00ffdd6102321bc251e4a5190ad5b1"
+          "2b251069d9b401f6552df4f5ff51c3d13347cab045cfdb8b9bd8030278eb8b6ab9"
+          "a768579cd5146b480789650c83f28e";
     const tz_fields_check fields_check[] = {
         {"Source",        false, 1},
         {"Fee",           false, 2},
         {"Storage limit", false, 3},
         {"Kind",          false, 4},
         {"Kernel",        true,  5},
-        {"Proof",         true,  6},
-        {"Parameters",    true,  7},
+        {"Parameters",    true,  6},
+ //     {"Option",        _,     7},
+        {"Whitelist",     false, 8},
     };
     check_field_complexity(data, str, fields_check, sizeof(fields_check));
 }

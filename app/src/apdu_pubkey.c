@@ -35,8 +35,9 @@
 
 static void provide_pubkey(void);
 static void prompt_address(void);
-static void format_pkh(cx_ecfp_public_key_t *, char *, size_t);
-static void stream_cb(tz_ui_cb_type_t);
+static void format_pkh(cx_ecfp_public_key_t *pubkey, char *buffer,
+                       size_t len);
+static void stream_cb(tz_ui_cb_type_t cb_type);
 
 static void
 provide_pubkey(void)
@@ -59,7 +60,10 @@ provide_pubkey(void)
 static void
 format_pkh(cx_ecfp_public_key_t *pubkey, char *buffer, size_t len)
 {
-    derive_pkh(pubkey, global.path_with_curve.derivation_type, buffer, len);
+    TZ_PREAMBLE(("buffer=%p, len=%u", buffer, len));
+    TZ_LIB_CHECK(derive_pkh(pubkey, global.path_with_curve.derivation_type,
+                            buffer, len));
+    TZ_POSTAMBLE;
 }
 
 static void
@@ -167,29 +171,31 @@ handle_apdu_get_public_key(command_t *cmd)
     bool prompt = cmd->ins == INS_PROMPT_PUBLIC_KEY;
     TZ_PREAMBLE(("cmd=%p", cmd));
 
-    TZ_ASSERT(EXC_UNEXPECTED_STATE, global.step == ST_IDLE);
+    TZ_ASSERT(EXC_UNEXPECTED_STATE,
+              (global.step == ST_IDLE) || (global.step == ST_SWAP_SIGN));
     TZ_ASSERT(EXC_WRONG_PARAM, cmd->p1 == 0);
 
     // do not expose pks without prompt through U2F (permissionless legacy
     // comm in browser)
     TZ_ASSERT(EXC_HID_REQUIRED,
-              prompt || G_io_apdu_media != IO_APDU_MEDIA_U2F);
+              prompt || (G_io_apdu_media != IO_APDU_MEDIA_U2F));
 
     global.path_with_curve.derivation_type = cmd->p2;
     TZ_ASSERT(EXC_WRONG_PARAM,
               check_derivation_type(global.path_with_curve.derivation_type));
-    TZ_CHECK(read_bip32_path(&global.path_with_curve.bip32_path, cmd->data,
-                             cmd->lc));
+    TZ_LIB_CHECK(read_bip32_path(&global.path_with_curve.bip32_path,
+                                 cmd->data, cmd->lc));
 
     // Derive public key and store it on global.keys.pubkey
 
-    TZ_CHECK(derive_pk(&global.keys.pubkey,
-                       global.path_with_curve.derivation_type,
-                       &global.path_with_curve.bip32_path));
-    if (prompt)
+    TZ_LIB_CHECK(derive_pk(&global.keys.pubkey,
+                           global.path_with_curve.derivation_type,
+                           &global.path_with_curve.bip32_path));
+    if (prompt) {
         prompt_address();
-    else
+    } else {
         provide_pubkey();
+    }
 
     TZ_POSTAMBLE;
 }

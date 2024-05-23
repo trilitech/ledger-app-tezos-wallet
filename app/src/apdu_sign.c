@@ -30,6 +30,10 @@
 #include <parser.h>
 #include <ux.h>
 
+#ifdef HAVE_SWAP
+#include <swap.h>
+#endif
+
 #include "apdu.h"
 #include "apdu_sign.h"
 #include "globals.h"
@@ -47,17 +51,16 @@
 /* Prototypes */
 
 static void sign_packet(void);
-static void send_reject(int);
+static void send_reject(int error_code);
 static void send_continue(void);
 static void send_cancel(void);
 static void refill(void);
-static void pass_from_clear_to_blind(void);
-static void stream_cb(tz_ui_cb_type_t);
-static void handle_first_apdu(command_t *);
-static void handle_first_apdu_clear(command_t *);
+static void stream_cb(tz_ui_cb_type_t cb_type);
+static void handle_first_apdu(command_t *cmd);
+static void handle_first_apdu_clear(command_t *cmd);
 static void init_blind_stream(void);
-static void handle_data_apdu(command_t *);
-static void handle_data_apdu_clear(command_t *);
+static void handle_data_apdu(command_t *cmd);
+static void handle_data_apdu_clear(command_t *cmd);
 static void handle_data_apdu_blind(void);
 
 /* Macros */
@@ -112,9 +115,11 @@ sign_packet(void)
                   &global.path_with_curve.bip32_path, bufs[0].ptr,
                   bufs[0].size, sig, &bufs[1].size));
 
-    /* If we aren't returning the hash, zero its buffer... */
-    if (!global.keys.apdu.sign.return_hash)
+    /* If we aren't returning the hash, zero its buffer. */
+    if (!global.keys.apdu.sign.return_hash) {
+        memset((void *)bufs[0].ptr, 0, bufs[0].size);
         bufs[0].size = 0;
+    }
 
     io_send_response_buffers(bufs, 2, SW_OK);
     global.step = ST_IDLE;
@@ -138,8 +143,8 @@ send_continue(void)
 {
     TZ_PREAMBLE(("void"));
 
-    APDU_SIGN_ASSERT(global.keys.apdu.sign.step == SIGN_ST_WAIT_USER_INPUT
-                     || global.keys.apdu.sign.step == SIGN_ST_WAIT_DATA);
+    APDU_SIGN_ASSERT((global.keys.apdu.sign.step == SIGN_ST_WAIT_USER_INPUT)
+                     || (global.keys.apdu.sign.step == SIGN_ST_WAIT_DATA));
     APDU_SIGN_ASSERT(!global.keys.apdu.sign.received_last_msg);
 
     if (global.keys.apdu.sign.u.clear.received_msg) {
@@ -151,82 +156,6 @@ send_continue(void)
 
     TZ_POSTAMBLE;
 }
-#ifdef HAVE_NBGL
-
-static void
-cancel_operation(uint8_t reject_code)
-{
-    TZ_PREAMBLE(("void"));
-    global.keys.apdu.sign.received_last_msg = true;
-    stream_cb(reject_code);
-    global.step = ST_IDLE;
-    nbgl_useCaseStatus("Transaction rejected", false, ui_home_init);
-
-    TZ_POSTAMBLE;
-}
-
-static void
-cancel_operation_blindsign(void)
-{
-    cancel_operation(TZ_UI_STREAM_CB_BLINDSIGN_REJECT);
-}
-
-static void
-blindsign_splash(void)
-{
-    TZ_PREAMBLE(("void"));
-    nbgl_useCaseReviewStart(
-        &C_round_warning_64px, "Blind signing",
-        "This transaction can not be securely interpreted by Ledger Stax. It "
-        "might put your assets at risk.",
-        "Reject transaction", pass_from_clear_to_blind,
-        cancel_operation_blindsign);
-
-    TZ_POSTAMBLE;
-}
-
-static void
-handle_blindsigning(bool confirm)
-{
-    TZ_PREAMBLE(("void"));
-    if (confirm) {
-        if (!N_settings.blindsigning)
-            toggle_blindsigning();
-        nbgl_useCaseReviewStart(&C_round_check_64px, "Blind signing enabled",
-                                NULL, "Reject transaction", blindsign_splash,
-                                cancel_operation_blindsign);
-
-    } else {
-        cancel_operation_blindsign();
-    }
-    TZ_POSTAMBLE;
-}
-
-void
-switch_to_blindsigning(__attribute__((unused)) const char *err_type,
-                       const char                         *err_code)
-{
-    TZ_PREAMBLE(("void"));
-    PRINTF("[DEBUG] refill_error: global.step = %d\n", global.step);
-    TZ_ASSERT(EXC_UNEXPECTED_STATE, global.step == ST_CLEAR_SIGN);
-    global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
-    global.step                = ST_BLIND_SIGN;
-    if (N_settings.blindsigning) {
-        nbgl_useCaseReviewStart(&C_round_warning_64px,
-                                "Blind signing required:\nParsing Error",
-                                err_code, "Reject transaction",
-                                blindsign_splash, cancel_operation_blindsign);
-    } else {
-        nbgl_useCaseChoice(&C_round_warning_64px,
-                           "Enable blind signing to authorize this "
-                           "transaction:\nParsing Error",
-                           err_code, "Enable blind signing",
-                           "Reject transaction", handle_blindsigning);
-    }
-
-    TZ_POSTAMBLE;
-}
-#endif
 
 static void
 refill_blo_im_full(void)
@@ -235,8 +164,15 @@ refill_blo_im_full(void)
     size_t           wrote = 0;
     TZ_PREAMBLE(("void"));
 
-    global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
+#ifdef HAVE_SWAP
+    if (G_called_from_swap) {
+        tz_parser_flush(st, global.line_buf, TZ_UI_STREAM_CONTENTS_SIZE);
+        // invoke refill until we consume entire msg.
+        TZ_SUCCEED();
+    }
+#endif
 
+    global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
 #ifdef HAVE_BAGL
     if (st->field_info.is_field_complex && !N_settings.expert_mode) {
         tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, st->field_info.field_name,
@@ -248,8 +184,8 @@ refill_blo_im_full(void)
         goto end;
     } else {
         if (st->field_info.is_field_complex
-            && global.keys.apdu.sign.u.clear.last_field_index
-                   != st->field_info.field_index) {
+            && (global.keys.apdu.sign.u.clear.last_field_index
+                != st->field_info.field_index)) {
             tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Next field requires",
                               "careful review", TZ_UI_LAYOUT_HOME_BP,
                               TZ_UI_ICON_NONE);
@@ -265,8 +201,8 @@ refill_blo_im_full(void)
     PRINTF("[DEBUG] field=%s complex=%d\n", st->field_info.field_name,
            st->field_info.is_field_complex);
     if (st->field_info.is_field_complex
-        && global.keys.apdu.sign.u.clear.last_field_index
-               != st->field_info.field_index) {
+        && (global.keys.apdu.sign.u.clear.last_field_index
+            != st->field_info.field_index)) {
         global.keys.apdu.sign.u.clear.last_field_index
             = st->field_info.field_index;
         if (!N_settings.expert_mode) {
@@ -285,7 +221,6 @@ refill_blo_im_full(void)
     }
 
 #endif
-
     tz_parser_flush_up_to(st, global.line_buf, TZ_UI_STREAM_CONTENTS_SIZE,
                           wrote);
     TZ_POSTAMBLE;
@@ -297,15 +232,21 @@ refill_blo_done(void)
     tz_parser_state *st = &global.keys.apdu.sign.u.clear.parser_state;
     TZ_PREAMBLE(("void"));
 
-    TZ_ASSERT(EXC_UNEXPECTED_STATE,
-              global.keys.apdu.sign.received_last_msg && st->regs.ilen == 0);
+    TZ_ASSERT(
+        EXC_UNEXPECTED_STATE,
+        (global.keys.apdu.sign.received_last_msg && st->regs.ilen) == 0);
 
     global.keys.apdu.sign.u.clear.received_msg = false;
     if (st->regs.oofs != 0) {
         refill_blo_im_full();
         TZ_SUCCEED();
     }
+
     global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
+    if (global.step == ST_SWAP_SIGN) {
+        TZ_CHECK(sign_packet());
+        TZ_SUCCEED();
+    }
 #ifdef HAVE_BAGL
     tz_ui_stream_push_accept_reject();
 #endif
@@ -321,6 +262,12 @@ refill_error(void)
     TZ_PREAMBLE(("void"));
 
     global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
+#ifdef HAVE_SWAP
+    if (G_called_from_swap) {
+        global.keys.apdu.sign.u.clear.received_msg = false;
+        TZ_FAIL(EXC_PARSE_ERROR);
+    }
+#endif
 
 #ifdef HAVE_BAGL
     tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Parsing error",
@@ -362,8 +309,9 @@ refill(void)
     tz_parser_state *st = &global.keys.apdu.sign.u.clear.parser_state;
     TZ_PREAMBLE(("void"));
 
-    while (!TZ_IS_BLOCKED(tz_operation_parser_step(st)))
-        ;
+    while (!TZ_IS_BLOCKED(tz_operation_parser_step(st))) {
+        // Loop while the result is successful and not blocking
+    }
     PRINTF("[DEBUG] refill(errno: %s)\n", tz_parser_result_name(st->errno));
     // clang-format off
     switch (st->errno) {
@@ -443,7 +391,7 @@ stream_cb(tz_ui_cb_type_t cb_type)
 #define FINAL_HASH global.keys.apdu.hash.final_hash
 #ifdef HAVE_BAGL
 static void
-bs_push_next()
+bs_push_next(void)
 {
     char              obuf[TZ_BASE58_BUFFER_SIZE(sizeof(FINAL_HASH))];
     blindsign_step_t *step = &global.keys.apdu.sign.u.blind.step;
@@ -455,8 +403,9 @@ bs_push_next()
         *step = BLINDSIGN_ST_HASH;
 
         if (tz_format_base58(FINAL_HASH, sizeof(FINAL_HASH), obuf,
-                             sizeof(obuf)))
+                             sizeof(obuf))) {
             TZ_FAIL(EXC_UNKNOWN);
+        }
 
         tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Sign Hash", obuf,
                               TZ_UI_LAYOUT_BNP, TZ_UI_ICON_NONE);
@@ -502,8 +451,8 @@ handle_first_apdu(command_t *cmd)
     TZ_ASSERT_NOTNULL(cmd);
     APDU_SIGN_ASSERT_STEP(SIGN_ST_IDLE);
 
-    TZ_CHECK(read_bip32_path(&global.path_with_curve.bip32_path, cmd->data,
-                             cmd->lc));
+    TZ_LIB_CHECK(read_bip32_path(&global.path_with_curve.bip32_path,
+                                 cmd->data, cmd->lc));
     global.path_with_curve.derivation_type = cmd->p2;
     TZ_ASSERT(EXC_WRONG_PARAM,
               check_derivation_type(global.path_with_curve.derivation_type));
@@ -515,9 +464,10 @@ handle_first_apdu(command_t *cmd)
      */
     global.keys.apdu.sign.tag = 0;
 
-    TZ_ASSERT(EXC_UNEXPECTED_STATE, global.step == ST_CLEAR_SIGN);
-
     TZ_CHECK(handle_first_apdu_clear(cmd));
+
+    TZ_ASSERT(EXC_UNEXPECTED_STATE, (global.step == ST_CLEAR_SIGN)
+                                        || (global.step == ST_SWAP_SIGN));
 
     io_send_sw(SW_OK);
     global.keys.apdu.sign.step = SIGN_ST_WAIT_DATA;
@@ -528,23 +478,35 @@ handle_first_apdu(command_t *cmd)
 static void
 handle_first_apdu_clear(__attribute__((unused)) command_t *cmd)
 {
+    TZ_PREAMBLE(("global.step=%d", global.step));
     tz_parser_state *st = &global.keys.apdu.sign.u.clear.parser_state;
 
     global.keys.apdu.sign.u.clear.received_msg = false;
-
-    tz_ui_stream_init(stream_cb);
+    // NO ui display during swap.
+#ifdef HAVE_SWAP
+    if (!G_called_from_swap) {
+#endif
+        tz_ui_stream_init(stream_cb);
+        global.step = ST_CLEAR_SIGN;
 
 #ifdef TARGET_NANOS
-    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Review operation", "",
-                      TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_EYE);
+        tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Review operation", "",
+                          TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_EYE);
 #elif defined(HAVE_BAGL)
     tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Review", "operation",
                       TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_EYE);
 #endif
-
+#ifdef HAVE_SWAP
+    } else {
+        PRINTF("[DEBUG] If called from SWAP : global.step =%d\n",
+               global.step);
+    }
+#endif
     tz_operation_parser_init(st, TZ_UNKNOWN_SIZE, false);
     tz_parser_refill(st, NULL, 0);
     tz_parser_flush(st, global.line_buf, TZ_UI_STREAM_CONTENTS_SIZE);
+
+    TZ_POSTAMBLE;
 }
 
 static void
@@ -572,15 +534,19 @@ handle_data_apdu(command_t *cmd)
                               cmd->lc, global.keys.apdu.hash.final_hash,
                               sizeof(global.keys.apdu.hash.final_hash)));
 
-    if (PKT_IS_LAST(cmd))
+    if (PKT_IS_LAST(cmd)) {
         global.keys.apdu.sign.received_last_msg = true;
+    }
 
-    if (!global.keys.apdu.sign.tag)
+    if (!global.keys.apdu.sign.tag) {
         global.keys.apdu.sign.tag = cmd->data[0];
+    }
 
     // clang-format off
     switch (global.step) {
-    case ST_CLEAR_SIGN: TZ_CHECK(handle_data_apdu_clear(cmd)); break;
+    case ST_CLEAR_SIGN:
+    case ST_SWAP_SIGN:
+                        TZ_CHECK(handle_data_apdu_clear(cmd)); break;
     case ST_BLIND_SIGN: TZ_CHECK(handle_data_apdu_blind());    break;
     default:            TZ_FAIL(EXC_UNEXPECTED_STATE);         break;
     }
@@ -598,20 +564,29 @@ handle_data_apdu_clear(command_t *cmd)
     global.keys.apdu.sign.u.clear.received_msg = true;
 
     TZ_ASSERT_NOTNULL(cmd);
-    if (st->regs.ilen > 0)
+    if (st->regs.ilen > 0) {
         // we asked for more input but did not consume what we already had
         TZ_FAIL(EXC_UNEXPECTED_SIGN_STATE);
+    }
 
     global.keys.apdu.sign.u.clear.total_length += cmd->lc;
 
     tz_parser_refill(st, cmd->data, cmd->lc);
-    if (PKT_IS_LAST(cmd))
+    if (PKT_IS_LAST(cmd)) {
         tz_operation_parser_set_size(
             st, global.keys.apdu.sign.u.clear.total_length);
-    TZ_CHECK(refill());
-    if (global.keys.apdu.sign.step == SIGN_ST_WAIT_USER_INPUT)
-        tz_ui_stream();
-
+    }
+    if (global.step == ST_SWAP_SIGN) {
+        do {
+            TZ_CHECK(refill());
+        } while (global.keys.apdu.sign.u.clear.received_msg);
+    } else {
+        TZ_CHECK(refill());
+        if ((global.keys.apdu.sign.step == SIGN_ST_WAIT_USER_INPUT)
+            && (global.step != ST_SWAP_SIGN)) {
+            tz_ui_stream();
+        }
+    }
     TZ_POSTAMBLE;
 }
 
@@ -658,8 +633,7 @@ reviewChoice(bool confirm)
     if (confirm) {
         nbgl_useCaseStatus("TRANSACTION\nSIGNED", true, accept_blindsign_cb);
     } else {
-        nbgl_useCaseStatus("Transaction rejected", false,
-                           reject_blindsign_cb);
+        tz_reject_ui();
     }
 
     FUNC_LEAVE();
@@ -741,15 +715,15 @@ handle_data_apdu_blind(void)
     tz_ui_stream();
 #elif HAVE_NBGL
     char obuf[TZ_BASE58_BUFFER_SIZE(sizeof(FINAL_HASH))];
-    if (tz_format_base58(FINAL_HASH, sizeof(FINAL_HASH), obuf, sizeof(obuf)))
+    if (tz_format_base58(FINAL_HASH, sizeof(FINAL_HASH), obuf,
+                         sizeof(obuf))) {
         TZ_FAIL(EXC_UNKNOWN);
+    }
 
     transaction_type = type;
     STRLCPY(hash, obuf);
     continue_blindsign_cb();
 #endif
-
-    /* XXXrcd: the logic here need analysis. */
     TZ_POSTAMBLE;
 }
 #undef FINAL_HASH
@@ -763,19 +737,18 @@ handle_apdu_sign(command_t *cmd)
     TZ_ASSERT(EXC_WRONG_LENGTH_FOR_INS, cmd->lc <= MAX_APDU_SIZE);
 
     if (PKT_IS_FIRST(cmd)) {
-        TZ_ASSERT(EXC_UNEXPECTED_STATE, global.step == ST_IDLE);
+        TZ_ASSERT(EXC_UNEXPECTED_STATE,
+                  (global.step == ST_IDLE) || (global.step == ST_SWAP_SIGN));
 
         memset(&global.keys, 0, sizeof(global.keys));
-
-        global.step = ST_CLEAR_SIGN;
-
         TZ_CHECK(handle_first_apdu(cmd));
         global.keys.apdu.sign.return_hash = return_hash;
         goto end;
     }
 
-    TZ_ASSERT(EXC_UNEXPECTED_STATE,
-              global.step == ST_BLIND_SIGN || global.step == ST_CLEAR_SIGN);
+    TZ_ASSERT(EXC_UNEXPECTED_STATE, (global.step == ST_BLIND_SIGN)
+                                        || (global.step == ST_CLEAR_SIGN)
+                                        || (global.step == ST_SWAP_SIGN));
     TZ_ASSERT(EXC_INVALID_INS,
               return_hash == global.keys.apdu.sign.return_hash);
     TZ_CHECK(handle_data_apdu(cmd));

@@ -50,10 +50,14 @@ if __name__ == "__main__":
     app.assert_screen("tst_review_002")
 
     app.review.tap()
+    app.assert_screen("tst_review_003")
+
+    app.review.tap()
     app.expert_mode_splash()
 
     app.review.tap()
-    app.assert_screen("tst_review_003")
+    app.assert_screen("tst_review_004")
+
     app.review.tap()
     app.assert_screen("operation_sign")
 

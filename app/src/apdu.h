@@ -1,7 +1,5 @@
 /* Tezos Ledger application - Some common primitives and some command handlers
 
-   TODO: split this file (apdu primitives and apdu handlers)
-
    Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
 
    With code excerpts from:
@@ -82,11 +80,25 @@
  *
  */
 
-typedef void(tz_handler)(command_t *);
+typedef void(tz_handler)(command_t *cmd);
 typedef tz_handler *tz_handler_t;
 
-tz_handler handle_unimplemented;
-tz_handler handle_apdu_version;
-tz_handler handle_apdu_git;
+tz_handler handle_unimplemented;  /// handler for unknown commands
+tz_handler handle_apdu_version;   /// handle version enquiry apdu
+tz_handler handle_apdu_git;       /// handle git commit enquiry apdu
+/**
+ * @brief Function to handle apdu request for public key. The public key is
+ * derived only once and stored in the RAM, in order to avoid repeated
+ * derivation calculations. This function can be called with or without
+ * prompt.
+ *
+ */
 tz_handler handle_apdu_get_public_key;
+/**
+ * @brief Parse the received command and prompt user for appropriate action.
+ * Triggers blindsigning and/or expert mode workflows based on transaction
+ * involved. Stream based parser helps decode arbitararily large transaction,
+ * screen by screen.
+ *
+ */
 tz_handler handle_apdu_sign;

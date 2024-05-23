@@ -29,44 +29,59 @@
 #include "keys.h"
 #include "parser/parser_state.h"
 
+/**
+ * @brief Save hash of the transaction to be signed.
+ *
+ */
 typedef struct {
-    cx_blake2b_t state;
-    uint8_t      final_hash[SIGN_HASH_SIZE];
+    cx_blake2b_t state;  /// Ledger-sdk blake2b state containing hash header
+                         /// and blake2b state info.
+    uint8_t final_hash[SIGN_HASH_SIZE];  /// Final hash of the transaction.
 } apdu_hash_state_t;
 
+/**
+ * @brief Represents state of sign transaction.
+ *
+ */
 typedef enum {
-    SIGN_ST_IDLE,
-    SIGN_ST_WAIT_DATA,
-    SIGN_ST_WAIT_USER_INPUT
+    SIGN_ST_IDLE,            /// IDLE
+    SIGN_ST_WAIT_DATA,       /// Waiting for more data from apdu interface
+    SIGN_ST_WAIT_USER_INPUT  /// Waiting for user action
 } sign_step_t;
 
+/**
+ * @brief Steps in a blind signing of a transaction.
+ *
+ */
 typedef enum {
     BLINDSIGN_ST_OPERATION,
     BLINDSIGN_ST_HASH,
     BLINDSIGN_ST_ACCEPT_REJECT,
 } blindsign_step_t;
 
+/**
+ * @brief Struct to track state/info about current sign operation.
+ *
+ */
 typedef struct {
-    uint8_t packet_index;
+    uint8_t packet_index;  /// Index of the packet currently being processed.
 
-    sign_step_t step;
-    bool        return_hash;
-    bool        received_last_msg;
-    uint8_t     tag;
+    sign_step_t step;  /// Current step of the sign operation.
+    bool return_hash;  /// Whether to return the hash of the transaction.
+    bool received_last_msg;  /// Whether the last message has been received.
+    uint8_t tag;             /// Type of tezos operation to sign.
 
     union {
+        /// @brief clear signing state info.
         struct {
             size_t          total_length;
             tz_parser_state parser_state;
             uint8_t         last_field_index;
             bool            received_msg;
         } clear;
+        /// @brief blindsigning state info.
         struct {
             blindsign_step_t step;
         } blind;
     } u;
 } apdu_sign_state_t;
-
-#ifdef HAVE_NBGL
-void switch_to_blindsigning(const char *, const char *);
-#endif

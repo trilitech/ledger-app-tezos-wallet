@@ -16,30 +16,28 @@
 from pathlib import Path
 
 from utils.account import Account, SIGNATURE_TYPE
-from utils.app import nano_app
 from utils.message import Message
 
 # Expression: {"CACA";"POPO";"BOUDIN"}
 
-if __name__ == "__main__":
+def test_tz3_sign_micheline_basic(app):
     test_name = Path(__file__).stem
-    with nano_app() as app:
 
-        account = Account("m/44'/1729'/0'/0'",
-                          SIGNATURE_TYPE.SECP256R1,
-                          "p2pk67fq5pzuMMABZ9RDrooYbLrgmnQbLt8z7PTGM9mskf7LXS5tdBG")
+    account = Account("m/44'/1729'/0'/0'",
+                      SIGNATURE_TYPE.SECP256R1,
+                      "p2pk67fq5pzuMMABZ9RDrooYbLrgmnQbLt8z7PTGM9mskf7LXS5tdBG")
 
-        message = Message.from_bytes("05020000001d0100000004434143410100000004504f504f0100000006424f5544494e")
+    message = Message.from_bytes("05020000001d0100000004434143410100000004504f504f0100000006424f5544494e")
 
-        data = app.sign(account,
-                        message,
-                        with_hash=True,
-                        path=test_name)
+    data = app.sign(account,
+                    message,
+                    with_hash=True,
+                    path=test_name)
 
-        app.checker.check_signature(
-            account=account,
-            message=message,
-            with_hash=True,
-            data=data)
+    app.checker.check_signature(
+        account=account,
+        message=message,
+        with_hash=True,
+        data=data)
 
-        app.quit()
+    app.quit()

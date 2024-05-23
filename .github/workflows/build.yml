@@ -21,7 +21,7 @@ jobs:
         device: [nanos, nanosp, nanox, stax]
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-builder:3.11.0
+      image: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools:latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -43,14 +43,9 @@ jobs:
           path: app_${{ matrix.device }}_dbg.tgz
           name: app_${{ matrix.device }}_dbg.tgz
 
-  build_docker_integration_tests:
-    uses: ./.github/workflows/docker.yml
-    secrets: inherit
-    with:
-      dockerfile: docker/Dockerfile.integration-tests
-      image_name: integration_tests
 
   build_docker_tezos_ocaml:
+    if: github.repository == 'trilitech/ledger-app-tezos-wallet'
     uses: ./.github/workflows/docker.yml
     secrets: inherit
     with:
@@ -58,17 +53,15 @@ jobs:
       image_name: tezos_ocaml
 
   integration_tests_basic:
-    needs: [build_app, build_docker_integration_tests]
+    needs: [build_app]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         device: [nanos, nanosp, nanox, stax]
     container:
-      image: ${{ needs.build_docker_integration_tests.outputs.image }}
-      credentials:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
+      image: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools:latest
+
     steps:
       - name: Set Git Safe Directory
         run: |
@@ -93,16 +86,30 @@ jobs:
             ./tests/integration/run_test_local.sh -F -m ${{ matrix.device }} \
               ./tests/integration/${{ matrix.device }}
           else
-            ./tests/integration/run_test_local.sh -F -m ${{ matrix.device }} \
-              ./tests/integration/nano ./tests/integration/nano/${{ matrix.device }}
+            apk add gmp-dev curl jq libsodium-dev git xxd procps
+            python3 -m venv tezos_test_env --system-site-package
+            source ./tezos_test_env/bin/activate
+            python3 -m pip install -r ./tests/requirements.txt -q
+            TMP_DIR=$(mktemp -d /tmp/foo-XXXXXX)
+            tar xfz app_${{ matrix.device }}_dbg.tgz -C $TMP_DIR
+            python3 -m pytest -n 32 tests/integration/nano/ --tb=no                \
+                   --device ${{ matrix.device }} --app $TMP_DIR/app.elf \
+                   --log-dir integration_tests_log
           fi
 
-      - name: Upload results
+      - name: Upload Stax results
         uses: actions/upload-artifact@v3
-        if: always()
+        if: always() && matrix.device == 'stax'
         with:
           name: integration_tests_${{ matrix.device }}.json
           path: ./integration_tests.json
+
+      - name: Upload Nano results
+        uses: actions/upload-artifact@v3
+        if: always() && matrix.device != 'stax'
+        with:
+          name: integration_tests_log_${{ matrix.device }}
+          path: ./integration_tests_log
 
   generate_samples_unit_tests:
     needs: [build_docker_tezos_ocaml]
@@ -151,7 +158,7 @@ jobs:
           path: tests/samples/operations/nano
 
   integration_tests_samples:
-    needs: [build_app, generate_samples_unit_tests, build_docker_integration_tests]
+    needs: [build_app, generate_samples_unit_tests]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -159,10 +166,7 @@ jobs:
         device: [nanos, nanosp, nanox]
         type: [micheline, operations]
     container:
-      image: ${{ needs.build_docker_integration_tests.outputs.image }}
-      credentials:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
+      image: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools:latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -184,7 +188,12 @@ jobs:
           path: tests
 
       - name: Test
-        run: ./tests/integration/run_test_local.sh -T100 -F -m ${{ matrix.device }} tests
+        run: |
+            apk add gmp-dev curl jq libsodium-dev git xxd procps
+            python3 -m venv tezos_test_env --system-site-package
+            source ./tezos_test_env/bin/activate
+            python3 -m pip install -r ./tests/requirements.txt -q
+            ./tests/integration/run_test_local.sh -T100 -F -m ${{ matrix.device }} tests
 
       - name: Upload results
         uses: actions/upload-artifact@v3

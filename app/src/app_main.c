@@ -24,7 +24,9 @@
 #include <cx.h>
 #include <io.h>
 #include <parser.h>
-
+#ifdef HAVE_SWAP
+#include <swap.h>
+#endif
 #include "apdu.h"
 #include "app_main.h"
 #include "globals.h"
@@ -34,6 +36,7 @@
 void
 app_exit(void)
 {
+    PRINTF("[DEBUG] Trying to exit the app. \n");
     os_sched_exit(-1);
 }
 
@@ -73,8 +76,9 @@ dispatch(command_t *cmd)
     tz_handler_t f;
     TZ_PREAMBLE(("cmd=0x%p {cla=0x02x ins=%u ...}", cmd, cmd->cla, cmd->ins));
 
-    if (cmd->cla != CLA)
+    if (cmd->cla != CLA) {
         TZ_FAIL(EXC_CLASS);
+    }
 
     if (tz_ui_stream_get_cb_type() == SCREEN_QUIT) {
         PRINTF("[ERROR] received instruction whilst on Quit screen\n");
@@ -115,7 +119,7 @@ app_main(void)
     command_t cmd;
     int       rx;
 
-    app_stack_canary = 0xDEADBEEF;
+    app_stack_canary = 0xDEADBEEFu;
     FUNC_ENTER(("void"));
 
     print_memory_layout();
@@ -124,9 +128,15 @@ app_main(void)
 
     /* ST_ERROR implies that we are completely unknown and need to reset */
     global.step = ST_ERROR;
-
     for (;;) {
         TZ_PREAMBLE(("void"));
+#ifdef HAVE_SWAP
+        if (G_called_from_swap) {
+            global.step = ST_SWAP_SIGN;
+        }
+        PRINTF("[SWAP] : G_called_from_swap = %d , global.step = %d",
+               G_called_from_swap, global.step);
+#endif
         if (global.step == ST_ERROR) {
             global.step = ST_IDLE;
             ui_home_init();
