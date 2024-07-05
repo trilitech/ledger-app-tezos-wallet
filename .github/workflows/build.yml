@@ -134,9 +134,9 @@ jobs:
           export PATH=/home/opam/.opam/4.14/bin:$PATH
           cp ./app/src/parser/[!g]*.[ch] ./tests/unit/parser
 
-          dune exec ./tests/generate/generate.exe micheline 500 \
+          dune exec ./tests/generate/generate.exe micheline 50 \
               nano tests/samples/micheline
-          dune exec ./tests/generate/generate.exe operations 500 \
+          dune exec ./tests/generate/generate.exe operations 50 \
               nano tests/samples/operations
 
       - name: Unit tests

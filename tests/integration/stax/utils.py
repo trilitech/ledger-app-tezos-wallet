@@ -61,6 +61,7 @@ class TezosAppScreen(metaclass=MetaScreen):
     def __init__(self, backend, firmware, commit, version, snapshot_prefix):
         self.__backend = backend
         realpath = os.path.realpath(__file__)
+        self.__snapshots_path = f"{os.path.dirname(realpath)}/snapshots"
         self.__stax = f"{os.path.dirname(realpath)}/snapshots/{Path(snapshot_prefix).stem}"
         self.__settings = ChoiceList(backend, firmware)
         self.commit = commit
@@ -86,13 +87,16 @@ class TezosAppScreen(metaclass=MetaScreen):
         """Send hex-encoded bytes asynchronously to the apdu"""
         return self.__backend.exchange_async_raw(bytes.fromhex(data))
 
-    def assert_screen(self, screen):
+    def assert_screen(self, screen, fixed: bool = False):
         golden = self.__golden and screen not in self.__snapshotted
         if golden:
             self.__snapshotted = self.__snapshotted + [screen]
             input(f"Press ENTER to snapshot {screen}")
 
-        path = f'{self.__stax}/{screen}.png'
+        if fixed:
+            path = f'{self.__snapshots_path}/{screen}.png'
+        else:
+            path = f'{self.__stax}/{screen}.png'
         def check():
             print(f"- Expecting {screen} -")
             assert self.__backend.compare_screen_with_snapshot(path, golden_run = golden)
@@ -105,6 +109,9 @@ class TezosAppScreen(metaclass=MetaScreen):
         Path(path).mkdir(parents=True, exist_ok=True)
         for filename in os.listdir(path):
             os.remove(os.path.join(path, filename))
+        path = f"{self.__snapshots_path}"
+        os.remove(os.path.join(path, "home.png"))
+        os.remove(os.path.join(path, "info.png"))
 
 
     def quit(self):
@@ -184,7 +191,7 @@ def stax_app(prefix) -> TezosAppScreen:
     return app
 
 def assert_home_with_code(app, code):
-    app.assert_screen(SCREEN_HOME_DEFAULT)
+    app.assert_screen(SCREEN_HOME_DEFAULT, True)
     app.expect_apdu_failure(code)
 
 def send_initialize_msg(app, apdu):

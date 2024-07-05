@@ -22,7 +22,7 @@ from utils import *
 if __name__ == "__main__":
     app = stax_app(__file__)
 
-    app.assert_screen(SCREEN_HOME_DEFAULT)
+    app.assert_screen(SCREEN_HOME_DEFAULT, True)
 
     app.send_apdu("800f000011048000002c800006c18000000080000000");
     app.expect_apdu_return("9000");
@@ -56,5 +56,5 @@ if __name__ == "__main__":
     expected_apdu = "c08f5e1a02d15b05c4066b43fc31aa1ccad30f6c7a18f44723e5af0b6584292236e919219e90793ef502e8883f5317206277607438695933fcb954f4ef451db19628a114880836193c755ddda4bf188b9764231975b2c5ecb64bc4bdc9c459039000"
     app.review_confirm_signing(expected_apdu)
 
-    app.assert_screen(SCREEN_HOME_DEFAULT)
+    app.assert_screen(SCREEN_HOME_DEFAULT, True)
     app.quit()

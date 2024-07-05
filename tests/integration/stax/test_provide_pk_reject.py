@@ -16,7 +16,7 @@
 from utils import *
 
 def short_reject(app):
-    app.assert_screen(SCREEN_HOME_DEFAULT)
+    app.assert_screen(SCREEN_HOME_DEFAULT, True)
 
     app.send_apdu("8003000011048000002c800006c18000000080000000")
     app.assert_screen("screen_verify_address")
@@ -28,7 +28,7 @@ def short_reject(app):
     app.assert_screen("address_rejected")
     app.expect_apdu_failure("6985")
 
-    app.assert_screen(SCREEN_HOME_DEFAULT)
+    app.assert_screen(SCREEN_HOME_DEFAULT, True)
 
 if __name__ == "__main__":
     app = stax_app(__file__)

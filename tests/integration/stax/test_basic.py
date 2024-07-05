@@ -18,10 +18,10 @@ from utils import *
 if __name__ == "__main__":
     app = stax_app(__file__)
 
-    app.assert_screen(SCREEN_HOME_DEFAULT)
+    app.assert_screen(SCREEN_HOME_DEFAULT, True)
 
     app.welcome.info()
-    app.assert_screen(SCREEN_INFO_PAGE)
+    app.assert_screen(SCREEN_INFO_PAGE, True)
 
     app.info.next()
     app.assert_screen("settings_blindsigning_off")
@@ -39,6 +39,6 @@ if __name__ == "__main__":
     app.assert_screen("settings_blindsigning_off")
 
     app.info.multi_page_exit()
-    app.assert_screen(SCREEN_HOME_DEFAULT)
+    app.assert_screen(SCREEN_HOME_DEFAULT, True)
 
     app.quit()
