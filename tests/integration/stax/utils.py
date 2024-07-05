@@ -18,6 +18,7 @@ import time
 
 from pathlib import Path
 from contextlib import contextmanager
+from requests.exceptions import (ChunkedEncodingError, ConnectionError)
 
 from ragger.backend import SpeculosBackend
 from ragger.backend.interface import RaisePolicy
@@ -108,7 +109,13 @@ class TezosAppScreen(metaclass=MetaScreen):
 
     def quit(self):
         if os.getenv("NOQUIT") == None:
-            self.welcome.quit()
+            try:
+                self.welcome.quit()
+            except ConnectionError:
+                pass
+            except ChunkedEncodingError:
+                pass
+
         else:
             input(f"PRESS ENTER to continue next test\n- You may need to reset to home")
 
