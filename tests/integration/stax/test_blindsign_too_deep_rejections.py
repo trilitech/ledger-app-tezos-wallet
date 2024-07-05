@@ -16,27 +16,27 @@
 from utils import *
 
 def toggle_blindsigning():
-    app.assert_screen(SCREEN_HOME_DEFAULT)
+    app.assert_screen(SCREEN_HOME_DEFAULT, True)
     app.welcome.settings()
-    app.assert_screen(SCREEN_INFO_PAGE)
+    app.assert_screen(SCREEN_INFO_PAGE, True)
     app.info.next()
     app.settings_toggle_blindsigning()
     app.info.multi_page_exit()
-    app.assert_screen(SCREEN_HOME_DEFAULT)
+    app.assert_screen(SCREEN_HOME_DEFAULT, True)
 
 def toggle_expert_mode():
-    app.assert_screen(SCREEN_HOME_DEFAULT)
+    app.assert_screen(SCREEN_HOME_DEFAULT, True)
     app.welcome.settings()
-    app.assert_screen(SCREEN_INFO_PAGE)
+    app.assert_screen(SCREEN_INFO_PAGE, True)
     app.info.next()
     app.settings_toggle_expert_mode()
     app.info.multi_page_exit()
-    app.assert_screen(SCREEN_HOME_DEFAULT)
+    app.assert_screen(SCREEN_HOME_DEFAULT, True)
 
 if __name__ == "__main__":
     app = stax_app(__file__)
 
-    app.assert_screen(SCREEN_HOME_DEFAULT)
+    app.assert_screen(SCREEN_HOME_DEFAULT, True)
 
     # Rejecting at error screen (blindsign disabled)
     send_initialize_msg(app, "800f000011048000002c800006c18000000080000000")
@@ -49,7 +49,7 @@ if __name__ == "__main__":
 
     # Rejecting at error screen (blindsign enabled)
     toggle_blindsigning() # Enable blindsigning
-    app.assert_screen(SCREEN_HOME_DEFAULT)
+    app.assert_screen(SCREEN_HOME_DEFAULT, True)
     send_initialize_msg(app, "800f000011048000002c800006c18000000080000000")
     send_payload(app, "800f0100eb0502000000f702000000f202000000ed02000000e802000000e302000000de02000000d902000000d402000000cf02000000ca02000000c502000000c002000000bb02000000b602000000b102000000ac02000000a702000000a2020000009d02000000980200000093020000008e02000000890200000084020000007f020000007a02000000750200000070020000006b02000000660200000061020000005c02000000570200000052020000004d02000000480200000043020000003e02000000390200000034020000002f020000002a02000000250200000020020000001b020000001602000000")
     app.review.tap()

@@ -20,7 +20,7 @@ from utils import *
 if __name__ == "__main__":
     app = stax_app(__file__)
 
-    app.assert_screen(SCREEN_HOME_DEFAULT)
+    app.assert_screen(SCREEN_HOME_DEFAULT, True)
 
     # original operation : 0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316
 
@@ -102,5 +102,5 @@ if __name__ == "__main__":
     app.review.tap()
     app.expect_apdu_failure("9002")
 
-    app.assert_screen(SCREEN_HOME_DEFAULT)
+    app.assert_screen(SCREEN_HOME_DEFAULT, True)
     app.quit()

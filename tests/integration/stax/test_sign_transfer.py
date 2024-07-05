@@ -23,7 +23,7 @@ from utils import *
 if __name__ == "__main__":
     app = stax_app(__file__)
 
-    app.assert_screen(SCREEN_HOME_DEFAULT)
+    app.assert_screen(SCREEN_HOME_DEFAULT, True)
 
     app.send_apdu("800f000011048000002c800006c18000000080000000");
     app.expect_apdu_return("9000");
@@ -56,7 +56,7 @@ if __name__ == "__main__":
     expected_apdu = "f6d5fa0e79cac216e25104938ac873ca17ee9d7f06763719293b413cf2ed475cf63d045a1cc9f73eee5775c5d496fa9d3aa9ae57fb97217f746a8728639795b7b2220e84ce5759ed111399ea3263d810c230d6a4fffcb6e82797c5ca673a17089000"
     app.review_confirm_signing(expected_apdu)
 
-    app.assert_screen(SCREEN_HOME_DEFAULT)
+    app.assert_screen(SCREEN_HOME_DEFAULT, True)
 
     # Now with expert enabled
     app.send_apdu("800f000011048000002c800006c18000000080000000");
@@ -87,5 +87,5 @@ if __name__ == "__main__":
     expected_apdu = "f6d5fa0e79cac216e25104938ac873ca17ee9d7f06763719293b413cf2ed475cf63d045a1cc9f73eee5775c5d496fa9d3aa9ae57fb97217f746a8728639795b7b2220e84ce5759ed111399ea3263d810c230d6a4fffcb6e82797c5ca673a17089000"
     app.review_confirm_signing(expected_apdu)
 
-    app.assert_screen(SCREEN_HOME_DEFAULT)
+    app.assert_screen(SCREEN_HOME_DEFAULT, True)
     app.quit()

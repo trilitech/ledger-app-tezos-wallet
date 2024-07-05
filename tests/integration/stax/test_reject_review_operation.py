@@ -21,7 +21,7 @@ from utils import *
 # path: m/44'/1729'/0'/0'
 
 def short_reject(app):
-    app.assert_screen(SCREEN_HOME_DEFAULT)
+    app.assert_screen(SCREEN_HOME_DEFAULT, True)
 
     app.send_apdu("800f000011048000002c800006c18000000080000000")
     app.expect_apdu_return("9000")
@@ -35,7 +35,7 @@ def short_reject(app):
     app.assert_screen("review_request_sign_operation")
     app.review_reject_signing(confirmRejection = True)
 
-    app.assert_screen(SCREEN_HOME_DEFAULT)
+    app.assert_screen(SCREEN_HOME_DEFAULT, True)
     app.expect_apdu_failure("6985")
 
 if __name__ == "__main__":

@@ -18,10 +18,10 @@ from utils import *
 if __name__ == "__main__":
     app = stax_app(__file__)
 
-    app.assert_screen(SCREEN_HOME_DEFAULT)
+    app.assert_screen(SCREEN_HOME_DEFAULT, True)
 
     app.send_apdu("8000000000")
     app.expect_apdu_return(app.version+"9000")
 
-    app.assert_screen(SCREEN_HOME_DEFAULT)
+    app.assert_screen(SCREEN_HOME_DEFAULT, True)
     app.quit()
