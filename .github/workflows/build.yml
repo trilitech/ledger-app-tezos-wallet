@@ -33,12 +33,12 @@ jobs:
           bash -c "make -C app BOLOS_SDK=\$${DEVICE_SDK} DEBUG=1"
           tar -C app/bin -czf app_${{ matrix.device }}_dbg.tgz .
       - name: Upload
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           path: app_${{ matrix.device }}.tgz
           name: app_${{ matrix.device }}.tgz
       - name: Upload (dbg)
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           path: app_${{ matrix.device }}_dbg.tgz
           name: app_${{ matrix.device }}_dbg.tgz
@@ -71,12 +71,12 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Download app
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: app_${{ matrix.device }}.tgz
 
       - name: Download app (dbg)
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: app_${{ matrix.device }}_dbg.tgz
 
@@ -98,14 +98,14 @@ jobs:
           fi
 
       - name: Upload Stax results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always() && matrix.device == 'stax'
         with:
           name: integration_tests_${{ matrix.device }}.json
           path: ./integration_tests.json
 
       - name: Upload Nano results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always() && matrix.device != 'stax'
         with:
           name: integration_tests_log_${{ matrix.device }}
@@ -146,13 +146,13 @@ jobs:
           make -C tests/unit
 
       - name: Upload results (nano, micheline)
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: nano_samples_micheline
           path: tests/samples/micheline/nano
 
       - name: Upload results (nano, operations)
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: nano_samples_operations
           path: tests/samples/operations/nano
@@ -172,17 +172,17 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Download app
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: app_${{ matrix.device }}.tgz
 
       - name: Download app (dbg)
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: app_${{ matrix.device }}_dbg.tgz
 
       - name: Download samples
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: nano_samples_${{ matrix.type }}
           path: tests
@@ -196,7 +196,7 @@ jobs:
             ./tests/integration/run_test_local.sh -T100 -F -m ${{ matrix.device }} tests
 
       - name: Upload results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: integration_tests_${{ matrix.type}}_${{ matrix.device }}.json
