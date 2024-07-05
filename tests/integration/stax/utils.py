@@ -18,14 +18,15 @@ import time
 
 from pathlib import Path
 from contextlib import contextmanager
+from requests.exceptions import (ChunkedEncodingError, ConnectionError)
 
 from ragger.backend import SpeculosBackend
 from ragger.backend.interface import RaisePolicy
 from ragger.firmware import Firmware
-from ragger.firmware.stax.screen import MetaScreen
-from ragger.firmware.stax.use_cases import UseCaseHomeExt, UseCaseSettings, UseCaseAddressConfirmation, UseCaseReview, UseCaseChoice
-from ragger.firmware.stax.layouts import ChoiceList
-from ragger.firmware.stax.positions import BUTTON_LOWER_LEFT, BUTTON_LOWER_RIGHT, BUTTON_ABOVE_LOWER_MIDDLE, BUTTON_LOWER_MIDDLE
+from ragger.firmware.touch.screen import MetaScreen
+from ragger.firmware.touch.use_cases import UseCaseHomeExt, UseCaseSettings, UseCaseAddressConfirmation, UseCaseReview, UseCaseChoice
+from ragger.firmware.touch.layouts import ChoiceList
+from ragger.firmware.touch.positions import STAX_BUTTON_LOWER_LEFT, STAX_BUTTON_LOWER_RIGHT, STAX_BUTTON_ABOVE_LOWER_MIDDLE, STAX_BUTTON_LOWER_MIDDLE
 
 MAX_ATTEMPTS = 50
 
@@ -108,7 +109,13 @@ class TezosAppScreen(metaclass=MetaScreen):
 
     def quit(self):
         if os.getenv("NOQUIT") == None:
-            self.welcome.quit()
+            try:
+                self.welcome.quit()
+            except ConnectionError:
+                pass
+            except ChunkedEncodingError:
+                pass
+
         else:
             input(f"PRESS ENTER to continue next test\n- You may need to reset to home")
 
@@ -140,7 +147,7 @@ class TezosAppScreen(metaclass=MetaScreen):
     def enable_expert_mode(self, expert_enabled=False):
         if not expert_enabled:
             self.assert_screen("enable_expert_mode")
-            self.welcome.client.finger_touch(BUTTON_ABOVE_LOWER_MIDDLE.x, BUTTON_ABOVE_LOWER_MIDDLE.y)
+            self.welcome.client.finger_touch(STAX_BUTTON_ABOVE_LOWER_MIDDLE.x, STAX_BUTTON_ABOVE_LOWER_MIDDLE.y)
             self.assert_screen("enabled_expert_mode")
 
     def expert_mode_splash(self, expert_enabled=False):
@@ -151,17 +158,17 @@ class TezosAppScreen(metaclass=MetaScreen):
 
 
     def review_reject_signing(self, confirmRejection = True):
-        self.welcome.client.finger_touch(BUTTON_LOWER_LEFT.x, BUTTON_LOWER_RIGHT.y)
+        self.welcome.client.finger_touch(STAX_BUTTON_LOWER_LEFT.x, STAX_BUTTON_LOWER_RIGHT.y)
         # Rejection confirmation page
         self.assert_screen("confirm_rejection")
         if confirmRejection:
             self.welcome.client.pause_ticker()
-            self.welcome.client.finger_touch(BUTTON_ABOVE_LOWER_MIDDLE.x, BUTTON_ABOVE_LOWER_MIDDLE.y)
+            self.welcome.client.finger_touch(STAX_BUTTON_ABOVE_LOWER_MIDDLE.x, STAX_BUTTON_ABOVE_LOWER_MIDDLE.y)
             self.assert_screen("reject_review")
             self.review.tap()
             self.welcome.client.resume_ticker()
         else:
-            self.welcome.client.finger_touch(BUTTON_LOWER_MIDDLE.x, BUTTON_LOWER_MIDDLE.y)
+            self.welcome.client.finger_touch(STAX_BUTTON_LOWER_MIDDLE.x, STAX_BUTTON_LOWER_MIDDLE.y)
 
 def stax_app(prefix) -> TezosAppScreen:
     port = os.environ["PORT"]
@@ -201,7 +208,7 @@ def verify_reject_response_common(app, tag, err_code):
     app.review.reject()
     app.assert_screen("reject_review")
     app.welcome.client.pause_ticker()
-    app.welcome.client.finger_touch(BUTTON_ABOVE_LOWER_MIDDLE.x, BUTTON_ABOVE_LOWER_MIDDLE.y)
+    app.welcome.client.finger_touch(STAX_BUTTON_ABOVE_LOWER_MIDDLE.x, STAX_BUTTON_ABOVE_LOWER_MIDDLE.y)
     app.assert_screen("rejected")
     app.review.tap()
     app.welcome.client.resume_ticker()
