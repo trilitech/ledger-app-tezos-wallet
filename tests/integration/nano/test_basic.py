@@ -13,9 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from utils.app import Screen
+from utils.app import Screen, TezosAppScreen
+from utils.app_touch import TezosAppTouchScreen
 
-def test_basic(app):
+from ragger.firmware import Firmware
+from ragger.navigator import NavInsID, NavIns
+
+
+def test_basic(app: TezosAppScreen):
     # Check main menu operation
     app.assert_screen(Screen.Home)
     app.backend.right_click()
@@ -76,3 +81,28 @@ def test_basic(app):
     app.backend.right_click()
     app.backend.right_click()
     app._quit()
+
+
+def test_basic(app: TezosAppTouchScreen):
+    if app.backend.firmware is Firmware.STAX:
+        instructions = [
+            NavInsID.USE_CASE_HOME_SETTINGS,
+            NavIns(NavInsID.TOUCH, (200, 113)),
+            NavIns(NavInsID.TOUCH, (200, 261)),
+            NavInsID.USE_CASE_CHOICE_CONFIRM,
+            NavIns(NavInsID.TOUCH, (200, 261)),
+            NavInsID.USE_CASE_SETTINGS_NEXT,
+            NavInsID.USE_CASE_SETTINGS_MULTI_PAGE_EXIT
+        ]
+    elif app.backend.firmware is Firmware.FLEX:
+        instructions = [
+            NavInsID.USE_CASE_HOME_SETTINGS,
+            NavIns(NavInsID.TOUCH, (200, 113)),
+            NavIns(NavInsID.TOUCH, (200, 300)),
+            NavInsID.USE_CASE_CHOICE_CONFIRM,
+            NavIns(NavInsID.TOUCH, (200, 300)),
+            NavInsID.USE_CASE_SETTINGS_NEXT,
+            NavInsID.USE_CASE_SETTINGS_MULTI_PAGE_EXIT
+        ]
+    app.navigator.navigate_and_compare(path=app.path, test_case_name=app.path, instructions=instructions,
+                                       screen_change_before_first_instruction=False)

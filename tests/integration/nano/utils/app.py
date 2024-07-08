@@ -23,7 +23,7 @@ from pathlib import Path
 from requests.exceptions import ConnectionError
 from ragger.backend import SpeculosBackend
 from ragger.error import ExceptionRAPDU
-from ragger.navigator import NavInsID, NanoNavigator
+from ragger.navigator import NavInsID, NanoNavigator , TouchNavigator
 from typing import Callable, Generator, List, Optional, Tuple, Union
 
 from .message import Message
@@ -178,7 +178,10 @@ class TezosAppScreen():
         self.snapshotted: List[str] = []
 
         self.golden_run = golden_run
-        self.navigator = NanoNavigator(backend, backend.firmware, golden_run)
+        self.setup_navigator(backend,golden_run)
+
+    def setup_navigator(self, backend, golden_run):
+            self.navigator = NanoNavigator(backend, backend.firmware, golden_run)
 
     def __enter__(self) -> "TezosAppScreen":
         with_retry(self.backend.__enter__, attempts=3)

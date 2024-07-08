@@ -5,12 +5,15 @@ from ragger.firmware import Firmware
 from typing import Dict, Callable, Generator, List, Optional, Tuple, Union
 
 from utils.app import TezosAppScreen, SpeculosTezosBackend, DEFAULT_SEED
+from utils.app_touch import  TezosAppTouchScreen
 from utils.backend import TezosBackend, APP_KIND
 
 FIRMWARES: List[Firmware] = [
     Firmware.NANOS,
     Firmware.NANOSP,
-    Firmware.NANOX
+    Firmware.NANOX,
+    Firmware.STAX,
+    Firmware.FLEX
 ]
 
 DEVICES: List[str] = list(map(lambda fw: fw.device, FIRMWARES))
@@ -19,7 +22,7 @@ def pytest_addoption(parser):
     parser.addoption("-D", "--device",
                      type=str,
                      choices=DEVICES,
-                     help="Device type: nanos | nanosp | nanox",
+                     help="Device type: nanos | nanosp | nanox | stax | flex",
                      required=True)
     parser.addoption("-P", "--port",
                      type=int,
@@ -144,7 +147,10 @@ def backend(app_path: Path,
 
 @pytest.fixture(scope="function")
 def app(backend: SpeculosTezosBackend, golden_run: bool):
-    return TezosAppScreen(backend, APP_KIND.WALLET, golden_run)
+    if backend.firmware.is_nano:
+        return TezosAppScreen(backend, APP_KIND.WALLET, golden_run)
+    else:
+        return TezosAppTouchScreen(backend,APP_KIND.WALLET, golden_run)
 
 def requires_device(device):
     return pytest.mark.skipif(
