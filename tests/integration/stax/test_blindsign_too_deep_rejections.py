@@ -18,8 +18,6 @@ from utils import *
 def toggle_blindsigning():
     app.assert_screen(SCREEN_HOME_DEFAULT, True)
     app.welcome.settings()
-    app.assert_screen(SCREEN_INFO_PAGE, True)
-    app.info.next()
     app.settings_toggle_blindsigning()
     app.info.multi_page_exit()
     app.assert_screen(SCREEN_HOME_DEFAULT, True)
@@ -27,8 +25,6 @@ def toggle_blindsigning():
 def toggle_expert_mode():
     app.assert_screen(SCREEN_HOME_DEFAULT, True)
     app.welcome.settings()
-    app.assert_screen(SCREEN_INFO_PAGE, True)
-    app.info.next()
     app.settings_toggle_expert_mode()
     app.info.multi_page_exit()
     app.assert_screen(SCREEN_HOME_DEFAULT, True)

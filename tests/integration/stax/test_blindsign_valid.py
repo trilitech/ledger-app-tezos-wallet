@@ -25,9 +25,6 @@ if __name__ == "__main__":
     app.assert_screen(SCREEN_HOME_DEFAULT, True)
 
     app.welcome.settings()
-    app.assert_screen(SCREEN_INFO_PAGE, True)
-
-    app.info.next()
     app.assert_screen("settings_blindsigning_off")
 
     app.settings_toggle_blindsigning()

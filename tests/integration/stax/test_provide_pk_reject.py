@@ -27,6 +27,7 @@ def short_reject(app):
     app.provide_pk.cancel()
     app.assert_screen("address_rejected")
     app.expect_apdu_failure("6985")
+    app.review.tap()
 
     app.assert_screen(SCREEN_HOME_DEFAULT, True)
 
