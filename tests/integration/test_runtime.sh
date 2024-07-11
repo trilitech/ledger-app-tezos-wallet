@@ -556,7 +556,7 @@ usage() {
     echo "            -F means that only failures are stored"            >&2
     echo "            -d tgz specifies that tgz contains the debug app"  >&2
     echo "            -l lim limits the number of tests run to lim"      >&2
-    echo "            -m arch is one of nanos, nanosp, nanox, or stax"   >&2
+    echo "            -m arch is one of nanos, nanosp, nanox, stax or flex" >&2
     echo "            -t tgz specifies that tgz contains the app"        >&2
     exit 1
 }
