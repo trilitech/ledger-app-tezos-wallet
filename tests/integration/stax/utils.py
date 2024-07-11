@@ -55,7 +55,7 @@ class TezosAppScreen(metaclass=MetaScreen):
     __snapshotted = []
     __settings = None
 
-    def __init__(self, backend, firmware, commit, version, snapshot_prefix):
+    def __init__(self, backend, firmware, commit, version, snapshot_prefix, golden):
         self.__backend = backend
         realpath = os.path.realpath(__file__)
         self.__snapshots_path = f"{os.path.dirname(realpath)}/snapshots"
@@ -63,6 +63,18 @@ class TezosAppScreen(metaclass=MetaScreen):
         self.__settings = ChoiceList(backend, firmware)
         self.commit = commit
         self.version = version
+        self.__golden = golden
+        if golden:
+            # Setup for golden
+            path = f"{self.__stax}/"
+            Path(path).mkdir(parents=True, exist_ok=True)
+            for filename in os.listdir(path):
+                os.remove(os.path.join(path, filename))
+            path = f"{self.__snapshots_path}"
+            home_path=os.path.join(path, "home.png")
+            info_path=os.path.join(path, "info.png")
+            if os.path.exists(home_path): os.remove(home_path)
+            if os.path.exists(info_path): os.remove(info_path)
 
     def send_apdu(self, data):
         """Send hex-encoded bytes to the apdu"""
@@ -99,18 +111,6 @@ class TezosAppScreen(metaclass=MetaScreen):
             assert self.__backend.compare_screen_with_snapshot(path, golden_run = golden)
 
         with_retry(check)
-
-    def make_golden(self):
-        self.__golden = True
-        path = f"{self.__stax}/"
-        Path(path).mkdir(parents=True, exist_ok=True)
-        for filename in os.listdir(path):
-            os.remove(os.path.join(path, filename))
-        path = f"{self.__snapshots_path}"
-        home_path=os.path.join(path, "home.png")
-        info_path=os.path.join(path, "info.png")
-        if os.path.exists(home_path): os.remove(home_path)
-        if os.path.exists(info_path): os.remove(info_path)
 
     def assert_home(self):
         self.assert_screen("home", True)
@@ -199,12 +199,7 @@ def stax_app(prefix) -> TezosAppScreen:
     version = os.environ["VERSION_BYTES"]
     golden = os.getenv("GOLDEN") != None
     backend = SpeculosBackend("__unused__", Firmware.STAX,args=["--api-port", port])
-    app = TezosAppScreen(backend, Firmware.STAX, commit, version, prefix)
-
-    if golden:
-        app.make_golden()
-
-    return app
+    return TezosAppScreen(backend, Firmware.STAX, commit, version, prefix, golden)
 
 def assert_home_with_code(app, code):
     app.assert_home()
