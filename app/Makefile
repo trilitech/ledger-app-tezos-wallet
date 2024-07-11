@@ -77,6 +77,7 @@ ICON_NANOS = icons/nano-s-tezos.gif
 ICON_NANOX = icons/nano-x-tezos.gif
 ICON_NANOSP = icons/nano-x-tezos.gif
 ICON_STAX = icons/stax_tezos.gif
+ICON_FLEX = icons/flex_tezos.gif
 
 # Application allowed derivation curves.
 # Possibles curves are: secp256k1, secp256r1, ed25519 and bls12381g1

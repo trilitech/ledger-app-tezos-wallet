@@ -2,8 +2,16 @@
 # Makefile
 #
 
-all: app_nanos.tgz app_nanosp.tgz app_nanox.tgz
-debug: app_nanos_dbg.tgz app_nanosp_dbg.tgz app_nanox_dbg.tgz
+all: app_nanos.tgz \
+	app_nanosp.tgz \
+	app_nanox.tgz \
+	app_stax.tgz \
+	app_flex.tgz
+debug: app_nanos_dbg.tgz \
+	app_nanosp_dbg.tgz \
+	app_nanox_dbg.tgz \
+	app_stax_dbg.tgz \
+	app_flex_dbg.tgz
 
 .PHONY: clean all debug format integration_tests unit_tests scan-build%	\
 	integration_tests_basic integration_tests_basic_% docker_%
@@ -49,7 +57,7 @@ scan-build-%:
 	  "BOLOS_SDK=\$$$$SDK make -C app scan-build"
 
 scan-build:	scan-build-nanos scan-build-nanosp	\
-	scan-build-nanox scan-build-stax
+	scan-build-nanox scan-build-stax scan-build-flex
 
 app_%_dbg.tgz:	app/src/*.[ch]	\
 	app/src/parser/*.[ch]	\
