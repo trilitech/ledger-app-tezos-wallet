@@ -30,6 +30,10 @@
 
 void tz_ui_home_redisplay(void);
 
+//  -----------------------------------------------------------
+//  --------------------- SETTINGS MENU -----------------------
+//  -----------------------------------------------------------
+#define SETTING_INFO_NB 2
 static const char *const infoTypes[] = {"Version", "Developer"};
 static const char *const infoContents[]
     = {APPVERSION, "Trilitech Kanvas Limited et al."};
@@ -38,74 +42,80 @@ enum {
     EXPERT_MODE_TOKEN = FIRST_USER_TOKEN,
     BLIND_SIGNING_TOKEN
 };
+enum {
+    EXPERT_MODE_TOKEN_ID = 0,
+    BLIND_SIGNING_TOKEN_ID,
+    SETTINGS_SWITCHES_NB
+};
 
-static nbgl_layoutSwitch_t switches[2];
+static nbgl_layoutSwitch_t switches[SETTINGS_SWITCHES_NB] = {0};
 
-static bool
-navigation_cb_wallet(__attribute__((unused)) uint8_t page,
-                     nbgl_pageContent_t             *content)
-{
-    switch (page) {
-    case 0:
-        content->type                   = INFOS_LIST;
-        content->infosList.nbInfos      = 2;
-        content->infosList.infoTypes    = infoTypes;
-        content->infosList.infoContents = infoContents;
-        break;
-    case 1:
-        switches[0] = (nbgl_layoutSwitch_t){
-            .initState = N_settings.expert_mode ? ON_STATE : OFF_STATE,
-            .text      = "Expert mode",
-            .subText   = "Enable expert mode signing",
-            .token     = EXPERT_MODE_TOKEN,
-            .tuneId    = TUNE_TAP_CASUAL};
-
-        switches[1] = (nbgl_layoutSwitch_t){
-            .initState = N_settings.blindsigning ? ON_STATE : OFF_STATE,
-            .text      = "Blind signing",
-            .subText   = "Enable transaction blind signing",
-            .token     = BLIND_SIGNING_TOKEN,
-            .tuneId    = TUNE_TAP_CASUAL};
-
-        content->type                    = SWITCHES_LIST;
-        content->switchesList.nbSwitches = 2;
-        content->switchesList.switches   = (nbgl_layoutSwitch_t *)switches;
-        break;
-    default:
-        return false;
-    }
-
-    return true;
-}
+static const nbgl_contentInfoList_t infoList = {.nbInfos   = SETTING_INFO_NB,
+                                                .infoTypes = infoTypes,
+                                                .infoContents = infoContents};
 
 static void
-controls_callback(int token, __attribute__((unused)) uint8_t index)
+controls_callback(int token, __attribute__((unused)) uint8_t index,
+                  __attribute__((unused)) int page)
 {
+    uint8_t switch_value;
     if (token == BLIND_SIGNING_TOKEN) {
+        switch_value = !N_settings.blindsigning;
         toggle_blindsigning();
+        switches[BLIND_SIGNING_TOKEN_ID].initState
+            = (nbgl_state_t)(switch_value);
     } else if (token == EXPERT_MODE_TOKEN) {
+        switch_value = !N_settings.expert_mode;
         toggle_expert_mode();
+        switches[EXPERT_MODE_TOKEN_ID].initState
+            = (nbgl_state_t)(switch_value);
     }
 }
 
-static void
-ui_menu_about_wallet(void)
-{
-    uint8_t nb_screens = 2;
-    nbgl_useCaseSettings("Tezos wallet", 0, nb_screens, false,
-                         tz_ui_home_redisplay, navigation_cb_wallet,
-                         controls_callback);
-}
+#define SETTINGS_CONTENTS_NB 1
+static const nbgl_content_t contentsList[SETTINGS_CONTENTS_NB] = {
+    {.content.switchesList.nbSwitches = SETTINGS_SWITCHES_NB,
+     .content.switchesList.switches   = switches,
+     .type                            = SWITCHES_LIST,
+     .contentActionCallback           = controls_callback}
+};
+
+static const nbgl_genericContents_t tezos_settingContents
+    = {.callbackCallNeeded = false,
+       .contentsList       = contentsList,
+       .nbContents         = SETTINGS_CONTENTS_NB};
+;
 
 #define HOME_TEXT "This app enables signing transactions on the Tezos Network"
+void
+initSettings(void)
+{
+    switches[EXPERT_MODE_TOKEN_ID].initState
+        = (nbgl_state_t)(N_settings.expert_mode);
+    switches[EXPERT_MODE_TOKEN_ID].text    = "Expert mode";
+    switches[EXPERT_MODE_TOKEN_ID].subText = "Enable expert mode signing";
+    switches[EXPERT_MODE_TOKEN_ID].token   = EXPERT_MODE_TOKEN;
+    switches[EXPERT_MODE_TOKEN_ID].tuneId  = TUNE_TAP_CASUAL;
+
+    switches[BLIND_SIGNING_TOKEN_ID].initState
+        = (nbgl_state_t)(N_settings.blindsigning);
+    switches[BLIND_SIGNING_TOKEN_ID].text = "Blind signing";
+    switches[BLIND_SIGNING_TOKEN_ID].subText
+        = "Enable transaction blind signing";
+    switches[BLIND_SIGNING_TOKEN_ID].token  = BLIND_SIGNING_TOKEN;
+    switches[BLIND_SIGNING_TOKEN_ID].tuneId = TUNE_TAP_CASUAL;
+}
 
 void
 tz_ui_home_redisplay(void)
 {
     FUNC_ENTER(("void"));
 
-    nbgl_useCaseHome("Tezos Wallet", &C_tezos, HOME_TEXT, true,
-                     ui_menu_about_wallet, app_exit);
+    initSettings();
+
+    nbgl_useCaseHomeAndSettings("Tezos Wallet", &C_tezos, HOME_TEXT,
+                                INIT_HOME_PAGE, &tezos_settingContents,
+                                &infoList, NULL, app_exit);
 
     FUNC_LEAVE();
 }

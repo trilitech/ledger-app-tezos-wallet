@@ -110,8 +110,10 @@ class TezosAppScreen(metaclass=MetaScreen):
         for filename in os.listdir(path):
             os.remove(os.path.join(path, filename))
         path = f"{self.__snapshots_path}"
-        os.remove(os.path.join(path, "home.png"))
-        os.remove(os.path.join(path, "info.png"))
+        home_path=os.path.join(path, "home.png")
+        info_path=os.path.join(path, "info.png")
+        if os.path.exists(home_path): os.remove(home_path)
+        if os.path.exists(info_path): os.remove(info_path)
 
 
     def quit(self):

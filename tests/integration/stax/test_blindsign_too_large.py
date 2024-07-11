@@ -27,9 +27,12 @@ if __name__ == "__main__":
     app.review.tap()
 
     app.assert_screen("too_large_enable_blindsign")
+    app.welcome.client.pause_ticker()
     app.choice.confirm()
 
     app.assert_screen("blindsign_enabled")
+    app.welcome.client.resume_ticker()
+
     app.review.tap()
 
     app.assert_screen("blindsign_warning")
@@ -46,9 +49,6 @@ if __name__ == "__main__":
 
     # Blindsign enabled
     app.welcome.settings()
-    app.assert_screen(SCREEN_INFO_PAGE, True)
-
-    app.info.next()
     app.assert_screen("settings_blindsigning_on")
     # blind sign will be on because of previous test run.
     app.info.multi_page_exit()
