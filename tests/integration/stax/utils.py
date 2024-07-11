@@ -18,7 +18,7 @@ import time
 
 from pathlib import Path
 from contextlib import contextmanager
-from requests.exceptions import (ChunkedEncodingError, ConnectionError)
+from requests.exceptions import ChunkedEncodingError
 
 from ragger.backend import SpeculosBackend
 from ragger.backend.interface import RaisePolicy
