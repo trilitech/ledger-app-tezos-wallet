@@ -18,7 +18,7 @@ from utils import *
 if __name__ == "__main__":
     app = stax_app(__file__)
 
-    app.assert_screen(SCREEN_HOME_DEFAULT, True)
+    app.assert_home()
 
     app.send_apdu("8001000000")
     app.expect_apdu_failure("6d00")
@@ -26,5 +26,5 @@ if __name__ == "__main__":
     app.send_apdu("8010000000")
     app.expect_apdu_failure("6d00")
 
-    app.assert_screen(SCREEN_HOME_DEFAULT, True)
+    app.assert_home()
     app.quit()

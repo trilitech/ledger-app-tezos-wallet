@@ -22,7 +22,7 @@ from utils import *
 
 
 def sign_transfer_initialize(app):
-    app.assert_screen(SCREEN_HOME_DEFAULT, True)
+    app.assert_home()
     app.send_apdu("800f000011048000002c800006c18000000080000000");
     app.expect_apdu_return("9000");
     app.assert_screen("review_request_sign_operation");

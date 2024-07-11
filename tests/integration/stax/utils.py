@@ -30,9 +30,6 @@ from ragger.firmware.touch.positions import STAX_BUTTON_LOWER_LEFT, STAX_BUTTON_
 
 MAX_ATTEMPTS = 50
 
-SCREEN_HOME_DEFAULT = "home"
-SCREEN_INFO_PAGE = "info"
-
 def with_retry(f, attempts=MAX_ATTEMPTS):
     while True:
         try:
@@ -115,6 +112,23 @@ class TezosAppScreen(metaclass=MetaScreen):
         if os.path.exists(home_path): os.remove(home_path)
         if os.path.exists(info_path): os.remove(info_path)
 
+    def assert_home(self):
+        self.assert_screen("home", True)
+
+    def assert_info(self):
+        self.assert_screen("info", True)
+
+    def assert_settings(self,
+                        blindsigning = False,
+                        expert_mode = False):
+        suffix=""
+        if blindsigning:
+            suffix += "_blindsigning"
+        if expert_mode:
+            suffix += "_expert"
+        if suffix != "":
+            suffix += "_on"
+        self.assert_screen("settings" + suffix)
 
     def quit(self):
         if os.getenv("NOQUIT") == None:
@@ -193,7 +207,7 @@ def stax_app(prefix) -> TezosAppScreen:
     return app
 
 def assert_home_with_code(app, code):
-    app.assert_screen(SCREEN_HOME_DEFAULT, True)
+    app.assert_home()
     app.expect_apdu_failure(code)
 
 def send_initialize_msg(app, apdu):
