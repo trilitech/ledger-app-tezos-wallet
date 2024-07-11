@@ -16,7 +16,8 @@
 from utils import (
     tezos_app,
     send_initialize_msg,
-    send_payload
+    send_payload,
+    index_screen
 )
 
 # full input: 0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316
@@ -31,17 +32,19 @@ if __name__ == "__main__":
 
     send_initialize_msg(app, "800f000011048000002c800006c18000000080000000")
     send_payload(app, "800f81005e0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316")
-    app.review.next()
-    app.assert_screen("tst_review_001")
 
-    app.review.next()
-    app.assert_screen("tst_review_002")
+    screen = "tst_review"
+    nb_screen = 2
+
+    for index in range(1, nb_screen+1):
+        app.review.next()
+        app.assert_screen(index_screen(screen, index))
 
     app.review.next()
     app.expert_mode_splash()
 
     app.review.next()
-    app.assert_screen("tst_review_003")
+    app.assert_screen(index_screen(screen, index+1))
 
     app.review.next()
     app.assert_screen("operation_sign")
@@ -54,17 +57,19 @@ if __name__ == "__main__":
     # Now with expert enabled
     send_initialize_msg(app, "800f000011048000002c800006c18000000080000000")
     send_payload(app, "800f81005e0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316")
-    app.review.next()
-    app.assert_screen("tst_review_001")
 
-    app.review.next()
-    app.assert_screen("tst_review_002")
+    screen = "tst_review"
+    nb_screen = 2
+
+    for index in range(1, nb_screen+1):
+        app.review.next()
+        app.assert_screen(index_screen(screen, index))
 
     app.review.next()
     app.assert_screen("expert_mode_splash")
 
     app.review.next()
-    app.assert_screen("tst_review_003")
+    app.assert_screen(index_screen(screen, index+1))
 
     app.review.next()
     app.assert_screen("operation_sign")

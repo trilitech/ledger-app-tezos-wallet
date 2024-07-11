@@ -103,6 +103,12 @@ integration_tests_basic_stax:	app_stax.tgz		\
 				tests/integration/touch/*
 	$(RUN_TEST_DOCKER) stax tests/integration/touch
 
+integration_tests_basic_flex:	app_flex.tgz		\
+				app_flex_dbg.tgz	\
+				tests/integration/*	\
+				tests/integration/touch/*
+	$(RUN_TEST_DOCKER) flex tests/integration/touch
+
 integration_tests_basic_%:	app_%.tgz   \
 				app_%_dbg.tgz			\
 				tests/integration/*		\
@@ -124,7 +130,8 @@ integration_tests_basic_%:	app_%.tgz   \
 integration_tests_basic:	integration_tests_basic_nanos	\
 				integration_tests_basic_nanosp	\
 				integration_tests_basic_nanox	\
-				integration_tests_basic_stax
+				integration_tests_basic_stax	\
+				integration_tests_basic_flex
 
 integration_tests_%:	integration_tests_basic_%		\
 			test/samples/operations/nano/samples.hex\
@@ -138,7 +145,8 @@ integration_tests: 	tests/integration/*.sh			\
 			integration_tests_nanos 		\
 			integration_tests_nanosp 		\
 			integration_tests_nanox 		\
-			integration_tests_basic_stax
+			integration_tests_basic_stax 		\
+			integration_tests_basic_flex
 
 test/samples/micheline/%/samples.hex:	tests/generate/*.ml*	\
 					tests/generate/dune	\

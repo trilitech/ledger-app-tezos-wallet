@@ -16,7 +16,8 @@
 from utils import (
     tezos_app,
     send_initialize_msg,
-    send_payload
+    send_payload,
+    index_screen
 )
 
 # full input: 0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316
@@ -31,17 +32,19 @@ if __name__ == "__main__":
 
     send_initialize_msg(app, "8004000011048000002c800006c18000000080000000")
     send_payload(app, "800481005e0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316")
-    app.review.next()
-    app.assert_screen("review_0")
 
-    app.review.next()
-    app.assert_screen("review_1")
+    screen = "review"
+    nb_screen = 2
+
+    for index in range(1, nb_screen+1):
+        app.review.next()
+        app.assert_screen(index_screen(screen, index))
 
     app.review.next()
     app.expert_mode_splash()
 
     app.review.next()
-    app.assert_screen("review_2")
+    app.assert_screen(index_screen(screen, index+1))
 
     app.review.next()
     app.assert_screen("operation_sign")

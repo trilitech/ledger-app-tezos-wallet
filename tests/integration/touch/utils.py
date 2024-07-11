@@ -39,7 +39,9 @@ from ragger.firmware.touch.positions import (
     STAX_BUTTON_LOWER_LEFT,
     STAX_BUTTON_ABOVE_LOWER_MIDDLE,
     STAX_BUTTON_LOWER_RIGHT,
-    STAX_BUTTON_LOWER_MIDDLE
+    STAX_BUTTON_LOWER_MIDDLE,
+    FLEX_BUTTON_LOWER_LEFT,
+    FLEX_BUTTON_ABOVE_LOWER_MIDDLE
 )
 
 MAX_ATTEMPTS = 50
@@ -62,7 +64,10 @@ class UseCaseChoice(OriginalUseCaseChoice):
     # Fixed in Ragger v1.21.0
     def reject(self) -> None:
         """Tap on reject button."""
-        self.client.finger_touch(*STAX_BUTTON_LOWER_LEFT)
+        if self.firmware == Firmware.STAX:
+            self.client.finger_touch(*STAX_BUTTON_LOWER_LEFT)
+        if self.firmware == Firmware.FLEX:
+            super().reject()
 
 class UseCaseReview(OriginalUseCaseReview):
     """Extension of UseCaseReview for our app."""
@@ -87,24 +92,36 @@ class UseCaseReview(OriginalUseCaseReview):
     # Fixed in Ragger v1.21.0
     def tap(self) -> None:
         """Tap on screen."""
-        self.client.finger_touch(*STAX_BUTTON_LOWER_RIGHT)
+        if self.firmware == Firmware.STAX:
+            self.client.finger_touch(*STAX_BUTTON_LOWER_RIGHT)
+        if self.firmware == Firmware.FLEX:
+            super().tap()
 
     # Fixed in Ragger v1.21.0
     def previous(self) -> None:
         """Tap on screen."""
-        self.client.finger_touch(*STAX_BUTTON_LOWER_MIDDLE)
+        if self.firmware == Firmware.STAX:
+            self.client.finger_touch(*STAX_BUTTON_LOWER_MIDDLE)
+        if self.firmware == Firmware.FLEX:
+            super().previous()
 
     # Fixed in Ragger v1.21.0
     def reject(self) -> None:
         """Tap on reject button."""
-        self.client.finger_touch(*STAX_BUTTON_LOWER_LEFT)
+        if self.firmware == Firmware.STAX:
+            self.client.finger_touch(*STAX_BUTTON_LOWER_LEFT)
+        if self.firmware == Firmware.FLEX:
+            super().reject()
 
 class UseCaseAddressConfirmation(OriginalUseCaseAddressConfirmation):
     """Extension of UseCaseAddressConfirmation for our app."""
 
     _center: Center
 
-    QR_POSITION = Position(STAX_BUTTON_LOWER_LEFT.x, STAX_BUTTON_ABOVE_LOWER_MIDDLE.y)
+    QR_POSITIONS = {
+        Firmware.STAX: Position(STAX_BUTTON_LOWER_LEFT.x, STAX_BUTTON_ABOVE_LOWER_MIDDLE.y),
+        Firmware.FLEX: Position(FLEX_BUTTON_LOWER_LEFT.x, FLEX_BUTTON_ABOVE_LOWER_MIDDLE.y)
+    }
 
     def __init__(self, client: BackendInterface, firmware: Firmware):
         super().__init__(client, firmware)
@@ -117,7 +134,7 @@ class UseCaseAddressConfirmation(OriginalUseCaseAddressConfirmation):
     @property
     def qr_position(self) -> Position:
         """Position of the qr code."""
-        return UseCaseAddressConfirmation.QR_POSITION
+        return UseCaseAddressConfirmation.QR_POSITIONS[self.firmware]
 
     def show_qr(self) -> None:
         """Tap to show qr code."""
@@ -126,7 +143,10 @@ class UseCaseAddressConfirmation(OriginalUseCaseAddressConfirmation):
     # Fixed in Ragger v1.21.0
     def cancel(self) -> None:
         """Tap on cancel button."""
-        self.client.finger_touch(*STAX_BUTTON_LOWER_LEFT)
+        if self.firmware == Firmware.STAX:
+            self.client.finger_touch(*STAX_BUTTON_LOWER_LEFT)
+        if self.firmware == Firmware.FLEX:
+            super().cancel()
 
 class UseCaseSettings(OriginalUseCaseSettings):
     """Extension of UseCaseSettings for our app."""
@@ -153,7 +173,10 @@ class UseCaseSettings(OriginalUseCaseSettings):
     STAX_BUTTON_LOWER_MIDDLE_RIGHT = Position(266, 615)
     def previous(self) -> None:
         """Tap on cancel button."""
-        self.client.finger_touch(*UseCaseSettings.STAX_BUTTON_LOWER_MIDDLE_RIGHT)
+        if self.firmware == Firmware.STAX:
+            self.client.finger_touch(*UseCaseSettings.STAX_BUTTON_LOWER_MIDDLE_RIGHT)
+        if self.firmware == Firmware.FLEX:
+            super().previous()
 
 class TezosAppScreen(metaclass=MetaScreen):
     use_case_welcome    = UseCaseHomeExt
@@ -166,8 +189,9 @@ class TezosAppScreen(metaclass=MetaScreen):
     provide_pk: UseCaseAddressConfirmation
     review:     UseCaseReview
 
-    commit:  str
-    version: str
+    firmware: Firmware
+    commit:   str
+    version:  str
 
     __backend:                 BackendInterface
     __golden:                  bool
@@ -188,6 +212,7 @@ class TezosAppScreen(metaclass=MetaScreen):
             f"{os.path.dirname(realpath)}/snapshots/{firmware.name}"
         self.__prefixed_snapshots_path = \
             f"{self.__snapshots_path}/{Path(snapshot_prefix).stem}"
+        self.firmware = firmware
         self.commit = commit
         self.version = version
         self.__golden = golden
@@ -322,7 +347,7 @@ def tezos_app(prefix) -> TezosAppScreen:
     version = os.environ["VERSION_BYTES"]
     golden = os.getenv("GOLDEN") != None
     target = os.getenv("TARGET")
-    firmware = Firmware.STAX if target == "stax" else Firmware.STAX
+    firmware = Firmware.STAX if target == "stax" else Firmware.FLEX
     backend = SpeculosBackend("__unused__", firmware, args=["--api-port", port])
     return TezosAppScreen(backend, firmware, commit, version, prefix, golden)
 
@@ -352,3 +377,6 @@ def verify_reject_response_common(app, tag, err_code):
     with app.fading_screen("rejected"):
         app.review.reject_tx.confirm()
     assert_home_with_code(app, err_code)
+
+def index_screen(screen: str, index: int) -> str:
+    return screen + "_" + str(index).zfill(2)

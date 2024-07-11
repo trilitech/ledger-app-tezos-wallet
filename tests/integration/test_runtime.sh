@@ -372,7 +372,7 @@ run_a_test() {
                     . $CMD
                     ;;
                 *.py)
-                    if [ "$TARGET" == "stax" ]; then
+                    if [ "$TARGET" == "stax" ] || [ "$TARGET" == "flex" ]; then
                         start_speculos "$seed"
                         PORT=$PORT\
                             COMMIT_BYTES=$COMMIT_BYTES\
@@ -586,8 +586,8 @@ main() {
 
     [ $# -lt 1 ] && usage "At least one test must be provided"
 
-    if ! echo $TARGET | grep -qE '^(stax)|(nano(s|sp|x))$'; then
-       usage "Target \"$TARGET\" must be nanos, nanosp, nanox or stax."
+    if ! echo $TARGET | grep -qE '^(stax)|(flex)|(nano(s|sp|x))$'; then
+       usage "Target \"$TARGET\" must be nanos, nanosp, nanox, stax or flex."
     fi
 
     if [ -z "$TGZ" ]; then
