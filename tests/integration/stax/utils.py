@@ -17,10 +17,11 @@ import os
 import time
 
 from pathlib import Path
+from typing import List
 from contextlib import contextmanager
 from requests.exceptions import ChunkedEncodingError
 
-from ragger.backend import SpeculosBackend
+from ragger.backend import BackendInterface, SpeculosBackend
 from ragger.backend.interface import RaisePolicy
 from ragger.firmware import Firmware
 from ragger.firmware.touch.screen import MetaScreen
@@ -43,24 +44,40 @@ def with_retry(f, attempts=MAX_ATTEMPTS):
         time.sleep(0.5)
 
 class TezosAppScreen(metaclass=MetaScreen):
-    use_case_welcome = UseCaseHomeExt
-    use_case_info = UseCaseSettings
+    use_case_welcome    = UseCaseHomeExt
+    use_case_info       = UseCaseSettings
     use_case_provide_pk = UseCaseAddressConfirmation
-    use_case_review = UseCaseReview
-    use_case_choice = UseCaseChoice
+    use_case_review     = UseCaseReview
+    use_case_choice     = UseCaseChoice
+    layout_settings     = ChoiceList
 
-    __backend = None
-    __golden = False
-    __stax = None
-    __snapshotted = []
-    __settings = None
+    welcome:    UseCaseHomeExt
+    info:       UseCaseSettings
+    provide_pk: UseCaseAddressConfirmation
+    review:     UseCaseReview
+    choice:     UseCaseChoice
+    settings:   ChoiceList
 
-    def __init__(self, backend, firmware, commit, version, snapshot_prefix, golden):
+    commit:  str
+    version: str
+
+    __backend:        BackendInterface
+    __golden:         bool
+    __snapshots_path: str
+    __stax:           str
+    __snapshotted:    List[str]  = []
+
+    def __init__(self,
+                 backend: BackendInterface,
+                 _firmware: Firmware,
+                 commit: str,
+                 version: str,
+                 snapshot_prefix: str,
+                 golden: bool = False):
         self.__backend = backend
         realpath = os.path.realpath(__file__)
         self.__snapshots_path = f"{os.path.dirname(realpath)}/snapshots"
         self.__stax = f"{os.path.dirname(realpath)}/snapshots/{Path(snapshot_prefix).stem}"
-        self.__settings = ChoiceList(backend, firmware)
         self.commit = commit
         self.version = version
         self.__golden = golden
@@ -143,10 +160,10 @@ class TezosAppScreen(metaclass=MetaScreen):
             input(f"PRESS ENTER to continue next test\n- You may need to reset to home")
 
     def settings_toggle_expert_mode(self):
-        self.__settings.choose(1)
+        self.settings.choose(1)
 
     def settings_toggle_blindsigning(self):
-        self.__settings.choose(2)
+        self.settings.choose(2)
 
     def start_loading_operation(self, first_packet):
         """
