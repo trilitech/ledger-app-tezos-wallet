@@ -13,15 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from utils import *
+from utils import tezos_app
 
 if __name__ == "__main__":
-    app = stax_app(__file__)
+    app = tezos_app(__file__)
 
     app.assert_home()
 
-    app.send_apdu("0000000000")
-    app.expect_apdu_failure("6e00")
+    app.send_apdu("800000000000")
+    app.expect_apdu_failure("917e")
+    app.send_apdu("8000000001")
+    app.expect_apdu_failure("917e")
 
     app.assert_home()
     app.quit()

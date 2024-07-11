@@ -13,28 +13,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from utils import *
+from utils import tezos_app
 
 if __name__ == "__main__":
-    app = stax_app(__file__)
+    app = tezos_app(__file__)
 
     app.assert_home()
 
-    # INS_GET_PUBLIC_KEY
-    app.send_apdu("8002000411048000002c800006c18000000080000000")
-    app.expect_apdu_failure("6b00")
+    app.send_apdu("8001000000")
+    app.expect_apdu_failure("6d00")
 
-    # INS_PROMPT_PUBLIC_KEY
-    app.send_apdu("8003000411048000002c800006c18000000080000000")
-    app.expect_apdu_failure("6b00")
-
-    # INS_SIGN
-    app.send_apdu("8004000411048000002c800006c18000000080000000")
-    app.expect_apdu_failure("6b00")
-
-    # INS_SIGN_WITH_HASH
-    app.send_apdu("800f000411048000002c800006c18000000080000000")
-    app.expect_apdu_failure("6b00")
+    app.send_apdu("8010000000")
+    app.expect_apdu_failure("6d00")
 
     app.assert_home()
     app.quit()

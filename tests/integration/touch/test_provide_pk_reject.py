@@ -13,32 +13,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from utils import *
+from utils import tezos_app
+
+def short_reject(app):
+    app.assert_home()
+
+    app.send_apdu("8003000011048000002c800006c18000000080000000")
+    app.assert_screen("screen_verify_address")
+
+    app.provide_pk.next()
+    app.assert_screen("screen_show_address_tz1_zebra")
+
+    with app.fading_screen("address_rejected"):
+        app.provide_pk.cancel()
+    app.expect_apdu_failure("6985")
+
+    app.assert_home()
 
 if __name__ == "__main__":
-    app = stax_app(__file__)
+    app = tezos_app(__file__)
 
-    app.assert_home()
-
-    app.welcome.settings()
-    app.assert_settings()
-
-    app.settings.toggle_blindsigning()
-    app.assert_settings(blindsigning=True)
-
-    app.settings.toggle_expert_mode()
-    app.assert_settings(blindsigning=True, expert_mode=True)
-
-    app.settings.toggle_blindsigning()
-    app.assert_settings(expert_mode=True)
-
-    app.settings.toggle_expert_mode()
-    app.assert_settings()
-
-    app.settings.next()
-    app.assert_info()
-
-    app.settings.exit()
-    app.assert_home()
+    short_reject(app)
+    # Ensure we can immediately send a new packet - the global state
+    # should have been reset correctly
+    short_reject(app)
 
     app.quit()

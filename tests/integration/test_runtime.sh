@@ -377,6 +377,7 @@ run_a_test() {
                         PORT=$PORT\
                             COMMIT_BYTES=$COMMIT_BYTES\
                             VERSION_BYTES=$VERSION_BYTES\
+                            TARGET=$TARGET\
                             python3 $CMD
                     elif [[ "$CMD" != *"conftest.py" ]]; then
                         if [ "$DBG" = "DEBUG" ]; then

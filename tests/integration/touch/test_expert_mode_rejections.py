@@ -13,46 +13,44 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-    Check if valid operations are not blindsigned, even when blindsigning is enabled.
-"""
-from utils import *
+from utils import (
+    tezos_app,
+    send_initialize_msg,
+    send_payload,
+    verify_reject_response
+)
 
-if __name__ == "__main__":
-    app = stax_app(__file__)
+# full input: 0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316
+# full output: CAR
+# signer: tz1dyX3B1CFYa2DfdFLyPtiJCfQRUgPVME6E
+# path: m/44'/1729'/0'/0'
 
-    # Switch to blindsign mode
+
+def sign_transfer_initialize(app):
     app.assert_home()
-
-    app.welcome.settings()
-    app.assert_settings()
-
-    app.settings.toggle_blindsigning()
-    app.assert_settings(blindsigning=True)
-
-    app.settings.exit()
-    app.assert_home()
-
     send_initialize_msg(app,"800f000011048000002c800006c18000000080000000")
     send_payload(app,"800f81005e0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316")
-
     app.review.next()
     app.assert_screen("tst_review_001")
-
     app.review.next()
     app.assert_screen("tst_review_002")
 
+
+if __name__ == "__main__":
+    app = tezos_app(__file__)
+    #  Reject from enable expert mode
+    sign_transfer_initialize(app)
     app.review.next()
-    app.expert_mode_splash()
+    verify_reject_response(app,"enable_expert_mode")
 
+    # Reject from expert mode splash
+    sign_transfer_initialize(app)
     app.review.next()
-    app.assert_screen("tst_review_003")
+    app.enable_expert_mode()
+    verify_reject_response(app, "expert_mode_splash")
 
+    # Now with expert mode enabled, reject from splash screen.
+
+    sign_transfer_initialize(app)
     app.review.next()
-    app.assert_screen("operation_sign")
-
-    expected_apdu = "f6d5fa0e79cac216e25104938ac873ca17ee9d7f06763719293b413cf2ed475cf63d045a1cc9f73eee5775c5d496fa9d3aa9ae57fb97217f746a8728639795b7b2220e84ce5759ed111399ea3263d810c230d6a4fffcb6e82797c5ca673a17089000"
-    app.review_confirm_signing(expected_apdu)
-
-    app.assert_home()
-    app.quit()
+    verify_reject_response(app, "expert_mode_splash")

@@ -169,29 +169,31 @@ class TezosAppScreen(metaclass=MetaScreen):
     commit:  str
     version: str
 
-    __backend:        BackendInterface
-    __golden:         bool
-    __snapshots_path: str
-    __stax:           str
-    __snapshotted:    List[str]  = []
+    __backend:                 BackendInterface
+    __golden:                  bool
+    __snapshots_path:          str
+    __prefixed_snapshots_path: str
+    __snapshotted:             List[str]  = []
 
     def __init__(self,
                  backend: BackendInterface,
-                 _firmware: Firmware,
+                 firmware: Firmware,
                  commit: str,
                  version: str,
                  snapshot_prefix: str,
                  golden: bool = False):
         self.__backend = backend
         realpath = os.path.realpath(__file__)
-        self.__snapshots_path = f"{os.path.dirname(realpath)}/snapshots"
-        self.__stax = f"{os.path.dirname(realpath)}/snapshots/{Path(snapshot_prefix).stem}"
+        self.__snapshots_path = \
+            f"{os.path.dirname(realpath)}/snapshots/{firmware.name}"
+        self.__prefixed_snapshots_path = \
+            f"{self.__snapshots_path}/{Path(snapshot_prefix).stem}"
         self.commit = commit
         self.version = version
         self.__golden = golden
         if golden:
             # Setup for golden
-            path = f"{self.__stax}/"
+            path = f"{self.__prefixed_snapshots_path}"
             Path(path).mkdir(parents=True, exist_ok=True)
             for filename in os.listdir(path):
                 os.remove(os.path.join(path, filename))
@@ -230,7 +232,7 @@ class TezosAppScreen(metaclass=MetaScreen):
         if fixed:
             path = f'{self.__snapshots_path}/{screen}.png'
         else:
-            path = f'{self.__stax}/{screen}.png'
+            path = f'{self.__prefixed_snapshots_path}/{screen}.png'
         def check():
             print(f"- Expecting {screen} -")
             assert self.__backend.compare_screen_with_snapshot(path, golden_run = golden)
@@ -314,13 +316,15 @@ class TezosAppScreen(metaclass=MetaScreen):
             with self.fading_screen("reject_review"):
                 self.review.reject_tx.confirm()
 
-def stax_app(prefix) -> TezosAppScreen:
+def tezos_app(prefix) -> TezosAppScreen:
     port = os.environ["PORT"]
     commit = os.environ["COMMIT_BYTES"]
     version = os.environ["VERSION_BYTES"]
     golden = os.getenv("GOLDEN") != None
-    backend = SpeculosBackend("__unused__", Firmware.STAX,args=["--api-port", port])
-    return TezosAppScreen(backend, Firmware.STAX, commit, version, prefix, golden)
+    target = os.getenv("TARGET")
+    firmware = Firmware.STAX if target == "stax" else Firmware.STAX
+    backend = SpeculosBackend("__unused__", firmware, args=["--api-port", port])
+    return TezosAppScreen(backend, firmware, commit, version, prefix, golden)
 
 def assert_home_with_code(app, code):
     app.assert_home()

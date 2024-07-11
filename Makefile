@@ -92,8 +92,8 @@ RUN_TEST_DOCKER = ./tests/integration/run_test_docker.sh
 integration_tests_basic_stax:	app_stax.tgz		\
 				app_stax_dbg.tgz	\
 				tests/integration/*	\
-				tests/integration/stax/*
-	$(RUN_TEST_DOCKER) stax tests/integration/stax
+				tests/integration/touch/*
+	$(RUN_TEST_DOCKER) stax tests/integration/touch
 
 integration_tests_basic_%:	app_%.tgz   \
 				app_%_dbg.tgz			\
