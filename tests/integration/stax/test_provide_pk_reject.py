@@ -24,10 +24,9 @@ def short_reject(app):
     app.provide_pk.next()
     app.assert_screen("screen_show_address_tz1_zebra")
 
-    app.provide_pk.cancel()
-    app.assert_screen("address_rejected")
+    with app.fading_screen("address_rejected"):
+        app.provide_pk.cancel()
     app.expect_apdu_failure("6985")
-    app.review.tap()
 
     app.assert_home()
 

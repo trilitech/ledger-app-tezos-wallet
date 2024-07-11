@@ -28,16 +28,12 @@ if __name__ == "__main__":
     app.assert_screen("tbtd_review_0")
     app.review.next()
     app.assert_screen("too_deep_enable_blindsign")
-    app.review.enable_blindsign.confirm()
-
-    app.assert_screen("blindsign_enabled")
-    app.review.tap()
+    with app.fading_screen("blindsign_enabled"):
+        app.review.enable_blindsign.confirm()
 
     app.assert_screen("blindsign_warning")
-    app.welcome.client.pause_ticker()
-    app.review.next()
-    app.assert_screen("loading_operation")
-    app.welcome.client.resume_ticker()
+    with app.fading_screen("loading_operation"):
+        app.review.next()
     app.send_apdu("800f82001211020000000c02000000070200000002002a")
 
     app.assert_screen("tbtd_review_1")
@@ -65,10 +61,8 @@ if __name__ == "__main__":
     app.assert_screen("too_deep_blindsign_notify")
     app.review.next()
     app.assert_screen("blindsign_warning")
-    app.welcome.client.pause_ticker()
-    app.review.next()
-    app.assert_screen("loading_operation")
-    app.welcome.client.resume_ticker()
+    with app.fading_screen("loading_operation"):
+        app.review.next()
     app.send_apdu("800f82001211020000000c02000000070200000002002a")
 
     app.assert_screen("tbtd_review_1")

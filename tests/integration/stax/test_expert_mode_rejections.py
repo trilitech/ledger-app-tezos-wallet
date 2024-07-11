@@ -45,7 +45,6 @@ if __name__ == "__main__":
     sign_transfer_initialize(app)
     app.review.next()
     app.enable_expert_mode()
-    app.review.tap()
     verify_reject_response(app, "expert_mode_splash")
 
     # Now with expert mode enabled, reject from splash screen.

@@ -33,8 +33,8 @@ if __name__ == "__main__":
     app.provide_pk.exit_qr()
     app.assert_screen("screen_show_address_tz1_zebra")
 
-    app.provide_pk.confirm()
-    app.assert_screen("address_verified")
+    with app.fading_screen("address_verified"):
+        app.provide_pk.confirm()
 
     app.provide_pk.next()
     app.expect_apdu_return("2102747884d9abdf16b3ab745158925f567e222f71225501826fa83347f6cbe9c3939000")

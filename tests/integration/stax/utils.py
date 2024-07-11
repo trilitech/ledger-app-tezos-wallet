@@ -17,7 +17,7 @@ import os
 import time
 
 from pathlib import Path
-from typing import List
+from typing import Generator, List
 from contextlib import contextmanager
 from requests.exceptions import ChunkedEncodingError
 
@@ -220,50 +220,52 @@ class TezosAppScreen(metaclass=MetaScreen):
         else:
             input("PRESS ENTER to continue next test\n- You may need to reset to home")
 
+    @contextmanager
+    def manual_ticker(self) -> Generator[None, None, None]:
+        self.__backend.pause_ticker()
+        yield
+        self.__backend.resume_ticker()
+
+    @contextmanager
+    def fading_screen(self, screen) -> Generator[None, None, None]:
+        with self.manual_ticker():
+            yield
+            self.assert_screen(screen)
+            self.review.tap() # Not waiting for the screen to fade on its own
+
     def start_loading_operation(self, first_packet):
         """
         Send the first packet for signing an operation.
 
         We ensure that the loading operation screen is shown.
         """
-        self.welcome.client.pause_ticker()
-        self.send_apdu(first_packet)
-        self.assert_screen("loading_operation")
-        self.welcome.client.resume_ticker()
+        with self.fading_screen("loading_operation"):
+            self.send_apdu(first_packet)
         self.expect_apdu_return("9000")
 
     def review_confirm_signing(self, expected_apdu):
-        self.welcome.client.pause_ticker()
-        self.review.confirm()
-        self.assert_screen("signing_successful")
-        self.review.tap()
+        with self.fading_screen("signing_successful"):
+            self.review.confirm()
         self.expect_apdu_return(expected_apdu)
 
-    def enable_expert_mode(self, expert_enabled=False):
-        if not expert_enabled:
-            self.assert_screen("enable_expert_mode")
+    def enable_expert_mode(self):
+        self.assert_screen("enable_expert_mode")
+        with self.fading_screen("enabled_expert_mode"):
             self.review.enable_expert.confirm()
-            self.assert_screen("enabled_expert_mode")
 
-    def expert_mode_splash(self, expert_enabled=False):
-        self.enable_expert_mode(expert_enabled)
-        self.review.tap()
+    def expert_mode_splash(self):
+        self.enable_expert_mode()
         self.assert_screen("expert_mode_splash")
 
-
-
-    def review_reject_signing(self, confirmRejection = True):
+    def review_reject_signing(self, cancel_rejection = False):
         self.review.reject()
         # Rejection confirmation page
         self.assert_screen("confirm_rejection")
-        if confirmRejection:
-            self.welcome.client.pause_ticker()
-            self.review.reject_tx.confirm()
-            self.assert_screen("reject_review")
-            self.review.tap()
-            self.welcome.client.resume_ticker()
-        else:
+        if cancel_rejection:
             self.review.reject_tx.reject()
+        else:
+            with self.fading_screen("reject_review"):
+                self.review.reject_tx.confirm()
 
 def stax_app(prefix) -> TezosAppScreen:
     port = os.environ["PORT"]
@@ -280,15 +282,14 @@ def assert_home_with_code(app, code):
 def send_initialize_msg(app, apdu):
     app.send_apdu(apdu)
     app.expect_apdu_return("9000")
-
-    app.assert_screen("review_request_sign_operation");
+    app.assert_screen("review_request_sign_operation")
 
 def send_payload(app, apdu):
     app.send_apdu(apdu)
-    app.assert_screen("review_request_sign_operation");
+    app.assert_screen("review_request_sign_operation")
 
 def verify_err_reject_response(app, tag):
-    verify_reject_response_common(app,tag,"9405")
+    verify_reject_response_common(app, tag, "9405")
 
 def verify_reject_response(app, tag):
     verify_reject_response_common(app, tag,"6985")
@@ -297,9 +298,6 @@ def verify_reject_response_common(app, tag, err_code):
     app.assert_screen(tag)
     app.review.reject()
     app.assert_screen("reject_review")
-    app.welcome.client.pause_ticker()
-    app.review.reject_tx.confirm()
-    app.assert_screen("rejected")
-    app.review.tap()
-    app.welcome.client.resume_ticker()
+    with app.fading_screen("rejected"):
+        app.review.reject_tx.confirm()
     assert_home_with_code(app, err_code)

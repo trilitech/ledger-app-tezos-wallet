@@ -27,13 +27,8 @@ if __name__ == "__main__":
     app.review.next()
 
     app.assert_screen("too_large_enable_blindsign")
-    app.welcome.client.pause_ticker()
-    app.review.enable_blindsign.confirm()
-
-    app.assert_screen("blindsign_enabled")
-    app.welcome.client.resume_ticker()
-
-    app.review.tap()
+    with app.fading_screen("blindsign_enabled"):
+        app.review.enable_blindsign.confirm()
 
     app.assert_screen("blindsign_warning")
     app.review.next()
