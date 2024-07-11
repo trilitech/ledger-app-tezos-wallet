@@ -27,22 +27,22 @@ if __name__ == "__main__":
 
     send_initialize_msg(app, "8004000011048000002c800006c18000000080000000")
     send_payload(app, "800481005e0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316")
-    app.review.tap()
+    app.review.next()
     app.assert_screen("review_0")
 
-    app.review.tap()
+    app.review.next()
     app.assert_screen("review_1")
 
-    app.review.tap()
+    app.review.next()
     app.assert_screen("review_2")
 
-    app.review.tap()
+    app.review.next()
     app.expert_mode_splash()
 
-    app.review.tap()
+    app.review.next()
     app.assert_screen("review_3")
 
-    app.review.tap()
+    app.review.next()
     app.assert_screen("operation_sign")
 
     expected_apdu = "f63d045a1cc9f73eee5775c5d496fa9d3aa9ae57fb97217f746a8728639795b7b2220e84ce5759ed111399ea3263d810c230d6a4fffcb6e82797c5ca673a17089000"

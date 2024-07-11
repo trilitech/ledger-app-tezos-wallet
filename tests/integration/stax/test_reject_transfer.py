@@ -29,7 +29,7 @@ if __name__ == "__main__":
     app.expect_apdu_return("9000")
 
     app.assert_screen("review_request_sign_operation")
-    app.review.tap()
+    app.review.next()
 
     # Ensure we don't advance to a blank screen
     app.assert_screen("review_request_sign_operation")

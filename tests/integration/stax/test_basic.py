@@ -20,27 +20,25 @@ if __name__ == "__main__":
 
     app.assert_home()
 
-    app.welcome.info()
+    app.welcome.settings()
     app.assert_settings()
 
-
-    app.settings_toggle_blindsigning()
+    app.settings.toggle_blindsigning()
     app.assert_settings(blindsigning=True)
 
-    app.settings_toggle_expert_mode()
+    app.settings.toggle_expert_mode()
     app.assert_settings(blindsigning=True, expert_mode=True)
 
-    app.settings_toggle_blindsigning()
+    app.settings.toggle_blindsigning()
     app.assert_settings(expert_mode=True)
 
-    app.settings_toggle_expert_mode()
+    app.settings.toggle_expert_mode()
     app.assert_settings()
 
-
-    app.info.next()
+    app.settings.next()
     app.assert_info()
 
-    app.info.multi_page_exit()
+    app.settings.exit()
     app.assert_home()
 
     app.quit()

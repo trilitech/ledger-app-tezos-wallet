@@ -16,9 +16,6 @@
 
 from utils import *
 
-# "Show as QR" button position
-show_qr_position=(200, 275)
-
 if __name__ == "__main__":
     app = stax_app(__file__)
 
@@ -27,10 +24,10 @@ if __name__ == "__main__":
     app.send_apdu("8003000011048000002c800006c18000000080000000")
     app.assert_screen("screen_verify_address")
 
-    app.provide_pk.tap()
+    app.provide_pk.next()
     app.assert_screen("screen_show_address_tz1_zebra")
 
-    app.provide_pk.client.finger_touch(*show_qr_position)
+    app.provide_pk.show_qr()
     app.assert_screen("screen_show_address_tz1_zebra_qrcode")
 
     app.provide_pk.exit_qr()
@@ -39,7 +36,7 @@ if __name__ == "__main__":
     app.provide_pk.confirm()
     app.assert_screen("address_verified")
 
-    app.provide_pk.tap()
+    app.provide_pk.next()
     app.expect_apdu_return("2102747884d9abdf16b3ab745158925f567e222f71225501826fa83347f6cbe9c3939000")
 
     app.assert_home()

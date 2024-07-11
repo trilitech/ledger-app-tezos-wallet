@@ -25,9 +25,18 @@ from ragger.backend import BackendInterface, SpeculosBackend
 from ragger.backend.interface import RaisePolicy
 from ragger.firmware import Firmware
 from ragger.firmware.touch.screen import MetaScreen
-from ragger.firmware.touch.use_cases import UseCaseHomeExt, UseCaseSettings, UseCaseAddressConfirmation, UseCaseReview, UseCaseChoice
+from ragger.firmware.touch.use_cases import (
+    UseCaseHomeExt,
+    UseCaseSettings as OriginalUseCaseSettings,
+    UseCaseAddressConfirmation as OriginalUseCaseAddressConfirmation,
+    UseCaseReview as OriginalUseCaseReview,
+    UseCaseChoice
+)
 from ragger.firmware.touch.layouts import ChoiceList
-from ragger.firmware.touch.positions import STAX_BUTTON_LOWER_LEFT, STAX_BUTTON_LOWER_RIGHT, STAX_BUTTON_ABOVE_LOWER_MIDDLE, STAX_BUTTON_LOWER_MIDDLE
+from ragger.firmware.touch.positions import (
+    Position,
+    STAX_CENTER
+)
 
 MAX_ATTEMPTS = 50
 
@@ -43,20 +52,72 @@ def with_retry(f, attempts=MAX_ATTEMPTS):
         # Give plenty of time for speculos to update - can take a long time on CI machines
         time.sleep(0.5)
 
+class UseCaseReview(OriginalUseCaseReview):
+    """Extension of UseCaseReview for our app."""
+
+    reject_tx:        UseCaseChoice
+    enable_expert:    UseCaseChoice
+    enable_blindsign: UseCaseChoice
+
+    def __init__(self, client: BackendInterface, firmware: Firmware):
+        super().__init__(client, firmware)
+        self.reject_tx        = UseCaseChoice(client, firmware)
+        self.enable_expert    = UseCaseChoice(client, firmware)
+        self.enable_blindsign = UseCaseChoice(client, firmware)
+
+    def next(self) -> None:
+        """Pass to the next screen."""
+        self.tap()
+
+class UseCaseAddressConfirmation(OriginalUseCaseAddressConfirmation):
+    """Extension of UseCaseAddressConfirmation for our app."""
+
+    def next(self) -> None:
+        """Pass to the next screen."""
+        self.tap()
+
+    @property
+    def qr_position(self) -> Position:
+        """Position of the qr code.
+        Y-285 = common space shared by buttons under a key displayed on 2 or 3 lines
+        """
+        return Position(STAX_CENTER.x, 285)
+
+    def show_qr(self) -> None:
+        """Tap to show qr code."""
+        self.client.finger_touch(*self.qr_position)
+
+class UseCaseSettings(OriginalUseCaseSettings):
+    """Extension of UseCaseSettings for our app."""
+
+    _toggle_list: ChoiceList
+
+    def __init__(self, client: BackendInterface, firmware: Firmware):
+        super().__init__(client, firmware)
+        self._toggle_list = ChoiceList(client, firmware)
+
+    def toggle_expert_mode(self):
+        """Toggle the expert_mode switch."""
+        self._toggle_list.choose(1)
+
+    def toggle_blindsigning(self):
+        """Toggle the blindsigning switch."""
+        self._toggle_list.choose(2)
+
+    def exit(self) -> None:
+        """Exits settings."""
+        self.multi_page_exit()
+
 class TezosAppScreen(metaclass=MetaScreen):
     use_case_welcome    = UseCaseHomeExt
-    use_case_info       = UseCaseSettings
+    use_case_settings   = UseCaseSettings
     use_case_provide_pk = UseCaseAddressConfirmation
     use_case_review     = UseCaseReview
-    use_case_choice     = UseCaseChoice
-    layout_settings     = ChoiceList
 
     welcome:    UseCaseHomeExt
-    info:       UseCaseSettings
+    settings:   UseCaseSettings
     provide_pk: UseCaseAddressConfirmation
     review:     UseCaseReview
-    choice:     UseCaseChoice
-    settings:   ChoiceList
 
     commit:  str
     version: str
@@ -157,13 +218,7 @@ class TezosAppScreen(metaclass=MetaScreen):
                 pass
 
         else:
-            input(f"PRESS ENTER to continue next test\n- You may need to reset to home")
-
-    def settings_toggle_expert_mode(self):
-        self.settings.choose(1)
-
-    def settings_toggle_blindsigning(self):
-        self.settings.choose(2)
+            input("PRESS ENTER to continue next test\n- You may need to reset to home")
 
     def start_loading_operation(self, first_packet):
         """
@@ -187,7 +242,7 @@ class TezosAppScreen(metaclass=MetaScreen):
     def enable_expert_mode(self, expert_enabled=False):
         if not expert_enabled:
             self.assert_screen("enable_expert_mode")
-            self.welcome.client.finger_touch(STAX_BUTTON_ABOVE_LOWER_MIDDLE.x, STAX_BUTTON_ABOVE_LOWER_MIDDLE.y)
+            self.review.enable_expert.confirm()
             self.assert_screen("enabled_expert_mode")
 
     def expert_mode_splash(self, expert_enabled=False):
@@ -198,17 +253,17 @@ class TezosAppScreen(metaclass=MetaScreen):
 
 
     def review_reject_signing(self, confirmRejection = True):
-        self.welcome.client.finger_touch(STAX_BUTTON_LOWER_LEFT.x, STAX_BUTTON_LOWER_RIGHT.y)
+        self.review.reject()
         # Rejection confirmation page
         self.assert_screen("confirm_rejection")
         if confirmRejection:
             self.welcome.client.pause_ticker()
-            self.welcome.client.finger_touch(STAX_BUTTON_ABOVE_LOWER_MIDDLE.x, STAX_BUTTON_ABOVE_LOWER_MIDDLE.y)
+            self.review.reject_tx.confirm()
             self.assert_screen("reject_review")
             self.review.tap()
             self.welcome.client.resume_ticker()
         else:
-            self.welcome.client.finger_touch(STAX_BUTTON_LOWER_MIDDLE.x, STAX_BUTTON_LOWER_MIDDLE.y)
+            self.review.reject_tx.reject()
 
 def stax_app(prefix) -> TezosAppScreen:
     port = os.environ["PORT"]
@@ -243,7 +298,7 @@ def verify_reject_response_common(app, tag, err_code):
     app.review.reject()
     app.assert_screen("reject_review")
     app.welcome.client.pause_ticker()
-    app.welcome.client.finger_touch(STAX_BUTTON_ABOVE_LOWER_MIDDLE.x, STAX_BUTTON_ABOVE_LOWER_MIDDLE.y)
+    app.review.reject_tx.confirm()
     app.assert_screen("rejected")
     app.review.tap()
     app.welcome.client.resume_ticker()

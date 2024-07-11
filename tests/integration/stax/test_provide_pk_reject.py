@@ -21,7 +21,7 @@ def short_reject(app):
     app.send_apdu("8003000011048000002c800006c18000000080000000")
     app.assert_screen("screen_verify_address")
 
-    app.provide_pk.tap()
+    app.provide_pk.next()
     app.assert_screen("screen_show_address_tz1_zebra")
 
     app.provide_pk.cancel()
