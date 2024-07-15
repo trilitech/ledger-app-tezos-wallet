@@ -94,7 +94,7 @@ blindsign_splash(void)
 {
     TZ_PREAMBLE(("void"));
     nbgl_useCaseReviewStart(
-        &C_round_warning_64px, "Blind signing",
+        &C_Important_Circle_64px, "Blind signing",
         "This transaction can not be securely interpreted by Ledger Stax. It "
         "might put your assets at risk.",
         "Reject transaction", start_blindsign, tz_reject_ui);
@@ -127,11 +127,12 @@ switch_to_blindsigning(__attribute__((unused)) const char *err_type,
     global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
     global.step                = ST_BLIND_SIGN;
     if (N_settings.blindsigning) {
-        nbgl_useCaseReviewStart(
-            &C_round_warning_64px, "Blind signing required:\nParsing Error",
-            err_code, "Reject transaction", blindsign_splash, tz_reject_ui);
+        nbgl_useCaseReviewStart(&C_Important_Circle_64px,
+                                "Blind signing required:\nParsing Error",
+                                err_code, "Reject transaction",
+                                blindsign_splash, tz_reject_ui);
     } else {
-        nbgl_useCaseChoice(&C_round_warning_64px,
+        nbgl_useCaseChoice(&C_Important_Circle_64px,
                            "Enable blind signing to authorize this "
                            "transaction:\nParsing Error",
                            err_code, "Enable blind signing",
@@ -145,7 +146,7 @@ expert_mode_splash(void)
 {
     TZ_PREAMBLE(("void"));
 
-    nbgl_useCaseReviewStart(&C_round_warning_64px, "Expert mode",
+    nbgl_useCaseReviewStart(&C_Important_Circle_64px, "Expert mode",
                             "Next screen requires careful review",
                             "Reject transaction", tz_ui_stream_start,
                             tz_reject_ui);
@@ -175,7 +176,7 @@ tz_enable_expert_mode_ui(void)
 {
     FUNC_LEAVE();
 
-    nbgl_useCaseChoice(&C_round_warning_64px,
+    nbgl_useCaseChoice(&C_Important_Circle_64px,
                        "Enable expert mode to authorize this "
                        "transaction",
                        "", "Enable expert mode", "Reject transaction",
