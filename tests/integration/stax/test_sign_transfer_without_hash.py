@@ -34,13 +34,10 @@ if __name__ == "__main__":
     app.assert_screen("review_1")
 
     app.review.next()
-    app.assert_screen("review_2")
-
-    app.review.next()
     app.expert_mode_splash()
 
     app.review.next()
-    app.assert_screen("review_3")
+    app.assert_screen("review_2")
 
     app.review.next()
     app.assert_screen("operation_sign")

@@ -29,9 +29,6 @@ def sign_transfer_initialize(app):
     app.assert_screen("tst_review_001")
     app.review.next()
     app.assert_screen("tst_review_002")
-    app.review.next()
-    app.assert_screen("tst_review_003")
-
 
 
 if __name__ == "__main__":

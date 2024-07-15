@@ -24,6 +24,7 @@ from requests.exceptions import ChunkedEncodingError
 from ragger.backend import BackendInterface, SpeculosBackend
 from ragger.backend.interface import RaisePolicy
 from ragger.firmware import Firmware
+from ragger.firmware.touch.element import Center
 from ragger.firmware.touch.screen import MetaScreen
 from ragger.firmware.touch.use_cases import (
     UseCaseHomeExt,
@@ -35,7 +36,8 @@ from ragger.firmware.touch.use_cases import (
 from ragger.firmware.touch.layouts import ChoiceList
 from ragger.firmware.touch.positions import (
     Position,
-    STAX_CENTER
+    STAX_BUTTON_LOWER_LEFT,
+    STAX_BUTTON_ABOVE_LOWER_MIDDLE
 )
 
 MAX_ATTEMPTS = 50
@@ -59,29 +61,38 @@ class UseCaseReview(OriginalUseCaseReview):
     enable_expert:    UseCaseChoice
     enable_blindsign: UseCaseChoice
 
+    _center: Center
+
     def __init__(self, client: BackendInterface, firmware: Firmware):
         super().__init__(client, firmware)
         self.reject_tx        = UseCaseChoice(client, firmware)
         self.enable_expert    = UseCaseChoice(client, firmware)
         self.enable_blindsign = UseCaseChoice(client, firmware)
+        self._center = Center(client, firmware)
 
     def next(self) -> None:
         """Pass to the next screen."""
-        self.tap()
+        self._center.swipe_left()
 
 class UseCaseAddressConfirmation(OriginalUseCaseAddressConfirmation):
     """Extension of UseCaseAddressConfirmation for our app."""
 
+    _center: Center
+
+    QR_POSITION = Position(STAX_BUTTON_LOWER_LEFT.x, STAX_BUTTON_ABOVE_LOWER_MIDDLE.y)
+
+    def __init__(self, client: BackendInterface, firmware: Firmware):
+        super().__init__(client, firmware)
+        self._center = Center(client, firmware)
+
     def next(self) -> None:
         """Pass to the next screen."""
-        self.tap()
+        self._center.swipe_left()
 
     @property
     def qr_position(self) -> Position:
-        """Position of the qr code.
-        Y-285 = common space shared by buttons under a key displayed on 2 or 3 lines
-        """
-        return Position(STAX_CENTER.x, 285)
+        """Position of the qr code."""
+        return UseCaseAddressConfirmation.QR_POSITION
 
     def show_qr(self) -> None:
         """Tap to show qr code."""

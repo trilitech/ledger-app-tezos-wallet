@@ -41,9 +41,7 @@ if __name__ == "__main__":
     app.review.next()
     app.assert_screen("tpe_review_0_01")
     app.review.next()
-    app.assert_screen("tpe_review_0_02_partial")
-    app.review.next()
-    app.assert_screen("tpe_review_0_03")
+    app.assert_screen("tpe_review_0_02")
     app.review.next()
     verify_err_reject_response(app, "invalid_tag")
 
@@ -55,11 +53,9 @@ if __name__ == "__main__":
     app.review.next()
     app.assert_screen("tpe_review_0_02_full")
     app.review.next()
-    app.assert_screen("tpe_review_0_03_full")
-    app.review.next()
     app.expert_mode_splash()
     app.review.next()
-    app.assert_screen("tpe_review_0_04_full")
+    app.assert_screen("tpe_review_0_03_full")
     app.review.next()
     verify_err_reject_response(app, "invalid_tag")
 
@@ -94,9 +90,6 @@ if __name__ == "__main__":
     send_payload(app, "800f8100eb030000000000000000000000000000000000000000000000000000000000000000ce00ffdd6102321bc251e4a5190ad5b12b251069d9b4904e02030400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c63966303966323935326433343532386337333366393436313563666333396263353535363139666335353064643461363762613232303863653865383637616133643133613665663939646662653332633639373461613961323135306432316563613239633333343965353963313362393038316631")
     app.review.next()
     app.assert_screen("tpe_review_1_01")
-    # No error screen <- issue with packet framing protocol
-    app.review.next()
-    app.assert_screen("tpe_review_1_02")
     app.review.next()
     app.expect_apdu_failure("9002")
 

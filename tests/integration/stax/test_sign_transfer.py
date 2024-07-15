@@ -34,13 +34,10 @@ if __name__ == "__main__":
     app.assert_screen("tst_review_002")
 
     app.review.next()
-    app.assert_screen("tst_review_003")
-
-    app.review.next()
     app.expert_mode_splash()
 
     app.review.next()
-    app.assert_screen("tst_review_004")
+    app.assert_screen("tst_review_003")
 
     app.review.next()
     app.assert_screen("operation_sign")
@@ -60,13 +57,10 @@ if __name__ == "__main__":
     app.assert_screen("tst_review_002")
 
     app.review.next()
-    app.assert_screen("tst_review_003")
-
-    app.review.next()
     app.assert_screen("expert_mode_splash")
 
     app.review.next()
-    app.assert_screen("tst_review_004")
+    app.assert_screen("tst_review_003")
 
     app.review.next()
     app.assert_screen("operation_sign")
