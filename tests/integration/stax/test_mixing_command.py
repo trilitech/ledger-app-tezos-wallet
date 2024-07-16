@@ -18,7 +18,7 @@ from utils import *
 if __name__ == "__main__":
     app = stax_app(__file__)
 
-    app.assert_screen(SCREEN_HOME_DEFAULT, True)
+    app.assert_home()
 
     # INS_VERSION in INS_SIGN
     app.send_apdu("8004000011048000002c800006c18000000080000000")
@@ -56,5 +56,5 @@ if __name__ == "__main__":
     app.send_apdu("8009000000")
     app.expect_apdu_failure("9001")
 
-    app.assert_screen(SCREEN_HOME_DEFAULT, True)
+    app.assert_home()
     app.quit()

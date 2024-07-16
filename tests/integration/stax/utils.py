@@ -17,21 +17,32 @@ import os
 import time
 
 from pathlib import Path
+from typing import Generator, List
 from contextlib import contextmanager
-from requests.exceptions import (ChunkedEncodingError, ConnectionError)
+from requests.exceptions import ChunkedEncodingError
 
-from ragger.backend import SpeculosBackend
+from ragger.backend import BackendInterface, SpeculosBackend
 from ragger.backend.interface import RaisePolicy
 from ragger.firmware import Firmware
+from ragger.firmware.touch.element import Center
 from ragger.firmware.touch.screen import MetaScreen
-from ragger.firmware.touch.use_cases import UseCaseHomeExt, UseCaseSettings, UseCaseAddressConfirmation, UseCaseReview, UseCaseChoice
+from ragger.firmware.touch.use_cases import (
+    UseCaseHomeExt,
+    UseCaseSettings as OriginalUseCaseSettings,
+    UseCaseAddressConfirmation as OriginalUseCaseAddressConfirmation,
+    UseCaseReview as OriginalUseCaseReview,
+    UseCaseChoice as OriginalUseCaseChoice
+)
 from ragger.firmware.touch.layouts import ChoiceList
-from ragger.firmware.touch.positions import STAX_BUTTON_LOWER_LEFT, STAX_BUTTON_LOWER_RIGHT, STAX_BUTTON_ABOVE_LOWER_MIDDLE, STAX_BUTTON_LOWER_MIDDLE
+from ragger.firmware.touch.positions import (
+    Position,
+    STAX_BUTTON_LOWER_LEFT,
+    STAX_BUTTON_ABOVE_LOWER_MIDDLE,
+    STAX_BUTTON_LOWER_RIGHT,
+    STAX_BUTTON_LOWER_MIDDLE
+)
 
 MAX_ATTEMPTS = 50
-
-SCREEN_HOME_DEFAULT = "home"
-SCREEN_INFO_PAGE = "info"
 
 def with_retry(f, attempts=MAX_ATTEMPTS):
     while True:
@@ -45,27 +56,150 @@ def with_retry(f, attempts=MAX_ATTEMPTS):
         # Give plenty of time for speculos to update - can take a long time on CI machines
         time.sleep(0.5)
 
+class UseCaseChoice(OriginalUseCaseChoice):
+    """Extension of UseCaseChoice for our app."""
+
+    # Fixed in Ragger v1.21.0
+    def reject(self) -> None:
+        """Tap on reject button."""
+        self.client.finger_touch(*STAX_BUTTON_LOWER_LEFT)
+
+class UseCaseReview(OriginalUseCaseReview):
+    """Extension of UseCaseReview for our app."""
+
+    reject_tx:        UseCaseChoice
+    enable_expert:    UseCaseChoice
+    enable_blindsign: UseCaseChoice
+
+    _center: Center
+
+    def __init__(self, client: BackendInterface, firmware: Firmware):
+        super().__init__(client, firmware)
+        self.reject_tx        = UseCaseChoice(client, firmware)
+        self.enable_expert    = UseCaseChoice(client, firmware)
+        self.enable_blindsign = UseCaseChoice(client, firmware)
+        self._center = Center(client, firmware)
+
+    def next(self) -> None:
+        """Pass to the next screen."""
+        self._center.swipe_left()
+
+    # Fixed in Ragger v1.21.0
+    def tap(self) -> None:
+        """Tap on screen."""
+        self.client.finger_touch(*STAX_BUTTON_LOWER_RIGHT)
+
+    # Fixed in Ragger v1.21.0
+    def previous(self) -> None:
+        """Tap on screen."""
+        self.client.finger_touch(*STAX_BUTTON_LOWER_MIDDLE)
+
+    # Fixed in Ragger v1.21.0
+    def reject(self) -> None:
+        """Tap on reject button."""
+        self.client.finger_touch(*STAX_BUTTON_LOWER_LEFT)
+
+class UseCaseAddressConfirmation(OriginalUseCaseAddressConfirmation):
+    """Extension of UseCaseAddressConfirmation for our app."""
+
+    _center: Center
+
+    QR_POSITION = Position(STAX_BUTTON_LOWER_LEFT.x, STAX_BUTTON_ABOVE_LOWER_MIDDLE.y)
+
+    def __init__(self, client: BackendInterface, firmware: Firmware):
+        super().__init__(client, firmware)
+        self._center = Center(client, firmware)
+
+    def next(self) -> None:
+        """Pass to the next screen."""
+        self._center.swipe_left()
+
+    @property
+    def qr_position(self) -> Position:
+        """Position of the qr code."""
+        return UseCaseAddressConfirmation.QR_POSITION
+
+    def show_qr(self) -> None:
+        """Tap to show qr code."""
+        self.client.finger_touch(*self.qr_position)
+
+    # Fixed in Ragger v1.21.0
+    def cancel(self) -> None:
+        """Tap on cancel button."""
+        self.client.finger_touch(*STAX_BUTTON_LOWER_LEFT)
+
+class UseCaseSettings(OriginalUseCaseSettings):
+    """Extension of UseCaseSettings for our app."""
+
+    _toggle_list: ChoiceList
+
+    def __init__(self, client: BackendInterface, firmware: Firmware):
+        super().__init__(client, firmware)
+        self._toggle_list = ChoiceList(client, firmware)
+
+    def toggle_expert_mode(self):
+        """Toggle the expert_mode switch."""
+        self._toggle_list.choose(1)
+
+    def toggle_blindsigning(self):
+        """Toggle the blindsigning switch."""
+        self._toggle_list.choose(2)
+
+    def exit(self) -> None:
+        """Exits settings."""
+        self.multi_page_exit()
+
+    # Fixed in Ragger v1.21.0
+    STAX_BUTTON_LOWER_MIDDLE_RIGHT = Position(266, 615)
+    def previous(self) -> None:
+        """Tap on cancel button."""
+        self.client.finger_touch(*UseCaseSettings.STAX_BUTTON_LOWER_MIDDLE_RIGHT)
+
 class TezosAppScreen(metaclass=MetaScreen):
-    use_case_welcome = UseCaseHomeExt
-    use_case_info = UseCaseSettings
+    use_case_welcome    = UseCaseHomeExt
+    use_case_settings   = UseCaseSettings
     use_case_provide_pk = UseCaseAddressConfirmation
-    use_case_review = UseCaseReview
-    use_case_choice = UseCaseChoice
+    use_case_review     = UseCaseReview
 
-    __backend = None
-    __golden = False
-    __stax = None
-    __snapshotted = []
-    __settings = None
+    welcome:    UseCaseHomeExt
+    settings:   UseCaseSettings
+    provide_pk: UseCaseAddressConfirmation
+    review:     UseCaseReview
 
-    def __init__(self, backend, firmware, commit, version, snapshot_prefix):
+    commit:  str
+    version: str
+
+    __backend:        BackendInterface
+    __golden:         bool
+    __snapshots_path: str
+    __stax:           str
+    __snapshotted:    List[str]  = []
+
+    def __init__(self,
+                 backend: BackendInterface,
+                 _firmware: Firmware,
+                 commit: str,
+                 version: str,
+                 snapshot_prefix: str,
+                 golden: bool = False):
         self.__backend = backend
         realpath = os.path.realpath(__file__)
         self.__snapshots_path = f"{os.path.dirname(realpath)}/snapshots"
         self.__stax = f"{os.path.dirname(realpath)}/snapshots/{Path(snapshot_prefix).stem}"
-        self.__settings = ChoiceList(backend, firmware)
         self.commit = commit
         self.version = version
+        self.__golden = golden
+        if golden:
+            # Setup for golden
+            path = f"{self.__stax}/"
+            Path(path).mkdir(parents=True, exist_ok=True)
+            for filename in os.listdir(path):
+                os.remove(os.path.join(path, filename))
+            path = f"{self.__snapshots_path}"
+            home_path=os.path.join(path, "home.png")
+            info_path=os.path.join(path, "info.png")
+            if os.path.exists(home_path): os.remove(home_path)
+            if os.path.exists(info_path): os.remove(info_path)
 
     def send_apdu(self, data):
         """Send hex-encoded bytes to the apdu"""
@@ -103,18 +237,23 @@ class TezosAppScreen(metaclass=MetaScreen):
 
         with_retry(check)
 
-    def make_golden(self):
-        self.__golden = True
-        path = f"{self.__stax}/"
-        Path(path).mkdir(parents=True, exist_ok=True)
-        for filename in os.listdir(path):
-            os.remove(os.path.join(path, filename))
-        path = f"{self.__snapshots_path}"
-        home_path=os.path.join(path, "home.png")
-        info_path=os.path.join(path, "info.png")
-        if os.path.exists(home_path): os.remove(home_path)
-        if os.path.exists(info_path): os.remove(info_path)
+    def assert_home(self):
+        self.assert_screen("home", True)
 
+    def assert_info(self):
+        self.assert_screen("info", True)
+
+    def assert_settings(self,
+                        blindsigning = False,
+                        expert_mode = False):
+        suffix=""
+        if blindsigning:
+            suffix += "_blindsigning"
+        if expert_mode:
+            suffix += "_expert"
+        if suffix != "":
+            suffix += "_on"
+        self.assert_screen("settings" + suffix)
 
     def quit(self):
         if os.getenv("NOQUIT") == None:
@@ -126,13 +265,20 @@ class TezosAppScreen(metaclass=MetaScreen):
                 pass
 
         else:
-            input(f"PRESS ENTER to continue next test\n- You may need to reset to home")
+            input("PRESS ENTER to continue next test\n- You may need to reset to home")
 
-    def settings_toggle_expert_mode(self):
-        self.__settings.choose(1)
+    @contextmanager
+    def manual_ticker(self) -> Generator[None, None, None]:
+        self.__backend.pause_ticker()
+        yield
+        self.__backend.resume_ticker()
 
-    def settings_toggle_blindsigning(self):
-        self.__settings.choose(2)
+    @contextmanager
+    def fading_screen(self, screen) -> Generator[None, None, None]:
+        with self.manual_ticker():
+            yield
+            self.assert_screen(screen)
+            self.review.tap() # Not waiting for the screen to fade on its own
 
     def start_loading_operation(self, first_packet):
         """
@@ -140,44 +286,33 @@ class TezosAppScreen(metaclass=MetaScreen):
 
         We ensure that the loading operation screen is shown.
         """
-        self.welcome.client.pause_ticker()
-        self.send_apdu(first_packet)
-        self.assert_screen("loading_operation")
-        self.welcome.client.resume_ticker()
+        with self.fading_screen("loading_operation"):
+            self.send_apdu(first_packet)
         self.expect_apdu_return("9000")
 
     def review_confirm_signing(self, expected_apdu):
-        self.welcome.client.pause_ticker()
-        self.review.confirm()
-        self.assert_screen("signing_successful")
-        self.review.tap()
+        with self.fading_screen("signing_successful"):
+            self.review.confirm()
         self.expect_apdu_return(expected_apdu)
 
-    def enable_expert_mode(self, expert_enabled=False):
-        if not expert_enabled:
-            self.assert_screen("enable_expert_mode")
-            self.welcome.client.finger_touch(STAX_BUTTON_ABOVE_LOWER_MIDDLE.x, STAX_BUTTON_ABOVE_LOWER_MIDDLE.y)
-            self.assert_screen("enabled_expert_mode")
+    def enable_expert_mode(self):
+        self.assert_screen("enable_expert_mode")
+        with self.fading_screen("enabled_expert_mode"):
+            self.review.enable_expert.confirm()
 
-    def expert_mode_splash(self, expert_enabled=False):
-        self.enable_expert_mode(expert_enabled)
-        self.review.tap()
+    def expert_mode_splash(self):
+        self.enable_expert_mode()
         self.assert_screen("expert_mode_splash")
 
-
-
-    def review_reject_signing(self, confirmRejection = True):
-        self.welcome.client.finger_touch(STAX_BUTTON_LOWER_LEFT.x, STAX_BUTTON_LOWER_RIGHT.y)
+    def review_reject_signing(self, cancel_rejection = False):
+        self.review.reject()
         # Rejection confirmation page
         self.assert_screen("confirm_rejection")
-        if confirmRejection:
-            self.welcome.client.pause_ticker()
-            self.welcome.client.finger_touch(STAX_BUTTON_ABOVE_LOWER_MIDDLE.x, STAX_BUTTON_ABOVE_LOWER_MIDDLE.y)
-            self.assert_screen("reject_review")
-            self.review.tap()
-            self.welcome.client.resume_ticker()
+        if cancel_rejection:
+            self.review.reject_tx.reject()
         else:
-            self.welcome.client.finger_touch(STAX_BUTTON_LOWER_MIDDLE.x, STAX_BUTTON_LOWER_MIDDLE.y)
+            with self.fading_screen("reject_review"):
+                self.review.reject_tx.confirm()
 
 def stax_app(prefix) -> TezosAppScreen:
     port = os.environ["PORT"]
@@ -185,29 +320,23 @@ def stax_app(prefix) -> TezosAppScreen:
     version = os.environ["VERSION_BYTES"]
     golden = os.getenv("GOLDEN") != None
     backend = SpeculosBackend("__unused__", Firmware.STAX,args=["--api-port", port])
-    app = TezosAppScreen(backend, Firmware.STAX, commit, version, prefix)
-
-    if golden:
-        app.make_golden()
-
-    return app
+    return TezosAppScreen(backend, Firmware.STAX, commit, version, prefix, golden)
 
 def assert_home_with_code(app, code):
-    app.assert_screen(SCREEN_HOME_DEFAULT, True)
+    app.assert_home()
     app.expect_apdu_failure(code)
 
 def send_initialize_msg(app, apdu):
     app.send_apdu(apdu)
     app.expect_apdu_return("9000")
-
-    app.assert_screen("review_request_sign_operation");
+    app.assert_screen("review_request_sign_operation")
 
 def send_payload(app, apdu):
     app.send_apdu(apdu)
-    app.assert_screen("review_request_sign_operation");
+    app.assert_screen("review_request_sign_operation")
 
 def verify_err_reject_response(app, tag):
-    verify_reject_response_common(app,tag,"9405")
+    verify_reject_response_common(app, tag, "9405")
 
 def verify_reject_response(app, tag):
     verify_reject_response_common(app, tag,"6985")
@@ -216,9 +345,6 @@ def verify_reject_response_common(app, tag, err_code):
     app.assert_screen(tag)
     app.review.reject()
     app.assert_screen("reject_review")
-    app.welcome.client.pause_ticker()
-    app.welcome.client.finger_touch(STAX_BUTTON_ABOVE_LOWER_MIDDLE.x, STAX_BUTTON_ABOVE_LOWER_MIDDLE.y)
-    app.assert_screen("rejected")
-    app.review.tap()
-    app.welcome.client.resume_ticker()
+    with app.fading_screen("rejected"):
+        app.review.reject_tx.confirm()
     assert_home_with_code(app, err_code)

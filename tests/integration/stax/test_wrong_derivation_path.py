@@ -18,7 +18,7 @@ from utils import *
 if __name__ == "__main__":
     app = stax_app(__file__)
 
-    app.assert_screen(SCREEN_HOME_DEFAULT, True)
+    app.assert_home()
 
     # INS_GET_PUBLIC_KEY
     app.send_apdu("8002000011058000002c800006c18000000080000000")
@@ -51,5 +51,5 @@ if __name__ == "__main__":
     app.expect_apdu_failure("917e")
     app.send_apdu("800f0000110b8000002c800006c1800000008000000080000000800000008000000080000000800000008000000080000000")
 
-    app.assert_screen(SCREEN_HOME_DEFAULT, True)
+    app.assert_home()
     app.quit()

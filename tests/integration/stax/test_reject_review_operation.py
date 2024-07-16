@@ -21,21 +21,17 @@ from utils import *
 # path: m/44'/1729'/0'/0'
 
 def short_reject(app):
-    app.assert_screen(SCREEN_HOME_DEFAULT, True)
+    app.assert_home()
 
-    app.send_apdu("800f000011048000002c800006c18000000080000000")
-    app.expect_apdu_return("9000")
+    send_initialize_msg(app, "800f000011048000002c800006c18000000080000000")
+    send_payload(app, "800f81005e0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316")
 
-    app.send_apdu("800f81005e0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316");
-
-    app.assert_screen("review_request_sign_operation")
-
-    app.review_reject_signing(confirmRejection = False)
+    app.review_reject_signing(cancel_rejection=True)
     # Cancelling rejection lands us back on the same page
     app.assert_screen("review_request_sign_operation")
-    app.review_reject_signing(confirmRejection = True)
+    app.review_reject_signing()
 
-    app.assert_screen(SCREEN_HOME_DEFAULT, True)
+    app.assert_home()
     app.expect_apdu_failure("6985")
 
 if __name__ == "__main__":

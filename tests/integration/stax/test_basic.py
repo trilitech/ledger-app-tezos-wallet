@@ -18,29 +18,27 @@ from utils import *
 if __name__ == "__main__":
     app = stax_app(__file__)
 
-    app.assert_screen(SCREEN_HOME_DEFAULT, True)
+    app.assert_home()
 
-    app.welcome.info()
-    app.assert_screen("settings_blindsigning_off")
+    app.welcome.settings()
+    app.assert_settings()
 
+    app.settings.toggle_blindsigning()
+    app.assert_settings(blindsigning=True)
 
-    app.settings_toggle_blindsigning()
-    app.assert_screen("settings_blindsigning_on")
+    app.settings.toggle_expert_mode()
+    app.assert_settings(blindsigning=True, expert_mode=True)
 
-    app.settings_toggle_expert_mode()
-    app.assert_screen("settings_blindsigning_expert_on")
+    app.settings.toggle_blindsigning()
+    app.assert_settings(expert_mode=True)
 
-    app.settings_toggle_blindsigning()
-    app.assert_screen("settings_expert_on")
+    app.settings.toggle_expert_mode()
+    app.assert_settings()
 
-    app.settings_toggle_expert_mode()
-    app.assert_screen("settings_blindsigning_off")
+    app.settings.next()
+    app.assert_info()
 
-
-    app.info.next()
-    app.assert_screen(SCREEN_INFO_PAGE, True)
-
-    app.info.multi_page_exit()
-    app.assert_screen(SCREEN_HOME_DEFAULT, True)
+    app.settings.exit()
+    app.assert_home()
 
     app.quit()

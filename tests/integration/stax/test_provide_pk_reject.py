@@ -16,20 +16,19 @@
 from utils import *
 
 def short_reject(app):
-    app.assert_screen(SCREEN_HOME_DEFAULT, True)
+    app.assert_home()
 
     app.send_apdu("8003000011048000002c800006c18000000080000000")
     app.assert_screen("screen_verify_address")
 
-    app.provide_pk.tap()
+    app.provide_pk.next()
     app.assert_screen("screen_show_address_tz1_zebra")
 
-    app.provide_pk.cancel()
-    app.assert_screen("address_rejected")
+    with app.fading_screen("address_rejected"):
+        app.provide_pk.cancel()
     app.expect_apdu_failure("6985")
-    app.review.tap()
 
-    app.assert_screen(SCREEN_HOME_DEFAULT, True)
+    app.assert_home()
 
 if __name__ == "__main__":
     app = stax_app(__file__)

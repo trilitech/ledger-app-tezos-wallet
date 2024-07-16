@@ -23,13 +23,13 @@ from utils import *
 if __name__ == "__main__":
     app = stax_app(__file__)
 
-    app.assert_screen(SCREEN_HOME_DEFAULT, True)
+    app.assert_home()
 
     app.send_apdu("800f000011048000002c800006c18000000080000000")
     app.expect_apdu_return("9000")
 
     app.assert_screen("review_request_sign_operation")
-    app.review.tap()
+    app.review.next()
 
     # Ensure we don't advance to a blank screen
     app.assert_screen("review_request_sign_operation")
@@ -42,5 +42,5 @@ if __name__ == "__main__":
     app.review_reject_signing()
     app.expect_apdu_failure("6985")
 
-    app.assert_screen(SCREEN_HOME_DEFAULT, True)
+    app.assert_home()
     app.quit()
