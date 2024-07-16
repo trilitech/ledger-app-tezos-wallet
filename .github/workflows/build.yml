@@ -18,7 +18,7 @@ jobs:
     name: Build application
     strategy:
       matrix:
-        device: [nanos, nanosp, nanox, stax]
+        device: [nanos, nanosp, nanox, stax, flex]
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools:latest
@@ -58,7 +58,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        device: [nanos, nanosp, nanox, stax]
+        device: [nanos, nanosp, nanox, stax, flex]
     container:
       image: ghcr.io/ledgerhq/ledger-app-builder/ledger-app-dev-tools:latest
 
@@ -82,9 +82,9 @@ jobs:
 
       - name: Run test
         run: |
-          if [ "${{ matrix.device }}" = "stax" ]; then
+          if [ "${{ matrix.device }}" = "stax" ] || [ "${{ matrix.device }}" = "flex" ]; then
             ./tests/integration/run_test_local.sh -F -m ${{ matrix.device }} \
-              ./tests/integration/${{ matrix.device }}
+              ./tests/integration/touch
           else
             apk add gmp-dev curl jq libsodium-dev git xxd procps
             python3 -m venv tezos_test_env --system-site-package
@@ -99,14 +99,14 @@ jobs:
 
       - name: Upload Stax results
         uses: actions/upload-artifact@v4
-        if: always() && matrix.device == 'stax'
+        if: always() && (matrix.device == 'stax' || matrix.device == 'flex')
         with:
           name: integration_tests_${{ matrix.device }}.json
           path: ./integration_tests.json
 
       - name: Upload Nano results
         uses: actions/upload-artifact@v4
-        if: always() && matrix.device != 'stax'
+        if: always() && (matrix.device != 'stax' && matrix.device != 'flex')
         with:
           name: integration_tests_log_${{ matrix.device }}
           path: ./integration_tests_log

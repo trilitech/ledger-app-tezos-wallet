@@ -2,8 +2,16 @@
 # Makefile
 #
 
-all: app_nanos.tgz app_nanosp.tgz app_nanox.tgz
-debug: app_nanos_dbg.tgz app_nanosp_dbg.tgz app_nanox_dbg.tgz
+all: app_nanos.tgz \
+	app_nanosp.tgz \
+	app_nanox.tgz \
+	app_stax.tgz \
+	app_flex.tgz
+debug: app_nanos_dbg.tgz \
+	app_nanosp_dbg.tgz \
+	app_nanox_dbg.tgz \
+	app_stax_dbg.tgz \
+	app_flex_dbg.tgz
 
 .PHONY: clean all debug format integration_tests unit_tests scan-build%	\
 	integration_tests_basic integration_tests_basic_% docker_%
@@ -49,7 +57,7 @@ scan-build-%:
 	  "BOLOS_SDK=\$$$$SDK make -C app scan-build"
 
 scan-build:	scan-build-nanos scan-build-nanosp	\
-	scan-build-nanox scan-build-stax
+	scan-build-nanox scan-build-stax scan-build-flex
 
 app_%_dbg.tgz:	app/src/*.[ch]	\
 	app/src/parser/*.[ch]	\
@@ -92,8 +100,14 @@ RUN_TEST_DOCKER = ./tests/integration/run_test_docker.sh
 integration_tests_basic_stax:	app_stax.tgz		\
 				app_stax_dbg.tgz	\
 				tests/integration/*	\
-				tests/integration/stax/*
-	$(RUN_TEST_DOCKER) stax tests/integration/stax
+				tests/integration/touch/*
+	$(RUN_TEST_DOCKER) stax tests/integration/touch
+
+integration_tests_basic_flex:	app_flex.tgz		\
+				app_flex_dbg.tgz	\
+				tests/integration/*	\
+				tests/integration/touch/*
+	$(RUN_TEST_DOCKER) flex tests/integration/touch
 
 integration_tests_basic_%:	app_%.tgz   \
 				app_%_dbg.tgz			\
@@ -116,7 +130,8 @@ integration_tests_basic_%:	app_%.tgz   \
 integration_tests_basic:	integration_tests_basic_nanos	\
 				integration_tests_basic_nanosp	\
 				integration_tests_basic_nanox	\
-				integration_tests_basic_stax
+				integration_tests_basic_stax	\
+				integration_tests_basic_flex
 
 integration_tests_%:	integration_tests_basic_%		\
 			test/samples/operations/nano/samples.hex\
@@ -130,7 +145,8 @@ integration_tests: 	tests/integration/*.sh			\
 			integration_tests_nanos 		\
 			integration_tests_nanosp 		\
 			integration_tests_nanox 		\
-			integration_tests_basic_stax
+			integration_tests_basic_stax 		\
+			integration_tests_basic_flex
 
 test/samples/micheline/%/samples.hex:	tests/generate/*.ml*	\
 					tests/generate/dune	\

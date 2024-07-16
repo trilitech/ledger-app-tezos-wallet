@@ -372,11 +372,12 @@ run_a_test() {
                     . $CMD
                     ;;
                 *.py)
-                    if [ "$TARGET" == "stax" ]; then
+                    if [ "$TARGET" == "stax" ] || [ "$TARGET" == "flex" ]; then
                         start_speculos "$seed"
                         PORT=$PORT\
                             COMMIT_BYTES=$COMMIT_BYTES\
                             VERSION_BYTES=$VERSION_BYTES\
+                            TARGET=$TARGET\
                             python3 $CMD
                     elif [[ "$CMD" != *"conftest.py" ]]; then
                         if [ "$DBG" = "DEBUG" ]; then
@@ -555,7 +556,7 @@ usage() {
     echo "            -F means that only failures are stored"            >&2
     echo "            -d tgz specifies that tgz contains the debug app"  >&2
     echo "            -l lim limits the number of tests run to lim"      >&2
-    echo "            -m arch is one of nanos, nanosp, nanox, or stax"   >&2
+    echo "            -m arch is one of nanos, nanosp, nanox, stax or flex" >&2
     echo "            -t tgz specifies that tgz contains the app"        >&2
     exit 1
 }
@@ -585,8 +586,8 @@ main() {
 
     [ $# -lt 1 ] && usage "At least one test must be provided"
 
-    if ! echo $TARGET | grep -qE '^(stax)|(nano(s|sp|x))$'; then
-       usage "Target \"$TARGET\" must be nanos, nanosp, nanox or stax."
+    if ! echo $TARGET | grep -qE '^(stax)|(flex)|(nano(s|sp|x))$'; then
+       usage "Target \"$TARGET\" must be nanos, nanosp, nanox, stax or flex."
     fi
 
     if [ -z "$TGZ" ]; then
