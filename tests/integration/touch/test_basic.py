@@ -19,6 +19,7 @@ from utils import tezos_app
 if __name__ == "__main__":
     app = tezos_app(__file__)
 
+    app.remove_info_page()
     app.assert_home()
 
     app.welcome.settings()

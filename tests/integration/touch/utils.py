@@ -224,13 +224,17 @@ class TezosAppScreen(metaclass=MetaScreen):
                 os.remove(os.path.join(path, filename))
             path = f"{self.__snapshots_path}"
             home_path=os.path.join(path, "home.png")
-            info_path=os.path.join(path, "info.png")
             if os.path.exists(home_path): os.remove(home_path)
-            if os.path.exists(info_path): os.remove(info_path)
 
     def send_apdu(self, data):
         """Send hex-encoded bytes to the apdu"""
         self.__backend.send_raw(bytes.fromhex(data))
+
+    def remove_info_page(self):
+        """ Delete the info page for golden tests"""
+        if self.__golden:
+            info_path=os.path.join(self.__snapshots_path, "info.png")
+            if os.path.exists(info_path): os.remove(info_path)
 
     def expect_apdu_return(self, expected):
         """Expect hex-encoded response from the apdu"""
