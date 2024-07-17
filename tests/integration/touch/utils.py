@@ -341,6 +341,15 @@ class TezosAppScreen(metaclass=MetaScreen):
             with self.fading_screen("reject_review"):
                 self.review.reject_tx.confirm()
 
+    def process_blindsign_warnings(self, landing_screen: str):
+        self.assert_screen("unsafe_operation_warning_1")
+        self.review.reject()
+        self.assert_screen("unsafe_operation_warning_2")
+        with self.fading_screen(landing_screen):
+            self.review.enable_blindsign.confirm()
+
+
+
 def tezos_app(prefix) -> TezosAppScreen:
     port = os.environ["PORT"]
     commit = os.environ["COMMIT_BYTES"]
@@ -373,6 +382,9 @@ def verify_reject_response(app, tag):
 def verify_reject_response_common(app, tag, err_code):
     app.assert_screen(tag)
     app.review.reject()
+    reject_flow(app, err_code)
+
+def reject_flow(app,err_code):
     app.assert_screen("reject_review")
     with app.fading_screen("rejected"):
         app.review.reject_tx.confirm()

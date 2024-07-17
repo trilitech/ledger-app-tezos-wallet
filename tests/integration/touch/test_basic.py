@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Copyright 2023 Trilitech <contact@trili.tech>
+import os
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,13 +24,7 @@ if __name__ == "__main__":
     app.welcome.settings()
     app.assert_settings()
 
-    app.settings.toggle_blindsigning()
-    app.assert_settings(blindsigning=True)
-
     app.settings.toggle_expert_mode()
-    app.assert_settings(blindsigning=True, expert_mode=True)
-
-    app.settings.toggle_blindsigning()
     app.assert_settings(expert_mode=True)
 
     app.settings.toggle_expert_mode()
