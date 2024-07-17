@@ -108,11 +108,10 @@ blindsign_splash(bool confirm)
     if (confirm) {
         tz_reject_ui();
     } else {
-        char blindsign_msg[]
-            = "Transaction could not be decoded correctly. \nLearn More: "
-              "tinyurl.com/ledger-Tezos\nERROR:                 ";
-        const int BLINDSIGN_MSG_ERROR_OFFSET = 90;
-        memcpy(blindsign_msg + BLINDSIGN_MSG_ERROR_OFFSET, global.error_code,
+        char blindsign_msg[150]
+            = "Transaction could not be decoded correctly. Learn More:\n"
+              "tinyurl.com/Tezos-ledger\nERROR: ";
+        memcpy(blindsign_msg + strlen(blindsign_msg), global.error_code,
                ERROR_CODE_SIZE);
         nbgl_useCaseChoice(&C_Important_Circle_64px,
                            "The transaction cannot be trusted", blindsign_msg,
