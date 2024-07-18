@@ -27,16 +27,6 @@ from utils import (
 if __name__ == "__main__":
     app = tezos_app(__file__)
 
-    # Switch to blindsign mode
-    app.assert_home()
-
-    app.welcome.settings()
-    app.assert_settings()
-
-    app.settings.toggle_blindsigning()
-    app.assert_settings(blindsigning=True)
-
-    app.settings.exit()
     app.assert_home()
 
     send_initialize_msg(app,"800f000011048000002c800006c18000000080000000")

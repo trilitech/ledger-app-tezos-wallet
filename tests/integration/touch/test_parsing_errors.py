@@ -33,11 +33,15 @@ if __name__ == "__main__":
     send_initialize_msg(app, "800f000011048000002c800006c18000000080000000")
     send_payload(app, "800f81005e0100000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316")
     app.review.next()
+    app.assert_screen("unsafe_operation_warning_1")
+    app.review.enable_blindsign.reject()
     verify_err_reject_response(app, "invalid_tag")
 
     send_initialize_msg(app, "800f000011048000002c800006c18000000080000000")
     send_payload(app, "800f81005e03000000000000000000000000000000000000000000000000000000000000000001016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316")
     app.review.next()
+    app.assert_screen("unsafe_operation_warning_1")
+    app.review.enable_blindsign.reject()
     verify_err_reject_response(app, "invalid_tag")
 
     print("Invalid input: 1 byte removed inside")
@@ -48,6 +52,8 @@ if __name__ == "__main__":
     app.review.next()
     app.assert_screen("tpe_review_0_02")
     app.review.next()
+    app.assert_screen("unsafe_operation_warning_1")
+    app.review.enable_blindsign.reject()
     verify_err_reject_response(app, "invalid_tag")
 
     print("Invalid input: 1 byte introduce at the end")
@@ -62,6 +68,8 @@ if __name__ == "__main__":
     app.review.next()
     app.assert_screen("tpe_review_0_03_full")
     app.review.next()
+    app.assert_screen("unsafe_operation_warning_1")
+    app.review.enable_blindsign.reject()
     verify_err_reject_response(app, "invalid_tag")
 
     print("Invalid input: 1 byte introduced inside")
@@ -72,6 +80,8 @@ if __name__ == "__main__":
     app.review.next()
     app.assert_screen("tpe_review_0_02_dest_only")
     app.review.next()
+    app.assert_screen("unsafe_operation_warning_1")
+    app.review.enable_blindsign.reject()
     verify_err_reject_response(app, "invalid_tag")
 
     # full output: 12345678901234567890123456789012345678901234567890123456789012345678901234567890
@@ -79,6 +89,8 @@ if __name__ == "__main__":
     send_initialize_msg(app, "800f000011048000002c800006c18000000080000000")
     send_payload(app, "800f810028050092abf8e3d9e5f8cfd9ae8a9fe5f28ea1d5b5abf1af82dae8a4b68df3d1889eb6f988f5e8d31a")
     app.review.next()
+    app.assert_screen("unsafe_operation_warning_1")
+    app.review.enable_blindsign.reject()
     verify_err_reject_response(app, "too_large")
 
    # full output: {{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{42}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}
@@ -88,6 +100,8 @@ if __name__ == "__main__":
     app.review.next()
     app.assert_screen('tpe_review_too_deep_0')
     app.review.next()
+    app.assert_screen("unsafe_operation_warning_1")
+    app.review.enable_blindsign.reject()
     verify_err_reject_response(app, "too_deep")
 
     print("wrong last packet")

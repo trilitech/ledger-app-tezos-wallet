@@ -40,11 +40,9 @@ static const char *const infoContents[]
 
 enum {
     EXPERT_MODE_TOKEN = FIRST_USER_TOKEN,
-    BLIND_SIGNING_TOKEN
 };
 enum {
     EXPERT_MODE_TOKEN_ID = 0,
-    BLIND_SIGNING_TOKEN_ID,
     SETTINGS_SWITCHES_NB
 };
 
@@ -59,12 +57,7 @@ controls_callback(int token, __attribute__((unused)) uint8_t index,
                   __attribute__((unused)) int page)
 {
     uint8_t switch_value;
-    if (token == BLIND_SIGNING_TOKEN) {
-        switch_value = !N_settings.blindsigning;
-        toggle_blindsigning();
-        switches[BLIND_SIGNING_TOKEN_ID].initState
-            = (nbgl_state_t)(switch_value);
-    } else if (token == EXPERT_MODE_TOKEN) {
+    if (token == EXPERT_MODE_TOKEN) {
         switch_value = !N_settings.expert_mode;
         toggle_expert_mode();
         switches[EXPERT_MODE_TOKEN_ID].initState
@@ -96,14 +89,6 @@ initSettings(void)
     switches[EXPERT_MODE_TOKEN_ID].subText = "Enable expert mode signing";
     switches[EXPERT_MODE_TOKEN_ID].token   = EXPERT_MODE_TOKEN;
     switches[EXPERT_MODE_TOKEN_ID].tuneId  = TUNE_TAP_CASUAL;
-
-    switches[BLIND_SIGNING_TOKEN_ID].initState
-        = (nbgl_state_t)(N_settings.blindsigning);
-    switches[BLIND_SIGNING_TOKEN_ID].text = "Blind signing";
-    switches[BLIND_SIGNING_TOKEN_ID].subText
-        = "Enable transaction blind signing";
-    switches[BLIND_SIGNING_TOKEN_ID].token  = BLIND_SIGNING_TOKEN;
-    switches[BLIND_SIGNING_TOKEN_ID].tuneId = TUNE_TAP_CASUAL;
 }
 
 void

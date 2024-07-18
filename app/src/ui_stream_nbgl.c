@@ -72,8 +72,8 @@ tz_reject_ui(void)
 {
     FUNC_ENTER(("void"));
 
-    nbgl_useCaseConfirm("Reject transaction?", NULL, "Yes, Reject",
-                        "Go back to transaction", tz_reject);
+    nbgl_useCaseConfirm("Reject transaction?", NULL, REJECT_CONFIRM_BUTTON,
+                        RESUME("transaction"), tz_reject);
 
     FUNC_LEAVE();
 }
@@ -90,30 +90,35 @@ start_blindsign(void)
 }
 
 static void
-blindsign_splash(void)
+blindsign_choice(bool confirm)
 {
     TZ_PREAMBLE(("void"));
-    nbgl_useCaseReviewStart(
-        &C_Important_Circle_64px, "Blind signing",
-        "This transaction can not be securely interpreted by Ledger Stax. It "
-        "might put your assets at risk.",
-        "Reject transaction", start_blindsign, tz_reject_ui);
-
+    if (confirm) {
+        start_blindsign();
+    } else {
+        tz_reject_ui();
+    }
     TZ_POSTAMBLE;
 }
 
 static void
-handle_blindsigning(bool confirm)
+blindsign_splash(bool confirm)
 {
     TZ_PREAMBLE(("void"));
     if (confirm) {
-        if (!N_settings.blindsigning) {
-            toggle_blindsigning();
-        }
-        nbgl_useCaseStatus("BLIND SIGNING\nENABLED", true, blindsign_splash);
-    } else {
         tz_reject_ui();
+    } else {
+        char blindsign_msg[150]
+            = "Transaction could not be decoded correctly. Learn More:\n"
+              "tinyurl.com/Tezos-ledger\nERROR: ";
+        memcpy(blindsign_msg + strlen(blindsign_msg), global.error_code,
+               ERROR_CODE_SIZE);
+        nbgl_useCaseChoice(&C_Important_Circle_64px,
+                           "The transaction cannot be trusted", blindsign_msg,
+                           "I accept the risk", "Reject transaction",
+                           blindsign_choice);
     }
+
     TZ_POSTAMBLE;
 }
 
@@ -122,22 +127,17 @@ switch_to_blindsigning(__attribute__((unused)) const char *err_type,
                        const char                         *err_code)
 {
     TZ_PREAMBLE(("void"));
-    PRINTF("[DEBUG] refill_error: global.step = %d\n", global.step);
+    PRINTF("[DEBUG] refill_error: global.step = %d\n %s", global.step,
+           err_code);
     TZ_ASSERT(EXC_UNEXPECTED_STATE, global.step == ST_CLEAR_SIGN);
     global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
     global.step                = ST_BLIND_SIGN;
-    if (N_settings.blindsigning) {
-        nbgl_useCaseReviewStart(&C_Important_Circle_64px,
-                                "Blind signing required:\nParsing Error",
-                                err_code, "Reject transaction",
-                                blindsign_splash, tz_reject_ui);
-    } else {
-        nbgl_useCaseChoice(&C_Important_Circle_64px,
-                           "Enable blind signing to authorize this "
-                           "transaction:\nParsing Error",
-                           err_code, "Enable blind signing",
-                           "Reject transaction", handle_blindsigning);
-    }
+    memcpy(global.error_code, err_code, sizeof(global.error_code));
+
+    nbgl_useCaseChoice(&C_Important_Circle_64px, "Security risk detected",
+                       "It may not be safe to sign this transaction. To "
+                       "continue, you'll need to review the risk.",
+                       "Back to safety", "Review risk", blindsign_splash);
 
     TZ_POSTAMBLE;
 }

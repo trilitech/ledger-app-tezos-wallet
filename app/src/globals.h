@@ -20,7 +20,6 @@
    limitations under the License. */
 
 #pragma once
-
 #include <memory.h>
 #include <string.h>
 #include <bolos_target.h>
@@ -58,6 +57,7 @@ void toggle_blindsigning(void);
 
 #define MAX_APDU_SIZE      235
 #define MAX_SIGNATURE_SIZE 100
+#define ERROR_CODE_SIZE    15
 /**
  * @brief Home screen pages in order
  *
@@ -115,6 +115,11 @@ typedef struct {
     struct {
         bagl_element_t bagls[5 + TZ_SCREEN_LINES_11PX];
     } ux;  /// Config for history screens for nano devices.
+#endif
+
+#ifdef HAVE_NBGL
+    char error_code[ERROR_CODE_SIZE];  /// Error codes to be displayed in
+                                       /// blindsigning.
 #endif
 } globals_t;
 

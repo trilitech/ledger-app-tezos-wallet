@@ -224,13 +224,17 @@ class TezosAppScreen(metaclass=MetaScreen):
                 os.remove(os.path.join(path, filename))
             path = f"{self.__snapshots_path}"
             home_path=os.path.join(path, "home.png")
-            info_path=os.path.join(path, "info.png")
             if os.path.exists(home_path): os.remove(home_path)
-            if os.path.exists(info_path): os.remove(info_path)
 
     def send_apdu(self, data):
         """Send hex-encoded bytes to the apdu"""
         self.__backend.send_raw(bytes.fromhex(data))
+
+    def remove_info_page(self):
+        """ Delete the info page for golden tests"""
+        if self.__golden:
+            info_path=os.path.join(self.__snapshots_path, "info.png")
+            if os.path.exists(info_path): os.remove(info_path)
 
     def expect_apdu_return(self, expected):
         """Expect hex-encoded response from the apdu"""
@@ -341,6 +345,15 @@ class TezosAppScreen(metaclass=MetaScreen):
             with self.fading_screen("reject_review"):
                 self.review.reject_tx.confirm()
 
+    def process_blindsign_warnings(self, landing_screen: str):
+        self.assert_screen("unsafe_operation_warning_1")
+        self.review.reject()
+        self.assert_screen("unsafe_operation_warning_2")
+        with self.fading_screen(landing_screen):
+            self.review.enable_blindsign.confirm()
+
+
+
 def tezos_app(prefix) -> TezosAppScreen:
     port = os.environ["PORT"]
     commit = os.environ["COMMIT_BYTES"]
@@ -373,6 +386,9 @@ def verify_reject_response(app, tag):
 def verify_reject_response_common(app, tag, err_code):
     app.assert_screen(tag)
     app.review.reject()
+    reject_flow(app, err_code)
+
+def reject_flow(app,err_code):
     app.assert_screen("reject_review")
     with app.fading_screen("rejected"):
         app.review.reject_tx.confirm()

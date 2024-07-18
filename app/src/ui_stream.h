@@ -273,6 +273,11 @@ tz_ui_cb_type_t tz_ui_stream_get_cb_type(void);
 
 #ifdef HAVE_NBGL
 /**
+ * @brief Send Reject code.
+ *
+ */
+void tz_reject(void);
+/**
  * @brief Reject confirmation screen.
  *
  */

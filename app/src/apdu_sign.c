@@ -592,7 +592,6 @@ handle_data_apdu_clear(command_t *cmd)
 
 #ifdef HAVE_NBGL
 static nbgl_layoutTagValueList_t useCaseTagValueList;
-static nbgl_pageInfoLongPress_t  infoLongPress;
 
 void
 reject_blindsign_cb(void)
@@ -633,7 +632,7 @@ reviewChoice(bool confirm)
     if (confirm) {
         nbgl_useCaseStatus("TRANSACTION\nSIGNED", true, accept_blindsign_cb);
     } else {
-        tz_reject_ui();
+        tz_reject();
     }
 
     FUNC_LEAVE();
@@ -665,6 +664,8 @@ void
 continue_blindsign_cb(void)
 {
     FUNC_ENTER(("void"));
+    nbgl_operationType_t op = TYPE_TRANSACTION;
+    op |= BLIND_OPERATION;
 
     useCaseTagValueList.pairs             = NULL;
     useCaseTagValueList.callback          = getTagValuePair;
@@ -672,11 +673,9 @@ continue_blindsign_cb(void)
     useCaseTagValueList.nbPairs           = 2;
     useCaseTagValueList.smallCaseForValue = false;
     useCaseTagValueList.wrapping          = false;
-    infoLongPress.icon                    = &C_tezos;
-    infoLongPress.text                    = "Sign transaction?";
-    infoLongPress.longPressText           = "Hold to sign";
-    nbgl_useCaseStaticReview(&useCaseTagValueList, &infoLongPress,
-                             "Reject transaction", reviewChoice);
+    nbgl_useCaseReview(op, &useCaseTagValueList, &C_tezos,
+                       REVIEW("Transaction"), NULL, SIGN("Transaction"),
+                       reviewChoice);
 
     FUNC_LEAVE();
 }
