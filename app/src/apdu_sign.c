@@ -274,25 +274,15 @@ refill_error(void)
                           tz_parser_result_name(st->errno), TZ_UI_LAYOUT_BNP,
                           TZ_UI_ICON_NONE);
 
-    if (N_settings.blindsigning) {
 #ifdef TARGET_NANOS
-        tz_ui_stream_push(TZ_UI_STREAM_CB_BLINDSIGN, "Switch to",
-                          "blindsigning", TZ_UI_LAYOUT_HOME_BP,
-                          TZ_UI_ICON_NONE);
+    tz_ui_stream_push(TZ_UI_STREAM_CB_BLINDSIGN, "Switch to", "blindsigning",
+                      TZ_UI_LAYOUT_HOME_BP, TZ_UI_ICON_NONE);
 #else
-        tz_ui_stream_push(TZ_UI_STREAM_CB_BLINDSIGN, "Switch to",
-                          "blindsigning", TZ_UI_LAYOUT_HOME_PB,
-                          TZ_UI_ICON_TICK);
+    tz_ui_stream_push(TZ_UI_STREAM_CB_BLINDSIGN, "Switch to", "blindsigning",
+                      TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_TICK);
 #endif
-        tz_ui_stream_push(TZ_UI_STREAM_CB_CANCEL, "Reject", "",
-                          TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_CROSS);
-    } else {
-        tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Blindsigning",
-                              "not enabled", TZ_UI_LAYOUT_HOME_BP,
-                              TZ_UI_ICON_NONE);
-        tz_ui_stream_push(TZ_UI_STREAM_CB_CANCEL, "Home", "",
-                          TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_BACK);
-    }
+    tz_ui_stream_push(TZ_UI_STREAM_CB_CANCEL, "Reject", "",
+                      TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_CROSS);
 #elif HAVE_NBGL
     tz_ui_stream_push_all(TZ_UI_STREAM_CB_CANCEL, "Parsing error",
                           tz_parser_result_name(st->errno), TZ_UI_LAYOUT_BNP,

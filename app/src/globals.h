@@ -52,9 +52,6 @@ void init_globals(void);
 /// Toggles the persisted expert_mode setting
 void toggle_expert_mode(void);
 
-/// Toggles the persisted blindsigning setting
-void toggle_blindsigning(void);
-
 #define MAX_APDU_SIZE      235
 #define MAX_SIGNATURE_SIZE 100
 #define ERROR_CODE_SIZE    15
@@ -125,9 +122,8 @@ typedef struct {
 
 /* Settings */
 typedef struct {
-    bool blindsigning;  /// enable blindsigning
-    bool expert_mode;   /// enable expert mode
-} settings_t;           /// Special settings available in the app.
+    bool expert_mode;  /// enable expert mode
+} settings_t;          /// Special settings available in the app.
 
 extern globals_t global;
 
