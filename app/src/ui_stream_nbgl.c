@@ -274,6 +274,7 @@ tz_ui_stream_init(void (*cb)(tz_ui_cb_type_t cb_type))
 
     FUNC_ENTER(("cb=%p", cb));
     memset(s, 0x0, sizeof(*s));
+    memset(global.error_code, '\0', sizeof(global.error_code));
     s->cb            = cb;
     s->full          = false;
     s->last          = 0;
