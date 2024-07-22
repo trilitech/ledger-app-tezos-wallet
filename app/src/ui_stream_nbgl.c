@@ -331,7 +331,7 @@ tz_ui_stream_close(void)
 }
 
 bool
-tz_ui_nav_cb()
+tz_ui_nav_cb(void)
 {
     FUNC_ENTER(("void"));
 
@@ -339,12 +339,6 @@ tz_ui_nav_cb()
     tz_ui_stream_display_t *c      = &s->current_screen;
     bool                    result = true;
     tz_parser_state        *st = &global.keys.apdu.sign.u.clear.parser_state;
-
-    PRINTF(
-        "[DEBUG]Step-1: Entered ui_nav_cb: pressed_right=%d, current=%d, "
-        "total=%d, full=%d, "
-        "global.step= %d\n",
-        s->pressed_right, s->current, s->total, s->full, global.step);
 
     // Continue receiving data from the apdu until s->full is true.
     while (((s->total < 0) || ((s->current == s->total) && !s->full))
