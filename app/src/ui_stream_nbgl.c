@@ -15,7 +15,7 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License. */
-
+#define HAVE_NBGL
 #ifdef HAVE_NBGL
 
 #include <nbgl_use_case.h>
@@ -233,10 +233,8 @@ void
 tz_ui_stream_cb(void)
 {
     FUNC_ENTER(("void"));
-
     nbgl_useCaseForwardOnlyReviewNoSkip("Reject transaction", NULL,
-                                        tz_ui_nav_cb, tz_choice_ui);
-
+                                         tz_ui_nav_cb, tz_choice_ui);
     FUNC_LEAVE();
 }
 
@@ -267,6 +265,20 @@ tz_ui_review_start(void)
     FUNC_LEAVE();
 }
 
+void transaction_choice(bool getMorePairs)
+{
+    FUNC_ENTER();
+    if(getMorePairs) {
+        // get more pairs
+        tz_ui_review_start();
+    }
+    else {
+    tz_reject();
+    }
+
+    FUNC_LEAVE();
+}
+
 void
 tz_ui_stream_init(void (*cb)(tz_ui_cb_type_t cb_type))
 {
@@ -283,10 +295,14 @@ tz_ui_stream_init(void (*cb)(tz_ui_cb_type_t cb_type))
     s->pressed_right = false;
 
     ui_strings_init();
+    nbgl_operationType_t op_type = TYPE_TRANSACTION;
+    nbgl_useCaseReviewStreamingStart(op_type,
+        &C_tezos, "Review request to sign operation",
+                            NULL,
+                            transaction_choice);
 
-    nbgl_useCaseReviewStart(&C_tezos, "Review request to sign operation",
-                            NULL, "Reject request", tz_ui_review_start,
-                            tz_reject_ui);
+                       //     "Reject request", tz_ui_review_start,
+                       //     tz_reject_ui);
     FUNC_LEAVE();
 }
 
