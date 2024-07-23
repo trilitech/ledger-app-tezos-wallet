@@ -189,6 +189,7 @@ find_icon(tz_ui_icon_t icon)
     case TZ_UI_ICON_SETTINGS:   return (const char *)&C_icon_coggle;
     case TZ_UI_ICON_BACK:       return (const char *)&C_icon_back_x;
     case TZ_UI_ICON_EYE:        return (const char *)&C_icon_eye;
+    case TZ_UI_ICON_WARNING:    return (const char *)&C_icon_warning;
     default:                    return NULL;
     }
     // clang-format on

@@ -272,29 +272,48 @@ refill_error(void)
     // clang-format off
 #ifdef HAVE_BAGL
     tz_ui_stream_init(stream_cb);
-    tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB,
-                          "Parsing error",
-                          tz_parser_result_name(st->errno),
-                          TZ_UI_LAYOUT_BNP,
-                          TZ_UI_ICON_NONE);
+
+    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB,
+                      "The transaction",
+                      "cannot be trusted.",
 #ifdef TARGET_NANOS
-    tz_ui_stream_push(TZ_UI_STREAM_CB_BLINDSIGN,
-                      "Switch to",
-                      "blindsigning",
                       TZ_UI_LAYOUT_HOME_BP,
                       TZ_UI_ICON_NONE);
 #else
+                      TZ_UI_LAYOUT_HOME_PB,
+                      TZ_UI_ICON_WARNING);
+    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB,
+                      " ",
+                      "This transaction\ncould not be\ndecoded correctly.",
+                      TZ_UI_LAYOUT_NP,
+                      TZ_UI_ICON_NONE);
+    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB,
+                      " ",
+                      "It may not be safe\nto sign this\ntransaction.",
+                      TZ_UI_LAYOUT_NP,
+                      TZ_UI_ICON_NONE);
+#endif
+    tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB,
+                          "Parsing error",
+                          tz_parser_result_name(st->errno),
+                          TZ_UI_LAYOUT_HOME_BNP,
+                          TZ_UI_ICON_NONE);
+    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB,
+                      "Learn More:",
+                      "bit.ly/ledger-tez",
+                      TZ_UI_LAYOUT_HOME_BNP,
+                      TZ_UI_ICON_NONE);
     tz_ui_stream_push(TZ_UI_STREAM_CB_BLINDSIGN,
-                      "Switch to",
-                      "blindsigning",
+                      "Accept risk",
+                      "",
                       TZ_UI_LAYOUT_HOME_PB,
                       TZ_UI_ICON_TICK);
-#endif
     tz_ui_stream_push(TZ_UI_STREAM_CB_CANCEL,
                       "Reject",
                       "",
                       TZ_UI_LAYOUT_HOME_PB,
                       TZ_UI_ICON_CROSS);
+
 #elif HAVE_NBGL
     tz_ui_stream_push_all(TZ_UI_STREAM_CB_CANCEL,
                           "Parsing error",

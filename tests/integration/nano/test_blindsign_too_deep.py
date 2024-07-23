@@ -41,11 +41,17 @@ def test_blindsign_too_deep(app):
 
         app.backend.wait_for_text_not_on_screen(Screen_text.Home)
 
-        for i in range(4):
+        for i in range(6):
+            # 'Review operation'
+            # 'Expression {{{...{{{'
+            # 'Expression {{{...{{{'
+            # 'The transaction cannot be trusted.'
+            # 'Parsing error ERR_TOO_DEEP'
+            # 'Learn More: bit.ly/ledger-tez'
             assert_screen_i(i)
             app.backend.right_click()
 
-        # 'Switch to blindsigning' screen
+        # 'Accept risk' screen
         assert_screen_i(i+1)
 
         def blind_navigate() -> None:

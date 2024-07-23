@@ -153,7 +153,7 @@ class Screen_text(str, Enum):
     Public_key_reject = "Reject"
     Sign_accept = "Accept"
     Sign_reject = "Reject"
-    Blind_switch = "Switch to"
+    Blind_switch = "Accept risk"
     Back_home = "Home"
 
 class TezosAppScreen():
