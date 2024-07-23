@@ -135,7 +135,7 @@ succ(void)
     tz_ui_stream_t *s = &global.stream;
 
     FUNC_ENTER(("current=%d total=%d", s->current, s->total));
-    if (s->current < s->total) {
+    if ((s->current < s->total) && (s->pressed_right)) {
         s->pressed_right = false;
         s->current++;
     }

@@ -270,6 +270,7 @@ refill_error(void)
 #endif
 
 #ifdef HAVE_BAGL
+    tz_ui_stream_init(stream_cb);
     tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Parsing error",
                           tz_parser_result_name(st->errno), TZ_UI_LAYOUT_BNP,
                           TZ_UI_ICON_NONE);
