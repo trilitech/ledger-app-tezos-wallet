@@ -328,8 +328,13 @@ redisplay_screen(tz_ui_layout_type_t layout, uint8_t icon_pos)
         for (int i = txt_start_line; i < icon_pos; i++) {
             init[i].component.x     = 8;
             init[i].component.width = 112;
-            init[i].component.y
-                = (BAGL_HEIGHT / 2) - 3 + ((i - txt_start_line) * 13);
+            init[i].component.y =
+                /// height if title only
+                ((BAGL_HEIGHT / 2) + 3)
+                /// half a line height for each additional line
+                - ((s->screens[bucket].body_len * 13) / 2)
+                /// 13px space between lines
+                + ((i - txt_start_line) * 13);
         }
     }
 
@@ -491,7 +496,7 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
     s->screens[bucket].layout_type = layout_type;
     s->screens[bucket].icon        = icon;
 
-    int line = 0;
+    short line = 0;
     while ((offset < length) && (line < TZ_UI_STREAM_CONTENTS_LINES)) {
         uint8_t will_fit;
 
@@ -512,6 +517,7 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
 
         line++;
     }
+    s->screens[bucket].body_len = line;
 
     PRINTF("[DEBUG] tz_ui_stream_pushl(%s, %s, %u)\n", title, value, max);
     PRINTF("[DEBUG]        bucket     %d\n", bucket);

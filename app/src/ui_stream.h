@@ -144,6 +144,7 @@ typedef struct {
     char *title;      /// Title to display on the screen.
     char *body[TZ_UI_STREAM_CONTENTS_LINES];  /// Body to display on the
                                               /// screen (Below title).
+    short body_len;  /// number of non-empty lines in the body.
 #else
     nbgl_layoutTagValue_t
         pairs[NB_MAX_DISPLAYED_PAIRS_IN_REVIEW];  /// Title-value pairs to be
