@@ -60,9 +60,9 @@ ui_home_init(void)
 #ifdef HAVE_BAGL
     tz_ui_stream_init(cb);
     tz_ui_stream_push(SCREEN_HOME, "Application", "is ready",
-                      TZ_UI_LAYOUT_HOME_NP, TZ_UI_ICON_NONE);
+                      TZ_UI_LAYOUT_HOME_N, TZ_UI_ICON_NONE);
     tz_ui_stream_push(SCREEN_VERSION, "Version", APPVERSION,
-                      TZ_UI_LAYOUT_HOME_BNP, TZ_UI_ICON_NONE);
+                      TZ_UI_LAYOUT_HOME_BN, TZ_UI_ICON_NONE);
     tz_ui_stream_push(SCREEN_SETTINGS, "Settings", "", TZ_UI_LAYOUT_HOME_PB,
                       TZ_UI_ICON_SETTINGS);
     tz_ui_stream_push(SCREEN_QUIT, "Quit?", "", TZ_UI_LAYOUT_HOME_PB,

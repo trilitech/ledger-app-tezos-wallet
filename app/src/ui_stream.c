@@ -280,12 +280,12 @@ redisplay_screen(tz_ui_layout_type_t layout, uint8_t icon_pos)
         = 3;  /// first three lines are for black rectangle, left screen icon
               /// and right screen icon.
 
-    if (layout == TZ_UI_LAYOUT_BP) {
+    if (layout == TZ_UI_LAYOUT_B) {
         // Change the contents to bold.
         for (int i = txt_start_line + 1; i < icon_pos; i++) {
             init[i].component.font_id = BOLD;
         }
-    } else if (layout == TZ_UI_LAYOUT_NP) {
+    } else if (layout == TZ_UI_LAYOUT_N) {
         // Set title to Regular.
         init[txt_start_line].component.font_id = REGULAR;
     } else if (layout == TZ_UI_LAYOUT_PB) {
@@ -312,17 +312,11 @@ redisplay_screen(tz_ui_layout_type_t layout, uint8_t icon_pos)
                 = init[txt_start_line].component.y + 16 + 8 + ((i - 4) * 12);
             init[i].component.width = 112;
         }
-    }  /// otherwise TZ_UI_LAYOUT_BNP
 
-    if (icon) {
-        init[icon_pos].text = find_icon(icon);
-#ifdef TARGET_NANOS
-        // Make sure text does not overflow on icon line in non-PB layouts.
-        if (layout != TZ_UI_LAYOUT_PB) {
-            init[icon_pos - 1].text = NULL;
+        if (icon) {
+            init[icon_pos].text = find_icon(icon);
         }
-#endif
-    }
+    }  /// otherwise TZ_UI_LAYOUT_BN
 
     // if the screen layout type is home , set the left and right arrows to
     // middle of screen.

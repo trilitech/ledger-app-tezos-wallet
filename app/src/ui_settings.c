@@ -54,7 +54,7 @@ ui_settings_init(int16_t page)
 
     tz_ui_stream_init(cb);
     tz_ui_stream_push(EXPERT_MODE, "Expert mode", exp_mode,
-                      TZ_UI_LAYOUT_HOME_BNP, TZ_UI_ICON_NONE);
+                      TZ_UI_LAYOUT_HOME_BN, TZ_UI_ICON_NONE);
     tz_ui_stream_push(BACK, "Back", "", TZ_UI_LAYOUT_HOME_PB,
                       TZ_UI_ICON_BACK);
     tz_ui_stream_close();
