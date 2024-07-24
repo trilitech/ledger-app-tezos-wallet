@@ -208,7 +208,7 @@ tz_choice_ui(bool accept)
     if (accept) {
         tz_accept_ui();
     } else {
-        tz_reject_ui();
+        tz_reject();
     }
 
     FUNC_LEAVE();
