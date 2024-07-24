@@ -283,14 +283,14 @@ refill_error(void)
                       TZ_UI_LAYOUT_HOME_PB,
                       TZ_UI_ICON_WARNING);
     tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB,
-                      " ",
-                      "This transaction\ncould not be\ndecoded correctly.",
-                      TZ_UI_LAYOUT_N,
+                      "This transaction",
+                      "could not be\ndecoded correctly.",
+                      TZ_UI_LAYOUT_HOME_N,
                       TZ_UI_ICON_NONE);
     tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB,
-                      " ",
-                      "It may not be safe\nto sign this\ntransaction.",
-                      TZ_UI_LAYOUT_N,
+                      "It may not be safe",
+                      "to sign this\ntransaction.",
+                      TZ_UI_LAYOUT_HOME_N,
                       TZ_UI_ICON_NONE);
 #endif
     tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB,
