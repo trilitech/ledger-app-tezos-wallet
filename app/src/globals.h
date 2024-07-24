@@ -110,7 +110,7 @@ typedef struct {
                   + 1];  /// Buffer to store incoming data.
 #ifdef HAVE_BAGL
     struct {
-        bagl_element_t bagls[5 + TZ_SCREEN_LINES_11PX];
+        bagl_element_t bagls[4 + TZ_SCREEN_LINES_11PX];
     } ux;  /// Config for history screens for nano devices.
 #endif
 
