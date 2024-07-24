@@ -110,7 +110,7 @@ blindsign_splash(bool confirm)
     } else {
         char blindsign_msg[150]
             = "Transaction could not be decoded correctly. Learn More:\n"
-              "tinyurl.com/Tezos-ledger\nERROR: ";
+              "bit.ly/ledger-tez\nERROR: ";
         memcpy(blindsign_msg + strlen(blindsign_msg), global.error_code,
                ERROR_CODE_SIZE);
         nbgl_useCaseChoice(&C_Important_Circle_64px,

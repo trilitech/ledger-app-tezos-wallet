@@ -168,25 +168,6 @@ expected_review_operation() {
     fi
 }
 
-set_blind_signing() {
-    echo " - set_blind_signing"
-    expected_home
-    press_button right
-    expected_version
-    press_button right
-    expect_full_text "Settings"
-    press_button both
-    expect_section_content 'Expert mode' 'DISABLED'
-    press_button right
-    expect_section_content 'Blind Signing' 'DISABLED'
-    press_button both
-    expect_section_content 'Blind Signing' 'ENABLED'
-    press_button right
-    expect_section_content 'Back'
-    press_button both
-    expected_home
-}
-
 set_expert_mode() {
     echo " - set_expert_mode"
     expected_home
@@ -198,8 +179,6 @@ set_expert_mode() {
     expect_section_content 'Expert mode' 'DISABLED'
     press_button both
     expect_section_content 'Expert mode' 'ENABLED'
-    press_button right
-    expect_section_content 'Blind Signing' 'DISABLED'
     press_button right
     expect_section_content 'Back'
     press_button both

@@ -125,6 +125,7 @@ typedef uint8_t tz_ui_icon_t;
 #define TZ_UI_ICON_SETTINGS  0x04
 #define TZ_UI_ICON_BACK      0x05
 #define TZ_UI_ICON_EYE       0x06
+#define TZ_UI_ICON_WARNING   0x07
 
 /**
  * @brief Represents a single screen's content and formatting for a ledger
