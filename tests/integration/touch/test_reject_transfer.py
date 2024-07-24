@@ -43,4 +43,34 @@ if __name__ == "__main__":
     app.expect_apdu_failure("6985")
 
     app.assert_home()
+
+    app.send_apdu("800f000011048000002c800006c18000000080000000")
+    app.expect_apdu_return("9000")
+
+    app.assert_screen("review_request_sign_operation")
+    app.review.next()
+
+    # Ensure we don't advance to a blank screen
+    app.assert_screen("review_request_sign_operation")
+
+    app.send_apdu("800f81005e0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316");
+
+    # Don't tap again - we tapped earlier
+    app.assert_screen("trt_review_1")
+    app.review.next()
+
+    app.assert_screen("trt_review_2")
+    app.review.next()
+
+    app.expert_mode_splash()
+    app.review.next()
+
+    app.assert_screen("trt_review_3")
+    app.review.next()
+    app.assert_screen("operation_sign")
+    app.review_reject_signing()
+    app.expect_apdu_failure("6985")
+    app.assert_home()
+
+
     app.quit()
