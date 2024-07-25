@@ -44,9 +44,9 @@ if __name__ == "__main__":
 
     app.review.next()
     app.assert_screen("operation_proof_396...834_0")
-    app.provide_pk.show_more()
+    app.review.show_more()
     app.assert_screen("operation_prooof_details_396...834_0")
-    app.provide_pk.exit_qr()
+    app.review.details.exit()
     app.assert_screen("operation_proof_396...834_0")
     app.review.next()
     app.assert_screen("operation_proof_396...834_1")

@@ -31,20 +31,20 @@ from ragger.firmware.touch.use_cases import (
     UseCaseSettings as OriginalUseCaseSettings,
     UseCaseAddressConfirmation as OriginalUseCaseAddressConfirmation,
     UseCaseReview as OriginalUseCaseReview,
-    UseCaseChoice
+    UseCaseChoice,
+    UseCaseViewDetails
 )
 from ragger.firmware.touch.layouts import ChoiceList
 from ragger.firmware.touch.positions import (
     Position,
     STAX_BUTTON_LOWER_LEFT,
     STAX_BUTTON_ABOVE_LOWER_MIDDLE,
-    STAX_BUTTON_LOWER_RIGHT,
-    STAX_BUTTON_LOWER_MIDDLE,
     FLEX_BUTTON_LOWER_LEFT,
     FLEX_BUTTON_ABOVE_LOWER_MIDDLE
 )
 
 MAX_ATTEMPTS = 50
+
 
 def with_retry(f, attempts=MAX_ATTEMPTS):
     while True:
@@ -58,14 +58,20 @@ def with_retry(f, attempts=MAX_ATTEMPTS):
         # Give plenty of time for speculos to update - can take a long time on CI machines
         time.sleep(0.5)
 
+
 class UseCaseReview(OriginalUseCaseReview):
     """Extension of UseCaseReview for our app."""
 
     reject_tx:        UseCaseChoice
     enable_expert:    UseCaseChoice
     enable_blindsign: UseCaseChoice
+    details:          UseCaseViewDetails
 
     _center: Center
+    MORE_POSITIONS = {
+        Firmware.STAX: Position(200, 390),
+        Firmware.FLEX: Position(240, 350)
+    }
 
     def __init__(self, client: BackendInterface, firmware: Firmware):
         super().__init__(client, firmware)
@@ -73,10 +79,21 @@ class UseCaseReview(OriginalUseCaseReview):
         self.enable_expert    = UseCaseChoice(client, firmware)
         self.enable_blindsign = UseCaseChoice(client, firmware)
         self._center = Center(client, firmware)
+        self.details = UseCaseViewDetails(client, firmware)
+
+    @property
+    def more_position(self) -> Position:
+        """Position of the qr code."""
+        return UseCaseReview.MORE_POSITIONS[self.firmware]
 
     def next(self) -> None:
         """Pass to the next screen."""
         self._center.swipe_left()
+
+    def show_more(self) -> None:
+        """Tap to show more."""
+        self.client.finger_touch(*self.more_position)
+
 
 class UseCaseAddressConfirmation(OriginalUseCaseAddressConfirmation):
     """Extension of UseCaseAddressConfirmation for our app."""
@@ -87,12 +104,6 @@ class UseCaseAddressConfirmation(OriginalUseCaseAddressConfirmation):
         Firmware.STAX: Position(STAX_BUTTON_LOWER_LEFT.x, STAX_BUTTON_ABOVE_LOWER_MIDDLE.y),
         Firmware.FLEX: Position(FLEX_BUTTON_LOWER_LEFT.x, FLEX_BUTTON_ABOVE_LOWER_MIDDLE.y)
     }
-
-    MORE_POSITIONS = {
-        Firmware.STAX: Position(200,390),
-        Firmware.FLEX: Position(240, 350)
-    }
-
 
     def __init__(self, client: BackendInterface, firmware: Firmware):
         super().__init__(client, firmware)
@@ -107,17 +118,10 @@ class UseCaseAddressConfirmation(OriginalUseCaseAddressConfirmation):
         """Position of the qr code."""
         return UseCaseAddressConfirmation.QR_POSITIONS[self.firmware]
 
-    @property
-    def more_position(self) -> Position:
-        """Position of the qr code."""
-        return UseCaseAddressConfirmation.MORE_POSITIONS[self.firmware]
     def show_qr(self) -> None:
         """Tap to show qr code."""
         self.client.finger_touch(*self.qr_position)
 
-    def show_more(self) -> None:
-        """Tap to show more."""
-        self.client.finger_touch(*self.more_position)
 
 class UseCaseSettings(OriginalUseCaseSettings):
     """Extension of UseCaseSettings for our app."""
@@ -139,6 +143,7 @@ class UseCaseSettings(OriginalUseCaseSettings):
     def exit(self) -> None:
         """Exits settings."""
         self.multi_page_exit()
+
 
 class TezosAppScreen(metaclass=MetaScreen):
     use_case_welcome    = UseCaseHomeExt
@@ -185,8 +190,9 @@ class TezosAppScreen(metaclass=MetaScreen):
             for filename in os.listdir(path):
                 os.remove(os.path.join(path, filename))
             path = f"{self.__snapshots_path}"
-            home_path=os.path.join(path, "home.png")
-            if os.path.exists(home_path): os.remove(home_path)
+            home_path = os.path.join(path, "home.png")
+            if os.path.exists(home_path):
+                os.remove(home_path)
 
     def send_apdu(self, data):
         """Send hex-encoded bytes to the apdu"""
@@ -196,7 +202,8 @@ class TezosAppScreen(metaclass=MetaScreen):
         """ Delete the info page for golden tests"""
         if self.__golden:
             info_path=os.path.join(self.__snapshots_path, "info.png")
-            if os.path.exists(info_path): os.remove(info_path)
+            if os.path.exists(info_path):
+                os.remove(info_path)
 
     def expect_apdu_return(self, expected):
         """Expect hex-encoded response from the apdu"""
@@ -224,9 +231,10 @@ class TezosAppScreen(metaclass=MetaScreen):
             path = f'{self.__snapshots_path}/{screen}.png'
         else:
             path = f'{self.__prefixed_snapshots_path}/{screen}.png'
+
         def check():
             print(f"- Expecting {screen} -")
-            assert self.__backend.compare_screen_with_snapshot(path, golden_run = golden)
+            assert self.__backend.compare_screen_with_snapshot(path, golden_run=golden)
 
         with_retry(check)
 
@@ -315,46 +323,53 @@ class TezosAppScreen(metaclass=MetaScreen):
             self.review.enable_blindsign.confirm()
 
 
-
 def tezos_app(prefix) -> TezosAppScreen:
     port = os.environ["PORT"]
     commit = os.environ["COMMIT_BYTES"]
     version = os.environ["VERSION_BYTES"]
-    golden = os.getenv("GOLDEN") != None
+    golden = os.getenv("GOLDEN") is not None
     target = os.getenv("TARGET")
     firmware = Firmware.STAX if target == "stax" else Firmware.FLEX
     backend = SpeculosBackend("__unused__", firmware, args=["--api-port", port])
     return TezosAppScreen(backend, firmware, commit, version, prefix, golden)
 
+
 def assert_home_with_code(app, code):
     app.assert_home()
     app.expect_apdu_failure(code)
+
 
 def send_initialize_msg(app, apdu):
     app.send_apdu(apdu)
     app.expect_apdu_return("9000")
     app.assert_screen("review_request_sign_operation")
 
+
 def send_payload(app, apdu):
     app.send_apdu(apdu)
     app.assert_screen("review_request_sign_operation")
 
+
 def verify_err_reject_response(app, tag):
     verify_reject_response_common(app, tag, "9405")
 
+
 def verify_reject_response(app, tag):
-    verify_reject_response_common(app, tag,"6985")
+    verify_reject_response_common(app, tag, "6985")
+
 
 def verify_reject_response_common(app, tag, err_code):
     app.assert_screen(tag)
     app.review.reject()
     reject_flow(app, err_code)
 
-def reject_flow(app,err_code):
+
+def reject_flow(app, err_code):
     app.assert_screen("reject_review")
     with app.fading_screen("rejected"):
         app.review.reject_tx.confirm()
     assert_home_with_code(app, err_code)
+
 
 def index_screen(screen: str, index: int) -> str:
     return screen + "_" + str(index).zfill(2)
