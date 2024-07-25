@@ -176,7 +176,7 @@ refill_blo_im_full(void)
 #ifdef HAVE_BAGL
     if (st->field_info.is_field_complex && !N_settings.expert_mode) {
         tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, st->field_info.field_name,
-                          "Needs Expert mode", TZ_UI_LAYOUT_HOME_BP,
+                          "Needs Expert mode", TZ_UI_LAYOUT_HOME_B,
                           TZ_UI_ICON_NONE);
         tz_ui_stream_push(TZ_UI_STREAM_CB_REJECT, "Home", "",
                           TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_BACK);
@@ -187,7 +187,7 @@ refill_blo_im_full(void)
             && (global.keys.apdu.sign.u.clear.last_field_index
                 != st->field_info.field_index)) {
             tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Next field requires",
-                              "careful review", TZ_UI_LAYOUT_HOME_BP,
+                              "careful review", TZ_UI_LAYOUT_HOME_B,
                               TZ_UI_ICON_NONE);
             global.keys.apdu.sign.u.clear.last_field_index
                 = st->field_info.field_index;
@@ -195,7 +195,7 @@ refill_blo_im_full(void)
     }
 
     wrote = tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, st->field_info.field_name,
-                              global.line_buf, TZ_UI_LAYOUT_BNP,
+                              global.line_buf, TZ_UI_LAYOUT_BN,
                               TZ_UI_ICON_NONE);
 #elif HAVE_NBGL
     PRINTF("[DEBUG] field=%s complex=%d\n", st->field_info.field_name,
@@ -208,16 +208,16 @@ refill_blo_im_full(void)
         if (!N_settings.expert_mode) {
             tz_ui_stream_push_all(TZ_UI_STREAM_CB_EXPERT_MODE_ENABLE,
                                   st->field_info.field_name, "complex",
-                                  TZ_UI_LAYOUT_BNP, TZ_UI_ICON_NONE);
+                                  TZ_UI_LAYOUT_BN, TZ_UI_ICON_NONE);
         }
 
         wrote = tz_ui_stream_push_all(
             TZ_UI_STREAM_CB_EXPERT_MODE_FIELD, st->field_info.field_name,
-            global.line_buf, TZ_UI_LAYOUT_BNP, TZ_UI_ICON_NONE);
+            global.line_buf, TZ_UI_LAYOUT_BN, TZ_UI_ICON_NONE);
     } else {
         wrote = tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB,
                                   st->field_info.field_name, global.line_buf,
-                                  TZ_UI_LAYOUT_BNP, TZ_UI_ICON_NONE);
+                                  TZ_UI_LAYOUT_BN, TZ_UI_ICON_NONE);
     }
 
 #endif
@@ -277,31 +277,31 @@ refill_error(void)
                       "The transaction",
                       "cannot be trusted.",
 #ifdef TARGET_NANOS
-                      TZ_UI_LAYOUT_HOME_BP,
+                      TZ_UI_LAYOUT_HOME_B,
                       TZ_UI_ICON_NONE);
 #else
                       TZ_UI_LAYOUT_HOME_PB,
                       TZ_UI_ICON_WARNING);
     tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB,
-                      " ",
-                      "This transaction\ncould not be\ndecoded correctly.",
-                      TZ_UI_LAYOUT_NP,
+                      "This transaction",
+                      "could not be\ndecoded correctly.",
+                      TZ_UI_LAYOUT_HOME_N,
                       TZ_UI_ICON_NONE);
     tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB,
-                      " ",
-                      "It may not be safe\nto sign this\ntransaction.",
-                      TZ_UI_LAYOUT_NP,
+                      "It may not be safe",
+                      "to sign this\ntransaction.",
+                      TZ_UI_LAYOUT_HOME_N,
                       TZ_UI_ICON_NONE);
 #endif
     tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB,
                           "Parsing error",
                           tz_parser_result_name(st->errno),
-                          TZ_UI_LAYOUT_HOME_BNP,
+                          TZ_UI_LAYOUT_HOME_BN,
                           TZ_UI_ICON_NONE);
     tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB,
                       "Learn More:",
                       "bit.ly/ledger-tez",
-                      TZ_UI_LAYOUT_HOME_BNP,
+                      TZ_UI_LAYOUT_HOME_BN,
                       TZ_UI_ICON_NONE);
     tz_ui_stream_push(TZ_UI_STREAM_CB_BLINDSIGN,
                       "Accept risk",
@@ -318,8 +318,8 @@ refill_error(void)
     tz_ui_stream_push_all(TZ_UI_STREAM_CB_CANCEL,
                           "Parsing error",
                           tz_parser_result_name(st->errno),
-                          TZ_UI_LAYOUT_BNP,
-                          TZ_UI_ICON_CROSS);
+                          TZ_UI_LAYOUT_BN,
+                          TZ_UI_ICON_NONE);
 #endif
     // clang-format on
 
@@ -432,7 +432,7 @@ bs_push_next(void)
         }
 
         tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Sign Hash", obuf,
-                              TZ_UI_LAYOUT_BNP, TZ_UI_ICON_NONE);
+                              TZ_UI_LAYOUT_BN, TZ_UI_ICON_NONE);
         break;
     case BLINDSIGN_ST_HASH:
         *step = BLINDSIGN_ST_ACCEPT_REJECT;
@@ -733,7 +733,7 @@ handle_data_apdu_blind(void)
 
 #ifdef HAVE_BAGL
     tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Sign Hash", type,
-                          TZ_UI_LAYOUT_BNP, TZ_UI_ICON_NONE);
+                          TZ_UI_LAYOUT_BN, TZ_UI_ICON_NONE);
 
     tz_ui_stream();
 #elif HAVE_NBGL
