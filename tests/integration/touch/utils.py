@@ -88,6 +88,12 @@ class UseCaseAddressConfirmation(OriginalUseCaseAddressConfirmation):
         Firmware.FLEX: Position(FLEX_BUTTON_LOWER_LEFT.x, FLEX_BUTTON_ABOVE_LOWER_MIDDLE.y)
     }
 
+    MORE_POSITIONS = {
+        Firmware.STAX: Position(200,390),
+        Firmware.FLEX: Position(240, 350)
+    }
+
+
     def __init__(self, client: BackendInterface, firmware: Firmware):
         super().__init__(client, firmware)
         self._center = Center(client, firmware)
@@ -101,9 +107,17 @@ class UseCaseAddressConfirmation(OriginalUseCaseAddressConfirmation):
         """Position of the qr code."""
         return UseCaseAddressConfirmation.QR_POSITIONS[self.firmware]
 
+    @property
+    def more_position(self) -> Position:
+        """Position of the qr code."""
+        return UseCaseAddressConfirmation.MORE_POSITIONS[self.firmware]
     def show_qr(self) -> None:
         """Tap to show qr code."""
         self.client.finger_touch(*self.qr_position)
+
+    def show_more(self) -> None:
+        """Tap to show more."""
+        self.client.finger_touch(*self.more_position)
 
 class UseCaseSettings(OriginalUseCaseSettings):
     """Extension of UseCaseSettings for our app."""
