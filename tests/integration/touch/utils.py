@@ -31,7 +31,7 @@ from ragger.firmware.touch.use_cases import (
     UseCaseSettings as OriginalUseCaseSettings,
     UseCaseAddressConfirmation as OriginalUseCaseAddressConfirmation,
     UseCaseReview as OriginalUseCaseReview,
-    UseCaseChoice as OriginalUseCaseChoice
+    UseCaseChoice
 )
 from ragger.firmware.touch.layouts import ChoiceList
 from ragger.firmware.touch.positions import (
@@ -58,17 +58,6 @@ def with_retry(f, attempts=MAX_ATTEMPTS):
         # Give plenty of time for speculos to update - can take a long time on CI machines
         time.sleep(0.5)
 
-class UseCaseChoice(OriginalUseCaseChoice):
-    """Extension of UseCaseChoice for our app."""
-
-    # Fixed in Ragger v1.21.0
-    def reject(self) -> None:
-        """Tap on reject button."""
-        if self.firmware == Firmware.STAX:
-            self.client.finger_touch(*STAX_BUTTON_LOWER_LEFT)
-        if self.firmware == Firmware.FLEX:
-            super().reject()
-
 class UseCaseReview(OriginalUseCaseReview):
     """Extension of UseCaseReview for our app."""
 
@@ -88,30 +77,6 @@ class UseCaseReview(OriginalUseCaseReview):
     def next(self) -> None:
         """Pass to the next screen."""
         self._center.swipe_left()
-
-    # Fixed in Ragger v1.21.0
-    def tap(self) -> None:
-        """Tap on screen."""
-        if self.firmware == Firmware.STAX:
-            self.client.finger_touch(*STAX_BUTTON_LOWER_RIGHT)
-        if self.firmware == Firmware.FLEX:
-            super().tap()
-
-    # Fixed in Ragger v1.21.0
-    def previous(self) -> None:
-        """Tap on screen."""
-        if self.firmware == Firmware.STAX:
-            self.client.finger_touch(*STAX_BUTTON_LOWER_MIDDLE)
-        if self.firmware == Firmware.FLEX:
-            super().previous()
-
-    # Fixed in Ragger v1.21.0
-    def reject(self) -> None:
-        """Tap on reject button."""
-        if self.firmware == Firmware.STAX:
-            self.client.finger_touch(*STAX_BUTTON_LOWER_LEFT)
-        if self.firmware == Firmware.FLEX:
-            super().reject()
 
 class UseCaseAddressConfirmation(OriginalUseCaseAddressConfirmation):
     """Extension of UseCaseAddressConfirmation for our app."""
@@ -140,14 +105,6 @@ class UseCaseAddressConfirmation(OriginalUseCaseAddressConfirmation):
         """Tap to show qr code."""
         self.client.finger_touch(*self.qr_position)
 
-    # Fixed in Ragger v1.21.0
-    def cancel(self) -> None:
-        """Tap on cancel button."""
-        if self.firmware == Firmware.STAX:
-            self.client.finger_touch(*STAX_BUTTON_LOWER_LEFT)
-        if self.firmware == Firmware.FLEX:
-            super().cancel()
-
 class UseCaseSettings(OriginalUseCaseSettings):
     """Extension of UseCaseSettings for our app."""
 
@@ -168,15 +125,6 @@ class UseCaseSettings(OriginalUseCaseSettings):
     def exit(self) -> None:
         """Exits settings."""
         self.multi_page_exit()
-
-    # Fixed in Ragger v1.21.0
-    STAX_BUTTON_LOWER_MIDDLE_RIGHT = Position(266, 615)
-    def previous(self) -> None:
-        """Tap on cancel button."""
-        if self.firmware == Firmware.STAX:
-            self.client.finger_touch(*UseCaseSettings.STAX_BUTTON_LOWER_MIDDLE_RIGHT)
-        if self.firmware == Firmware.FLEX:
-            super().previous()
 
 class TezosAppScreen(metaclass=MetaScreen):
     use_case_welcome    = UseCaseHomeExt
