@@ -83,7 +83,7 @@ class UseCaseReview(OriginalUseCaseReview):
 
     @property
     def more_position(self) -> Position:
-        """Position of the qr code."""
+        """Position of the `More` button."""
         return UseCaseReview.MORE_POSITIONS[self.firmware]
 
     def next(self) -> None:
