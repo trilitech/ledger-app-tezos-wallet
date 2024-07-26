@@ -517,7 +517,10 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
                                                        0, &push_to_next);
         PRINTF("[DEBUG] idx=%d fit=%d push_to_next=%d\n", idx, fit,
                push_to_next);
-        push_to_next |= fit <= (uint8_t)idx;
+        /*
+         * Dont push to next screen if the number of pairs is one.
+         */
+        push_to_next = (fit <= (uint8_t)idx);
 
         if (push_to_next) {
             /* We need to move to the next screen, retry */
