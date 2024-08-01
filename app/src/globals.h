@@ -20,7 +20,6 @@
    limitations under the License. */
 
 #pragma once
-
 #include <memory.h>
 #include <string.h>
 #include <bolos_target.h>
@@ -53,11 +52,9 @@ void init_globals(void);
 /// Toggles the persisted expert_mode setting
 void toggle_expert_mode(void);
 
-/// Toggles the persisted blindsigning setting
-void toggle_blindsigning(void);
-
 #define MAX_APDU_SIZE      235
 #define MAX_SIGNATURE_SIZE 100
+#define ERROR_CODE_SIZE    15
 /**
  * @brief Home screen pages in order
  *
@@ -113,16 +110,20 @@ typedef struct {
                   + 1];  /// Buffer to store incoming data.
 #ifdef HAVE_BAGL
     struct {
-        bagl_element_t bagls[5 + TZ_SCREEN_LINES_11PX];
+        bagl_element_t bagls[4 + TZ_SCREEN_LINES_11PX];
     } ux;  /// Config for history screens for nano devices.
+#endif
+
+#ifdef HAVE_NBGL
+    char error_code[ERROR_CODE_SIZE];  /// Error codes to be displayed in
+                                       /// blindsigning.
 #endif
 } globals_t;
 
 /* Settings */
 typedef struct {
-    bool blindsigning;  /// enable blindsigning
-    bool expert_mode;   /// enable expert mode
-} settings_t;           /// Special settings available in the app.
+    bool expert_mode;  /// enable expert mode
+} settings_t;          /// Special settings available in the app.
 
 extern globals_t global;
 

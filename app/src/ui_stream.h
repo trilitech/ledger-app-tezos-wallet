@@ -105,13 +105,14 @@ typedef uint8_t tz_ui_cb_type_t;
  *
  */
 typedef enum : uint8_t {
-    TZ_UI_LAYOUT_BNP      = 0x01,
-    TZ_UI_LAYOUT_BP       = 0x02,
-    TZ_UI_LAYOUT_NP       = 0x03,
-    TZ_UI_LAYOUT_HOME_PB  = (0x04 | TZ_UI_LAYOUT_HOME_MASK),
-    TZ_UI_LAYOUT_HOME_BNP = (0x05 | TZ_UI_LAYOUT_HOME_MASK),
-    TZ_UI_LAYOUT_HOME_BP  = (0x06 | TZ_UI_LAYOUT_HOME_MASK),
-    TZ_UI_LAYOUT_HOME_NP  = (0x07 | TZ_UI_LAYOUT_HOME_MASK)
+    TZ_UI_LAYOUT_BN      = 0x01,
+    TZ_UI_LAYOUT_B       = 0x02,
+    TZ_UI_LAYOUT_N       = 0x03,
+    TZ_UI_LAYOUT_PB      = 0x04,
+    TZ_UI_LAYOUT_HOME_PB = (TZ_UI_LAYOUT_HOME_MASK | TZ_UI_LAYOUT_PB),
+    TZ_UI_LAYOUT_HOME_BN = (TZ_UI_LAYOUT_HOME_MASK | TZ_UI_LAYOUT_BN),
+    TZ_UI_LAYOUT_HOME_B  = (TZ_UI_LAYOUT_HOME_MASK | TZ_UI_LAYOUT_B),
+    TZ_UI_LAYOUT_HOME_N  = (TZ_UI_LAYOUT_HOME_MASK | TZ_UI_LAYOUT_N)
 } tz_ui_layout_type_t;
 
 /**
@@ -125,6 +126,7 @@ typedef uint8_t tz_ui_icon_t;
 #define TZ_UI_ICON_SETTINGS  0x04
 #define TZ_UI_ICON_BACK      0x05
 #define TZ_UI_ICON_EYE       0x06
+#define TZ_UI_ICON_WARNING   0x07
 
 /**
  * @brief Represents a single screen's content and formatting for a ledger
@@ -142,6 +144,7 @@ typedef struct {
     char *title;      /// Title to display on the screen.
     char *body[TZ_UI_STREAM_CONTENTS_LINES];  /// Body to display on the
                                               /// screen (Below title).
+    short body_len;  /// number of non-empty lines in the body.
 #else
     nbgl_layoutTagValue_t
         pairs[NB_MAX_DISPLAYED_PAIRS_IN_REVIEW];  /// Title-value pairs to be
@@ -272,6 +275,11 @@ void tz_ui_stream_start(void);
 tz_ui_cb_type_t tz_ui_stream_get_cb_type(void);
 
 #ifdef HAVE_NBGL
+/**
+ * @brief Send Reject code.
+ *
+ */
+void tz_reject(void);
 /**
  * @brief Reject confirmation screen.
  *

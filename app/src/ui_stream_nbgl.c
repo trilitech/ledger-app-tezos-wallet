@@ -15,7 +15,6 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License. */
-
 #ifdef HAVE_NBGL
 
 #include <nbgl_use_case.h>
@@ -24,9 +23,10 @@
 #include "globals.h"
 #include "ui_stream.h"
 
-bool tz_ui_nav_cb(uint8_t page, nbgl_pageContent_t *content);
+bool tz_ui_nav_cb(void);
 bool has_final_screen(void);
 void tz_ui_stream_start(void);
+void tz_transaction_choice(bool getMorePairs);
 
 void drop_last_screen(void);
 void push_str(const char *text, size_t len, char **out);
@@ -62,8 +62,7 @@ tz_reject(void)
     }
 
     global.step = ST_IDLE;
-    nbgl_useCaseStatus("Transaction rejected", false, ui_home_init);
-
+    nbgl_useCaseReviewStatus(STATUS_TYPE_TRANSACTION_REJECTED, ui_home_init);
     FUNC_LEAVE();
 }
 
@@ -72,8 +71,8 @@ tz_reject_ui(void)
 {
     FUNC_ENTER(("void"));
 
-    nbgl_useCaseConfirm("Reject transaction?", NULL, "Yes, Reject",
-                        "Go back to transaction", tz_reject);
+    nbgl_useCaseConfirm("Reject transaction?", NULL, REJECT_CONFIRM_BUTTON,
+                        RESUME("transaction"), tz_reject);
 
     FUNC_LEAVE();
 }
@@ -90,30 +89,35 @@ start_blindsign(void)
 }
 
 static void
-blindsign_splash(void)
+blindsign_choice(bool confirm)
 {
     TZ_PREAMBLE(("void"));
-    nbgl_useCaseReviewStart(
-        &C_round_warning_64px, "Blind signing",
-        "This transaction can not be securely interpreted by Ledger Stax. It "
-        "might put your assets at risk.",
-        "Reject transaction", start_blindsign, tz_reject_ui);
-
+    if (confirm) {
+        start_blindsign();
+    } else {
+        tz_reject_ui();
+    }
     TZ_POSTAMBLE;
 }
 
 static void
-handle_blindsigning(bool confirm)
+blindsign_splash(bool confirm)
 {
     TZ_PREAMBLE(("void"));
     if (confirm) {
-        if (!N_settings.blindsigning) {
-            toggle_blindsigning();
-        }
-        nbgl_useCaseStatus("BLIND SIGNING\nENABLED", true, blindsign_splash);
-    } else {
         tz_reject_ui();
+    } else {
+        char blindsign_msg[150]
+            = "Transaction could not be decoded correctly. Learn More:\n"
+              "bit.ly/ledger-tez\nERROR: ";
+        memcpy(blindsign_msg + strlen(blindsign_msg), global.error_code,
+               ERROR_CODE_SIZE);
+        nbgl_useCaseChoice(&C_Important_Circle_64px,
+                           "The transaction cannot be trusted", blindsign_msg,
+                           "I accept the risk", "Reject transaction",
+                           blindsign_choice);
     }
+
     TZ_POSTAMBLE;
 }
 
@@ -122,30 +126,27 @@ switch_to_blindsigning(__attribute__((unused)) const char *err_type,
                        const char                         *err_code)
 {
     TZ_PREAMBLE(("void"));
-    PRINTF("[DEBUG] refill_error: global.step = %d\n", global.step);
+    PRINTF("[DEBUG] refill_error: global.step = %d\n %s", global.step,
+           err_code);
     TZ_ASSERT(EXC_UNEXPECTED_STATE, global.step == ST_CLEAR_SIGN);
     global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
     global.step                = ST_BLIND_SIGN;
-    if (N_settings.blindsigning) {
-        nbgl_useCaseReviewStart(
-            &C_round_warning_64px, "Blind signing required:\nParsing Error",
-            err_code, "Reject transaction", blindsign_splash, tz_reject_ui);
-    } else {
-        nbgl_useCaseChoice(&C_round_warning_64px,
-                           "Enable blind signing to authorize this "
-                           "transaction:\nParsing Error",
-                           err_code, "Enable blind signing",
-                           "Reject transaction", handle_blindsigning);
-    }
+    memcpy(global.error_code, err_code, sizeof(global.error_code));
+
+    nbgl_useCaseChoice(&C_Important_Circle_64px, "Security risk detected",
+                       "It may not be safe to sign this transaction. To "
+                       "continue, you'll need to review the risk.",
+                       "Back to safety", "Review risk", blindsign_splash);
 
     TZ_POSTAMBLE;
 }
+
 void
 expert_mode_splash(void)
 {
     TZ_PREAMBLE(("void"));
 
-    nbgl_useCaseReviewStart(&C_round_warning_64px, "Expert mode",
+    nbgl_useCaseReviewStart(&C_Important_Circle_64px, "Expert mode",
                             "Next screen requires careful review",
                             "Reject transaction", tz_ui_stream_start,
                             tz_reject_ui);
@@ -175,7 +176,7 @@ tz_enable_expert_mode_ui(void)
 {
     FUNC_LEAVE();
 
-    nbgl_useCaseChoice(&C_round_warning_64px,
+    nbgl_useCaseChoice(&C_Important_Circle_64px,
                        "Enable expert mode to authorize this "
                        "transaction",
                        "", "Enable expert mode", "Reject transaction",
@@ -194,7 +195,7 @@ tz_accept_ui(void)
     global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
     s->cb(TZ_UI_STREAM_CB_ACCEPT);
 
-    nbgl_useCaseStatus("TRANSACTION\nSIGNED", true, ui_home_init);
+    nbgl_useCaseReviewStatus(STATUS_TYPE_TRANSACTION_SIGNED, ui_home_init);
 
     FUNC_LEAVE();
 }
@@ -207,7 +208,7 @@ tz_choice_ui(bool accept)
     if (accept) {
         tz_accept_ui();
     } else {
-        tz_reject_ui();
+        tz_reject();
     }
 
     FUNC_LEAVE();
@@ -222,7 +223,6 @@ tz_ui_continue(void)
 
     if (!s->full) {
         TZ_CHECK(s->cb(TZ_UI_STREAM_CB_REFILL));
-        PRINTF("[DEBUG] total=%d\n", s->total);
     }
 
     TZ_POSTAMBLE;
@@ -232,10 +232,13 @@ void
 tz_ui_stream_cb(void)
 {
     FUNC_ENTER(("void"));
+    bool result = tz_ui_nav_cb();
+    if (result) {
+        tz_ui_stream_t         *s = &global.stream;
+        tz_ui_stream_display_t *c = &s->current_screen;
 
-    nbgl_useCaseForwardOnlyReviewNoSkip("Reject transaction", NULL,
-                                        tz_ui_nav_cb, tz_choice_ui);
-
+        nbgl_useCaseReviewStreamingContinue(&c->list, tz_transaction_choice);
+    }
     FUNC_LEAVE();
 }
 
@@ -267,12 +270,27 @@ tz_ui_review_start(void)
 }
 
 void
+tz_transaction_choice(bool getMorePairs)
+{
+    FUNC_ENTER();
+    if (getMorePairs) {
+        // get more pairs
+        tz_ui_review_start();
+    } else {
+        tz_reject();
+    }
+
+    FUNC_LEAVE();
+}
+
+void
 tz_ui_stream_init(void (*cb)(tz_ui_cb_type_t cb_type))
 {
     tz_ui_stream_t *s = &global.stream;
 
     FUNC_ENTER(("cb=%p", cb));
     memset(s, 0x0, sizeof(*s));
+    memset(global.error_code, '\0', sizeof(global.error_code));
     s->cb            = cb;
     s->full          = false;
     s->last          = 0;
@@ -281,10 +299,11 @@ tz_ui_stream_init(void (*cb)(tz_ui_cb_type_t cb_type))
     s->pressed_right = false;
 
     ui_strings_init();
+    nbgl_operationType_t op_type = TYPE_TRANSACTION;
+    nbgl_useCaseReviewStreamingStart(op_type, &C_tezos,
+                                     "Review request to sign operation", NULL,
+                                     tz_transaction_choice);
 
-    nbgl_useCaseReviewStart(&C_tezos, "Review request to sign operation",
-                            NULL, "Reject request", tz_ui_review_start,
-                            tz_reject_ui);
     FUNC_LEAVE();
 }
 
@@ -312,20 +331,16 @@ tz_ui_stream_close(void)
 }
 
 bool
-tz_ui_nav_cb(uint8_t page, nbgl_pageContent_t *content)
+tz_ui_nav_cb(void)
 {
-    FUNC_ENTER(("page=%d, content=%p", page, content));
+    FUNC_ENTER(("void"));
 
     tz_ui_stream_t         *s      = &global.stream;
     tz_ui_stream_display_t *c      = &s->current_screen;
     bool                    result = true;
     tz_parser_state        *st = &global.keys.apdu.sign.u.clear.parser_state;
 
-    PRINTF(
-        "[DEBUG] pressed_right=%d, current=%d, total=%d, full=%d, "
-        "global.step= %d\n",
-        s->pressed_right, s->current, s->total, s->full, global.step);
-
+    // Continue receiving data from the apdu until s->full is true.
     while (((s->total < 0) || ((s->current == s->total) && !s->full))
            && (st->errno < TZ_ERR_INVALID_TAG)) {
         PRINTF("tz_ui_nav_cb: Looping...\n");
@@ -342,11 +357,6 @@ tz_ui_nav_cb(uint8_t page, nbgl_pageContent_t *content)
         s->total++;
     }
 
-    PRINTF(
-        "[DEBUG] pressed_right=%d, current=%d, total=%d, full=%d, "
-        "global.step=%d\n",
-        s->pressed_right, s->current, s->total, s->full, global.step);
-
     if (global.step == ST_ERROR) {
         global.step = ST_IDLE;
         ui_home_init();
@@ -355,18 +365,9 @@ tz_ui_nav_cb(uint8_t page, nbgl_pageContent_t *content)
         result = false;
     } else if ((s->current == s->total) && s->full) {
         PRINTF("[DEBUG] signing...\n");
-        content->type                        = INFO_LONG_PRESS;
-        content->infoLongPress.icon          = &C_tezos;
-        content->infoLongPress.text          = "Sign transaction?";
-        content->infoLongPress.longPressText = "Hold to sign";
-    } else if (page == LAST_PAGE_FOR_REVIEW) {
-        s->current = s->total;
-        result     = false;
-
+        result = false;
+        nbgl_useCaseReviewStreamingFinish(SIGN("transaction"), tz_choice_ui);
     } else if (s->total >= 0) {
-        PRINTF("[DEBUG] Display: curr=%d total=%d pr=%d\n", s->current,
-               s->total, s->pressed_right);
-
         if (s->current < s->total) {
             s->current++;
         }
@@ -394,10 +395,7 @@ tz_ui_nav_cb(uint8_t page, nbgl_pageContent_t *content)
             c->list.nbPairs           = s->screens[bucket].nb_pairs;
             c->list.smallCaseForValue = false;
             c->list.wrapping          = true;
-
-            content->type         = TAG_VALUE_LIST;
-            content->tagValueList = c->list;
-            result                = true;
+            result                    = true;
         }
     }
 
@@ -519,7 +517,10 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
                                                        0, &push_to_next);
         PRINTF("[DEBUG] idx=%d fit=%d push_to_next=%d\n", idx, fit,
                push_to_next);
-        push_to_next |= fit <= (uint8_t)idx;
+        /*
+         * Dont push to next screen if the number of pairs is one.
+         */
+        push_to_next = (fit <= (uint8_t)idx);
 
         if (push_to_next) {
             /* We need to move to the next screen, retry */

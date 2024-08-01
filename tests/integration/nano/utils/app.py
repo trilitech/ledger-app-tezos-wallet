@@ -30,7 +30,7 @@ from .message import Message
 from .account import Account, SIGNATURE_TYPE
 from .backend import StatusCode, TezosBackend, APP_KIND
 
-version: Tuple[int, int, int] = (3, 0, 3)
+version: Tuple[int, int, int] = (3, 0, 4)
 
 class TezosAPDUChecker:
 
@@ -140,13 +140,10 @@ class SpeculosTezosBackend(TezosBackend, SpeculosBackend):
 
 class Screen(str, Enum):
     Home = "home"
-    Blind_home = "blind_home"
     Version = "version"
     Settings = "settings"
     Settings_expert_mode_disabled = "settings_expert_mode_disabled"
     Settings_expert_mode_enabled = "settings_expert_mode_enabled"
-    Settings_blind_disabled = "settings_blind_signing_disabled"
-    Settings_blind_enabled = "settings_blind_signing_enabled"
     Settings_back = "back"
     Quit = "quit"
 
@@ -156,7 +153,7 @@ class Screen_text(str, Enum):
     Public_key_reject = "Reject"
     Sign_accept = "Accept"
     Sign_reject = "Reject"
-    Blind_switch = "Switch to"
+    Blind_switch = "Accept risk"
     Back_home = "Home"
 
 class TezosAppScreen():
@@ -223,25 +220,6 @@ class TezosAppScreen():
         self.assert_screen(Screen.Settings_expert_mode_disabled)
         self.backend.both_click()
         self.assert_screen(Screen.Settings_expert_mode_enabled)
-        self.backend.right_click()
-        self.assert_screen(Screen.Settings_blind_disabled)
-        self.backend.right_click()
-        self.assert_screen(Screen.Settings_back)
-        self.backend.both_click()
-        self.assert_screen(Screen.Home)
-
-    def setup_blind_signing(self) -> None:
-        self.assert_screen(Screen.Home)
-        self.backend.right_click()
-        self.assert_screen(Screen.Version)
-        self.backend.right_click()
-        self.assert_screen(Screen.Settings)
-        self.backend.both_click()
-        self.assert_screen(Screen.Settings_expert_mode_disabled)
-        self.backend.right_click()
-        self.assert_screen(Screen.Settings_blind_disabled)
-        self.backend.both_click()
-        self.assert_screen(Screen.Settings_blind_enabled)
         self.backend.right_click()
         self.assert_screen(Screen.Settings_back)
         self.backend.both_click()
@@ -334,8 +312,6 @@ class TezosAppScreen():
 
         if isinstance(path, str): path = Path(path)
 
-        self.setup_blind_signing()
-
         def navigate() -> None:
             self.navigate_until_text(Screen_text.Blind_switch, path / "clear")
             self.navigate_until_text(Screen_text.Sign_accept, path / "blind")
@@ -392,7 +368,7 @@ class TezosAppScreen():
         self._failing_signing(account,
                               message,
                               with_hash,
-                              Screen_text.Back_home,
+                              Screen_text.Sign_reject,
                               StatusCode.PARSE_ERROR,
                               path)
 

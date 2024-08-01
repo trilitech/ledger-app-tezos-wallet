@@ -102,7 +102,7 @@ prompt_address(void)
                       TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_EYE);
 #endif
     tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Address", buf,
-                          TZ_UI_LAYOUT_BNP, TZ_UI_ICON_NONE);
+                          TZ_UI_LAYOUT_BN, TZ_UI_ICON_NONE);
     tz_ui_stream_push(TZ_UI_STREAM_CB_ACCEPT, "Approve", "",
                       TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_TICK);
     tz_ui_stream_push(TZ_UI_STREAM_CB_REJECT, "Reject", "",
@@ -117,52 +117,42 @@ prompt_address(void)
 #include "nbgl_use_case.h"
 
 static void
-cancel_callback(void)
-{
-    stream_cb(TZ_UI_STREAM_CB_REJECT);
-    global.step = ST_IDLE;
-    nbgl_useCaseStatus("Address rejected", false, ui_home_init);
-}
-
-static void
-approve_callback(void)
-{
-    stream_cb(TZ_UI_STREAM_CB_ACCEPT);
-    nbgl_useCaseStatus("ADDRESS\nVERIFIED", true, ui_home_init);
-}
-
-static void
 confirmation_callback(bool confirm)
 {
     if (confirm) {
-        approve_callback();
+        stream_cb(TZ_UI_STREAM_CB_ACCEPT);
     } else {
-        cancel_callback();
+        stream_cb(TZ_UI_STREAM_CB_REJECT);
+        global.step = ST_IDLE;
     }
 }
 
 static void
-verify_address(void)
+review_choice(bool confirm)
 {
-    TZ_PREAMBLE(("void"));
-
-    TZ_CHECK(format_pkh(&global.keys.pubkey, global.stream.verify_address,
-                        sizeof(global.stream.verify_address)));
-    nbgl_useCaseAddressConfirmation(global.stream.verify_address,
-                                    confirmation_callback);
-    TZ_POSTAMBLE;
+    // Answer, display a status page and go back to main
+    confirmation_callback(confirm);
+    if (confirm) {
+        nbgl_useCaseReviewStatus(STATUS_TYPE_ADDRESS_VERIFIED, ui_home_init);
+    } else {
+        nbgl_useCaseReviewStatus(STATUS_TYPE_ADDRESS_REJECTED, ui_home_init);
+    }
 }
-
 static void
 prompt_address(void)
 {
     TZ_PREAMBLE(("void"));
 
     global.step = ST_PROMPT;
-    nbgl_useCaseReviewStart(&C_tezos, "Verify Tezos\naddress", NULL, "Cancel",
-                            verify_address, cancel_callback);
+    TZ_CHECK(format_pkh(&global.keys.pubkey, global.stream.verify_address,
+                        sizeof(global.stream.verify_address)));
+
+    nbgl_useCaseAddressReview(global.stream.verify_address, NULL, &C_tezos,
+                              "Verify Tezos\naddress", NULL, review_choice);
+
     TZ_POSTAMBLE;
 }
+
 #endif
 
 void

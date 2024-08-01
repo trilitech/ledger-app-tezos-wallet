@@ -201,7 +201,10 @@ typedef enum {
     TZ_MICHELSON_OP_EMIT                           = 151,
     TZ_MICHELSON_OP_Lambda_rec                     = 152,
     TZ_MICHELSON_OP_LAMBDA_REC                     = 153,
-    TZ_MICHELSON_OP_TICKET                         = 154
+    TZ_MICHELSON_OP_TICKET                         = 154,
+    TZ_MICHELSON_OP_BYTES                          = 155,
+    TZ_MICHELSON_OP_NAT                            = 156,
+    TZ_MICHELSON_OP_Ticket                         = 157
 } tz_michelson_opcode;
 
 #define TZ_DECIMAL_BUFFER_SIZE(_l) ((((_l)*241) / 100) + 1)

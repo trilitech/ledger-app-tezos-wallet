@@ -126,7 +126,7 @@ Both of these commands take the following arguments:
 -x
 : executes the tests with shell tracing (-x)
 
-Basic tests rely on gold-images, rather than OCR. They are stored under [nano/snapshots](./tests/integration/nano/snapshots) and [stax/snapshots](./tests/integration/stax/snapshots).
+Basic tests rely on gold-images, rather than OCR. They are stored under [nano/snapshots](./tests/integration/nano/snapshots) and [touch/snapshots](./tests/integration/touch/snapshots).
 
 To generate/reset the snapshots, you can do so for individual tests.
 
@@ -171,7 +171,7 @@ You will be requested to press enter to take snapshots in term.
 **NB** make sure that the screen has updated to the screen you want to snapshot each time. It's also a good idea to
 re-run the test normally afterwards, to ensure the snapshots have been set correctly.
 
-### STAX
+### STAX/FLEX
 
 #### Preparation
 
@@ -196,7 +196,7 @@ $ docker exec -it ledger-app-tezos-integration-tests bash;
 You can run an individual test from the test container. You should see the app progress on the display.
 
 ```sh
-./tests/integration/stax/<test_name>.py
+./tests/integration/touch/<test_name>.py
 ```
 
 #### Setting goldimages
@@ -204,7 +204,7 @@ You can run an individual test from the test container. You should see the app p
 You can reset/set goldimages using the following:
 
 ```sh
-GOLDEN=1 ./tests/integration/stax/<test_name>.py
+GOLDEN=1 ./tests/integration/touch/<test_name>.py
 ```
 
 If you are resetting goldimages for multiple tests, you can also use `export NOQUIT=1` to keep the app
@@ -264,4 +264,4 @@ with a new version
 1. app/Makefile
 2. tests/integration/app_vars.sh
 3. tests/integration/nano/utils/app.py
-4. the snapshots (nano and stax)
+4. the snapshots (nano and touch)

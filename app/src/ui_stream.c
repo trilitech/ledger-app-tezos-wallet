@@ -135,7 +135,7 @@ succ(void)
     tz_ui_stream_t *s = &global.stream;
 
     FUNC_ENTER(("current=%d total=%d", s->current, s->total));
-    if (s->current < s->total) {
+    if ((s->current < s->total) && (s->pressed_right)) {
         s->pressed_right = false;
         s->current++;
     }
@@ -189,6 +189,7 @@ find_icon(tz_ui_icon_t icon)
     case TZ_UI_ICON_SETTINGS:   return (const char *)&C_icon_coggle;
     case TZ_UI_ICON_BACK:       return (const char *)&C_icon_back_x;
     case TZ_UI_ICON_EYE:        return (const char *)&C_icon_eye;
+    case TZ_UI_ICON_WARNING:    return (const char *)&C_icon_warning;
     default:                    return NULL;
     }
     // clang-format on
@@ -229,8 +230,10 @@ redisplay_screen(tz_ui_layout_type_t layout, uint8_t icon_pos)
     TZ_PREAMBLE(("void"));
     tz_ui_stream_t *s = &global.stream;
     size_t          bucket;
-    bucket            = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
-    tz_ui_icon_t icon = s->screens[bucket].icon;
+    bucket                     = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
+    tz_ui_icon_t icon          = s->screens[bucket].icon;
+    bool         has_home_mask = layout & TZ_UI_LAYOUT_HOME_MASK;
+    layout                     = layout & ~TZ_UI_LAYOUT_HOME_MASK;
 
     bagl_element_t init[] = {
   //  {type, userid, x, y, width, height, stroke, radius,
@@ -277,16 +280,15 @@ redisplay_screen(tz_ui_layout_type_t layout, uint8_t icon_pos)
         = 3;  /// first three lines are for black rectangle, left screen icon
               /// and right screen icon.
 
-    if ((layout == TZ_UI_LAYOUT_BP) || (layout == TZ_UI_LAYOUT_HOME_BP)) {
+    if (layout == TZ_UI_LAYOUT_B) {
         // Change the contents to bold.
         for (int i = txt_start_line + 1; i < icon_pos; i++) {
             init[i].component.font_id = BOLD;
         }
-    } else if ((layout == TZ_UI_LAYOUT_NP)
-               || (layout == TZ_UI_LAYOUT_HOME_NP)) {
+    } else if (layout == TZ_UI_LAYOUT_N) {
         // Set title to Regular.
         init[txt_start_line].component.font_id = REGULAR;
-    } else if (layout == TZ_UI_LAYOUT_HOME_PB) {
+    } else if (layout == TZ_UI_LAYOUT_PB) {
         // Icon will be at txt_start_line.
         // modify the x,y coordinates for index txt_start_line to end.
         init[txt_start_line].component   = init[icon_pos].component;
@@ -310,30 +312,29 @@ redisplay_screen(tz_ui_layout_type_t layout, uint8_t icon_pos)
                 = init[txt_start_line].component.y + 16 + 8 + ((i - 4) * 12);
             init[i].component.width = 112;
         }
-    }
 
-    if (icon) {
-        init[icon_pos].text = find_icon(icon);
-#ifdef TARGET_NANOS
-        // Make sure text does not overflow on icon line in non-PB layouts.
-        if (layout != TZ_UI_LAYOUT_HOME_PB) {
-            init[icon_pos - 1].text = NULL;
+        if (icon) {
+            init[icon_pos].text = find_icon(icon);
         }
-#endif
-    }
+    }  /// otherwise TZ_UI_LAYOUT_BN
 
     // if the screen layout type is home , set the left and right arrows to
     // middle of screen.
-    if (layout & TZ_UI_LAYOUT_HOME_MASK) {
+    if (has_home_mask) {
         init[1].component.y = (BAGL_HEIGHT / 2) - 3;
         init[2].component.y = (BAGL_HEIGHT / 2) - 3;
-        // as icon_pos = txt_start_line in TZ_UI_LAYOUT_HOME_PB layout,
+        // as icon_pos = txt_start_line in TZ_UI_LAYOUT_PB layout,
         // following changes dont affect it.
         for (int i = txt_start_line; i < icon_pos; i++) {
             init[i].component.x     = 8;
             init[i].component.width = 112;
-            init[i].component.y
-                = (BAGL_HEIGHT / 2) - 3 + ((i - txt_start_line) * 13);
+            init[i].component.y =
+                /// height if title only
+                ((BAGL_HEIGHT / 2) + 3)
+                /// half a line height for each additional line
+                - ((s->screens[bucket].body_len * 13) / 2)
+                /// 13px space between lines
+                + ((i - txt_start_line) * 13);
         }
     }
 
@@ -495,7 +496,7 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
     s->screens[bucket].layout_type = layout_type;
     s->screens[bucket].icon        = icon;
 
-    int line = 0;
+    short line = 0;
     while ((offset < length) && (line < TZ_UI_STREAM_CONTENTS_LINES)) {
         uint8_t will_fit;
 
@@ -516,6 +517,7 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
 
         line++;
     }
+    s->screens[bucket].body_len = line;
 
     PRINTF("[DEBUG] tz_ui_stream_pushl(%s, %s, %u)\n", title, value, max);
     PRINTF("[DEBUG]        bucket     %d\n", bucket);

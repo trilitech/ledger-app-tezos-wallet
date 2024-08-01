@@ -27,8 +27,6 @@ def test_blindsign_reject(app):
 
     expression = Message.from_bytes("050092abf8e3d9e5f8cfd9ae8a9fe5f28ea1d5b5abf1af82dae8a4b68df3d1889eb6f988f5e8d31a")
 
-    app.setup_blind_signing()
-
     app._failing_signing(DEFAULT_ACCOUNT,
                          expression,
                          with_hash=False,
@@ -41,9 +39,11 @@ def test_blindsign_reject(app):
             app.backend.sign(DEFAULT_ACCOUNT, expression, with_hash=False)
         return b''
 
+    path = Path(test_name) / "reject_from_blind"
+
     def navigate() -> None:
-        app.navigate_until_text(Screen_text.Blind_switch, Path(test_name) / "reject_from_blind" / "clear")
-        app.navigate_until_text(Screen_text.Sign_reject, Path(test_name) / "reject_from_blind" / "blind")
+        app.navigate_until_text(Screen_text.Blind_switch, path / "clear")
+        app.navigate_until_text(Screen_text.Sign_reject, path / "blind")
 
     send_and_navigate(
         send=expected_failure_send,

@@ -29,8 +29,6 @@ def test_blindsign_too_deep(app):
     expression = Message.from_bytes("0502000000f702000000f202000000ed02000000e802000000e302000000de02000000d902000000d402000000cf02000000ca02000000c502000000c002000000bb02000000b602000000b102000000ac02000000a702000000a2020000009d02000000980200000093020000008e02000000890200000084020000007f020000007a02000000750200000070020000006b02000000660200000061020000005c02000000570200000052020000004d02000000480200000043020000003e02000000390200000034020000002f020000002a02000000250200000020020000001b02000000160200000011020000000c02000000070200000002002a")
 
     if app.backend.firmware.device == "nanos":
-        app.setup_blind_signing()
-
         def send(result_queue: Queue) -> None:
             res = app.backend.sign(DEFAULT_ACCOUNT, expression, with_hash=True)
             result_queue.put(res)
@@ -43,11 +41,17 @@ def test_blindsign_too_deep(app):
 
         app.backend.wait_for_text_not_on_screen(Screen_text.Home)
 
-        for i in range(4):
+        for i in range(6):
+            # 'Review operation'
+            # 'Expression {{{...{{{'
+            # 'Expression {{{...{{{'
+            # 'The transaction cannot be trusted.'
+            # 'Parsing error ERR_TOO_DEEP'
+            # 'Learn More: bit.ly/ledger-tez'
             assert_screen_i(i)
             app.backend.right_click()
 
-        # 'Switch to blindsigning' screen
+        # 'Accept risk' screen
         assert_screen_i(i+1)
 
         def blind_navigate() -> None:

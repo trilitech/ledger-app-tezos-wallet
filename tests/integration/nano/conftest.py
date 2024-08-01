@@ -10,7 +10,7 @@ from utils.backend import TezosBackend, APP_KIND
 FIRMWARES: List[Firmware] = [
     Firmware.NANOS,
     Firmware.NANOSP,
-    Firmware.NANOX,
+    Firmware.NANOX
 ]
 
 DEVICES: List[str] = list(map(lambda fw: fw.device, FIRMWARES))
