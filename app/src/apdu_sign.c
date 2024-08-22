@@ -36,6 +36,7 @@
 
 #include "apdu.h"
 #include "apdu_sign.h"
+#include "format.h"
 #include "globals.h"
 #include "handle_swap.h"
 #include "keys.h"
@@ -318,7 +319,7 @@ refill_blo_done(void)
 
 #ifdef HAVE_BAGL
     if (global.step == ST_SUMMARY_SIGN) {
-        init_summary_stream();
+        TZ_CHECK(init_summary_stream());
         TZ_SUCCEED();
     }
 
@@ -486,15 +487,78 @@ stream_cb(tz_ui_cb_type_t cb_type)
 
 #ifdef HAVE_BAGL
 static void
+push_next_summary_screen(void)
+{
+#define FINAL_HASH       global.keys.apdu.hash.final_hash
+#define SUMMARYSIGN_STEP global.keys.apdu.sign.u.summary.step
+
+    char num_buffer[TZ_DECIMAL_BUFFER_SIZE(TZ_NUM_BUFFER_SIZE / 8)] = {0};
+    char hash_buffer[TZ_BASE58_BUFFER_SIZE(sizeof(FINAL_HASH))]     = {0};
+    tz_operation_state *op
+        = &global.keys.apdu.sign.u.clear.parser_state.operation;
+
+    TZ_PREAMBLE(("void"));
+
+    switch (SUMMARYSIGN_STEP) {
+    case SUMMARYSIGN_ST_OPERATION:
+        SUMMARYSIGN_STEP = SUMMARYSIGN_ST_NB_TX;
+
+        snprintf(num_buffer, sizeof(num_buffer), "%d", op->batch_index);
+        tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Number of Tx", num_buffer,
+                          TZ_UI_LAYOUT_BN, TZ_UI_ICON_NONE);
+        break;
+    case SUMMARYSIGN_ST_NB_TX:
+        SUMMARYSIGN_STEP = SUMMARYSIGN_ST_AMOUNT;
+
+        tz_mutez_to_string(num_buffer, sizeof(num_buffer), op->total_amount);
+        tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Total amount", num_buffer,
+                          TZ_UI_LAYOUT_BN, TZ_UI_ICON_NONE);
+        break;
+    case SUMMARYSIGN_ST_AMOUNT:
+        SUMMARYSIGN_STEP = SUMMARYSIGN_ST_FEE;
+
+        tz_mutez_to_string(num_buffer, sizeof(num_buffer), op->total_fee);
+        tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Total fee", num_buffer,
+                          TZ_UI_LAYOUT_BN, TZ_UI_ICON_NONE);
+        break;
+    case SUMMARYSIGN_ST_FEE:
+        SUMMARYSIGN_STEP = SUMMARYSIGN_ST_HASH;
+
+        if (tz_format_base58(FINAL_HASH, sizeof(FINAL_HASH), hash_buffer,
+                             sizeof(hash_buffer))) {
+            TZ_FAIL(EXC_UNKNOWN);
+        }
+        tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Hash", hash_buffer,
+                              TZ_UI_LAYOUT_BN, TZ_UI_ICON_NONE);
+        break;
+    case SUMMARYSIGN_ST_HASH:
+        SUMMARYSIGN_STEP = SUMMARYSIGN_ST_ACCEPT_REJECT;
+
+        tz_ui_stream_push_accept_reject();
+        tz_ui_stream_close();
+        break;
+    default:
+        PRINTF("Unexpected summary state: %d\n", (int)SUMMARYSIGN_STEP);
+        TZ_FAIL(EXC_UNEXPECTED_STATE);
+    };
+
+    TZ_POSTAMBLE;
+
+#undef SUMMARYSIGN_STEP
+#undef FINAL_HASH
+}
+
+static void
 summary_stream_cb(tz_ui_cb_type_t cb_type)
 {
     TZ_PREAMBLE(("cb_type=%u", cb_type));
 
     // clang-format off
     switch (cb_type) {
-    case TZ_UI_STREAM_CB_ACCEPT:    TZ_CHECK(sign_packet()); break;
-    case TZ_UI_STREAM_CB_REJECT:    send_reject(EXC_REJECT); break;
-    default:                        TZ_FAIL(EXC_UNKNOWN);    break;
+    case TZ_UI_STREAM_CB_ACCEPT: TZ_CHECK(sign_packet());              break;
+    case TZ_UI_STREAM_CB_REJECT: send_reject(EXC_REJECT);              break;
+    case TZ_UI_STREAM_CB_REFILL: TZ_CHECK(push_next_summary_screen()); break;
+    default:                     TZ_FAIL(EXC_UNKNOWN);                 break;
     }
     // clang-format on
 
@@ -504,20 +568,16 @@ summary_stream_cb(tz_ui_cb_type_t cb_type)
 static void
 init_summary_stream(void)
 {
-    FUNC_ENTER(("void"));
+    TZ_PREAMBLE(("void"));
 
     tz_ui_stream_init(summary_stream_cb);
 
-    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "TODO", "SUMMARY",
-                      TZ_UI_LAYOUT_HOME_BN, TZ_UI_ICON_NONE);
-
-    tz_ui_stream_push_accept_reject();
-
-    tz_ui_stream_close();
+    global.keys.apdu.sign.u.summary.step = SUMMARYSIGN_ST_OPERATION;
+    push_next_summary_screen();
 
     tz_ui_stream();
 
-    FUNC_LEAVE();
+    TZ_POSTAMBLE;
 }
 
 static void
@@ -578,14 +638,15 @@ init_too_many_screens_stream(void)
 static void
 bs_push_next(void)
 {
-    char              obuf[TZ_BASE58_BUFFER_SIZE(sizeof(FINAL_HASH))];
-    blindsign_step_t *step = &global.keys.apdu.sign.u.blind.step;
+#define BLINDSIGN_STEP global.keys.apdu.sign.u.blind.step
+
+    char obuf[TZ_BASE58_BUFFER_SIZE(sizeof(FINAL_HASH))];
 
     TZ_PREAMBLE(("void"));
 
-    switch (*step) {
+    switch (BLINDSIGN_STEP) {
     case BLINDSIGN_ST_OPERATION:
-        *step = BLINDSIGN_ST_HASH;
+        BLINDSIGN_STEP = BLINDSIGN_ST_HASH;
 
         if (tz_format_base58(FINAL_HASH, sizeof(FINAL_HASH), obuf,
                              sizeof(obuf))) {
@@ -596,17 +657,19 @@ bs_push_next(void)
                               TZ_UI_LAYOUT_BN, TZ_UI_ICON_NONE);
         break;
     case BLINDSIGN_ST_HASH:
-        *step = BLINDSIGN_ST_ACCEPT_REJECT;
+        BLINDSIGN_STEP = BLINDSIGN_ST_ACCEPT_REJECT;
 
         tz_ui_stream_push_accept_reject();
         tz_ui_stream_close();
         break;
     default:
-        PRINTF("Unexpected blindsign state: %d\n", (int)*step);
+        PRINTF("Unexpected blindsign state: %d\n", (int)BLINDSIGN_STEP);
         TZ_FAIL(EXC_UNEXPECTED_STATE);
     };
 
     TZ_POSTAMBLE;
+
+#undef BLINDSIGN_STEP
 }
 
 static void

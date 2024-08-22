@@ -60,6 +60,19 @@ typedef enum {
 } blindsign_step_t;
 
 /**
+ * @brief Steps to display summary.
+ *
+ */
+typedef enum {
+    SUMMARYSIGN_ST_OPERATION,
+    SUMMARYSIGN_ST_NB_TX,
+    SUMMARYSIGN_ST_AMOUNT,
+    SUMMARYSIGN_ST_FEE,
+    SUMMARYSIGN_ST_HASH,
+    SUMMARYSIGN_ST_ACCEPT_REJECT,
+} summarysign_step_t;
+
+/**
  * @brief Struct to track state/info about current sign operation.
  *
  */
@@ -84,5 +97,8 @@ typedef struct {
         struct {
             blindsign_step_t step;
         } blind;
+        struct {
+            summarysign_step_t step;
+        } summary;
     } u;
 } apdu_sign_state_t;
