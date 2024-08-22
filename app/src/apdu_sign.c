@@ -39,6 +39,7 @@
 #include "globals.h"
 #include "handle_swap.h"
 #include "keys.h"
+#include "num_parser.h"
 #include "ui_stream.h"
 
 #include "parser/parser_state.h"
@@ -94,6 +95,28 @@ tz_ui_stream_push_accept_reject(void)
     FUNC_LEAVE();
 }
 #endif
+
+void
+tz_ui_stream_push_summary(void)
+{
+    FUNC_ENTER(("void"));
+
+    tz_parser_state    *st = &global.keys.apdu.sign.u.clear.parser_state;
+    tz_operation_state *op
+        = &global.keys.apdu.sign.u.clear.parser_state.operation;
+    char *value = st->buffers.num.decimal;
+    snprintf(value, 32, "%d", op->batch_index);
+    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Number of Tx", value,
+                      TZ_UI_LAYOUT_BN, TZ_UI_ICON_NONE);
+    // get total_amount
+    tz_mutez_to_string(value, op->total_amount);
+    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Total amount", value,
+                      TZ_UI_LAYOUT_BN, TZ_UI_ICON_NONE);
+
+    tz_mutez_to_string(value, op->total_fee);
+    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Total fee", value,
+                      TZ_UI_LAYOUT_BN, TZ_UI_ICON_NONE);
+}
 
 static void
 sign_packet(void)
@@ -229,7 +252,9 @@ refill_blo_im_full(void)
 static void
 refill_blo_done(void)
 {
-    tz_parser_state *st = &global.keys.apdu.sign.u.clear.parser_state;
+    tz_parser_state    *st = &global.keys.apdu.sign.u.clear.parser_state;
+    tz_operation_state *op
+        = &global.keys.apdu.sign.u.clear.parser_state.operation;
     TZ_PREAMBLE(("void"));
 
     TZ_ASSERT(
@@ -247,7 +272,9 @@ refill_blo_done(void)
         TZ_CHECK(sign_packet());
         TZ_SUCCEED();
     }
-
+    if (op->batch_index > 1) {
+        tz_ui_stream_push_summary();
+    }
 #ifdef HAVE_BAGL
     tz_ui_stream_push_accept_reject();
 #endif

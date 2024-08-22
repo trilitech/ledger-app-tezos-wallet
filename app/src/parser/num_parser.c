@@ -97,3 +97,63 @@ tz_string_to_mutez(const char *str, uint64_t *res)
 
     return true;
 }
+
+bool
+tz_mutez_to_string(char *str, uint64_t microtez)
+{
+    if (str == NULL) {
+        return false;
+    }
+
+    uint64_t integer_part = microtez / 1000000;
+    uint64_t decimal_part = microtez % 1000000;
+
+    // Convert integer part to string
+    size_t i = 0;
+    if (integer_part == 0) {
+        str[i++] = '0';
+    } else {
+        uint64_t temp    = integer_part;
+        size_t   int_len = 0;
+        while (temp > 0) {
+            temp /= 10;
+            int_len++;
+        }
+        for (size_t j = int_len; j > 0; j--) {
+            str[i + j - 1] = '0' + (integer_part % 10);
+            integer_part /= 10;
+        }
+        i += int_len;
+    }
+
+    // Add decimal point
+    str[i++] = '.';
+
+    // Convert decimal part to string
+    size_t decimal_start = i;
+    for (size_t j = 0; j < 6; j++) {
+        str[i++]     = '0' + (decimal_part / 100000);
+        decimal_part = (decimal_part % 100000) * 10;
+    }
+
+    // Remove trailing zeros from the decimal part
+    while (i > decimal_start && str[i - 1] == '0') {
+        i--;
+    }
+
+    // Remove decimal point if no decimal part
+    if (i > decimal_start && str[i - 1] == '.') {
+        i--;
+    }
+
+    // Append " XTZ"
+    const char *xtz = " XTZ";
+    for (size_t j = 0; xtz[j] != '\0'; j++) {
+        str[i++] = xtz[j];
+    }
+
+    // Null-terminate the string
+    str[i] = '\0';
+
+    return true;
+}

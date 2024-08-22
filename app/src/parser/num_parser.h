@@ -71,3 +71,12 @@ tz_parser_result tz_parse_nat_step(tz_num_parser_buffer *buffers,
  * @return bool: success
  */
 bool tz_string_to_mutez(const char *in, uint64_t *out);
+
+/**
+ * @brief format a mutez number to a string
+ *
+ * @param str: output string buffer
+ * @param microtez: input number
+ * @return bool: success
+ */
+bool tz_mutez_to_string(char *str, uint64_t microtez);
