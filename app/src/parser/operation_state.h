@@ -243,9 +243,9 @@ typedef struct {
     uint8_t  destination[22];             /// saved for entrypoint dispatch
     uint16_t batch_index;                 /// to print a sequence number
 #ifdef HAVE_SWAP
-    tz_operation_tag last_tag;     /// last operations tag encountered
-    uint16_t         nb_reveal;    /// number of reveal encountered
-    uint64_t         last_fee;     /// last fee encountered
-    uint64_t         last_amount;  /// last amount encountered
-#endif                             // HAVE_SWAP
+    tz_operation_tag last_tag;   /// last operations tag encountered
+    uint16_t         nb_reveal;  /// number of reveal encountered
+#endif                           // HAVE_SWAP
+    uint64_t total_fee;          /// last fee encountered
+    uint64_t total_amount;       /// last amount encountered
 } tz_operation_state;

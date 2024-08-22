@@ -247,6 +247,7 @@ refill_blo_done(void)
         TZ_CHECK(sign_packet());
         TZ_SUCCEED();
     }
+
 #ifdef HAVE_BAGL
     tz_ui_stream_push_accept_reject();
 #endif

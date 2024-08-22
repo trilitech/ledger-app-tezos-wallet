@@ -319,11 +319,11 @@ tz_operation_parser_init(tz_parser_state *state, uint16_t size,
     memset(&state->operation.destination, 0, 22);
     op->batch_index = 0;
 #ifdef HAVE_SWAP
-    op->last_tag    = TZ_OPERATION_TAG_END;
-    op->nb_reveal   = 0;
-    op->last_fee    = 0;
-    op->last_amount = 0;
+    op->last_tag  = TZ_OPERATION_TAG_END;
+    op->nb_reveal = 0;
 #endif  // HAVE_SWAP
+    op->total_fee     = 0;
+    op->total_amount  = 0;
     op->frame         = op->stack;
     op->stack[0].stop = size;
     if (!skip_magic) {
@@ -662,22 +662,20 @@ tz_step_read_num(tz_parser_state *state)
                               &op->frame->step_read_num.state, b,
                               op->frame->step_read_num.natural));
     if (op->frame->step_read_num.state.stop) {
-#ifdef HAVE_SWAP
         uint64_t value;
         if (!tz_string_to_mutez(state->buffers.num.decimal, &value)) {
             tz_raise(INVALID_DATA);
         }
         switch (op->frame->step_read_num.kind) {
         case TZ_OPERATION_FIELD_AMOUNT:
-            op->last_amount = value;
+            op->total_amount += value;
             break;
         case TZ_OPERATION_FIELD_FEE:
-            op->last_fee = value;
+            op->total_fee += value;
             break;
         default:
             break;
         }
-#endif  // HAVE_SWAP
         if (op->frame->step_read_num.skip) {
             tz_must(pop_frame(state));
             tz_continue;
