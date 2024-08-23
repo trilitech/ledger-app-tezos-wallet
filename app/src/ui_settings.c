@@ -31,16 +31,29 @@ expert_mode_toggle()
     FUNC_LEAVE();
 }
 
+static void
+blindsign_toggle()
+{
+    FUNC_ENTER();
+    toggle_blindsign_status();
+    ui_settings_init(SETTINGS_BLINDSIGN_PAGE);
+    FUNC_LEAVE();
+}
+
 UX_STEP_CB(ux_expert_mode_step, bn, expert_mode_toggle(),
            {"Expert mode", global.expert_mode_state});
+UX_STEP_CB(ux_blindsign_step, bn, blindsign_toggle(),
+           {"Allow Blindsigning", global.blindsign_state_desc});
 UX_STEP_CB(ux_back_step, pb, ui_home_init(), {&C_icon_back, "Back"});
 
-UX_FLOW(ux_expert_mode_flow, &ux_expert_mode_step, &ux_back_step, FLOW_LOOP);
+UX_FLOW(ux_expert_mode_flow, &ux_expert_mode_step, &ux_blindsign_step,
+        &ux_back_step, FLOW_LOOP);
 
 void
-ui_settings_init(__attribute__((unused)) int16_t page)
+ui_settings_init(int16_t page)
 {
-    FUNC_ENTER(("Page number: %d", page));
+    FUNC_ENTER(("%d, Expert Mode: %d, Max_Screen: ", page,
+                N_settings.expert_mode, N_settings.blindsign_status));
 
     if (N_settings.expert_mode) {
         strncpy(global.expert_mode_state, "ENABLED",
@@ -50,7 +63,26 @@ ui_settings_init(__attribute__((unused)) int16_t page)
                 sizeof(global.expert_mode_state));
     }
 
-    ux_flow_init(0, ux_expert_mode_flow, NULL);
+    switch (N_settings.blindsign_status) {
+    case ST_BLINDSIGN_LARGE_TX:
+    default:
+        strncpy(global.blindsign_state_desc, "For Large Tx",
+                sizeof(global.blindsign_state_desc));
+        break;
+    case ST_BLINDSIGN_ON:
+        strncpy(global.blindsign_state_desc, "ON",
+                sizeof(global.blindsign_state_desc));
+        break;
+    case ST_BLINDSIGN_OFF:
+        strncpy(global.blindsign_state_desc, "OFF",
+                sizeof(global.blindsign_state_desc));
+        break;
+    }
+    if (page == SETTINGS_HOME_PAGE) {
+        ux_flow_init(0, ux_expert_mode_flow, &ux_expert_mode_step);
+    } else if (page == SETTINGS_BLINDSIGN_PAGE) {
+        ux_flow_init(0, ux_expert_mode_flow, &ux_blindsign_step);
+    }
     FUNC_LEAVE();
 }
 

@@ -45,3 +45,12 @@ toggle_expert_mode(void)
     tmp.expert_mode = !N_settings.expert_mode;
     nvm_write((void *)&N_settings, (void *)&tmp, sizeof(N_settings));
 }
+
+void
+toggle_blindsign_status(void)
+{
+    settings_t tmp;
+    memcpy(&tmp, (void *)&N_settings, sizeof(tmp));
+    tmp.blindsign_status = (tmp.blindsign_status + 1) % 3;
+    nvm_write((void *)&N_settings, (void *)&tmp, sizeof(N_settings));
+}

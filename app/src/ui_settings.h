@@ -4,7 +4,8 @@
 
 #pragma once
 
-#define SETTINGS_HOME_PAGE 0
+#define SETTINGS_HOME_PAGE      0
+#define SETTINGS_BLINDSIGN_PAGE 1
 
 /**
  * @brief Initialize settings screen for nano devices. Displays status of

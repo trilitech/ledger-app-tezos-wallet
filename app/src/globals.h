@@ -52,6 +52,9 @@ void init_globals(void);
 /// Toggles the persisted expert_mode setting
 void toggle_expert_mode(void);
 
+/// toggles the blindsign setting between "For large tx", "ON", "OFF".
+void toggle_blindsign_status(void);
+
 #define MAX_APDU_SIZE      235
 #define MAX_SIGNATURE_SIZE 100
 #define ERROR_CODE_SIZE    15
@@ -78,11 +81,17 @@ typedef enum {
 typedef enum {
     ST_IDLE,        /// Idle state
     ST_CLEAR_SIGN,  /// Clearsigning an operation
-    ST_BLIND_SIGN,  /// blindisigning an operation
+    ST_BLIND_SIGN,  /// blindsigning an operation
     ST_PROMPT,      /// Waiting for user prompt
     ST_SWAP_SIGN,   /// Performing swap operations
     ST_ERROR        /// In error state.
 } main_step_t;
+
+typedef enum {
+    ST_BLINDSIGN_LARGE_TX = 0,
+    ST_BLINDSIGN_ON       = 1,
+    ST_BLINDSIGN_OFF      = 2
+} blindsign_state_t;
 
 /**
  * @brief Global structure holding state of operations and buffer of the data
@@ -112,8 +121,9 @@ typedef struct {
     struct {
         bagl_element_t bagls[4 + TZ_SCREEN_LINES_11PX];
     } ux;  /// Config for history screens for nano devices.
-    char expert_mode_state[10];  /// Expert mode state to be displayed in
-                                 /// settings.ENAELED/DISABLED.
+    char expert_mode_state[10];  /// Expert mode text:  "ENAELED", "DISABLED"
+    char blindsign_state_desc[14];  /// Blindsigning text: "For Large Tx",
+                                    /// "ON" , "OFF"
 #endif
 
 #ifdef HAVE_NBGL
@@ -124,8 +134,9 @@ typedef struct {
 
 /* Settings */
 typedef struct {
-    bool expert_mode;  /// enable expert mode
-} settings_t;          /// Special settings available in the app.
+    bool              expert_mode;       /// enable expert mode
+    blindsign_state_t blindsign_status;  /// Blindsign status
+} settings_t;  /// Special settings available in the app.
 
 extern globals_t global;
 

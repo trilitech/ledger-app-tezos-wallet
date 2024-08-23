@@ -179,7 +179,7 @@ set_expert_mode() {
     expect_section_content 'Expert mode' 'DISABLED'
     press_button both
     expect_section_content 'Expert mode' 'ENABLED'
-    press_button right
+    press_button left
     expect_section_content 'Back'
     press_button both
     expected_home
