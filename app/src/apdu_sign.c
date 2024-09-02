@@ -93,6 +93,55 @@ tz_ui_stream_push_accept_reject(void)
                       TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_CROSS);
     FUNC_LEAVE();
 }
+
+void
+tz_ui_stream_push_risky_accept_reject(tz_ui_cb_type_t accept_cb_type,
+                                      tz_ui_cb_type_t reject_cb_type)
+{
+    FUNC_ENTER(("void"));
+    tz_ui_stream_push(accept_cb_type, "Accept risk", "", TZ_UI_LAYOUT_HOME_PB,
+                      TZ_UI_ICON_TICK);
+    tz_ui_stream_push(reject_cb_type, "Reject", "", TZ_UI_LAYOUT_HOME_PB,
+                      TZ_UI_ICON_CROSS);
+    FUNC_LEAVE();
+}
+
+void
+tz_ui_stream_push_warning_not_trusted(
+#ifdef TARGET_NANOS
+    void
+#else
+    const char *title_reason, const char *value_reason
+#endif
+)
+{
+    FUNC_ENTER(("void"));
+#ifdef TARGET_NANOS
+    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "The transaction",
+                      "cannot be trusted.", TZ_UI_LAYOUT_HOME_B,
+                      TZ_UI_ICON_NONE);
+#else
+    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "The transaction",
+                      "cannot be trusted.", TZ_UI_LAYOUT_HOME_PB,
+                      TZ_UI_ICON_WARNING);
+    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, title_reason, value_reason,
+                      TZ_UI_LAYOUT_HOME_N, TZ_UI_ICON_NONE);
+    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "It may not be safe",
+                      "to sign this\ntransaction.", TZ_UI_LAYOUT_HOME_N,
+                      TZ_UI_ICON_NONE);
+#endif
+    FUNC_LEAVE();
+}
+
+void
+tz_ui_stream_push_learn_more(void)
+{
+    FUNC_ENTER(("void"));
+    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB,
+                      "Learn More:", "bit.ly/ledger-tez",
+                      TZ_UI_LAYOUT_HOME_BN, TZ_UI_ICON_NONE);
+    FUNC_LEAVE();
+}
 #endif
 
 static void
@@ -273,46 +322,19 @@ refill_error(void)
 #ifdef HAVE_BAGL
     tz_ui_stream_init(stream_cb);
 
-    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB,
-                      "The transaction",
-                      "cannot be trusted.",
-#ifdef TARGET_NANOS
-                      TZ_UI_LAYOUT_HOME_B,
-                      TZ_UI_ICON_NONE);
-#else
-                      TZ_UI_LAYOUT_HOME_PB,
-                      TZ_UI_ICON_WARNING);
-    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB,
-                      "This transaction",
-                      "could not be\ndecoded correctly.",
-                      TZ_UI_LAYOUT_HOME_N,
-                      TZ_UI_ICON_NONE);
-    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB,
-                      "It may not be safe",
-                      "to sign this\ntransaction.",
-                      TZ_UI_LAYOUT_HOME_N,
-                      TZ_UI_ICON_NONE);
+    tz_ui_stream_push_warning_not_trusted(
+#ifndef TARGET_NANOS
+            "This transaction", "could not be\ndecoded correctly."
 #endif
+    );
+
     tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB,
                           "Parsing error",
                           tz_parser_result_name(st->errno),
                           TZ_UI_LAYOUT_HOME_BN,
                           TZ_UI_ICON_NONE);
-    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB,
-                      "Learn More:",
-                      "bit.ly/ledger-tez",
-                      TZ_UI_LAYOUT_HOME_BN,
-                      TZ_UI_ICON_NONE);
-    tz_ui_stream_push(TZ_UI_STREAM_CB_BLINDSIGN,
-                      "Accept risk",
-                      "",
-                      TZ_UI_LAYOUT_HOME_PB,
-                      TZ_UI_ICON_TICK);
-    tz_ui_stream_push(TZ_UI_STREAM_CB_CANCEL,
-                      "Reject",
-                      "",
-                      TZ_UI_LAYOUT_HOME_PB,
-                      TZ_UI_ICON_CROSS);
+    tz_ui_stream_push_learn_more();
+    tz_ui_stream_push_risky_accept_reject(TZ_UI_STREAM_CB_BLINDSIGN, TZ_UI_STREAM_CB_CANCEL);
 
 #elif HAVE_NBGL
     tz_ui_stream_push_all(TZ_UI_STREAM_CB_CANCEL,
