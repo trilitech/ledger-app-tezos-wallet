@@ -112,6 +112,8 @@ typedef struct {
     struct {
         bagl_element_t bagls[4 + TZ_SCREEN_LINES_11PX];
     } ux;  /// Config for history screens for nano devices.
+    char expert_mode_state[10];  /// Expert mode state to be displayed in
+                                 /// settings.ENAELED/DISABLED.
 #endif
 
 #ifdef HAVE_NBGL

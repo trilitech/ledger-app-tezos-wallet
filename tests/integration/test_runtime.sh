@@ -193,7 +193,7 @@ quit_app() {
     press_button right
     expect_full_text "Settings"
     press_button right
-    expect_full_text "Quit?"
+    expect_full_text "Quit"
     press_button both
     expect_exited
 }

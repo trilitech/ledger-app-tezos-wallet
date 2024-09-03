@@ -19,46 +19,39 @@
    See the License for the specific language governing permissions and
    limitations under the License. */
 
+#ifdef HAVE_BAGL
 #include "globals.h"
 
-static void cb(tz_ui_cb_type_t cb_type);
-
-#define EXPERT_MODE 0x01
-#define BACK        0x02
-
 static void
-cb(tz_ui_cb_type_t cb_type)
+expert_mode_toggle()
 {
-    FUNC_ENTER(("cb_type=%u", cb_type));
-    switch (cb_type) {
-    case EXPERT_MODE:
-        toggle_expert_mode();
-        ui_settings_init(SETTINGS_HOME_PAGE);
-        break;
-    case BACK:
-        ui_home_init();
-        break;
-    }
-}
-
-void
-ui_settings_init(int16_t page)
-{
-    const char *exp_mode = "DISABLED";
-
-    FUNC_ENTER(("void"));
-
-    if (N_settings.expert_mode) {
-        exp_mode = "ENABLED";
-    }
-
-    tz_ui_stream_init(cb);
-    tz_ui_stream_push(EXPERT_MODE, "Expert mode", exp_mode,
-                      TZ_UI_LAYOUT_HOME_BN, TZ_UI_ICON_NONE);
-    tz_ui_stream_push(BACK, "Back", "", TZ_UI_LAYOUT_HOME_PB,
-                      TZ_UI_ICON_BACK);
-    tz_ui_stream_close();
-    global.stream.current = page;
-    tz_ui_stream_start();
+    FUNC_ENTER();
+    toggle_expert_mode();
+    ui_settings_init(SETTINGS_HOME_PAGE);
     FUNC_LEAVE();
 }
+
+UX_STEP_CB(ux_expert_mode_step, bn, expert_mode_toggle(),
+           {"Expert mode", global.expert_mode_state});
+UX_STEP_CB(ux_back_step, pb, ui_home_init(), {&C_icon_back, "Back"});
+
+UX_FLOW(ux_expert_mode_flow, &ux_expert_mode_step, &ux_back_step, FLOW_LOOP);
+
+void
+ui_settings_init(__attribute__((unused)) int16_t page)
+{
+    FUNC_ENTER(("Page number: %d", page));
+
+    if (N_settings.expert_mode) {
+        strncpy(global.expert_mode_state, "ENABLED",
+                sizeof(global.expert_mode_state));
+    } else {
+        strncpy(global.expert_mode_state, "DISABLED",
+                sizeof(global.expert_mode_state));
+    }
+
+    ux_flow_init(0, ux_expert_mode_flow, NULL);
+    FUNC_LEAVE();
+}
+
+#endif
