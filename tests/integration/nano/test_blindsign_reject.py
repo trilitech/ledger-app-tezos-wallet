@@ -42,7 +42,7 @@ def test_blindsign_reject(app):
     path = Path(test_name) / "reject_from_blind"
 
     def navigate() -> None:
-        app.navigate_until_text(Screen_text.Blind_switch, path / "clear")
+        app.navigate_until_text(Screen_text.Accept_risk, path / "clear")
         app.navigate_until_text(Screen_text.Sign_reject, path / "blind")
 
     send_and_navigate(

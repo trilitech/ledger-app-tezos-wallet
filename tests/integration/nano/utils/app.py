@@ -156,7 +156,7 @@ class Screen_text(str, Enum):
     Public_key_reject = "Reject"
     Sign_accept = "Accept"
     Sign_reject = "Reject"
-    Blind_switch = "Accept risk"
+    Accept_risk = "Accept risk"
     Back_home = "Home"
 
 class TezosAppScreen():
@@ -316,14 +316,26 @@ class TezosAppScreen():
             status_code=StatusCode.REJECT,
             path=path)
 
+    def _sign(self,
+              account: Account,
+              message: Message,
+              with_hash: bool,
+              navigate: Callable[[], None]) -> bytes:
+
+        return send_and_navigate(
+            send=(lambda: self.backend.sign(account, message, with_hash)),
+            navigate=navigate)
+
     def sign(self,
              account: Account,
              message: Message,
              with_hash: bool,
              path: Union[str, Path]) -> bytes:
 
-        return send_and_navigate(
-            send=(lambda: self.backend.sign(account, message, with_hash)),
+        return self._sign(
+            account,
+            message,
+            with_hash,
             navigate=(lambda: self.navigate_until_text(Screen_text.Sign_accept, path)))
 
     def blind_sign(self,
@@ -335,7 +347,7 @@ class TezosAppScreen():
         if isinstance(path, str): path = Path(path)
 
         def navigate() -> None:
-            self.navigate_until_text(Screen_text.Blind_switch, path / "clear")
+            self.navigate_until_text(Screen_text.Accept_risk, path / "clear")
             self.navigate_until_text(Screen_text.Sign_accept, path / "blind")
 
         return send_and_navigate(
