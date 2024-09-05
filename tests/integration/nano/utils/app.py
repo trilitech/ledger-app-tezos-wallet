@@ -286,9 +286,8 @@ class TezosAppScreen():
 
     def _failing_send(self,
                       send: Callable[[], bytes],
-                      text: Screen_text,
-                      status_code: StatusCode,
-                      path: Union[str, Path]) -> None:
+                      navigate: Callable[[], None],
+                      status_code: StatusCode) -> None:
         def expected_failure_send() -> bytes:
             with self.expect_apdu_failure(status_code):
                 send()
@@ -296,7 +295,7 @@ class TezosAppScreen():
 
         send_and_navigate(
             send=expected_failure_send,
-            navigate=(lambda: self.navigate_until_text(text, path)))
+            navigate=navigate)
 
     def provide_public_key(self,
                           account: Account,
@@ -312,9 +311,10 @@ class TezosAppScreen():
 
         self._failing_send(
             send=(lambda: self.backend.get_public_key(account, with_prompt=True)),
-            text=Screen_text.Public_key_reject,
-            status_code=StatusCode.REJECT,
-            path=path)
+            navigate=(lambda: self.navigate_until_text(
+                Screen_text.Public_key_reject,
+                path)),
+            status_code=StatusCode.REJECT)
 
     def _sign(self,
               account: Account,
@@ -358,15 +358,13 @@ class TezosAppScreen():
                          account: Account,
                          message: Message,
                          with_hash: bool,
-                         text: Screen_text,
-                         status_code: StatusCode,
-                         path: Union[str, Path]) -> None:
+                         navigate: Callable[[], None],
+                         status_code: StatusCode) -> None:
 
         self._failing_send(
             send=(lambda: self.backend.sign(account, message, with_hash)),
-            text=text,
-            status_code=status_code,
-            path=path)
+            navigate=navigate,
+            status_code=status_code)
 
     def reject_signing(self,
                        account: Account,
@@ -377,9 +375,10 @@ class TezosAppScreen():
             account,
             message,
             with_hash,
-            text=Screen_text.Sign_reject,
-            status_code=StatusCode.REJECT,
-            path=path)
+            navigate=(lambda: self.navigate_until_text(
+                Screen_text.Sign_reject,
+                path)),
+            status_code=StatusCode.REJECT)
 
     def hard_failing_signing(self,
                              account: Account,
@@ -390,9 +389,10 @@ class TezosAppScreen():
         self._failing_signing(account,
                               message,
                               with_hash,
-                              Screen_text.Home,
-                              status_code,
-                              path)
+                              navigate=(lambda: self.navigate_until_text(
+                                  Screen_text.Home,
+                                  path)),
+                              status_code=status_code)
 
     def parsing_error_signing(self,
                               account: Account,
@@ -402,9 +402,10 @@ class TezosAppScreen():
         self._failing_signing(account,
                               message,
                               with_hash,
-                              Screen_text.Sign_reject,
-                              StatusCode.PARSE_ERROR,
-                              path)
+                              navigate=(lambda: self.navigate_until_text(
+                                  Screen_text.Sign_reject,
+                                  path)),
+                              status_code=StatusCode.PARSE_ERROR)
 
 DEFAULT_SEED = ('zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra')
 

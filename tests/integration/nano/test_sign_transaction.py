@@ -115,9 +115,10 @@ def test_too_complex_transaction(app):
     app._failing_signing(DEFAULT_ACCOUNT,
                          message,
                          with_hash=True,
-                         text=Screen_text.Back_home,
-                         status_code=StatusCode.REJECT,
-                         path=path)
+                         navigate=(lambda: app.navigate_until_text(
+                             Screen_text.Back_home,
+                             path)),
+                         status_code=StatusCode.REJECT)
 
     app.quit()
 
