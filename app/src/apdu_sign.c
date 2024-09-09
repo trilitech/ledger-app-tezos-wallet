@@ -727,6 +727,11 @@ handle_data_apdu(command_t *cmd)
         global.keys.apdu.sign.tag = cmd->data[0];
     }
 
+    if ((N_settings.blindsign_status == ST_BLINDSIGN_ON)
+        && (global.step == ST_CLEAR_SIGN)) {
+        global.step = ST_SUMMARY_SIGN;
+    }
+
     // clang-format off
     switch (global.step) {
     case ST_CLEAR_SIGN:
