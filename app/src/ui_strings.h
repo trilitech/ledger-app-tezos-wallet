@@ -27,7 +27,7 @@
  */
 
 #ifdef TARGET_NANOS
-#define BUFF_LEN 128  /// Ring buffer length of nanos
+#define BUFF_LEN 120  /// Ring buffer length of nanos
 #elif defined(HAVE_BAGL)
 #define BUFF_LEN 256  /// Ring buffer length for nanos2/nanox
 #else
