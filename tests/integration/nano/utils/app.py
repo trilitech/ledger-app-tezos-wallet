@@ -228,6 +228,25 @@ class TezosAppScreen():
         self.backend.both_click()
         self.assert_screen(Screen.Home)
 
+    def setup_blindsign_off(self) -> None:
+        self.assert_screen(Screen.Home)
+        self.backend.right_click()
+        self.assert_screen(Screen.Version)
+        self.backend.right_click()
+        self.assert_screen(Screen.Settings)
+        self.backend.both_click()
+        # expert_mode screen
+        self.backend.right_click()
+        self.assert_screen(Screen.Settings_blindsign_large_tx)
+        self.backend.both_click()
+        self.assert_screen(Screen.Settings_blindsign_on)
+        self.backend.both_click()
+        self.assert_screen(Screen.Settings_blindsign_off)
+        self.backend.right_click()
+        self.assert_screen(Screen.Settings_back)
+        self.backend.both_click()
+        self.assert_screen(Screen.Home)
+
     def _quit(self) -> None:
         self.assert_screen(Screen.Quit)
         try:

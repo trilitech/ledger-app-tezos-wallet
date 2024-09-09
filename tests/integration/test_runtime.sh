@@ -185,6 +185,27 @@ set_expert_mode() {
     expected_home
 }
 
+set_blindsign_off() {
+    echo " - set_blindsign_off"
+    expected_home
+    press_button right
+    expected_version
+    press_button right
+    expect_full_text "Settings"
+    press_button both
+    # expect_section_content 'Expert mode'
+    press_button right
+    expect_section_content 'Allow Blindsigning' 'For Large Tx'
+    press_button both
+    expect_section_content 'Allow Blindsigning' 'ON'
+    press_button both
+    expect_section_content 'Allow Blindsigning' 'OFF'
+    press_button right
+    expect_section_content 'Back'
+    press_button both
+    expected_home
+}
+
 quit_app() {
     echo " - quit_app"
     expected_home
