@@ -68,12 +68,13 @@ typedef enum {
  *
  */
 typedef enum {
-    ST_IDLE,        /// Idle state
-    ST_CLEAR_SIGN,  /// Clearsigning an operation
-    ST_BLIND_SIGN,  /// blindsigning an operation
-    ST_PROMPT,      /// Waiting for user prompt
-    ST_SWAP_SIGN,   /// Performing swap operations
-    ST_ERROR        /// In error state.
+    ST_IDLE,          /// Idle state
+    ST_CLEAR_SIGN,    /// Clear signing an operation
+    ST_BLIND_SIGN,    /// Blind signing an operation
+    ST_SUMMARY_SIGN,  /// Summary signing an operation
+    ST_PROMPT,        /// Waiting for user prompt
+    ST_SWAP_SIGN,     /// Performing swap operations
+    ST_ERROR          /// In error state.
 } main_step_t;
 
 typedef enum {

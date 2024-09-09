@@ -55,6 +55,7 @@ static void send_reject(int error_code);
 static void send_continue(void);
 static void send_cancel(void);
 static void refill(void);
+static void refill_all(void);
 static void stream_cb(tz_ui_cb_type_t cb_type);
 static void handle_first_apdu(command_t *cmd);
 static void handle_first_apdu_clear(command_t *cmd);
@@ -62,6 +63,9 @@ static void init_blind_stream(void);
 static void handle_data_apdu(command_t *cmd);
 static void handle_data_apdu_clear(command_t *cmd);
 static void handle_data_apdu_blind(void);
+#ifdef HAVE_BAGL
+static void init_summary_stream(void);
+#endif
 
 /* Macros */
 
@@ -213,13 +217,16 @@ refill_blo_im_full(void)
     size_t           wrote = 0;
     TZ_PREAMBLE(("void"));
 
+    // No display for Swap or Summary flow
+    if (
 #ifdef HAVE_SWAP
-    if (G_called_from_swap) {
+        G_called_from_swap ||
+#endif
+        global.step == ST_SUMMARY_SIGN) {
         tz_parser_flush(st, global.line_buf, TZ_UI_STREAM_CONTENTS_SIZE);
         // invoke refill until we consume entire msg.
         TZ_SUCCEED();
     }
-#endif
 
     global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
 #ifdef HAVE_BAGL
@@ -296,7 +303,13 @@ refill_blo_done(void)
         TZ_CHECK(sign_packet());
         TZ_SUCCEED();
     }
+
 #ifdef HAVE_BAGL
+    if (global.step == ST_SUMMARY_SIGN) {
+        init_summary_stream();
+        TZ_SUCCEED();
+    }
+
     tz_ui_stream_push_accept_reject();
 #endif
     tz_ui_stream_close();
@@ -370,6 +383,26 @@ refill(void)
     TZ_POSTAMBLE;
 }
 
+/**
+ * @brief Parse until there is nothing left to parse or user input is
+ * required.
+ */
+static void
+refill_all(void)
+{
+    TZ_PREAMBLE(("void"));
+
+    while (global.keys.apdu.sign.u.clear.received_msg) {
+        TZ_CHECK(refill());
+        if ((global.step == ST_SUMMARY_SIGN)
+            && (global.keys.apdu.sign.step == SIGN_ST_WAIT_USER_INPUT)) {
+            break;
+        }
+    }
+
+    TZ_POSTAMBLE;
+}
+
 static void
 send_cancel(void)
 {
@@ -433,6 +466,43 @@ stream_cb(tz_ui_cb_type_t cb_type)
 
     TZ_POSTAMBLE;
 }
+
+#ifdef HAVE_BAGL
+static void
+summary_stream_cb(tz_ui_cb_type_t cb_type)
+{
+    TZ_PREAMBLE(("cb_type=%u", cb_type));
+
+    // clang-format off
+    switch (cb_type) {
+    case TZ_UI_STREAM_CB_ACCEPT:    TZ_CHECK(sign_packet()); break;
+    case TZ_UI_STREAM_CB_REJECT:    send_reject(EXC_REJECT); break;
+    default:                        TZ_FAIL(EXC_UNKNOWN);    break;
+    }
+    // clang-format on
+
+    TZ_POSTAMBLE;
+}
+
+static void
+init_summary_stream(void)
+{
+    FUNC_ENTER(("void"));
+
+    tz_ui_stream_init(summary_stream_cb);
+
+    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "TODO", "SUMMARY",
+                      TZ_UI_LAYOUT_HOME_BN, TZ_UI_ICON_NONE);
+
+    tz_ui_stream_push_accept_reject();
+
+    tz_ui_stream_close();
+
+    tz_ui_stream();
+
+    FUNC_LEAVE();
+}
+#endif
 
 #define FINAL_HASH global.keys.apdu.hash.final_hash
 #ifdef HAVE_BAGL
@@ -592,9 +662,10 @@ handle_data_apdu(command_t *cmd)
     switch (global.step) {
     case ST_CLEAR_SIGN:
     case ST_SWAP_SIGN:
-                        TZ_CHECK(handle_data_apdu_clear(cmd)); break;
-    case ST_BLIND_SIGN: TZ_CHECK(handle_data_apdu_blind());    break;
-    default:            TZ_FAIL(EXC_UNEXPECTED_STATE);         break;
+    case ST_SUMMARY_SIGN:
+                          TZ_CHECK(handle_data_apdu_clear(cmd)); break;
+    case ST_BLIND_SIGN:   TZ_CHECK(handle_data_apdu_blind());    break;
+    default:              TZ_FAIL(EXC_UNEXPECTED_STATE);         break;
     }
     // clang-format on
 
@@ -622,17 +693,23 @@ handle_data_apdu_clear(command_t *cmd)
         tz_operation_parser_set_size(
             st, global.keys.apdu.sign.u.clear.total_length);
     }
-    if (global.step == ST_SWAP_SIGN) {
-        do {
-            TZ_CHECK(refill());
-        } while (global.keys.apdu.sign.u.clear.received_msg);
-    } else {
+
+    switch (global.step) {
+    case ST_CLEAR_SIGN:
         TZ_CHECK(refill());
-        if ((global.keys.apdu.sign.step == SIGN_ST_WAIT_USER_INPUT)
-            && (global.step != ST_SWAP_SIGN)) {
+        if (global.keys.apdu.sign.step == SIGN_ST_WAIT_USER_INPUT) {
             tz_ui_stream();
         }
+        break;
+    case ST_SWAP_SIGN:
+    case ST_SUMMARY_SIGN:
+        TZ_CHECK(refill_all());
+        break;
+    default:
+        TZ_FAIL(EXC_UNEXPECTED_SIGN_STATE);
+        break;
     }
+
     TZ_POSTAMBLE;
 }
 
@@ -793,6 +870,7 @@ handle_apdu_sign(command_t *cmd)
 
     TZ_ASSERT(EXC_UNEXPECTED_STATE, (global.step == ST_BLIND_SIGN)
                                         || (global.step == ST_CLEAR_SIGN)
+                                        || (global.step == ST_SUMMARY_SIGN)
                                         || (global.step == ST_SWAP_SIGN));
     TZ_ASSERT(EXC_INVALID_INS,
               return_hash == global.keys.apdu.sign.return_hash);
