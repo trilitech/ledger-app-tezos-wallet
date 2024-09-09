@@ -64,6 +64,7 @@ static void handle_data_apdu(command_t *cmd);
 static void handle_data_apdu_clear(command_t *cmd);
 static void handle_data_apdu_blind(void);
 #ifdef HAVE_BAGL
+static void init_too_many_screens_stream(void);
 static void init_summary_stream(void);
 #endif
 
@@ -80,6 +81,9 @@ static void init_summary_stream(void);
 #define APDU_SIGN_ASSERT(_cond) TZ_ASSERT(EXC_UNEXPECTED_SIGN_STATE, (_cond))
 #define APDU_SIGN_ASSERT_STEP(x) \
     APDU_SIGN_ASSERT(global.keys.apdu.sign.step == (x))
+
+#define NB_MAX_SCREEN_ALLOWED 20
+#define SCREEN_DISPLAYED      global.keys.apdu.sign.u.clear.screen_displayed
 
 #ifdef HAVE_BAGL
 void
@@ -186,7 +190,6 @@ send_reject(int error_code)
     TZ_PREAMBLE(("void"));
 
     APDU_SIGN_ASSERT_STEP(SIGN_ST_WAIT_USER_INPUT);
-    APDU_SIGN_ASSERT(global.keys.apdu.sign.received_last_msg);
     TZ_FAIL(error_code);
     TZ_POSTAMBLE;
 }
@@ -242,6 +245,7 @@ refill_blo_im_full(void)
         if (st->field_info.is_field_complex
             && (global.keys.apdu.sign.u.clear.last_field_index
                 != st->field_info.field_index)) {
+            SCREEN_DISPLAYED++;
             tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Next field requires",
                               "careful review", TZ_UI_LAYOUT_HOME_B,
                               TZ_UI_ICON_NONE);
@@ -250,9 +254,17 @@ refill_blo_im_full(void)
         }
     }
 
-    wrote = tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, st->field_info.field_name,
-                              global.line_buf, TZ_UI_LAYOUT_BN,
-                              TZ_UI_ICON_NONE);
+    if ((N_settings.blindsign_status == ST_BLINDSIGN_LARGE_TX)
+        && (SCREEN_DISPLAYED >= NB_MAX_SCREEN_ALLOWED)) {
+        init_too_many_screens_stream();
+        TZ_SUCCEED();
+    } else {
+        SCREEN_DISPLAYED++;
+        wrote = tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB,
+                                  st->field_info.field_name, global.line_buf,
+                                  TZ_UI_LAYOUT_BN, TZ_UI_ICON_NONE);
+    }
+
 #elif HAVE_NBGL
     PRINTF("[DEBUG] field=%s complex=%d\n", st->field_info.field_name,
            st->field_info.is_field_complex);
@@ -359,6 +371,11 @@ refill_error(void)
     // clang-format on
 
     tz_ui_stream_close();
+
+#ifdef HAVE_BAGL
+    tz_ui_stream_start();
+#endif
+
     TZ_POSTAMBLE;
 }
 
@@ -501,6 +518,58 @@ init_summary_stream(void)
     tz_ui_stream();
 
     FUNC_LEAVE();
+}
+
+static void
+pass_from_clear_to_summary(void)
+{
+    TZ_PREAMBLE(("void"));
+
+    APDU_SIGN_ASSERT_STEP(SIGN_ST_WAIT_USER_INPUT);
+
+    global.step                = ST_SUMMARY_SIGN;
+    global.keys.apdu.sign.step = SIGN_ST_WAIT_DATA;
+
+    TZ_CHECK(refill_all());
+
+    TZ_POSTAMBLE;
+}
+
+static void
+too_many_screens_stream_cb(tz_ui_cb_type_t cb_type)
+{
+    TZ_PREAMBLE(("cb_type=%u", cb_type));
+
+    // clang-format off
+    switch (cb_type) {
+    case TZ_UI_STREAM_CB_VALIDATE: TZ_CHECK(pass_from_clear_to_summary()); break;
+    case TZ_UI_STREAM_CB_REJECT:   send_reject(EXC_REJECT);                break;
+    default:                       TZ_FAIL(EXC_UNKNOWN);                   break;
+    }
+    // clang-format on
+
+    TZ_POSTAMBLE;
+}
+
+static void
+init_too_many_screens_stream(void)
+{
+    tz_ui_stream_init(too_many_screens_stream_cb);
+
+    tz_ui_stream_push_warning_not_trusted(
+#ifndef TARGET_NANOS
+        "Operation too long", "Proceed to\nblindsign."
+#endif
+    );
+#ifdef TARGET_NANOS
+    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Operation too long",
+                      "Accept blindsign.", TZ_UI_LAYOUT_HOME_B,
+                      TZ_UI_ICON_NONE);
+#endif
+    tz_ui_stream_push_risky_accept_reject(TZ_UI_STREAM_CB_VALIDATE,
+                                          TZ_UI_STREAM_CB_REJECT);
+
+    tz_ui_stream_close();
 }
 #endif
 

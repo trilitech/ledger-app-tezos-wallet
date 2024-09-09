@@ -77,6 +77,7 @@ typedef struct {
             tz_parser_state parser_state;
             size_t          total_length;
             uint8_t         last_field_index;
+            uint8_t         screen_displayed;
             bool            received_msg;
         } clear;
         /// @brief blindsigning state info.
