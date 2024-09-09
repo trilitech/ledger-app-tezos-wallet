@@ -164,6 +164,8 @@ class TezosAppScreen(metaclass=MetaScreen):
     __golden:                  bool
     __snapshots_path:          str
     __prefixed_snapshots_path: str
+    __tmp_snapshots_path:          str
+    __prefixed_tmp_snapshots_path: str
     __snapshotted:             List[str]  = []
 
     def __init__(self,
@@ -179,6 +181,10 @@ class TezosAppScreen(metaclass=MetaScreen):
             f"{os.path.dirname(realpath)}/snapshots/{firmware.name}"
         self.__prefixed_snapshots_path = \
             f"{self.__snapshots_path}/{Path(snapshot_prefix).stem}"
+        self.__tmp_snapshots_path = \
+            f"{os.path.dirname(realpath)}/snapshots/{firmware.name}"
+        self.__prefixed_tmp_snapshots_path = \
+            f"{self.__tmp_snapshots_path}/{Path(snapshot_prefix).stem}"
         self.firmware = firmware
         self.commit = commit
         self.version = version
@@ -190,6 +196,14 @@ class TezosAppScreen(metaclass=MetaScreen):
             for filename in os.listdir(path):
                 os.remove(os.path.join(path, filename))
             path = f"{self.__snapshots_path}"
+            home_path = os.path.join(path, "home.png")
+            if os.path.exists(home_path):
+                os.remove(home_path)
+            path = f"{self.__prefixed_tmp_snapshots_path}"
+            Path(path).mkdir(parents=True, exist_ok=True)
+            for filename in os.listdir(path):
+                os.remove(os.path.join(path, filename))
+            path = f"{self.__tmp_snapshots_path}"
             home_path = os.path.join(path, "home.png")
             if os.path.exists(home_path):
                 os.remove(home_path)
@@ -229,12 +243,14 @@ class TezosAppScreen(metaclass=MetaScreen):
 
         if fixed:
             path = f'{self.__snapshots_path}/{screen}.png'
+            tmp_path = f'{self.__tmp_snapshots_path}/{screen}.png'
         else:
             path = f'{self.__prefixed_snapshots_path}/{screen}.png'
+            tmp_path = f'{self.__prefixed_tmp_snapshots_path}/{screen}.png'
 
         def check():
             print(f"- Expecting {screen} -")
-            assert self.__backend.compare_screen_with_snapshot(path, golden_run=golden)
+            assert self.__backend.compare_screen_with_snapshot(path, tmp_snap_path=tmp_path, golden_run=golden)
 
         with_retry(check)
 
