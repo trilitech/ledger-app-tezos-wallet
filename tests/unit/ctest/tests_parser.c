@@ -304,7 +304,7 @@ CTEST2(operation_parser, check_stake_complexity)
  //     {"Option",        _,     6},
   //    {"Tuple",         _,     7},
         {"Entrypoint",    false, 8},
-        {"Parameter",     true,  9},
+        {"Parameter",     false, 9},
     };
     check_field_complexity(data, str, fields_check, sizeof(fields_check));
 }
@@ -324,7 +324,7 @@ CTEST2(operation_parser, check_unstake_complexity)
  //     {"Option",        _,     6},
   //    {"Tuple",         _,     7},
         {"Entrypoint",    false, 8},
-        {"Parameter",     true,  9},
+        {"Parameter",     false, 9},
     };
     check_field_complexity(data, str, fields_check, sizeof(fields_check));
 }
@@ -344,7 +344,7 @@ CTEST2(operation_parser, check_finalize_unstake_complexity)
  //     {"Option",        _,     6},
   //    {"Tuple",         _,     7},
         {"Entrypoint",    false, 8},
-        {"Parameter",     true,  9},
+        {"Parameter",     false, 9},
     };
     check_field_complexity(data, str, fields_check, sizeof(fields_check));
 }

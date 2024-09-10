@@ -573,6 +573,9 @@ tz_step_read_micheline(tz_parser_state *state)
     }
     tz_micheline_parser_step(state);
     if (state->errno == TZ_BLO_DONE) {
+        if (state->micheline.is_unit) {
+            state->field_info.is_field_complex = false;
+        }
         if ((op->frame->stop != 0) && (state->ofs != op->frame->stop)) {
             tz_raise(TOO_LARGE);
         }
