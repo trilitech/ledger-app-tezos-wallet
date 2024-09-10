@@ -15,6 +15,7 @@
 
 import os
 import time
+from enum import Enum
 
 from pathlib import Path
 from typing import Generator, List
@@ -136,14 +137,20 @@ class UseCaseSettings(OriginalUseCaseSettings):
         """Toggle the expert_mode switch."""
         self._toggle_list.choose(1)
 
-    def toggle_blindsigning(self):
-        """Toggle the blindsigning switch."""
-        self._toggle_list.choose(2)
+    def set_blindigning(self, value: int):
+        if value not in [1, 2, 3]:
+            raise ValueError("Value must be 1, 2 or 3")
+        self._toggle_list.choose(value)
 
     def exit(self) -> None:
         """Exits settings."""
         self.multi_page_exit()
 
+
+class BlindsigningStatus(Enum):
+    Large_Tx_only = 1
+    ON = 2
+    OFF = 3
 
 class TezosAppScreen(metaclass=MetaScreen):
     use_case_welcome    = UseCaseHomeExt
@@ -244,16 +251,16 @@ class TezosAppScreen(metaclass=MetaScreen):
     def assert_info(self):
         self.assert_screen("info", True)
 
-    def assert_settings(self,
-                        blindsigning = False,
-                        expert_mode = False):
-        suffix=""
-        if blindsigning:
-            suffix += "_blindsigning"
+    def assert_expert_mode(self, expert_mode=False):
+        suffix = ""
         if expert_mode:
-            suffix += "_expert"
-        if suffix != "":
-            suffix += "_on"
+            suffix += "_expert_on"
+        self.assert_screen("settings" + suffix)
+
+    def assert_blindsigning_status(
+        self, blindsignStatus=BlindsigningStatus.Large_Tx_only
+    ):
+        suffix = "_" + str(blindsignStatus).replace(".", "-")
         self.assert_screen("settings" + suffix)
 
     def quit(self):

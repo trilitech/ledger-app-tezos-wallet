@@ -63,7 +63,7 @@ void
 ui_home_init(void)
 {
     FUNC_ENTER(("void"));
-    tz_ui_home_redisplay();
+    tz_ui_home_redisplay(INIT_HOME_PAGE);
     FUNC_LEAVE();
 }
 #endif  // HAVE_NBGL

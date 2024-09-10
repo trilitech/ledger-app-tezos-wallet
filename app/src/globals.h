@@ -43,17 +43,6 @@
 #include "utils.h"
 
 #include "parser/parser_state.h"
-/**
- * @brief  Zeros out all application-specific globals and SDK-specific
- * UI/exchange buffers.
- */
-void init_globals(void);
-
-/// Toggles the persisted expert_mode setting
-void toggle_expert_mode(void);
-
-/// toggles the blindsign setting between "For large tx", "ON", "OFF".
-void toggle_blindsign_status(void);
 
 #define MAX_APDU_SIZE      235
 #define MAX_SIGNATURE_SIZE 100
@@ -149,3 +138,19 @@ extern unsigned int app_stack_canary;  // From SDK
  *
  */
 extern unsigned char G_io_seproxyhal_spi_buffer[IO_SEPROXYHAL_BUFFER_SIZE_B];
+
+/**
+ * @brief  Zeros out all application-specific globals and SDK-specific
+ * UI/exchange buffers.
+ */
+void init_globals(void);
+
+/// Toggles the persisted expert_mode setting
+void toggle_expert_mode(void);
+
+/// Toggles the persisted blindsign setting between "For large tx", "ON",
+/// "OFF".
+void toggle_blindsign_status(void);
+
+/// set the blindsign setting between "For large tx", "ON", "OFF".
+void set_blindsign_status(blindsign_state_t status);
