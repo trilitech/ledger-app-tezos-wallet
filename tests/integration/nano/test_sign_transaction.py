@@ -119,3 +119,115 @@ def test_too_complex_transaction(app):
                          path=path)
 
     app.quit()
+
+# Operation (0): Transaction
+# Source: tz2WmivuMG8MMRKMEmzKRMMxMApxZQWYNS4W
+# Fee: 0.04 XTZ
+# Storage limit: 2
+# Amount: 1000 XTZ
+# Destination: tz2CJBeWWLsUDjVUDqGZL6od3DeBCNzYXrXk
+# Entrypoint: stake
+# Parameter: Unit
+def test_sign_stake_transaction(app):
+    path = test_path / "stake"
+
+    app.setup_expert_mode()
+
+    message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000006c01f6552df4f5ff51c3d13347cab045cfdb8b9bd803c0b8020031028094ebdc0300012bad922d045c068660fabe19576f8506a1fa8fa3ff0600000002030b")
+
+    data = app.sign(DEFAULT_ACCOUNT,
+                    message,
+                    with_hash=True,
+                    path=path)
+
+    app.checker.check_signature(
+        account=DEFAULT_ACCOUNT,
+        message=message,
+        with_hash=True,
+        data=data)
+
+    app.quit()
+
+# Operation (0): Transaction
+# Source: tz2WmivuMG8MMRKMEmzKRMMxMApxZQWYNS4W
+# Fee: 0.04 XTZ
+# Storage limit: 2
+# Amount: 500 XTZ
+# Destination: tz2CJBeWWLsUDjVUDqGZL6od3DeBCNzYXrXk
+# Entrypoint: unstake
+# Parameter: Unit
+def test_sign_unstake_transaction(app):
+    path = test_path / "unstake"
+
+    app.setup_expert_mode()
+
+    message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000006c01f6552df4f5ff51c3d13347cab045cfdb8b9bd803c0b80200310280cab5ee0100012bad922d045c068660fabe19576f8506a1fa8fa3ff0700000002030b")
+
+    data = app.sign(DEFAULT_ACCOUNT,
+                    message,
+                    with_hash=True,
+                    path=path)
+
+    app.checker.check_signature(
+        account=DEFAULT_ACCOUNT,
+        message=message,
+        with_hash=True,
+        data=data)
+
+    app.quit()
+
+# Operation (0): Transaction
+# Source: tz2WmivuMG8MMRKMEmzKRMMxMApxZQWYNS4W
+# Fee: 0.04 XTZ
+# Storage limit: 2
+# Amount: 0 XTZ
+# Destination: tz2CJBeWWLsUDjVUDqGZL6od3DeBCNzYXrXk
+# Entrypoint: finalize_unstake
+# Parameter: Unit
+def test_sign_finalize_unstake_transaction(app):
+    path = test_path / "finalize_unstake"
+
+    app.setup_expert_mode()
+
+    message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000006c01f6552df4f5ff51c3d13347cab045cfdb8b9bd803c0b8020031020000012bad922d045c068660fabe19576f8506a1fa8fa3ff0800000002030b")
+
+    data = app.sign(DEFAULT_ACCOUNT,
+                    message,
+                    with_hash=True,
+                    path=path)
+
+    app.checker.check_signature(
+        account=DEFAULT_ACCOUNT,
+        message=message,
+        with_hash=True,
+        data=data)
+
+    app.quit()
+
+# Operation (0): Transaction
+# Source: tz2WmivuMG8MMRKMEmzKRMMxMApxZQWYNS4W
+# Fee: 0.04 XTZ
+# Storage limit: 2
+# Amount: 0 XTZ
+# Destination: tz2CJBeWWLsUDjVUDqGZL6od3DeBCNzYXrXk
+# Entrypoint: set_delegate_parameters
+# Parameter: Pair 4000000 (Pair 20000000 Unit)
+def test_sign_set_delegate_parameters_transaction(app):
+    path = test_path / "delegate_parameters"
+
+    app.setup_expert_mode()
+
+    message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000006c01f6552df4f5ff51c3d13347cab045cfdb8b9bd803c0b8020031020000012bad922d045c068660fabe19576f8506a1fa8fa3ff090000001007070080a4e80307070080b48913030b")
+
+    data = app.sign(DEFAULT_ACCOUNT,
+                    message,
+                    with_hash=True,
+                    path=path)
+
+    app.checker.check_signature(
+        account=DEFAULT_ACCOUNT,
+        message=message,
+        with_hash=True,
+        data=data)
+
+    app.quit()

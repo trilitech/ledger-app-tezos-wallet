@@ -289,6 +289,87 @@ CTEST2(operation_parser, check_double_transaction_complexity)
     check_field_complexity(data, str, fields_check, sizeof(fields_check));
 }
 
+CTEST2(operation_parser, check_stake_complexity)
+{
+    char str[]
+        = "030000000000000000000000000000000000000000000000000000000000000000"
+          "6c01f6552df4f5ff51c3d13347cab045cfdb8b9bd803c0b8020031028094ebdc03"
+          "00012bad922d045c068660fabe19576f8506a1fa8fa3ff0600000002030b";
+    const tz_fields_check fields_check[] = {
+        {"Source",        false, 1},
+        {"Fee",           false, 2},
+        {"Storage limit", false, 3},
+        {"Amount",        false, 4},
+        {"Destination",   false, 5},
+ //     {"Option",        _,     6},
+  //    {"Tuple",         _,     7},
+        {"Entrypoint",    false, 8},
+        {"Parameter",     true,  9},
+    };
+    check_field_complexity(data, str, fields_check, sizeof(fields_check));
+}
+
+CTEST2(operation_parser, check_unstake_complexity)
+{
+    char str[]
+        = "030000000000000000000000000000000000000000000000000000000000000000"
+          "6c01f6552df4f5ff51c3d13347cab045cfdb8b9bd803c0b80200310280cab5ee01"
+          "00012bad922d045c068660fabe19576f8506a1fa8fa3ff0700000002030b";
+    const tz_fields_check fields_check[] = {
+        {"Source",        false, 1},
+        {"Fee",           false, 2},
+        {"Storage limit", false, 3},
+        {"Amount",        false, 4},
+        {"Destination",   false, 5},
+ //     {"Option",        _,     6},
+  //    {"Tuple",         _,     7},
+        {"Entrypoint",    false, 8},
+        {"Parameter",     true,  9},
+    };
+    check_field_complexity(data, str, fields_check, sizeof(fields_check));
+}
+
+CTEST2(operation_parser, check_finalize_unstake_complexity)
+{
+    char str[]
+        = "030000000000000000000000000000000000000000000000000000000000000000"
+          "6c01f6552df4f5ff51c3d13347cab045cfdb8b9bd803c0b8020031020000012bad"
+          "922d045c068660fabe19576f8506a1fa8fa3ff0800000002030b";
+    const tz_fields_check fields_check[] = {
+        {"Source",        false, 1},
+        {"Fee",           false, 2},
+        {"Storage limit", false, 3},
+        {"Amount",        false, 4},
+        {"Destination",   false, 5},
+ //     {"Option",        _,     6},
+  //    {"Tuple",         _,     7},
+        {"Entrypoint",    false, 8},
+        {"Parameter",     true,  9},
+    };
+    check_field_complexity(data, str, fields_check, sizeof(fields_check));
+}
+
+CTEST2(operation_parser, check_set_delegate_parameters_complexity)
+{
+    char str[]
+        = "030000000000000000000000000000000000000000000000000000000000000000"
+          "6c01f6552df4f5ff51c3d13347cab045cfdb8b9bd803c0b8020031020000012bad"
+          "922d045c068660fabe19576f8506a1fa8fa3ff090000001007070080a4e8030707"
+          "0080b48913030b";
+    const tz_fields_check fields_check[] = {
+        {"Source",        false, 1},
+        {"Fee",           false, 2},
+        {"Storage limit", false, 3},
+        {"Amount",        false, 4},
+        {"Destination",   false, 5},
+ //     {"Option",        _,     6},
+  //    {"Tuple",         _,     7},
+        {"Entrypoint",    false, 8},
+        {"Parameter",     true,  9},
+    };
+    check_field_complexity(data, str, fields_check, sizeof(fields_check));
+}
+
 CTEST2(operation_parser, check_origination_complexity)
 {
     char str[]
