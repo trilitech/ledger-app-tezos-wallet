@@ -47,6 +47,7 @@ tz_micheline_parser_init(tz_parser_state *state)
 
     m->frame         = m->stack;
     m->stack[0].step = TZ_MICHELINE_STEP_TAG;
+    m->is_unit       = false;
 }
 
 /**
@@ -373,6 +374,12 @@ tz_micheline_parser_step(tz_parser_state *state)
         }
         m->frame->step         = TZ_MICHELINE_STEP_PRIM_NAME;
         m->frame->step_prim.op = op;
+        // clang-format off
+        m->is_unit = ((m->frame == m->stack)
+                      && (op == TZ_MICHELSON_OP_Unit)
+                      && (m->frame->step_prim.nargs == 0)
+                      && (!m->frame->step_prim.annot));
+        // clang-format on
         break;
     case TZ_MICHELINE_STEP_PRIM_NAME:
         if (m->frame->step_prim.wrap && m->frame->step_prim.first) {
