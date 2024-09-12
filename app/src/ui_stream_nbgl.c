@@ -28,9 +28,11 @@ bool has_final_screen(void);
 void tz_ui_stream_start(void);
 void tz_transaction_choice(bool getMorePairs);
 
-void drop_last_screen(void);
-void push_str(const char *text, size_t len, char **out);
-void switch_to_blindsigning_on_error(void);
+void        drop_last_screen(void);
+void        push_str(const char *text, size_t len, char **out);
+void        switch_to_blindsigning_on_error(void);
+static void ui_stream_init(void);
+#define SCREEN_DISPLAYED global.keys.apdu.sign.u.clear.screen_displayed
 
 void
 tz_reject(void)
@@ -66,14 +68,38 @@ tz_reject_ui(void)
 }
 
 static void
+blindsign_skip_callback(void)
+{
+    TZ_PREAMBLE(("Blindsign reason: %d", global.blindsign_reason));
+
+    if (global.blindsign_reason == REASON_NONE) {
+        global.blindsign_reason = REASON_TOO_MANY_SCREENS;
+        tz_ui_stream_close();
+        tz_ui_stream_t *s = &global.stream;
+        s->cb(TZ_UI_STREAM_CB_SUMMARY);
+    } else if (global.blindsign_reason == REASON_PARSING_ERROR) {
+        switch_to_blindsigning_on_error();
+    }
+    TZ_POSTAMBLE;
+}
+
+static void
 blindsign_choice(bool confirm)
 {
     TZ_PREAMBLE(("void"));
     if (confirm) {
+        if (global.blindsign_reason != REASON_TOO_MANY_SCREENS) {
+            global.step = ST_BLIND_SIGN;
+        }
         tz_reject_ui();
     } else {
         tz_ui_stream_t *s = &global.stream;
-        s->cb(TZ_UI_STREAM_CB_BLINDSIGN);
+
+        if (global.blindsign_reason == REASON_TOO_MANY_SCREENS) {
+            s->cb(TZ_UI_STREAM_CB_SUMMARY);
+        } else {
+            s->cb(TZ_UI_STREAM_CB_BLINDSIGN);
+        }
     }
 
     TZ_POSTAMBLE;
@@ -85,22 +111,18 @@ switch_to_blindsigning_on_error(void)
     TZ_PREAMBLE(("void"));
     TZ_ASSERT(EXC_UNEXPECTED_STATE, global.step == ST_CLEAR_SIGN);
     global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
-    global.step                = ST_BLIND_SIGN;
 
     // copy error code
-    tz_ui_stream_t *s        = &global.stream;
-    size_t          bucket   = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
-    const char     *err_code = s->screens[bucket].pairs[0].value;
     PRINTF("[DEBUG] refill_error: global.step = %d\n %s", global.step,
-           err_code);
-    char blindsign_msg[150]
-        = "Transaction could not be decoded correctly. Learn More:\n"
-          "bit.ly/ledger-tez\nERROR: ";
-    memcpy(blindsign_msg + strlen(blindsign_msg), err_code, ERROR_CODE_SIZE);
+           global.error_code);
+    char blindsign_msg[60] = "Learn More: bit.ly/ledger-tez\nERROR: ";
+
+    strncpy(blindsign_msg + strlen(blindsign_msg), global.error_code,
+            ERROR_CODE_SIZE);
 
     // Show error msg and ask user to proceed to blindsign
     nbgl_useCaseChoice(&C_Important_Circle_64px,
-                       "The transaction cannot be trusted", blindsign_msg,
+                       "The transaction cannot be decoded", blindsign_msg,
                        "Reject transaction", "Proceed to Blindsign",
                        blindsign_choice);
     TZ_POSTAMBLE;
@@ -202,7 +224,13 @@ tz_ui_stream_cb(void)
         tz_ui_stream_t         *s = &global.stream;
         tz_ui_stream_display_t *c = &s->current_screen;
 
-        nbgl_useCaseReviewStreamingContinue(&c->list, tz_transaction_choice);
+        if (N_settings.blindsign_status == ST_BLINDSIGN_ON) {
+            nbgl_useCaseReviewStreamingContinueExt(
+                &c->list, tz_transaction_choice, blindsign_skip_callback);
+        } else {
+            nbgl_useCaseReviewStreamingContinue(&c->list,
+                                                tz_transaction_choice);
+        }
     }
     FUNC_LEAVE();
 }
@@ -246,16 +274,11 @@ tz_transaction_choice(bool getMorePairs)
 
     FUNC_LEAVE();
 }
-
-void
-tz_ui_stream_init(void (*cb)(tz_ui_cb_type_t cb_type))
+static void
+ui_stream_init(void)
 {
     tz_ui_stream_t *s = &global.stream;
 
-    FUNC_ENTER(("cb=%p", cb));
-    memset(s, 0x0, sizeof(*s));
-    memset(global.error_code, '\0', sizeof(global.error_code));
-    s->cb            = cb;
     s->full          = false;
     s->last          = 0;
     s->current       = -1;
@@ -263,7 +286,21 @@ tz_ui_stream_init(void (*cb)(tz_ui_cb_type_t cb_type))
     s->pressed_right = false;
 
     ui_strings_init();
+}
+void
+tz_ui_stream_init(void (*cb)(tz_ui_cb_type_t cb_type))
+{
+    tz_ui_stream_t *s = &global.stream;
+    memset(s, 0x0, sizeof(*s));
+    FUNC_ENTER(("cb=%p", cb));
+    ui_stream_init();
+    s->cb                   = cb;
+    global.blindsign_reason = REASON_NONE;
+    memset(&global.error_code, '\0', ERROR_CODE_SIZE);
     nbgl_operationType_t op_type = TYPE_TRANSACTION;
+    if (N_settings.blindsign_status == ST_BLINDSIGN_ON) {
+        op_type |= SKIPPABLE_OPERATION;
+    }
     nbgl_useCaseReviewStreamingStart(op_type, &C_tezos,
                                      "Review request to sign operation", NULL,
                                      tz_transaction_choice);
@@ -278,8 +315,6 @@ tz_ui_stream_start(void)
     tz_ui_stream_cb();
     FUNC_LEAVE();
 }
-
-
 
 bool
 tz_ui_nav_cb(void)
@@ -494,6 +529,7 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
         || (!append && (++(s->screens[bucket].nb_pairs) == max_pairs))
         || (append && (offset == 0))) {
         s->total++;
+        SCREEN_DISPLAYED++;
         if ((s->total > 0)
             && ((s->total % TZ_UI_STREAM_HISTORY_SCREENS)
                 == (s->last % TZ_UI_STREAM_HISTORY_SCREENS))) {

@@ -28,11 +28,11 @@ if __name__ == "__main__":
     app.send_apdu("800f000011048000002c800006c18000000080000000")
     app.expect_apdu_return("9000")
 
-    app.assert_screen("review_request_sign_operation")
+    app.assert_screen("review_screen", True)
     app.review.next()
 
     # Ensure we don't advance to a blank screen
-    app.assert_screen("review_request_sign_operation")
+    app.assert_screen("review_screen", True)
 
     app.send_apdu("800f81005e0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316");
 
@@ -47,11 +47,11 @@ if __name__ == "__main__":
     app.send_apdu("800f000011048000002c800006c18000000080000000")
     app.expect_apdu_return("9000")
 
-    app.assert_screen("review_request_sign_operation")
+    app.assert_screen("review_screen", True)
     app.review.next()
 
     # Ensure we don't advance to a blank screen
-    app.assert_screen("review_request_sign_operation")
+    app.assert_screen("review_screen", True)
 
     app.send_apdu("800f81005e0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316");
 

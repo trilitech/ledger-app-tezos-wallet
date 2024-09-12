@@ -15,7 +15,7 @@
 
 from utils import (
     tezos_app,
-    send_initialize_msg,
+
     send_payload
 )
 
@@ -27,12 +27,12 @@ from utils import (
 def short_reject(app):
     app.assert_home()
 
-    send_initialize_msg(app, "800f000011048000002c800006c18000000080000000")
+    app.send_initialize_msg( "800f000011048000002c800006c18000000080000000")
     send_payload(app, "800f81005e0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316")
 
     app.review_reject_signing(cancel_rejection=True)
     # Cancelling rejection lands us back on the same page
-    app.assert_screen("review_request_sign_operation")
+    app.assert_screen("review_screen", True)
     app.review_reject_signing()
 
     app.assert_home()

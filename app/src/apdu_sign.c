@@ -66,8 +66,12 @@ static void handle_data_apdu_clear(command_t *cmd);
 static void handle_data_apdu_blind(void);
 #ifdef HAVE_BAGL
 static void init_too_many_screens_stream(void);
-static void init_summary_stream(void);
 #endif
+#ifdef HAVE_NBGL
+static void continue_blindsign_cb(void);
+static void pass_from_summary_to_blind(void);
+#endif
+static void init_summary_stream(void);
 
 /* Macros */
 
@@ -83,8 +87,7 @@ static void init_summary_stream(void);
 #define APDU_SIGN_ASSERT_STEP(x) \
     APDU_SIGN_ASSERT(global.keys.apdu.sign.step == (x))
 
-#define NB_MAX_SCREEN_ALLOWED 20
-#define SCREEN_DISPLAYED      global.keys.apdu.sign.u.clear.screen_displayed
+#define SCREEN_DISPLAYED global.keys.apdu.sign.u.clear.screen_displayed
 
 #ifdef HAVE_BAGL
 void
@@ -181,7 +184,6 @@ sign_packet(void)
 
     io_send_response_buffers(bufs, 2, SW_OK);
     global.step = ST_IDLE;
-
     TZ_POSTAMBLE;
 }
 
@@ -269,6 +271,17 @@ refill_blo_im_full(void)
 #elif HAVE_NBGL
     PRINTF("[DEBUG] field=%s complex=%d\n", st->field_info.field_name,
            st->field_info.is_field_complex);
+    if ((N_settings.blindsign_status == ST_BLINDSIGN_LARGE_TX)
+        && (SCREEN_DISPLAYED >= NB_MAX_SCREEN_ALLOWED)) {
+        strncpy(global.error_code, "TOO_MANY_SCREENS", ERROR_CODE_SIZE);
+        tz_ui_stream_push_all(TZ_UI_STREAM_CB_CANCEL,
+                              st->field_info.field_name, "TOO_MANY_SCREENS",
+                              TZ_UI_LAYOUT_BN, TZ_UI_ICON_NONE);
+
+        global.blindsign_reason = REASON_TOO_MANY_SCREENS;
+
+        TZ_SUCCEED();
+    }
     if (st->field_info.is_field_complex
         && !global.keys.apdu.sign.u.clear.displayed_expert_warning) {
         global.keys.apdu.sign.u.clear.last_field_index
@@ -317,12 +330,12 @@ refill_blo_done(void)
         TZ_SUCCEED();
     }
 
-#ifdef HAVE_BAGL
     if (global.step == ST_SUMMARY_SIGN) {
         TZ_CHECK(init_summary_stream());
         TZ_SUCCEED();
     }
 
+#ifdef HAVE_BAGL
     tz_ui_stream_push_accept_reject();
 #endif
     tz_ui_stream_close();
@@ -352,7 +365,7 @@ refill_error(void)
 #ifndef TARGET_NANOS
             "This transaction", "could not be\ndecoded correctly."
 #endif
-    );
+        );
 
     tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB,
                           "Parsing error",
@@ -360,17 +373,29 @@ refill_error(void)
                           TZ_UI_LAYOUT_HOME_BN,
                           TZ_UI_ICON_NONE);
     tz_ui_stream_push_learn_more();
-    tz_ui_stream_push_risky_accept_reject(TZ_UI_STREAM_CB_BLINDSIGN, TZ_UI_STREAM_CB_CANCEL);
+    tz_ui_stream_push_risky_accept_reject(
+        TZ_UI_STREAM_CB_BLINDSIGN, TZ_UI_STREAM_CB_CANCEL);
 
 #elif HAVE_NBGL
-    // The following call is just to invoke switch_to_blindsigning
-    // with TZ_UI_STREAM_CB_CANCEL callback type in function tz_ui_nav_cb()
-    // The text will not be shown.
-    tz_ui_stream_push_all(TZ_UI_STREAM_CB_CANCEL,
-                          "Parsing error",
-                          tz_parser_result_name(st->errno),
-                          TZ_UI_LAYOUT_BN,
-                          TZ_UI_ICON_NONE);
+    global.blindsign_reason = REASON_PARSING_ERROR;
+    strncpy(global.error_code, tz_parser_result_name(st->errno), ERROR_CODE_SIZE);
+    if(global.step == ST_SUMMARY_SIGN) {
+        pass_from_summary_to_blind();
+        TZ_SUCCEED();
+    }
+    else if(global.step == ST_CLEAR_SIGN){
+        // The following call is just to invoke switch_to_blindsigning
+        // with TZ_UI_STREAM_CB_CANCEL callback type in function tz_ui_nav_cb()
+        // The text will not be shown.
+        tz_ui_stream_push_all(TZ_UI_STREAM_CB_CANCEL,
+                              "Parsing error",
+                              tz_parser_result_name(st->errno),
+                              TZ_UI_LAYOUT_BN,
+                              TZ_UI_ICON_NONE);
+    }
+    else{
+        TZ_FAIL(EXC_UNEXPECTED_STATE); // Only two states can lead to refill error. ST_CLEAR_SIGN and ST_SUMMARY_SIGN
+    }
 #endif
     // clang-format on
 
@@ -395,10 +420,14 @@ refill(void)
     PRINTF("[DEBUG] refill(errno: %s)\n", tz_parser_result_name(st->errno));
     // clang-format off
     switch (st->errno) {
-    case TZ_BLO_IM_FULL: TZ_CHECK(refill_blo_im_full()); break;
-    case TZ_BLO_FEED_ME: TZ_CHECK(send_continue());      break;
-    case TZ_BLO_DONE:    TZ_CHECK(refill_blo_done());    break;
-    default:             TZ_CHECK(refill_error());       break;
+    case TZ_BLO_IM_FULL: TZ_CHECK(refill_blo_im_full());
+        break;
+    case TZ_BLO_FEED_ME: TZ_CHECK(send_continue());
+        break;
+    case TZ_BLO_DONE: TZ_CHECK(refill_blo_done());
+        break;
+    default: TZ_CHECK(refill_error());
+        break;
     }
     // clang-format on
     TZ_POSTAMBLE;
@@ -420,6 +449,23 @@ refill_all(void)
             break;
         }
     }
+
+    TZ_POSTAMBLE;
+}
+
+static void
+pass_from_clear_to_summary(void)
+{
+    TZ_PREAMBLE(("void"));
+
+    APDU_SIGN_ASSERT_STEP(SIGN_ST_WAIT_USER_INPUT);
+
+    global.step                = ST_SUMMARY_SIGN;
+    global.keys.apdu.sign.step = SIGN_ST_WAIT_DATA;
+#ifdef HAVE_NBGL
+    init_blind_stream();
+#endif
+    TZ_CHECK(refill_all());
 
     TZ_POSTAMBLE;
 }
@@ -475,13 +521,14 @@ stream_cb(tz_ui_cb_type_t cb_type)
 
     // clang-format off
     switch (cb_type) {
-    case TZ_UI_STREAM_CB_ACCEPT:             TZ_CHECK(sign_packet());              break;
-    case TZ_UI_STREAM_CB_REFILL:             TZ_CHECK(refill());                   break;
-    case TZ_UI_STREAM_CB_REJECT:             send_reject(EXC_REJECT);              break;
-    case TZ_UI_STREAM_CB_BLINDSIGN_REJECT:   send_reject(EXC_PARSE_ERROR);         break;
-    case TZ_UI_STREAM_CB_CANCEL:             TZ_CHECK(send_cancel());              break;
-    case TZ_UI_STREAM_CB_BLINDSIGN:          TZ_CHECK(pass_from_clear_to_blind()); break;
-    default:                                 TZ_FAIL(EXC_UNKNOWN);                 break;
+    case TZ_UI_STREAM_CB_ACCEPT:           TZ_CHECK(sign_packet());                break;
+    case TZ_UI_STREAM_CB_REFILL:           TZ_CHECK(refill());                     break;
+    case TZ_UI_STREAM_CB_REJECT:           send_reject(EXC_REJECT);                break;
+    case TZ_UI_STREAM_CB_BLINDSIGN_REJECT: send_reject(EXC_PARSE_ERROR);           break;
+    case TZ_UI_STREAM_CB_CANCEL:           TZ_CHECK(send_cancel());                break;
+    case TZ_UI_STREAM_CB_BLINDSIGN:        TZ_CHECK(pass_from_clear_to_blind());   break;
+    case TZ_UI_STREAM_CB_SUMMARY:          TZ_CHECK(pass_from_clear_to_summary()); break;
+    default: TZ_FAIL(EXC_UNKNOWN);                                                 break;
     }
     // clang-format on
 
@@ -558,46 +605,38 @@ summary_stream_cb(tz_ui_cb_type_t cb_type)
 
     // clang-format off
     switch (cb_type) {
-    case TZ_UI_STREAM_CB_ACCEPT: TZ_CHECK(sign_packet());              break;
-    case TZ_UI_STREAM_CB_REJECT: send_reject(EXC_REJECT);              break;
-    case TZ_UI_STREAM_CB_REFILL: TZ_CHECK(push_next_summary_screen()); break;
-    default:                     TZ_FAIL(EXC_UNKNOWN);                 break;
+    case TZ_UI_STREAM_CB_ACCEPT: TZ_CHECK(sign_packet());               break;
+    case TZ_UI_STREAM_CB_REJECT:  send_reject(EXC_REJECT);              break;
+    case TZ_UI_STREAM_CB_REFILL: TZ_CHECK(push_next_summary_screen());  break;
+    default: TZ_FAIL(EXC_UNKNOWN);
+        break;
     }
     // clang-format on
 
     TZ_POSTAMBLE;
 }
 
+#endif
+
 static void
 init_summary_stream(void)
 {
     TZ_PREAMBLE(("void"));
-
+#ifdef HAVE_BAGL
     tz_ui_stream_init(summary_stream_cb);
-
     global.keys.apdu.sign.u.summary.step = SUMMARYSIGN_ST_OPERATION;
     push_next_summary_screen();
-
     tz_ui_stream();
+#elif defined(HAVE_NBGL)
+    continue_blindsign_cb();
+#endif
 
     TZ_POSTAMBLE;
 }
 
-static void
-pass_from_clear_to_summary(void)
-{
-    TZ_PREAMBLE(("void"));
+#define FINAL_HASH global.keys.apdu.hash.final_hash
 
-    APDU_SIGN_ASSERT_STEP(SIGN_ST_WAIT_USER_INPUT);
-
-    global.step                = ST_SUMMARY_SIGN;
-    global.keys.apdu.sign.step = SIGN_ST_WAIT_DATA;
-
-    TZ_CHECK(refill_all());
-
-    TZ_POSTAMBLE;
-}
-
+#ifdef HAVE_BAGL
 static void
 too_many_screens_stream_cb(tz_ui_cb_type_t cb_type)
 {
@@ -605,9 +644,9 @@ too_many_screens_stream_cb(tz_ui_cb_type_t cb_type)
 
     // clang-format off
     switch (cb_type) {
-    case TZ_UI_STREAM_CB_VALIDATE: TZ_CHECK(pass_from_clear_to_summary()); break;
-    case TZ_UI_STREAM_CB_REJECT:   send_reject(EXC_REJECT);                break;
-    default:                       TZ_FAIL(EXC_UNKNOWN);                   break;
+    case TZ_UI_STREAM_CB_VALIDATE: TZ_CHECK(pass_from_clear_to_summary());    break;
+    case TZ_UI_STREAM_CB_REJECT:   send_reject(EXC_REJECT);                   break;
+    default: TZ_FAIL(EXC_UNKNOWN);                                            break;
     }
     // clang-format on
 
@@ -634,10 +673,7 @@ init_too_many_screens_stream(void)
 
     tz_ui_stream_close();
 }
-#endif
 
-#define FINAL_HASH global.keys.apdu.hash.final_hash
-#ifdef HAVE_BAGL
 static void
 bs_push_next(void)
 {
@@ -682,11 +718,15 @@ bs_stream_cb(tz_ui_cb_type_t cb_type)
 
     // clang-format off
     switch (cb_type) {
-    case TZ_UI_STREAM_CB_ACCEPT: return sign_packet();
-    case TZ_UI_STREAM_CB_REFILL: return bs_push_next();
-    case TZ_UI_STREAM_CB_REJECT: return send_reject(EXC_REJECT);
-    case TZ_UI_STREAM_CB_CANCEL: return send_cancel();
-    default:                     TZ_FAIL(EXC_UNKNOWN);
+    case TZ_UI_STREAM_CB_ACCEPT:
+        return sign_packet();
+    case TZ_UI_STREAM_CB_REFILL:
+        return bs_push_next();
+    case TZ_UI_STREAM_CB_REJECT:
+        return send_reject(EXC_REJECT);
+    case TZ_UI_STREAM_CB_CANCEL:
+        return send_cancel();
+    default: TZ_FAIL(EXC_UNKNOWN);
     }
     // clang-format on
 
@@ -793,19 +833,24 @@ handle_data_apdu(command_t *cmd)
         global.keys.apdu.sign.tag = cmd->data[0];
     }
 
+#ifdef HAVE_BAGL
     if ((N_settings.blindsign_status == ST_BLINDSIGN_ON)
         && (global.step == ST_CLEAR_SIGN)) {
         global.step = ST_SUMMARY_SIGN;
     }
+#endif
 
     // clang-format off
     switch (global.step) {
     case ST_CLEAR_SIGN:
     case ST_SWAP_SIGN:
     case ST_SUMMARY_SIGN:
-                          TZ_CHECK(handle_data_apdu_clear(cmd)); break;
-    case ST_BLIND_SIGN:   TZ_CHECK(handle_data_apdu_blind());    break;
-    default:              TZ_FAIL(EXC_UNEXPECTED_STATE);         break;
+        TZ_CHECK(handle_data_apdu_clear(cmd));
+        break;
+    case ST_BLIND_SIGN: TZ_CHECK(handle_data_apdu_blind());
+        break;
+    default: TZ_FAIL(EXC_UNEXPECTED_STATE);
+        break;
     }
     // clang-format on
 
@@ -853,7 +898,55 @@ handle_data_apdu_clear(command_t *cmd)
     TZ_POSTAMBLE;
 }
 
+#define OPERATION_TYPE_STR_LENGTH 22
+
+static void
+get_blindsign_type(char *type)
+{
+    TZ_PREAMBLE(("type=%s", type));
+    TZ_ASSERT(strlen(type) == OPERATION_TYPE_STR_LENGTH, EXC_WRONG_PARAM);
+    // clang-format off
+    switch (global.keys.apdu.sign.tag) {
+    case 0x01:
+    case 0x11:
+        memcpy(type,"Block\nproposal", OPERATION_TYPE_STR_LENGTH);
+        break;
+    case 0x03:
+        memcpy(type,"Manager\noperation", OPERATION_TYPE_STR_LENGTH);
+        break;
+    case 0x02:
+    case 0x12:
+    case 0x13:
+        memcpy(type,"Consensus\noperation", OPERATION_TYPE_STR_LENGTH);
+        break;
+    case 0x05:
+        memcpy(type,"Micheline\nexpression", OPERATION_TYPE_STR_LENGTH);
+        break;
+    default:
+        break;
+    }
+    // clang-format on
+    TZ_POSTAMBLE;
+}
+
 #ifdef HAVE_NBGL
+static void
+pass_from_summary_to_blind(void)
+{
+    TZ_PREAMBLE(("void"));
+
+    TZ_ASSERT(global.step == ST_SUMMARY_SIGN, EXC_UNEXPECTED_STATE);
+
+    global.step                        = ST_BLIND_SIGN;
+    global.keys.apdu.sign.step         = SIGN_ST_WAIT_DATA;
+    global.keys.apdu.sign.u.blind.step = BLINDSIGN_ST_OPERATION;
+
+    init_blind_stream();
+    handle_data_apdu_blind();
+
+    TZ_POSTAMBLE;
+}
+
 static nbgl_layoutTagValueList_t useCaseTagValueList;
 
 void
@@ -873,7 +966,8 @@ reviewChoice(bool confirm)
     FUNC_ENTER(("confirm=%d", confirm));
 
     if (confirm) {
-        nbgl_useCaseStatus("TRANSACTION\nSIGNED", true, accept_blindsign_cb);
+        nbgl_useCaseReviewStatus(STATUS_TYPE_TRANSACTION_SIGNED,
+                                 accept_blindsign_cb);
     } else {
         tz_reject();
     }
@@ -881,25 +975,85 @@ reviewChoice(bool confirm)
     FUNC_LEAVE();
 }
 
-static const char *transaction_type;
-static char
-    hash[TZ_BASE58_BUFFER_SIZE(sizeof(global.keys.apdu.hash.final_hash))];
+typedef enum {
+    SUMMARY_INDEX_NB_OF_TX = 0,
+    SUMMARY_INDEX_TOTAL_AMOUNT,
+    SUMMARY_INDEX_TOTAL_FEES,
+    SUMMARY_INDEX_TYPE,
+    SUMMARY_INDEX_HASH,
+    SUMMARY_INDEX_MAX
+} summary_index_t;
+
+#define DECIMAL_SIZE TZ_DECIMAL_BUFFER_SIZE((TZ_NUM_BUFFER_SIZE / 8))
+
 static nbgl_layoutTagValue_t pair;
+
 static nbgl_layoutTagValue_t *
 getTagValuePair(uint8_t pairIndex)
 {
+    TZ_PREAMBLE(("pairIndex=%u", pairIndex));
+    // Reuse the buffer for tag value pair list.
+    tz_operation_state *op
+        = &global.keys.apdu.sign.u.clear.parser_state.operation;
+
+    /// Following condition is setup because startIndex in useCaseTagValueList
+    /// is not being used by the SDK.
+    if (global.step == ST_BLIND_SIGN && useCaseTagValueList.nbPairs == 2) {
+        if (pairIndex < SUMMARY_INDEX_TOTAL_FEES) {
+            pairIndex += SUMMARY_INDEX_TYPE;
+        }
+    }
+
+    char num_buffer[DECIMAL_SIZE]        = {0};
+    char type[OPERATION_TYPE_STR_LENGTH] = "Micheline\nexpression";
+    char
+        hash[TZ_BASE58_BUFFER_SIZE(sizeof(global.keys.apdu.hash.final_hash))];
+
+    pair.value = NULL;  // A requirement for ui_strings_push
     switch (pairIndex) {
-    case 0:
-        pair.item  = "Type";
-        pair.value = transaction_type;
-        break;
-    case 1:
-        pair.item  = "Hash";
-        pair.value = hash;
-        break;
+    case SUMMARY_INDEX_NB_OF_TX: {
+        pair.item = "Number of Tx";
+
+        snprintf(num_buffer, sizeof(num_buffer), "%d", op->batch_index);
+        ui_strings_push(num_buffer, strlen(num_buffer),
+                        (char **)&(pair.value));
+    } break;
+    case SUMMARY_INDEX_TOTAL_AMOUNT: {
+        pair.item = "Total amount";
+
+        tz_mutez_to_string(num_buffer, sizeof(num_buffer), op->total_amount);
+        ui_strings_push(num_buffer, strlen(num_buffer),
+                        (char **)&(pair.value));
+
+    } break;
+    case SUMMARY_INDEX_TOTAL_FEES: {
+        pair.item = "Total Fees";
+
+        tz_mutez_to_string(num_buffer, sizeof(num_buffer), op->total_fee);
+        ui_strings_push(num_buffer, strlen(num_buffer),
+                        (char **)&(pair.value));
+    } break;
+    case SUMMARY_INDEX_TYPE: {
+        get_blindsign_type(type);
+        pair.item = "Type";
+        ui_strings_push(type, strlen(type), (char **)&(pair.value));
+    }
+
+    break;
+    case SUMMARY_INDEX_HASH: {
+        if (tz_format_base58(FINAL_HASH, sizeof(FINAL_HASH), hash,
+                             sizeof(hash))) {
+            TZ_FAIL(EXC_UNKNOWN);
+        }
+
+        pair.item = "Hash";
+        ui_strings_push(hash, strlen(hash), (char **)&(pair.value));
+    } break;
     default:
         return NULL;
     }
+
+    TZ_POSTAMBLE;
     return &pair;
 }
 
@@ -907,12 +1061,24 @@ void
 continue_blindsign_cb(void)
 {
     FUNC_ENTER(("void"));
+
+    ui_strings_init();
+
     nbgl_operationType_t op = TYPE_TRANSACTION;
 
-    useCaseTagValueList.pairs             = NULL;
-    useCaseTagValueList.callback          = getTagValuePair;
-    useCaseTagValueList.startIndex        = 0;
-    useCaseTagValueList.nbPairs           = 2;
+    useCaseTagValueList.pairs      = NULL;
+    useCaseTagValueList.callback   = getTagValuePair;
+    useCaseTagValueList.startIndex = 3;
+    useCaseTagValueList.nbPairs    = 2;
+    if (global.step == ST_SUMMARY_SIGN) {
+        PRINTF("[DEBUG] SUMMARY_SIGN start_index %d\n",
+               useCaseTagValueList.startIndex);
+        useCaseTagValueList.startIndex = 0;
+        useCaseTagValueList.nbPairs    = 5;
+    }
+    PRINTF("[DEBUG] SIGN Stauts: %d,  start_index %d Number of pairs:%d ",
+           global.step, useCaseTagValueList.startIndex,
+           useCaseTagValueList.nbPairs);
     useCaseTagValueList.smallCaseForValue = false;
     useCaseTagValueList.wrapping          = false;
     nbgl_useCaseReviewBlindSigning(op, &useCaseTagValueList, &C_tezos,
@@ -934,35 +1100,17 @@ handle_data_apdu_blind(void)
         TZ_SUCCEED();
     }
 
-    const char *type = "unknown type";
-
     global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
 
-    // clang-format off
-    switch(global.keys.apdu.sign.tag) {
-    case 0x01: case 0x11: type = "Block\nproposal";         break;
-    case 0x03:            type = "Manager\noperation";      break;
-    case 0x02:
-    case 0x12: case 0x13: type = "Consensus\noperation";    break;
-    case 0x05:            type = "Micheline\nexpression";   break;
-    default:                                                break;
-    }
-    // clang-format on
-
 #ifdef HAVE_BAGL
+
+    char type[OPERATION_TYPE_STR_LENGTH] = "Michelline\nexpression";
+    get_blindsign_type(type);
     tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Sign Hash", type,
                           TZ_UI_LAYOUT_BN, TZ_UI_ICON_NONE);
 
     tz_ui_stream();
 #elif HAVE_NBGL
-    char obuf[TZ_BASE58_BUFFER_SIZE(sizeof(FINAL_HASH))];
-    if (tz_format_base58(FINAL_HASH, sizeof(FINAL_HASH), obuf,
-                         sizeof(obuf))) {
-        TZ_FAIL(EXC_UNKNOWN);
-    }
-
-    transaction_type = type;
-    STRLCPY(hash, obuf);
     continue_blindsign_cb();
 #endif
     TZ_POSTAMBLE;
@@ -973,7 +1121,7 @@ void
 handle_apdu_sign(command_t *cmd)
 {
     bool return_hash = cmd->ins == INS_SIGN_WITH_HASH;
-    TZ_PREAMBLE(("cmd=0x%p", cmd));
+    TZ_PREAMBLE(("cmd=0x%p, \nglobal.step: %d", cmd, global.step));
 
     TZ_ASSERT(EXC_WRONG_LENGTH_FOR_INS, cmd->lc <= MAX_APDU_SIZE);
 

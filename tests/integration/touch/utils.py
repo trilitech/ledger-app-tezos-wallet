@@ -53,7 +53,7 @@ def with_retry(f, attempts=MAX_ATTEMPTS):
             return f()
         except Exception as e:
             if attempts <= 0:
-                print("- with_retry: attempts exhausted -")
+                print("- with_retry: attempts exhausted -{e}")
                 raise e
         attempts -= 1
         # Give plenty of time for speculos to update - can take a long time on CI machines
@@ -66,6 +66,7 @@ class UseCaseReview(OriginalUseCaseReview):
     reject_tx:        UseCaseChoice
     enable_expert:    UseCaseChoice
     enable_blindsign: UseCaseChoice
+    back_to_safety:   UseCaseChoice
     details:          UseCaseViewDetails
 
     _center: Center
@@ -79,6 +80,7 @@ class UseCaseReview(OriginalUseCaseReview):
         self.reject_tx        = UseCaseChoice(client, firmware)
         self.enable_expert    = UseCaseChoice(client, firmware)
         self.enable_blindsign = UseCaseChoice(client, firmware)
+        self.back_to_safety   = UseCaseChoice(client, firmware)
         self._center = Center(client, firmware)
         self.details = UseCaseViewDetails(client, firmware)
 
@@ -124,6 +126,17 @@ class UseCaseAddressConfirmation(OriginalUseCaseAddressConfirmation):
         self.client.finger_touch(*self.qr_position)
 
 
+class BlindsigningStatus(Enum):
+    Large_Tx_only = 1
+    ON = 2
+    OFF = 3
+
+class BlindsigningType(Enum):
+    NO_BLINDSIGN = 0
+    BLINDSIGN = 2
+    SUMMARYSIGN = 3
+
+
 class UseCaseSettings(OriginalUseCaseSettings):
     """Extension of UseCaseSettings for our app."""
 
@@ -137,20 +150,19 @@ class UseCaseSettings(OriginalUseCaseSettings):
         """Toggle the expert_mode switch."""
         self._toggle_list.choose(1)
 
-    def set_blindigning(self, value: int):
-        if value not in [1, 2, 3]:
-            raise ValueError("Value must be 1, 2 or 3")
-        self._toggle_list.choose(value)
+    def set_blindigning(self, status: BlindsigningStatus):
+        if status == BlindsigningStatus.Large_Tx_only:
+            if self.firmware == Firmware.STAX:
+                self.client.finger_touch(200, 180)
+            else:
+                self.client.finger_touch(240, 140)
+        else:
+            self._toggle_list.choose(status.value)
 
     def exit(self) -> None:
         """Exits settings."""
         self.multi_page_exit()
 
-
-class BlindsigningStatus(Enum):
-    Large_Tx_only = 1
-    ON = 2
-    OFF = 3
 
 class TezosAppScreen(metaclass=MetaScreen):
     use_case_welcome    = UseCaseHomeExt
@@ -171,7 +183,7 @@ class TezosAppScreen(metaclass=MetaScreen):
     __golden:                  bool
     __snapshots_path:          str
     __prefixed_snapshots_path: str
-    __snapshotted:             List[str]  = []
+    __snapshotted:             List[str]  = [ ]
 
     def __init__(self,
                  backend: BackendInterface,
@@ -190,16 +202,13 @@ class TezosAppScreen(metaclass=MetaScreen):
         self.commit = commit
         self.version = version
         self.__golden = golden
+        self.__update_fixed = os.getenv("UPDATE_FIXED") is not None
         if golden:
             # Setup for golden
             path = f"{self.__prefixed_snapshots_path}"
             Path(path).mkdir(parents=True, exist_ok=True)
             for filename in os.listdir(path):
                 os.remove(os.path.join(path, filename))
-            path = f"{self.__snapshots_path}"
-            home_path = os.path.join(path, "home.png")
-            if os.path.exists(home_path):
-                os.remove(home_path)
 
     def send_apdu(self, data):
         """Send hex-encoded bytes to the apdu"""
@@ -211,6 +220,29 @@ class TezosAppScreen(metaclass=MetaScreen):
             info_path=os.path.join(self.__snapshots_path, "info.png")
             if os.path.exists(info_path):
                 os.remove(info_path)
+
+    def remove_expert_mode_pages(self):
+        """ Delete the info page for golden tests"""
+        if self.__golden:
+            info_path=os.path.join(self.__snapshots_path, "settings_expert_mode_on.png")
+            if os.path.exists(info_path):
+                os.remove(info_path)
+            info_path=os.path.join(self.__snapshots_path, "settings_expert_mode_off.png")
+            if os.path.exists(info_path):
+                os.remove(info_path)
+
+    def remove_blindsigning_pages(self):
+        """ Delete the blindsigning pages for golden tests"""
+        if self.__golden:
+            blindsigning_path=os.path.join(self.__snapshots_path, "settings_BlindsigningStatus_Large_Tx_only.png")
+            if os.path.exists(blindsigning_path):
+                os.remove(blindsigning_path)
+            blindsigning_path=os.path.join(self.__snapshots_path, "settings_BlindsigningStatus_ON.png")
+            if os.path.exists(blindsigning_path):
+                os.remove(blindsigning_path)
+            blindsigning_path=os.path.join(self.__snapshots_path, "settings_BlindsigningStatus_OFF.png")
+            if os.path.exists(blindsigning_path):
+                os.remove(blindsigning_path)
 
     def expect_apdu_return(self, expected):
         """Expect hex-encoded response from the apdu"""
@@ -230,14 +262,16 @@ class TezosAppScreen(metaclass=MetaScreen):
 
     def assert_screen(self, screen, fixed: bool = False):
         golden = self.__golden and screen not in self.__snapshotted
-        if golden:
-            self.__snapshotted = self.__snapshotted + [screen]
-            input(f"Press ENTER to snapshot {screen}")
 
         if fixed:
             path = f'{self.__snapshots_path}/{screen}.png'
+            golden = golden and self.__update_fixed
         else:
             path = f'{self.__prefixed_snapshots_path}/{screen}.png'
+
+        if golden:
+            self.__snapshotted = self.__snapshotted + [screen]
+            input(f"Press ENTER to snapshot {screen}")
 
         def check():
             print(f"- Expecting {screen} -")
@@ -257,11 +291,9 @@ class TezosAppScreen(metaclass=MetaScreen):
             suffix += "_expert_on"
         self.assert_screen("settings" + suffix)
 
-    def assert_blindsigning_status(
-        self, blindsignStatus=BlindsigningStatus.Large_Tx_only
-    ):
-        suffix = "_" + str(blindsignStatus).replace(".", "-")
-        self.assert_screen("settings" + suffix)
+    def assert_blindsigning_status(self, blindsignStatus=BlindsigningStatus.Large_Tx_only):
+        suffix = "settings_" + str(blindsignStatus).replace(".", "_")
+        self.assert_screen(suffix, True)
 
     def quit(self):
         if os.getenv("NOQUIT") == None:
@@ -282,10 +314,10 @@ class TezosAppScreen(metaclass=MetaScreen):
         self.__backend.resume_ticker()
 
     @contextmanager
-    def fading_screen(self, screen) -> Generator[None, None, None]:
+    def fading_screen(self, screen, fixed=False) -> Generator[None, None, None]:
         with self.manual_ticker():
             yield
-            self.assert_screen(screen)
+            self.assert_screen(screen, fixed)
             self.review.tap() # Not waiting for the screen to fade on its own
 
     def start_loading_operation(self, first_packet):
@@ -298,7 +330,15 @@ class TezosAppScreen(metaclass=MetaScreen):
             self.send_apdu(first_packet)
         self.expect_apdu_return("9000")
 
-    def review_confirm_signing(self, expected_apdu):
+    def review_confirm_signing(self, expected_apdu, blindsigning_type : BlindsigningType= BlindsigningType.NO_BLINDSIGN):
+        self.review.next()
+        if blindsigning_type == BlindsigningType.NO_BLINDSIGN:
+            self.assert_screen("operation_sign")
+        elif blindsigning_type == BlindsigningType.BLINDSIGN:
+            self.assert_screen("operation_sign_blindsign")
+        else:
+            self.assert_screen("operation_sign_summary")
+
         with self.fading_screen("signing_successful"):
             self.review.confirm()
         self.expect_apdu_return(expected_apdu)
@@ -307,6 +347,25 @@ class TezosAppScreen(metaclass=MetaScreen):
         self.assert_screen("enable_expert_mode")
         with self.fading_screen("enabled_expert_mode"):
             self.review.enable_expert.confirm()
+
+
+    def set_expert_mode(self,initial_status: bool):
+        self.assert_home()
+        suffix = initial_status and "_on" or "_off"
+        suffix_2 = initial_status and "_off" or "_on"
+        self.welcome.settings()
+        self.assert_screen("settings_expert_mode" + suffix, True)
+        self.settings.toggle_expert_mode()
+        self.assert_screen("settings_expert_mode" + suffix_2, True )
+        self.settings.multi_page_exit()
+
+    def set_blindsigning_status(self, status: BlindsigningStatus):
+        self.assert_home()
+        self.welcome.settings()
+        self.settings.next()
+        self.settings.set_blindigning(status)
+        self.assert_blindsigning_status(status)
+        self.settings.multi_page_exit()
 
     def expert_mode_splash(self):
         self.enable_expert_mode()
@@ -322,17 +381,23 @@ class TezosAppScreen(metaclass=MetaScreen):
             with self.fading_screen("reject_review"):
                 self.review.reject_tx.confirm()
 
-    def process_blindsign_warnings(self, loading_operation: bool = False, apdu: str = None):
+    def process_blindsign_warnings(self, apdu: str = None, loading_operation: bool = True):
         self.assert_screen("unsafe_operation_warning_1")
         if loading_operation:
             with self.fading_screen("loading_operation"):
-                self.review.reject()
+                self.review.back_to_safety.reject()
         else:
-            self.review.reject()
+            self.review.back_to_safety.reject()
         if apdu:
             self.send_apdu(apdu)
         self.assert_screen("unsafe_operation_warning_2")
-        self.review.enable_blindsign.reject()
+        self.review.back_to_safety.reject()
+
+
+    def send_initialize_msg(self, apdu):
+        self.send_apdu(apdu)
+        self.expect_apdu_return("9000")
+        self.assert_screen("review_screen", True)
 
 
 def tezos_app(prefix) -> TezosAppScreen:
@@ -351,24 +416,18 @@ def assert_home_with_code(app, code):
     app.expect_apdu_failure(code)
 
 
-def send_initialize_msg(app, apdu):
-    app.send_apdu(apdu)
-    app.expect_apdu_return("9000")
-    app.assert_screen("review_request_sign_operation")
-
-
 def send_payload(app, apdu):
     app.send_apdu(apdu)
-    app.assert_screen("review_request_sign_operation")
+    app.assert_screen("review_screen", True)
 
 
 def verify_parsing_err_reject_response(app, tag):
     app.assert_screen(tag)
-    app.review.enable_blindsign.confirm()
+    app.review.back_to_safety.confirm()
     reject_flow(app, "9405")
 
 def verify_err_reject_response(app, tag):
-    verify_reject_response_common(app, tag, "9405")
+    verify_reject_response_common(app, tag, "9405" )
 
 
 def verify_reject_response(app, tag):
@@ -385,7 +444,6 @@ def reject_flow(app, err_code):
     app.assert_screen("reject_review")
     with app.fading_screen("rejected"):
         app.review.reject_tx.confirm()
-        print("Clicked on confirm")
     assert_home_with_code(app, err_code)
 
 
