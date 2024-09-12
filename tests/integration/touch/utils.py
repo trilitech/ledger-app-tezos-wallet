@@ -322,12 +322,17 @@ class TezosAppScreen(metaclass=MetaScreen):
             with self.fading_screen("reject_review"):
                 self.review.reject_tx.confirm()
 
-    def process_blindsign_warnings(self, landing_screen: str):
+    def process_blindsign_warnings(self, loading_operation: bool = False, apdu: str = None):
         self.assert_screen("unsafe_operation_warning_1")
-        self.review.reject()
+        if loading_operation:
+            with self.fading_screen("loading_operation"):
+                self.review.reject()
+        else:
+            self.review.reject()
+        if apdu:
+            self.send_apdu(apdu)
         self.assert_screen("unsafe_operation_warning_2")
-        with self.fading_screen(landing_screen):
-            self.review.enable_blindsign.confirm()
+        self.review.enable_blindsign.reject()
 
 
 def tezos_app(prefix) -> TezosAppScreen:
@@ -357,6 +362,11 @@ def send_payload(app, apdu):
     app.assert_screen("review_request_sign_operation")
 
 
+def verify_parsing_err_reject_response(app, tag):
+    app.assert_screen(tag)
+    app.review.enable_blindsign.confirm()
+    reject_flow(app, "9405")
+
 def verify_err_reject_response(app, tag):
     verify_reject_response_common(app, tag, "9405")
 
@@ -375,6 +385,7 @@ def reject_flow(app, err_code):
     app.assert_screen("reject_review")
     with app.fading_screen("rejected"):
         app.review.reject_tx.confirm()
+        print("Clicked on confirm")
     assert_home_with_code(app, err_code)
 
 

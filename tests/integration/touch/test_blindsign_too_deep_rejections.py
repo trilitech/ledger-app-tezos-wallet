@@ -18,7 +18,7 @@ from utils import (
     send_initialize_msg,
     send_payload,
     verify_err_reject_response,
-    reject_flow
+    reject_flow, assert_home_with_code
 )
 
 if __name__ == "__main__":
@@ -46,8 +46,14 @@ if __name__ == "__main__":
     app.assert_screen("tbtdr_review_0")
     app.review.next()
     app.assert_screen("unsafe_operation_warning_1")
-    app.review.reject()
-    verify_err_reject_response(app, "unsafe_operation_warning_2")
+    with app.fading_screen("loading_operation"):
+        app.review.reject()
+    app.send_apdu("800f82001211020000000c02000000070200000002002a")
+    app.assert_screen("unsafe_operation_warning_2")
+    with app.fading_screen("rejected"):
+        app.review.enable_blindsign.confirm()
+    assert_home_with_code(app, "9405")
+
 
     # Rejecting at review blindsign operation
     send_initialize_msg(app, "800f000011048000002c800006c18000000080000000")
@@ -55,8 +61,7 @@ if __name__ == "__main__":
     app.review.next()
     app.assert_screen("tbtdr_review_0")
     app.review.next()
-    app.process_blindsign_warnings("loading_operation")
-    app.send_apdu("800f82001211020000000c02000000070200000002002a")
+    app.process_blindsign_warnings(True, "800f82001211020000000c02000000070200000002002a")
     verify_err_reject_response(app, "tbtdr_start_review_blindsign")
 
     # Rejecting at blindsign review screen
@@ -65,8 +70,7 @@ if __name__ == "__main__":
     app.review.next()
     app.assert_screen("tbtdr_review_0")
     app.review.next()
-    app.process_blindsign_warnings("loading_operation")
-    app.send_apdu("800f82001211020000000c02000000070200000002002a")
+    app.process_blindsign_warnings(True, "800f82001211020000000c02000000070200000002002a")
     app.assert_screen("tbtdr_start_review_blindsign")
     app.review.next()
     verify_err_reject_response(app,"tbtd_review_1")
@@ -78,8 +82,7 @@ if __name__ == "__main__":
     app.review.next()
     app.assert_screen("tbtdr_review_0")
     app.review.next()
-    app.process_blindsign_warnings("loading_operation")
-    app.send_apdu("800f82001211020000000c02000000070200000002002a")
+    app.process_blindsign_warnings(True, "800f82001211020000000c02000000070200000002002a")
     app.assert_screen("tbtdr_start_review_blindsign")
     app.review.next()
     app.assert_screen("tbtd_review_1")

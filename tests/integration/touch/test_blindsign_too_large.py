@@ -28,7 +28,9 @@ if __name__ == "__main__":
     send_payload(app, "800f810028050092abf8e3d9e5f8cfd9ae8a9fe5f28ea1d5b5abf1af82dae8a4b68df3d1889eb6f988f5e8d31a")
     app.review.next()
 
-    app.process_blindsign_warnings("tbtd_start_review_blindsign")
+    app.process_blindsign_warnings()
+    app.assert_screen("tbtd_start_review_blindsign")
+    app.review.next()
     app.assert_screen("tbtl_review_1")
     app.review.next()
     app.assert_screen("operation_sign")

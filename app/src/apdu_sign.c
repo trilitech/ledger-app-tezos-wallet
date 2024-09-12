@@ -363,6 +363,9 @@ refill_error(void)
     tz_ui_stream_push_risky_accept_reject(TZ_UI_STREAM_CB_BLINDSIGN, TZ_UI_STREAM_CB_CANCEL);
 
 #elif HAVE_NBGL
+    // The following call is just to invoke switch_to_blindsigning
+    // with TZ_UI_STREAM_CB_CANCEL callback type in function tz_ui_nav_cb()
+    // The text will not be shown.
     tz_ui_stream_push_all(TZ_UI_STREAM_CB_CANCEL,
                           "Parsing error",
                           tz_parser_result_name(st->errno),
@@ -854,26 +857,6 @@ handle_data_apdu_clear(command_t *cmd)
 static nbgl_layoutTagValueList_t useCaseTagValueList;
 
 void
-reject_blindsign_cb(void)
-{
-    FUNC_ENTER(("void"));
-
-    stream_cb(TZ_UI_STREAM_CB_BLINDSIGN_REJECT);
-    global.step = ST_IDLE;
-    ui_home_init();
-
-    FUNC_LEAVE();
-}
-
-void
-reject_blindsign_review_cb(void)
-{
-    FUNC_ENTER(("void"));
-    nbgl_useCaseStatus("Transaction rejected", false, reject_blindsign_cb);
-    FUNC_LEAVE();
-}
-
-void
 accept_blindsign_cb(void)
 {
     FUNC_ENTER(("void"));
@@ -925,7 +908,6 @@ continue_blindsign_cb(void)
 {
     FUNC_ENTER(("void"));
     nbgl_operationType_t op = TYPE_TRANSACTION;
-    op |= BLIND_OPERATION;
 
     useCaseTagValueList.pairs             = NULL;
     useCaseTagValueList.callback          = getTagValuePair;
@@ -933,9 +915,9 @@ continue_blindsign_cb(void)
     useCaseTagValueList.nbPairs           = 2;
     useCaseTagValueList.smallCaseForValue = false;
     useCaseTagValueList.wrapping          = false;
-    nbgl_useCaseReview(op, &useCaseTagValueList, &C_tezos,
-                       REVIEW("Transaction"), NULL, SIGN("Transaction"),
-                       reviewChoice);
+    nbgl_useCaseReviewBlindSigning(op, &useCaseTagValueList, &C_tezos,
+                                   REVIEW("Transaction"), NULL,
+                                   SIGN("Transaction"), NULL, reviewChoice);
 
     FUNC_LEAVE();
 }
