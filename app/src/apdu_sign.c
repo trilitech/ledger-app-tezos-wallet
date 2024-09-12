@@ -36,6 +36,7 @@
 
 #include "apdu.h"
 #include "apdu_sign.h"
+#include "format.h"
 #include "globals.h"
 #include "handle_swap.h"
 #include "keys.h"
@@ -55,6 +56,7 @@ static void send_reject(int error_code);
 static void send_continue(void);
 static void send_cancel(void);
 static void refill(void);
+static void refill_all(void);
 static void stream_cb(tz_ui_cb_type_t cb_type);
 static void handle_first_apdu(command_t *cmd);
 static void handle_first_apdu_clear(command_t *cmd);
@@ -62,6 +64,10 @@ static void init_blind_stream(void);
 static void handle_data_apdu(command_t *cmd);
 static void handle_data_apdu_clear(command_t *cmd);
 static void handle_data_apdu_blind(void);
+#ifdef HAVE_BAGL
+static void init_too_many_screens_stream(void);
+static void init_summary_stream(void);
+#endif
 
 /* Macros */
 
@@ -77,6 +83,9 @@ static void handle_data_apdu_blind(void);
 #define APDU_SIGN_ASSERT_STEP(x) \
     APDU_SIGN_ASSERT(global.keys.apdu.sign.step == (x))
 
+#define NB_MAX_SCREEN_ALLOWED 20
+#define SCREEN_DISPLAYED      global.keys.apdu.sign.u.clear.screen_displayed
+
 #ifdef HAVE_BAGL
 void
 tz_ui_stream_push_accept_reject(void)
@@ -91,6 +100,55 @@ tz_ui_stream_push_accept_reject(void)
 #endif
     tz_ui_stream_push(TZ_UI_STREAM_CB_REJECT, "Reject", "",
                       TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_CROSS);
+    FUNC_LEAVE();
+}
+
+void
+tz_ui_stream_push_risky_accept_reject(tz_ui_cb_type_t accept_cb_type,
+                                      tz_ui_cb_type_t reject_cb_type)
+{
+    FUNC_ENTER(("void"));
+    tz_ui_stream_push(accept_cb_type, "Accept risk", "", TZ_UI_LAYOUT_HOME_PB,
+                      TZ_UI_ICON_TICK);
+    tz_ui_stream_push(reject_cb_type, "Reject", "", TZ_UI_LAYOUT_HOME_PB,
+                      TZ_UI_ICON_CROSS);
+    FUNC_LEAVE();
+}
+
+void
+tz_ui_stream_push_warning_not_trusted(
+#ifdef TARGET_NANOS
+    void
+#else
+    const char *title_reason, const char *value_reason
+#endif
+)
+{
+    FUNC_ENTER(("void"));
+#ifdef TARGET_NANOS
+    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "The transaction",
+                      "cannot be trusted.", TZ_UI_LAYOUT_HOME_B,
+                      TZ_UI_ICON_NONE);
+#else
+    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "The transaction",
+                      "cannot be trusted.", TZ_UI_LAYOUT_HOME_PB,
+                      TZ_UI_ICON_WARNING);
+    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, title_reason, value_reason,
+                      TZ_UI_LAYOUT_HOME_N, TZ_UI_ICON_NONE);
+    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "It may not be safe",
+                      "to sign this\ntransaction.", TZ_UI_LAYOUT_HOME_N,
+                      TZ_UI_ICON_NONE);
+#endif
+    FUNC_LEAVE();
+}
+
+void
+tz_ui_stream_push_learn_more(void)
+{
+    FUNC_ENTER(("void"));
+    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB,
+                      "Learn More:", "bit.ly/ledger-tez",
+                      TZ_UI_LAYOUT_HOME_BN, TZ_UI_ICON_NONE);
     FUNC_LEAVE();
 }
 #endif
@@ -133,7 +191,6 @@ send_reject(int error_code)
     TZ_PREAMBLE(("void"));
 
     APDU_SIGN_ASSERT_STEP(SIGN_ST_WAIT_USER_INPUT);
-    APDU_SIGN_ASSERT(global.keys.apdu.sign.received_last_msg);
     TZ_FAIL(error_code);
     TZ_POSTAMBLE;
 }
@@ -164,13 +221,16 @@ refill_blo_im_full(void)
     size_t           wrote = 0;
     TZ_PREAMBLE(("void"));
 
+    // No display for Swap or Summary flow
+    if (
 #ifdef HAVE_SWAP
-    if (G_called_from_swap) {
+        G_called_from_swap ||
+#endif
+        global.step == ST_SUMMARY_SIGN) {
         tz_parser_flush(st, global.line_buf, TZ_UI_STREAM_CONTENTS_SIZE);
         // invoke refill until we consume entire msg.
         TZ_SUCCEED();
     }
-#endif
 
     global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
 #ifdef HAVE_BAGL
@@ -186,6 +246,7 @@ refill_blo_im_full(void)
         if (st->field_info.is_field_complex
             && (global.keys.apdu.sign.u.clear.last_field_index
                 != st->field_info.field_index)) {
+            SCREEN_DISPLAYED++;
             tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Next field requires",
                               "careful review", TZ_UI_LAYOUT_HOME_B,
                               TZ_UI_ICON_NONE);
@@ -194,9 +255,17 @@ refill_blo_im_full(void)
         }
     }
 
-    wrote = tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, st->field_info.field_name,
-                              global.line_buf, TZ_UI_LAYOUT_BN,
-                              TZ_UI_ICON_NONE);
+    if ((N_settings.blindsign_status == ST_BLINDSIGN_LARGE_TX)
+        && (SCREEN_DISPLAYED >= NB_MAX_SCREEN_ALLOWED)) {
+        init_too_many_screens_stream();
+        TZ_SUCCEED();
+    } else {
+        SCREEN_DISPLAYED++;
+        wrote = tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB,
+                                  st->field_info.field_name, global.line_buf,
+                                  TZ_UI_LAYOUT_BN, TZ_UI_ICON_NONE);
+    }
+
 #elif HAVE_NBGL
     PRINTF("[DEBUG] field=%s complex=%d\n", st->field_info.field_name,
            st->field_info.is_field_complex);
@@ -247,7 +316,13 @@ refill_blo_done(void)
         TZ_CHECK(sign_packet());
         TZ_SUCCEED();
     }
+
 #ifdef HAVE_BAGL
+    if (global.step == ST_SUMMARY_SIGN) {
+        TZ_CHECK(init_summary_stream());
+        TZ_SUCCEED();
+    }
+
     tz_ui_stream_push_accept_reject();
 #endif
     tz_ui_stream_close();
@@ -273,46 +348,19 @@ refill_error(void)
 #ifdef HAVE_BAGL
     tz_ui_stream_init(stream_cb);
 
-    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB,
-                      "The transaction",
-                      "cannot be trusted.",
-#ifdef TARGET_NANOS
-                      TZ_UI_LAYOUT_HOME_B,
-                      TZ_UI_ICON_NONE);
-#else
-                      TZ_UI_LAYOUT_HOME_PB,
-                      TZ_UI_ICON_WARNING);
-    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB,
-                      "This transaction",
-                      "could not be\ndecoded correctly.",
-                      TZ_UI_LAYOUT_HOME_N,
-                      TZ_UI_ICON_NONE);
-    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB,
-                      "It may not be safe",
-                      "to sign this\ntransaction.",
-                      TZ_UI_LAYOUT_HOME_N,
-                      TZ_UI_ICON_NONE);
+    tz_ui_stream_push_warning_not_trusted(
+#ifndef TARGET_NANOS
+            "This transaction", "could not be\ndecoded correctly."
 #endif
+    );
+
     tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB,
                           "Parsing error",
                           tz_parser_result_name(st->errno),
                           TZ_UI_LAYOUT_HOME_BN,
                           TZ_UI_ICON_NONE);
-    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB,
-                      "Learn More:",
-                      "bit.ly/ledger-tez",
-                      TZ_UI_LAYOUT_HOME_BN,
-                      TZ_UI_ICON_NONE);
-    tz_ui_stream_push(TZ_UI_STREAM_CB_BLINDSIGN,
-                      "Accept risk",
-                      "",
-                      TZ_UI_LAYOUT_HOME_PB,
-                      TZ_UI_ICON_TICK);
-    tz_ui_stream_push(TZ_UI_STREAM_CB_CANCEL,
-                      "Reject",
-                      "",
-                      TZ_UI_LAYOUT_HOME_PB,
-                      TZ_UI_ICON_CROSS);
+    tz_ui_stream_push_learn_more();
+    tz_ui_stream_push_risky_accept_reject(TZ_UI_STREAM_CB_BLINDSIGN, TZ_UI_STREAM_CB_CANCEL);
 
 #elif HAVE_NBGL
     tz_ui_stream_push_all(TZ_UI_STREAM_CB_CANCEL,
@@ -324,6 +372,11 @@ refill_error(void)
     // clang-format on
 
     tz_ui_stream_close();
+
+#ifdef HAVE_BAGL
+    tz_ui_stream_start();
+#endif
+
     TZ_POSTAMBLE;
 }
 
@@ -345,6 +398,26 @@ refill(void)
     default:             TZ_CHECK(refill_error());       break;
     }
     // clang-format on
+    TZ_POSTAMBLE;
+}
+
+/**
+ * @brief Parse until there is nothing left to parse or user input is
+ * required.
+ */
+static void
+refill_all(void)
+{
+    TZ_PREAMBLE(("void"));
+
+    while (global.keys.apdu.sign.u.clear.received_msg) {
+        TZ_CHECK(refill());
+        if ((global.step == ST_SUMMARY_SIGN)
+            && (global.keys.apdu.sign.step == SIGN_ST_WAIT_USER_INPUT)) {
+            break;
+        }
+    }
+
     TZ_POSTAMBLE;
 }
 
@@ -412,19 +485,168 @@ stream_cb(tz_ui_cb_type_t cb_type)
     TZ_POSTAMBLE;
 }
 
+#ifdef HAVE_BAGL
+static void
+push_next_summary_screen(void)
+{
+#define FINAL_HASH       global.keys.apdu.hash.final_hash
+#define SUMMARYSIGN_STEP global.keys.apdu.sign.u.summary.step
+
+    char num_buffer[TZ_DECIMAL_BUFFER_SIZE(TZ_NUM_BUFFER_SIZE / 8)] = {0};
+    char hash_buffer[TZ_BASE58_BUFFER_SIZE(sizeof(FINAL_HASH))]     = {0};
+    tz_operation_state *op
+        = &global.keys.apdu.sign.u.clear.parser_state.operation;
+
+    TZ_PREAMBLE(("void"));
+
+    switch (SUMMARYSIGN_STEP) {
+    case SUMMARYSIGN_ST_OPERATION:
+        SUMMARYSIGN_STEP = SUMMARYSIGN_ST_NB_TX;
+
+        snprintf(num_buffer, sizeof(num_buffer), "%d", op->batch_index);
+        tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Number of Tx", num_buffer,
+                          TZ_UI_LAYOUT_BN, TZ_UI_ICON_NONE);
+        break;
+    case SUMMARYSIGN_ST_NB_TX:
+        SUMMARYSIGN_STEP = SUMMARYSIGN_ST_AMOUNT;
+
+        tz_mutez_to_string(num_buffer, sizeof(num_buffer), op->total_amount);
+        tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Total amount", num_buffer,
+                          TZ_UI_LAYOUT_BN, TZ_UI_ICON_NONE);
+        break;
+    case SUMMARYSIGN_ST_AMOUNT:
+        SUMMARYSIGN_STEP = SUMMARYSIGN_ST_FEE;
+
+        tz_mutez_to_string(num_buffer, sizeof(num_buffer), op->total_fee);
+        tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Total fee", num_buffer,
+                          TZ_UI_LAYOUT_BN, TZ_UI_ICON_NONE);
+        break;
+    case SUMMARYSIGN_ST_FEE:
+        SUMMARYSIGN_STEP = SUMMARYSIGN_ST_HASH;
+
+        if (tz_format_base58(FINAL_HASH, sizeof(FINAL_HASH), hash_buffer,
+                             sizeof(hash_buffer))) {
+            TZ_FAIL(EXC_UNKNOWN);
+        }
+        tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Hash", hash_buffer,
+                              TZ_UI_LAYOUT_BN, TZ_UI_ICON_NONE);
+        break;
+    case SUMMARYSIGN_ST_HASH:
+        SUMMARYSIGN_STEP = SUMMARYSIGN_ST_ACCEPT_REJECT;
+
+        tz_ui_stream_push_accept_reject();
+        tz_ui_stream_close();
+        break;
+    default:
+        PRINTF("Unexpected summary state: %d\n", (int)SUMMARYSIGN_STEP);
+        TZ_FAIL(EXC_UNEXPECTED_STATE);
+    };
+
+    TZ_POSTAMBLE;
+
+#undef SUMMARYSIGN_STEP
+#undef FINAL_HASH
+}
+
+static void
+summary_stream_cb(tz_ui_cb_type_t cb_type)
+{
+    TZ_PREAMBLE(("cb_type=%u", cb_type));
+
+    // clang-format off
+    switch (cb_type) {
+    case TZ_UI_STREAM_CB_ACCEPT: TZ_CHECK(sign_packet());              break;
+    case TZ_UI_STREAM_CB_REJECT: send_reject(EXC_REJECT);              break;
+    case TZ_UI_STREAM_CB_REFILL: TZ_CHECK(push_next_summary_screen()); break;
+    default:                     TZ_FAIL(EXC_UNKNOWN);                 break;
+    }
+    // clang-format on
+
+    TZ_POSTAMBLE;
+}
+
+static void
+init_summary_stream(void)
+{
+    TZ_PREAMBLE(("void"));
+
+    tz_ui_stream_init(summary_stream_cb);
+
+    global.keys.apdu.sign.u.summary.step = SUMMARYSIGN_ST_OPERATION;
+    push_next_summary_screen();
+
+    tz_ui_stream();
+
+    TZ_POSTAMBLE;
+}
+
+static void
+pass_from_clear_to_summary(void)
+{
+    TZ_PREAMBLE(("void"));
+
+    APDU_SIGN_ASSERT_STEP(SIGN_ST_WAIT_USER_INPUT);
+
+    global.step                = ST_SUMMARY_SIGN;
+    global.keys.apdu.sign.step = SIGN_ST_WAIT_DATA;
+
+    TZ_CHECK(refill_all());
+
+    TZ_POSTAMBLE;
+}
+
+static void
+too_many_screens_stream_cb(tz_ui_cb_type_t cb_type)
+{
+    TZ_PREAMBLE(("cb_type=%u", cb_type));
+
+    // clang-format off
+    switch (cb_type) {
+    case TZ_UI_STREAM_CB_VALIDATE: TZ_CHECK(pass_from_clear_to_summary()); break;
+    case TZ_UI_STREAM_CB_REJECT:   send_reject(EXC_REJECT);                break;
+    default:                       TZ_FAIL(EXC_UNKNOWN);                   break;
+    }
+    // clang-format on
+
+    TZ_POSTAMBLE;
+}
+
+static void
+init_too_many_screens_stream(void)
+{
+    tz_ui_stream_init(too_many_screens_stream_cb);
+
+    tz_ui_stream_push_warning_not_trusted(
+#ifndef TARGET_NANOS
+        "Operation too long", "Proceed to\nblindsign."
+#endif
+    );
+#ifdef TARGET_NANOS
+    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Operation too long",
+                      "Accept blindsign.", TZ_UI_LAYOUT_HOME_B,
+                      TZ_UI_ICON_NONE);
+#endif
+    tz_ui_stream_push_risky_accept_reject(TZ_UI_STREAM_CB_VALIDATE,
+                                          TZ_UI_STREAM_CB_REJECT);
+
+    tz_ui_stream_close();
+}
+#endif
+
 #define FINAL_HASH global.keys.apdu.hash.final_hash
 #ifdef HAVE_BAGL
 static void
 bs_push_next(void)
 {
-    char              obuf[TZ_BASE58_BUFFER_SIZE(sizeof(FINAL_HASH))];
-    blindsign_step_t *step = &global.keys.apdu.sign.u.blind.step;
+#define BLINDSIGN_STEP global.keys.apdu.sign.u.blind.step
+
+    char obuf[TZ_BASE58_BUFFER_SIZE(sizeof(FINAL_HASH))];
 
     TZ_PREAMBLE(("void"));
 
-    switch (*step) {
+    switch (BLINDSIGN_STEP) {
     case BLINDSIGN_ST_OPERATION:
-        *step = BLINDSIGN_ST_HASH;
+        BLINDSIGN_STEP = BLINDSIGN_ST_HASH;
 
         if (tz_format_base58(FINAL_HASH, sizeof(FINAL_HASH), obuf,
                              sizeof(obuf))) {
@@ -435,17 +657,19 @@ bs_push_next(void)
                               TZ_UI_LAYOUT_BN, TZ_UI_ICON_NONE);
         break;
     case BLINDSIGN_ST_HASH:
-        *step = BLINDSIGN_ST_ACCEPT_REJECT;
+        BLINDSIGN_STEP = BLINDSIGN_ST_ACCEPT_REJECT;
 
         tz_ui_stream_push_accept_reject();
         tz_ui_stream_close();
         break;
     default:
-        PRINTF("Unexpected blindsign state: %d\n", (int)*step);
+        PRINTF("Unexpected blindsign state: %d\n", (int)BLINDSIGN_STEP);
         TZ_FAIL(EXC_UNEXPECTED_STATE);
     };
 
     TZ_POSTAMBLE;
+
+#undef BLINDSIGN_STEP
 }
 
 static void
@@ -566,13 +790,19 @@ handle_data_apdu(command_t *cmd)
         global.keys.apdu.sign.tag = cmd->data[0];
     }
 
+    if ((N_settings.blindsign_status == ST_BLINDSIGN_ON)
+        && (global.step == ST_CLEAR_SIGN)) {
+        global.step = ST_SUMMARY_SIGN;
+    }
+
     // clang-format off
     switch (global.step) {
     case ST_CLEAR_SIGN:
     case ST_SWAP_SIGN:
-                        TZ_CHECK(handle_data_apdu_clear(cmd)); break;
-    case ST_BLIND_SIGN: TZ_CHECK(handle_data_apdu_blind());    break;
-    default:            TZ_FAIL(EXC_UNEXPECTED_STATE);         break;
+    case ST_SUMMARY_SIGN:
+                          TZ_CHECK(handle_data_apdu_clear(cmd)); break;
+    case ST_BLIND_SIGN:   TZ_CHECK(handle_data_apdu_blind());    break;
+    default:              TZ_FAIL(EXC_UNEXPECTED_STATE);         break;
     }
     // clang-format on
 
@@ -600,17 +830,23 @@ handle_data_apdu_clear(command_t *cmd)
         tz_operation_parser_set_size(
             st, global.keys.apdu.sign.u.clear.total_length);
     }
-    if (global.step == ST_SWAP_SIGN) {
-        do {
-            TZ_CHECK(refill());
-        } while (global.keys.apdu.sign.u.clear.received_msg);
-    } else {
+
+    switch (global.step) {
+    case ST_CLEAR_SIGN:
         TZ_CHECK(refill());
-        if ((global.keys.apdu.sign.step == SIGN_ST_WAIT_USER_INPUT)
-            && (global.step != ST_SWAP_SIGN)) {
+        if (global.keys.apdu.sign.step == SIGN_ST_WAIT_USER_INPUT) {
             tz_ui_stream();
         }
+        break;
+    case ST_SWAP_SIGN:
+    case ST_SUMMARY_SIGN:
+        TZ_CHECK(refill_all());
+        break;
+    default:
+        TZ_FAIL(EXC_UNEXPECTED_SIGN_STATE);
+        break;
     }
+
     TZ_POSTAMBLE;
 }
 
@@ -771,6 +1007,7 @@ handle_apdu_sign(command_t *cmd)
 
     TZ_ASSERT(EXC_UNEXPECTED_STATE, (global.step == ST_BLIND_SIGN)
                                         || (global.step == ST_CLEAR_SIGN)
+                                        || (global.step == ST_SUMMARY_SIGN)
                                         || (global.step == ST_SWAP_SIGN));
     TZ_ASSERT(EXC_INVALID_INS,
               return_hash == global.keys.apdu.sign.return_hash);

@@ -82,6 +82,7 @@
 typedef uint8_t tz_ui_cb_type_t;
 #define TZ_UI_STREAM_CB_NOCB               0x00u
 #define TZ_UI_STREAM_CB_BLINDSIGN          0x0Eu
+#define TZ_UI_STREAM_CB_VALIDATE           0x0Fu
 #define TZ_UI_STREAM_CB_REFILL             0xEFu
 #define TZ_UI_STREAM_CB_MAINMASK           0xF0u
 #define TZ_UI_STREAM_CB_EXPERT_MODE_FIELD  0xFAu

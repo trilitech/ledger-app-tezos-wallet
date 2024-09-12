@@ -97,6 +97,7 @@ let reject ppf () =
   Button.(press ppf Both)
 
 let set_expert_mode ppf () = Format.fprintf ppf "set_expert_mode@."
+let set_blindsign_off ppf () = Format.fprintf ppf "set_blindsign_off@."
 
 type screen = { title : string; contents : string }
 
@@ -527,6 +528,7 @@ let gen_expect_test_sign ?(expert_mode = false) ppf ~watermark bin screens =
   start_speculos ppf signer.mnemonic;
   expected_home ppf ();
   if expert_mode then set_expert_mode ppf ();
+  set_blindsign_off ppf ();
   sign ppf ~signer ~watermark bin;
   expected_review_operation ppf ();
   Button.(press ppf Right);
