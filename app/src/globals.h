@@ -89,7 +89,6 @@ typedef enum {
  */
 typedef struct {
     /* State */
-    main_step_t             step;    /// Current operational state of app.
     tz_ui_stream_t          stream;  /// UX and display related information
     bip32_path_with_curve_t path_with_curve;  /// Derivation path
     union {
@@ -119,6 +118,7 @@ typedef struct {
     char error_code[ERROR_CODE_SIZE];  /// Error codes to be displayed in
                                        /// blindsigning.
 #endif
+    main_step_t step;  /// Current operational state of app.
 } globals_t;
 
 /* Settings */

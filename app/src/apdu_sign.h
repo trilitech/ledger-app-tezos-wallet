@@ -74,8 +74,8 @@ typedef struct {
     union {
         /// @brief clear signing state info.
         struct {
-            size_t          total_length;
             tz_parser_state parser_state;
+            size_t          total_length;
             uint8_t         last_field_index;
             bool            received_msg;
         } clear;
