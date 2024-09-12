@@ -90,7 +90,6 @@ typedef struct {
     tz_parser_regs regs;  /// parser register
 
     /// common fields to communicate with caller
-    tz_parser_result errno;  /// current parser result
     struct {
         char field_name[TZ_FIELD_NAME_SIZE];  /// name of the last field
                                               /// parsed
@@ -100,14 +99,15 @@ typedef struct {
     } field_info;               /// information of the last field parsed
                                 // common singleton buffers
     int ofs;                    /// offset for the parser
+    /// input type specific state
+    tz_micheline_state micheline;  /// micheline parser state
+    tz_operation_state operation;  /// operation parser state
     struct {
         tz_num_parser_buffer num;                 /// number parser buffer
         uint8_t capture[TZ_CAPTURE_BUFFER_SIZE];  /// capture buffer is used
                                                   /// to store string values
     } buffers;
-    /// input type specific state
-    tz_micheline_state micheline;  /// micheline parser state
-    tz_operation_state operation;  /// operation parser state
+    tz_parser_result errno;  /// current parser result
 } tz_parser_state;
 
 /**
