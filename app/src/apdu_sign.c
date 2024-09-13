@@ -244,14 +244,14 @@ refill_blo_im_full(void)
         goto end;
     } else {
         if (st->field_info.is_field_complex
-            && (global.keys.apdu.sign.u.clear.last_field_index
-                != st->field_info.field_index)) {
+            && !global.keys.apdu.sign.u.clear.displayed_expert_warning) {
             SCREEN_DISPLAYED++;
             tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Next field requires",
                               "careful review", TZ_UI_LAYOUT_HOME_B,
                               TZ_UI_ICON_NONE);
             global.keys.apdu.sign.u.clear.last_field_index
                 = st->field_info.field_index;
+            global.keys.apdu.sign.u.clear.displayed_expert_warning = true;
         }
     }
 
@@ -270,10 +270,10 @@ refill_blo_im_full(void)
     PRINTF("[DEBUG] field=%s complex=%d\n", st->field_info.field_name,
            st->field_info.is_field_complex);
     if (st->field_info.is_field_complex
-        && (global.keys.apdu.sign.u.clear.last_field_index
-            != st->field_info.field_index)) {
+        && !global.keys.apdu.sign.u.clear.displayed_expert_warning) {
         global.keys.apdu.sign.u.clear.last_field_index
             = st->field_info.field_index;
+        global.keys.apdu.sign.u.clear.displayed_expert_warning = true;
         if (!N_settings.expert_mode) {
             tz_ui_stream_push_all(TZ_UI_STREAM_CB_EXPERT_MODE_ENABLE,
                                   st->field_info.field_name, "complex",

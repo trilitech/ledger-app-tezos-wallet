@@ -92,6 +92,7 @@ typedef struct {
             uint8_t         last_field_index;
             uint8_t         screen_displayed;
             bool            received_msg;
+            bool            displayed_expert_warning;
         } clear;
         /// @brief blindsigning state info.
         struct {
