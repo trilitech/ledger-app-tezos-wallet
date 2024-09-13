@@ -287,3 +287,7 @@ void tz_reject(void);
  */
 void tz_reject_ui(void);
 #endif
+
+void drop_last_screen(void);
+
+void push_str(const char *text, size_t len, char **out);

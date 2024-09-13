@@ -218,7 +218,6 @@ tz_ui_stream(void)
     }
 
     FUNC_LEAVE();
-    return;
 }
 
 void
@@ -280,20 +279,7 @@ tz_ui_stream_start(void)
     FUNC_LEAVE();
 }
 
-void
-tz_ui_stream_close(void)
-{
-    tz_ui_stream_t *s = &global.stream;
 
-    FUNC_ENTER(("full=%d", s->full));
-    if (s->full) {
-        PRINTF("trying to close already closed stream display");
-        THROW(EXC_UNKNOWN);
-    }
-    s->full = true;
-
-    FUNC_LEAVE();
-}
 
 bool
 tz_ui_nav_cb(void)

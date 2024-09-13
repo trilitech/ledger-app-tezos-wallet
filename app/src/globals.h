@@ -47,21 +47,6 @@
 #define MAX_APDU_SIZE      235
 #define MAX_SIGNATURE_SIZE 100
 #define ERROR_CODE_SIZE    15
-/**
- * @brief Home screen pages in order
- *
- */
-typedef enum {
-#ifdef HAVE_BAGL
-    SCREEN_HOME = 0,
-#else
-    SCREEN_CLEAR_SIGN = 0,
-    SCREEN_BLIND_SIGN,
-#endif
-    SCREEN_VERSION,
-    SCREEN_SETTINGS,
-    SCREEN_QUIT,
-} screen_t;
 
 /**
  * @brief State of the app
