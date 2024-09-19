@@ -65,6 +65,7 @@ static void handle_data_apdu(command_t *cmd);
 static void handle_data_apdu_clear(command_t *cmd);
 static void handle_data_apdu_blind(void);
 #ifdef HAVE_BAGL
+static void pass_from_clear_to_summary(void);
 static void init_too_many_screens_stream(void);
 static void init_summary_stream(void);
 #endif
@@ -234,6 +235,12 @@ refill_blo_im_full(void)
 
     global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
 #ifdef HAVE_BAGL
+    if ((N_settings.blindsign_status == ST_BLINDSIGN_LARGE_TX)
+        && (SCREEN_DISPLAYED >= NB_MAX_SCREEN_ALLOWED)) {
+        pass_from_clear_to_summary();
+        TZ_SUCCEED();
+    }
+
     if (st->field_info.is_field_complex && !N_settings.expert_mode) {
         tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, st->field_info.field_name,
                           "Needs Expert mode", TZ_UI_LAYOUT_HOME_B,
@@ -255,16 +262,10 @@ refill_blo_im_full(void)
         }
     }
 
-    if ((N_settings.blindsign_status == ST_BLINDSIGN_LARGE_TX)
-        && (SCREEN_DISPLAYED >= NB_MAX_SCREEN_ALLOWED)) {
-        init_too_many_screens_stream();
-        TZ_SUCCEED();
-    } else {
-        SCREEN_DISPLAYED++;
-        wrote = tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB,
-                                  st->field_info.field_name, global.line_buf,
-                                  TZ_UI_LAYOUT_BN, TZ_UI_ICON_NONE);
-    }
+    SCREEN_DISPLAYED++;
+    wrote = tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, st->field_info.field_name,
+                              global.line_buf, TZ_UI_LAYOUT_BN,
+                              TZ_UI_ICON_NONE);
 
 #elif HAVE_NBGL
     PRINTF("[DEBUG] field=%s complex=%d\n", st->field_info.field_name,
@@ -319,7 +320,11 @@ refill_blo_done(void)
 
 #ifdef HAVE_BAGL
     if (global.step == ST_SUMMARY_SIGN) {
-        TZ_CHECK(init_summary_stream());
+        if (N_settings.blindsign_status == ST_BLINDSIGN_LARGE_TX) {
+            init_too_many_screens_stream();
+        } else {
+            init_summary_stream();
+        }
         TZ_SUCCEED();
     }
 
@@ -602,7 +607,7 @@ too_many_screens_stream_cb(tz_ui_cb_type_t cb_type)
 
     // clang-format off
     switch (cb_type) {
-    case TZ_UI_STREAM_CB_VALIDATE: TZ_CHECK(pass_from_clear_to_summary()); break;
+    case TZ_UI_STREAM_CB_VALIDATE: TZ_CHECK(init_summary_stream()); break;
     case TZ_UI_STREAM_CB_REJECT:   send_reject(EXC_REJECT);                break;
     default:                       TZ_FAIL(EXC_UNKNOWN);                   break;
     }
@@ -630,6 +635,8 @@ init_too_many_screens_stream(void)
                                           TZ_UI_STREAM_CB_REJECT);
 
     tz_ui_stream_close();
+
+    tz_ui_stream();
 }
 #endif
 
