@@ -87,6 +87,9 @@ typedef struct {
     // UI structs
     union {
         tz_ui_stream_t stream;  /// stream UX and UI related information
+#ifdef HAVE_BAGL
+        tz_ui_settings_t settings;  /// settings UI buffers
+#endif
     } ui;
     bip32_path_with_curve_t path_with_curve;  /// Derivation path
     union {
@@ -103,11 +106,6 @@ typedef struct {
     } keys;
     /// Buffer to store incoming data.
     char line_buf[TZ_UI_STREAM_CONTENTS_SIZE + 1];
-#ifdef HAVE_BAGL
-    char expert_mode_state[10];  /// Expert mode text:  "ENAELED", "DISABLED"
-    char blindsign_state_desc[14];  /// Blindsigning text: "For Large Tx",
-                                    /// "ON" , "OFF"
-#endif
 
 #ifdef HAVE_NBGL
     blindsign_reason_t

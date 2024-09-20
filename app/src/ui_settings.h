@@ -25,6 +25,16 @@
 #define SETTINGS_HOME_PAGE      0
 #define SETTINGS_BLINDSIGN_PAGE 1
 
+#ifdef HAVE_BAGL
+/**
+ * @brief Holds data for settings screens.
+ */
+typedef struct {
+    char expert_mode_state[10];  /// Expert mode text: "ENABLED", "DISABLED"
+    char blindsign_state_desc[14];  /// Blindsigning text: "ON" , "OFF"
+} tz_ui_settings_t;
+#endif
+
 /**
  * @brief Initialize settings screen for nano devices. Displays status of
  * Expert-mode and Blind Signing.
