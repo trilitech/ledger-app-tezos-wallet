@@ -191,8 +191,6 @@ typedef struct {
     bool    pressed_right;    // true if right button was pressed.
     tz_ui_stream_display_t current_screen;  // current screen's values.
 #ifdef HAVE_NBGL
-    char verify_address[TZ_BASE58CHECK_BUFFER_SIZE(
-        20, 3)];  //  Holds the public key..
     nbgl_callback_t
         stream_cb;  // callback to be called when new screen is needed.
 #endif              // HAVE_NBGL
