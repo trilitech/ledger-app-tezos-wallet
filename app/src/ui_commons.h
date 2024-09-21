@@ -21,10 +21,19 @@
 
 #pragma once
 
-#ifdef HAVE_BAGL
 #include <os.h>
 #include <os_io_seproxyhal.h>
 #include <ux.h>
+
+/**
+ * @brief Callback for flow confirmation/rejection.
+ *
+ * @param confirm: whether the user accept or reject
+ */
+typedef void (*action_validate_cb)(bool confirm);
+
+#ifdef HAVE_BAGL
+
 /**
  * @brief Macro to display navigation icons and set associated callback.
  *
