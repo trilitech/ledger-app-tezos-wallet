@@ -30,132 +30,37 @@
 #include "compat.h"
 #include "globals.h"
 #include "keys.h"
+#include "ui_pubkey.h"
 
-#define G_stream global.ui.stream
-
-/* Prototypes */
-
-static void provide_pubkey(void);
-static void prompt_address(void);
-static void format_pkh(cx_ecfp_public_key_t *pubkey, char *buffer,
-                       size_t len);
-static void stream_cb(tz_ui_cb_type_t cb_type);
-
+/**
+ * @brief Sends the public key on confirm
+ *        Sends the rejects response otherwise
+ *
+ * @param confirm: if sends the public key or the rejects response
+ */
 static void
-provide_pubkey(void)
+send_pubkey_response(bool confirm)
 {
-    buffer_t bufs[2] = {0};
-    uint8_t  byte;
-    TZ_PREAMBLE(("void"));
+    FUNC_ENTER(("confirm=%d", confirm));
 
-    byte         = global.keys.pubkey.W_len;
-    bufs[0].ptr  = &byte;
-    bufs[0].size = 1;
-    bufs[1].ptr  = global.keys.pubkey.W;
-    bufs[1].size = global.keys.pubkey.W_len;
-    io_send_response_buffers(bufs, 2, SW_OK);
-    global.step = ST_IDLE;
-
-    TZ_POSTAMBLE;
-}
-
-static void
-format_pkh(cx_ecfp_public_key_t *pubkey, char *buffer, size_t len)
-{
-    TZ_PREAMBLE(("buffer=%p, len=%u", buffer, len));
-    TZ_LIB_CHECK(derive_pkh(pubkey, global.path_with_curve.derivation_type,
-                            buffer, len));
-    TZ_POSTAMBLE;
-}
-
-static void
-stream_cb(tz_ui_cb_type_t cb_type)
-{
-    TZ_PREAMBLE(("cb_type=%u", cb_type));
-
-    // clang-format off
-    switch (cb_type) {
-    case TZ_UI_STREAM_CB_ACCEPT: TZ_CHECK(provide_pubkey()); break;
-    case TZ_UI_STREAM_CB_REFILL:                             break;
-    case TZ_UI_STREAM_CB_REJECT: TZ_FAIL(EXC_REJECT);        break;
+    if (confirm) {
+        buffer_t bufs[2] = {
+            {.ptr    = (const uint8_t *)&global.keys.pubkey.W_len,
+             .size   = 1,
+             .offset = 0u},
+            {.ptr    = global.keys.pubkey.W,
+             .size   = global.keys.pubkey.W_len,
+             .offset = 0u},
+        };
+        io_send_response_buffers(bufs, 2, SW_OK);
+    } else {
+        io_send_sw(EXC_REJECT);
     }
-    // clang-format on
 
-    // clear the public key from global storage after operation.
     memset(&global.keys, 0, sizeof(global.keys));
-    TZ_POSTAMBLE;
+
+    FUNC_LEAVE();
 }
-
-#ifdef HAVE_BAGL
-static void
-prompt_address(void)
-{
-    char buf[TZ_BASE58CHECK_BUFFER_SIZE(20, 3)];
-    TZ_PREAMBLE(("void"));
-
-    global.step = ST_PROMPT;
-    tz_ui_stream_init(stream_cb);
-    TZ_CHECK(format_pkh(&global.keys.pubkey, buf, sizeof(buf)));
-#ifdef TARGET_NANOS
-    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Verify address", "",
-                      TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_EYE);
-#else
-    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Verify", "address",
-                      TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_EYE);
-#endif
-    tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Address", buf,
-                          TZ_UI_LAYOUT_BN, TZ_UI_ICON_NONE);
-    tz_ui_stream_push(TZ_UI_STREAM_CB_ACCEPT, "Approve", "",
-                      TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_TICK);
-    tz_ui_stream_push(TZ_UI_STREAM_CB_REJECT, "Reject", "",
-                      TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_CROSS);
-    tz_ui_stream_close();
-    tz_ui_stream();
-
-    TZ_POSTAMBLE;
-}
-#elif HAVE_NBGL
-
-#include "nbgl_use_case.h"
-
-static void
-confirmation_callback(bool confirm)
-{
-    if (confirm) {
-        stream_cb(TZ_UI_STREAM_CB_ACCEPT);
-    } else {
-        stream_cb(TZ_UI_STREAM_CB_REJECT);
-        global.step = ST_IDLE;
-    }
-}
-
-static void
-review_choice(bool confirm)
-{
-    // Answer, display a status page and go back to main
-    confirmation_callback(confirm);
-    if (confirm) {
-        nbgl_useCaseReviewStatus(STATUS_TYPE_ADDRESS_VERIFIED, ui_home_init);
-    } else {
-        nbgl_useCaseReviewStatus(STATUS_TYPE_ADDRESS_REJECTED, ui_home_init);
-    }
-}
-static void
-prompt_address(void)
-{
-    TZ_PREAMBLE(("void"));
-
-    global.step = ST_PROMPT;
-    TZ_CHECK(format_pkh(&global.keys.pubkey, G_stream.verify_address,
-                        sizeof(G_stream.verify_address)));
-
-    nbgl_useCaseAddressReview(G_stream.verify_address, NULL, &C_tezos,
-                              "Verify Tezos\naddress", NULL, review_choice);
-
-    TZ_POSTAMBLE;
-}
-
-#endif
 
 void
 handle_apdu_get_public_key(command_t *cmd)
@@ -184,9 +89,11 @@ handle_apdu_get_public_key(command_t *cmd)
                            global.path_with_curve.derivation_type,
                            &global.path_with_curve.bip32_path));
     if (prompt) {
-        prompt_address();
+        ui_pubkey_review(&global.keys.pubkey,
+                         global.path_with_curve.derivation_type,
+                         &send_pubkey_response);
     } else {
-        provide_pubkey();
+        send_pubkey_response(true);
     }
 
     TZ_POSTAMBLE;

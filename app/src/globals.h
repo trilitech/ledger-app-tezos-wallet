@@ -39,6 +39,8 @@
 #include "ui_commons.h"
 #include "ui_stream.h"
 #include "ui_home.h"
+#include "ui_settings.h"
+#include "ui_pubkey.h"
 #include "utils.h"
 
 #ifdef HAVE_BAGL
@@ -90,6 +92,8 @@ typedef struct {
 #ifdef HAVE_BAGL
         tz_ui_settings_t settings;  /// settings UI buffers
 #endif
+        tz_ui_pubkey_t
+            pubkey;  /// UX and UI information related to public key
     } ui;
     bip32_path_with_curve_t path_with_curve;  /// Derivation path
     union {
