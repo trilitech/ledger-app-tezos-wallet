@@ -20,6 +20,8 @@
 #include "ui_strings.h"
 #include "ui_stream.h"
 
+#define G_stream global.ui.stream
+
 size_t
 tz_ui_stream_push_all(tz_ui_cb_type_t cb_type, const char *title,
                       const char *value, tz_ui_layout_type_t layout_type,
@@ -51,7 +53,7 @@ tz_ui_stream_push(tz_ui_cb_type_t cb_type, const char *title,
 tz_ui_cb_type_t
 tz_ui_stream_get_cb_type(void)
 {
-    tz_ui_stream_t *s      = &global.stream;
+    tz_ui_stream_t *s      = &G_stream;
     size_t          bucket = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
 
     return s->screens[bucket].cb_type;
@@ -78,7 +80,7 @@ push_str(const char *text, size_t len, char **out)
 void
 tz_ui_stream_close(void)
 {
-    tz_ui_stream_t *s = &global.stream;
+    tz_ui_stream_t *s = &G_stream;
 
     FUNC_ENTER(("full=%d", s->full));
     if (s->full) {
