@@ -31,6 +31,8 @@
 #include "globals.h"
 #include "keys.h"
 
+#define G_stream global.ui.stream
+
 /* Prototypes */
 
 static void provide_pubkey(void);
@@ -144,10 +146,10 @@ prompt_address(void)
     TZ_PREAMBLE(("void"));
 
     global.step = ST_PROMPT;
-    TZ_CHECK(format_pkh(&global.keys.pubkey, global.stream.verify_address,
-                        sizeof(global.stream.verify_address)));
+    TZ_CHECK(format_pkh(&global.keys.pubkey, G_stream.verify_address,
+                        sizeof(G_stream.verify_address)));
 
-    nbgl_useCaseAddressReview(global.stream.verify_address, NULL, &C_tezos,
+    nbgl_useCaseAddressReview(G_stream.verify_address, NULL, &C_tezos,
                               "Verify Tezos\naddress", NULL, review_choice);
 
     TZ_POSTAMBLE;

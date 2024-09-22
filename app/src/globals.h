@@ -84,8 +84,10 @@ typedef enum {
  *
  */
 typedef struct {
-    /* State */
-    tz_ui_stream_t          stream;  /// UX and display related information
+    // UI structs
+    union {
+        tz_ui_stream_t stream;  /// stream UX and UI related information
+    } ui;
     bip32_path_with_curve_t path_with_curve;  /// Derivation path
     union {
         struct {
@@ -99,12 +101,9 @@ typedef struct {
          * */
         cx_ecfp_public_key_t pubkey;
     } keys;
-    char line_buf[TZ_UI_STREAM_CONTENTS_SIZE
-                  + 1];  /// Buffer to store incoming data.
+    /// Buffer to store incoming data.
+    char line_buf[TZ_UI_STREAM_CONTENTS_SIZE + 1];
 #ifdef HAVE_BAGL
-    struct {
-        bagl_element_t bagls[4 + TZ_SCREEN_LINES_11PX];
-    } ux;  /// Config for history screens for nano devices.
     char expert_mode_state[10];  /// Expert mode text:  "ENAELED", "DISABLED"
     char blindsign_state_desc[14];  /// Blindsigning text: "For Large Tx",
                                     /// "ON" , "OFF"
