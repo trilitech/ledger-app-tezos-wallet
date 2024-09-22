@@ -23,6 +23,8 @@
 #include "globals.h"
 #include "ui_stream.h"
 
+#define G_stream global.ui.stream
+
 bool tz_ui_nav_cb(void);
 bool has_final_screen(void);
 void tz_ui_stream_start(void);
@@ -36,7 +38,7 @@ static void ui_stream_init(void);
 void
 tz_reject(void)
 {
-    tz_ui_stream_t *s = &global.stream;
+    tz_ui_stream_t *s = &G_stream;
 
     FUNC_ENTER(("void"));
 
@@ -73,7 +75,7 @@ blindsign_skip_callback(void)
 
     if (global.blindsign_reason == REASON_NONE) {
         tz_ui_stream_close();
-        tz_ui_stream_t *s = &global.stream;
+        tz_ui_stream_t *s = &G_stream;
         s->cb(TZ_UI_STREAM_CB_SUMMARY);
     } else if (global.blindsign_reason == REASON_PARSING_ERROR) {
         switch_to_blindsigning_on_error();
@@ -89,7 +91,7 @@ blindsign_choice(bool confirm)
         global.step = ST_BLIND_SIGN;
         tz_reject_ui();
     } else {
-        tz_ui_stream_t *s = &global.stream;
+        tz_ui_stream_t *s = &G_stream;
 
         TZ_ASSERT(EXC_UNEXPECTED_STATE,
                   global.blindsign_reason != REASON_NONE);
@@ -169,7 +171,7 @@ tz_enable_expert_mode_ui(void)
 void
 tz_accept_ui(void)
 {
-    tz_ui_stream_t *s = &global.stream;
+    tz_ui_stream_t *s = &G_stream;
 
     FUNC_ENTER(("void"));
 
@@ -198,7 +200,7 @@ tz_choice_ui(bool accept)
 void
 tz_ui_continue(void)
 {
-    tz_ui_stream_t *s = &global.stream;
+    tz_ui_stream_t *s = &G_stream;
 
     TZ_PREAMBLE(("void"));
 
@@ -215,7 +217,7 @@ tz_ui_stream_cb(void)
     FUNC_ENTER(("void"));
     bool result = tz_ui_nav_cb();
     if (result) {
-        tz_ui_stream_t         *s = &global.stream;
+        tz_ui_stream_t         *s = &G_stream;
         tz_ui_stream_display_t *c = &s->current_screen;
 
         if (N_settings.blindsigning) {
@@ -232,7 +234,7 @@ tz_ui_stream_cb(void)
 void
 tz_ui_stream(void)
 {
-    tz_ui_stream_t *s = &global.stream;
+    tz_ui_stream_t *s = &G_stream;
     FUNC_ENTER(("void"));
 
     if (s->stream_cb) {
@@ -245,7 +247,7 @@ tz_ui_stream(void)
 void
 tz_ui_review_start(void)
 {
-    tz_ui_stream_t *s = &global.stream;
+    tz_ui_stream_t *s = &G_stream;
 
     FUNC_ENTER(("void"));
 
@@ -271,7 +273,7 @@ tz_transaction_choice(bool getMorePairs)
 static void
 ui_stream_init(void)
 {
-    tz_ui_stream_t *s = &global.stream;
+    tz_ui_stream_t *s = &G_stream;
 
     s->full          = false;
     s->last          = 0;
@@ -284,7 +286,7 @@ ui_stream_init(void)
 void
 tz_ui_stream_init(void (*cb)(tz_ui_cb_type_t cb_type))
 {
-    tz_ui_stream_t *s = &global.stream;
+    tz_ui_stream_t *s = &G_stream;
     memset(s, 0x0, sizeof(*s));
     FUNC_ENTER(("cb=%p", cb));
     ui_stream_init();
@@ -315,7 +317,7 @@ tz_ui_nav_cb(void)
 {
     FUNC_ENTER(("void"));
 
-    tz_ui_stream_t         *s      = &global.stream;
+    tz_ui_stream_t         *s      = &G_stream;
     tz_ui_stream_display_t *c      = &s->current_screen;
     bool                    result = true;
     tz_parser_state        *st = &global.keys.apdu.sign.u.clear.parser_state;
@@ -388,7 +390,7 @@ tz_ui_nav_cb(void)
 bool
 has_final_screen(void)
 {
-    tz_ui_stream_t *s  = &global.stream;
+    tz_ui_stream_t *s  = &G_stream;
     size_t last_bucket = (s->total + 1) % TZ_UI_STREAM_HISTORY_SCREENS;
     return s->screens[last_bucket].nb_pairs > 0;
 }
@@ -404,7 +406,7 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
                    __attribute__((unused)) tz_ui_layout_type_t layout_type,
                    __attribute__((unused)) tz_ui_icon_t        icon)
 {
-    tz_ui_stream_t *s = &global.stream;
+    tz_ui_stream_t *s = &G_stream;
     bool            push_to_next;
     bool            append    = false;
     size_t          max_pairs = (cb_type == TZ_UI_STREAM_CB_CANCEL)
@@ -556,7 +558,7 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
 void
 drop_last_screen(void)
 {
-    tz_ui_stream_t *s      = &global.stream;
+    tz_ui_stream_t *s      = &G_stream;
     size_t          bucket = s->last % TZ_UI_STREAM_HISTORY_SCREENS;
     size_t          i;
 

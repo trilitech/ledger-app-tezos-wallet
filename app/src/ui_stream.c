@@ -24,6 +24,8 @@
 //! picture.
 #define UI_INIT_ARRAY_LEN (4 + TZ_SCREEN_LINES_11PX)
 
+#define G_stream global.ui.stream
+
 #ifdef HAVE_BAGL
 static unsigned int cb(unsigned int button_mask,
                        unsigned int button_mask_counter);
@@ -39,7 +41,7 @@ const bagl_icon_details_t C_icon_rien = {0, 0, 1, NULL, NULL};
 void
 tz_ui_stream_init(void (*cb)(tz_ui_cb_type_t cb_type))
 {
-    tz_ui_stream_t *s = &global.stream;
+    tz_ui_stream_t *s = &G_stream;
 
     FUNC_ENTER(("cb=%p", cb));
     memset(s, 0x0, sizeof(*s));
@@ -58,7 +60,7 @@ tz_ui_stream_init(void (*cb)(tz_ui_cb_type_t cb_type))
 static void
 pred(void)
 {
-    tz_ui_stream_t *s = &global.stream;
+    tz_ui_stream_t *s = &G_stream;
 
     FUNC_ENTER(("void"));
     if ((s->current >= 1) && (s->current > s->last)) {
@@ -70,7 +72,7 @@ pred(void)
 static void
 succ(void)
 {
-    tz_ui_stream_t *s = &global.stream;
+    tz_ui_stream_t *s = &G_stream;
 
     FUNC_ENTER(("current=%d total=%d", s->current, s->total));
     if ((s->current < s->total) && (s->pressed_right)) {
@@ -86,7 +88,7 @@ static unsigned int
 cb(unsigned int                         button_mask,
    __attribute__((unused)) unsigned int button_mask_counter)
 {
-    tz_ui_stream_t *s       = &global.stream;
+    tz_ui_stream_t *s       = &G_stream;
     size_t          bucket  = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
     uint8_t         cb_type = s->screens[bucket].cb_type;
 
@@ -136,7 +138,7 @@ find_icon(tz_ui_icon_t icon)
 static void
 display_init(bagl_element_t init[UI_INIT_ARRAY_LEN])
 {
-    tz_ui_stream_t *s = &global.stream;
+    tz_ui_stream_t *s = &G_stream;
     FUNC_ENTER(("void"));
 
     /* If we aren't on the first screen, we can go back */
@@ -166,7 +168,7 @@ static void
 redisplay_screen(tz_ui_layout_type_t layout, uint8_t icon_pos)
 {
     TZ_PREAMBLE(("void"));
-    tz_ui_stream_t *s = &global.stream;
+    tz_ui_stream_t *s = &G_stream;
     size_t          bucket;
     bucket                     = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
     tz_ui_icon_t icon          = s->screens[bucket].icon;
@@ -285,7 +287,7 @@ redisplay(void)
 {
     TZ_PREAMBLE(("void"));
 
-    tz_ui_stream_t *s        = &global.stream;
+    tz_ui_stream_t *s        = &G_stream;
     size_t          bucket   = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
     uint8_t         icon_pos = UI_INIT_ARRAY_LEN - 1;
     // clang-format off
@@ -306,7 +308,7 @@ change_screen_left(void)
 void
 change_screen_right(void)
 {
-    tz_ui_stream_t *s = &global.stream;
+    tz_ui_stream_t *s = &G_stream;
 
     TZ_PREAMBLE(("void"));
     s->pressed_right = true;
@@ -343,7 +345,7 @@ tz_ui_stream(void)
 {
     FUNC_ENTER(("void"));
 
-    tz_ui_stream_t *s = &global.stream;
+    tz_ui_stream_t *s = &G_stream;
     if (s->pressed_right) {
         succ();
     }
@@ -391,7 +393,7 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
                    const char *value, ssize_t max,
                    tz_ui_layout_type_t layout_type, tz_ui_icon_t icon)
 {
-    tz_ui_stream_t *s = &global.stream;
+    tz_ui_stream_t *s = &G_stream;
 
     FUNC_ENTER(("title=%s, value=%s", title, value));
     if (s->full) {
@@ -480,7 +482,7 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
 void
 drop_last_screen(void)
 {
-    tz_ui_stream_t *s      = &global.stream;
+    tz_ui_stream_t *s      = &G_stream;
     size_t          bucket = s->last % TZ_UI_STREAM_HISTORY_SCREENS;
 
     TZ_PREAMBLE(("last: %d", s->last));
