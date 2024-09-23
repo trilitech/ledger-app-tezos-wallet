@@ -64,8 +64,8 @@ static void init_blind_stream(void);
 static void handle_data_apdu(command_t *cmd);
 static void handle_data_apdu_clear(command_t *cmd);
 static void handle_data_apdu_blind(void);
-#ifdef HAVE_BAGL
 static void pass_from_clear_to_summary(void);
+#ifdef HAVE_BAGL
 static void init_too_many_screens_stream(void);
 #endif
 #ifdef HAVE_NBGL
@@ -331,6 +331,7 @@ refill_blo_done(void)
         TZ_SUCCEED();
     }
 
+#ifdef HAVE_BAGL
     if (global.step == ST_SUMMARY_SIGN) {
         if (N_settings.blindsign_status == ST_BLINDSIGN_LARGE_TX) {
             init_too_many_screens_stream();
@@ -339,12 +340,17 @@ refill_blo_done(void)
         }
         TZ_SUCCEED();
     }
-
-#ifdef HAVE_BAGL
     tz_ui_stream_push_accept_reject();
 #endif
-    tz_ui_stream_close();
 
+#ifdef HAVE_NBGL
+    if (global.step == ST_SUMMARY_SIGN) {
+        init_summary_stream();
+        TZ_SUCCEED();
+    }
+#endif
+
+    tz_ui_stream_close();
     TZ_POSTAMBLE;
 }
 
