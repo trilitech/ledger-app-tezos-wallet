@@ -263,26 +263,16 @@ def test_sign_too_long_operation_with_too_large(app):
     path = too_large_test_path / "accept"
 
     def navigate() -> None:
-        app.navigate_until_text(Screen_text.Accept_risk, path / "clear_n_too_long_warning")
-        app.navigate_until_text(Screen_text.Accept_risk, path / "too_large_warning")
+        app.navigate_until_text(Screen_text.Accept_risk, path / "clear_n_too_large_warning")
         app.navigate_until_text(Screen_text.Sign_accept, path / "blindsigning")
 
     _sign_too_long(app, operation_with_too_large, navigate)
-
-def test_reject_too_long_operation_with_too_large_at_too_long_warning(app):
-    path = too_large_test_path / "reject_at_too_long_warning"
-
-    def navigate() -> None:
-        app.navigate_until_text(Screen_text.Sign_reject, path / "clear_n_too_long_warning")
-
-    _reject_too_long(app, operation_with_too_large, StatusCode.REJECT, navigate)
 
 def test_reject_too_long_operation_with_too_large_at_too_large_warning(app):
     path = too_large_test_path / "reject_at_too_large_warning"
 
     def navigate() -> None:
-        app.navigate_until_text(Screen_text.Accept_risk, path / "clear_n_too_long_warning")
-        app.navigate_until_text(Screen_text.Sign_reject, path / "too_large_warning")
+        app.navigate_until_text(Screen_text.Sign_reject, path / "clear_n_too_large_warning")
 
     _reject_too_long(app, operation_with_too_large, StatusCode.PARSE_ERROR, navigate)
 
@@ -290,8 +280,7 @@ def test_reject_too_long_operation_with_too_large_at_blindsigning(app):
     path = too_large_test_path / "reject_at_blindsigning"
 
     def navigate() -> None:
-        app.navigate_until_text(Screen_text.Accept_risk, path / "clear_n_too_long_warning")
-        app.navigate_until_text(Screen_text.Accept_risk, path / "too_large_warning")
+        app.navigate_until_text(Screen_text.Accept_risk, path / "clear_n_too_large_warning")
         app.navigate_until_text(Screen_text.Sign_reject, path / "blindsigning")
 
     _reject_too_long(app, operation_with_too_large, StatusCode.REJECT, navigate)
