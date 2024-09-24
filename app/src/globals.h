@@ -68,8 +68,10 @@ typedef enum {
     ST_BLINDSIGN_OFF      = 2
 } blindsign_state_t;
 
-#ifdef HAVE_BAGL
+#ifdef TARGET_NANOS
 #define NB_MAX_SCREEN_ALLOWED 20
+#elif defined(HAVE_BAGL)
+#define NB_MAX_SCREEN_ALLOWED 12
 #else
 #define NB_MAX_SCREEN_ALLOWED 8
 #endif
