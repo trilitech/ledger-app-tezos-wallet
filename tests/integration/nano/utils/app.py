@@ -158,6 +158,14 @@ class Screen_text(str, Enum):
     Sign_reject = "Reject"
     Accept_risk = "Accept risk"
     Back_home = "Home"
+    Blindsign = "blindsign"
+    Blindsign_nanos = "Blindsign"
+
+    def blindsign(backend: SpeculosTezosBackend) -> "Screen_text":
+        if backend.firmware.device == "nanos":
+            return Screen_text.Blindsign_nanos
+        else:
+            return Screen_text.Blindsign
 
 class TezosAppScreen():
 

@@ -237,8 +237,9 @@ refill_blo_im_full(void)
 
     global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
 #ifdef HAVE_BAGL
-    if ((N_settings.blindsign_status == ST_BLINDSIGN_LARGE_TX)
+    if ((N_settings.blindsign_status != ST_BLINDSIGN_OFF)
         && (SCREEN_DISPLAYED >= NB_MAX_SCREEN_ALLOWED)) {
+        global.blindsign_reason = REASON_TOO_MANY_SCREENS;
         pass_from_clear_to_summary();
         TZ_SUCCEED();
     }
@@ -333,7 +334,7 @@ refill_blo_done(void)
 
 #ifdef HAVE_BAGL
     if (global.step == ST_SUMMARY_SIGN) {
-        if (N_settings.blindsign_status == ST_BLINDSIGN_LARGE_TX) {
+        if (global.blindsign_reason == REASON_TOO_MANY_SCREENS) {
             init_too_many_screens_stream();
         } else {
             init_summary_stream();
@@ -793,12 +794,24 @@ handle_first_apdu_clear(__attribute__((unused)) command_t *cmd)
         tz_ui_stream_init(stream_cb);
         global.step = ST_CLEAR_SIGN;
 
+#ifdef HAVE_BAGL
 #ifdef TARGET_NANOS
         tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Review operation", "",
                           TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_EYE);
-#elif defined(HAVE_BAGL)
-    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Review", "operation",
-                      TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_EYE);
+#else
+        tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Review", "operation",
+                          TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_EYE);
+#endif
+        if (N_settings.blindsign_status == ST_BLINDSIGN_ON) {
+#ifdef TARGET_NANOS
+            tz_ui_stream_push(TZ_UI_STREAM_CB_SUMMARY, "Blindsign?", "",
+                              TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_WARNING);
+#else
+            tz_ui_stream_push(TZ_UI_STREAM_CB_SUMMARY, "Switch to",
+                              "blindsign?", TZ_UI_LAYOUT_HOME_PB,
+                              TZ_UI_ICON_WARNING);
+#endif
+        }
 #endif
 #ifdef HAVE_SWAP
     } else {
@@ -845,13 +858,6 @@ handle_data_apdu(command_t *cmd)
     if (!global.keys.apdu.sign.tag) {
         global.keys.apdu.sign.tag = cmd->data[0];
     }
-
-#ifdef HAVE_BAGL
-    if ((N_settings.blindsign_status == ST_BLINDSIGN_ON)
-        && (global.step == ST_CLEAR_SIGN)) {
-        global.step = ST_SUMMARY_SIGN;
-    }
-#endif
 
     // clang-format off
     switch (global.step) {
