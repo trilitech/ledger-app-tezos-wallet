@@ -53,7 +53,7 @@ def blindsign_common(app: TezosAppScreen):
 
 def blindsign_review_sign(app: TezosAppScreen):
     app.assert_screen("blindsign_warning_ledger_1")
-    app.review.enable_blindsign.reject()
+    app.review.back_to_safety.reject()
     app.assert_screen("summary_review_transaction")
     app.review.next()
     app.assert_screen("tbdm_blind_review_1")
@@ -105,7 +105,7 @@ if __name__ == "__main__":
         app.assert_screen("tbdm_op_0_screen_8")
         app.review.next()
     app.assert_screen("blindsign_warning_too_many_screens")
-    app.review.enable_blindsign.reject()
+    app.review.back_to_safety.reject()
     app.expect_apdu_return("9000")
     app.send_apdu("800f81ff48000000096d6573736167653137000000096d6573736167653138000000096d65737361676531397000ffdd6102321bc251e4a5190ad5b12b251069d9b4c0843d0f0103ff80ade204")
     blindsign_review_sign(app)
@@ -117,9 +117,9 @@ if __name__ == "__main__":
     send_payload(app, "800f01ffeb0300000000000000000000000000000000000000000000000000000000000000006b00ffdd6102321bc251e4a5190ad5b12b251069d9b4c0843d0b0104020320182716513907b6bab33f905396d031931c07e01bddd780780c1a56b9c086da6c00ffdd6102321bc251e4a5190ad5b12b251069d9b480897a0c0107c08db701000278eb8b6ab9a768579cd5146b480789650c83f28effff0d7570646174655f636f6e6669670000000607070005030a6e00ffdd6102321bc251e4a5190ad5b12b251069d9b4c08db7010d0105ff01ee572f02e5be5d097ba17369789582882e8abb87c900ffdd6102321bc2")
     app.review.next()
     app.assert_screen("tbdm_blindsign_on_screen_1")
-    app.welcome.settings()  # skip button is at the same position as settings button on Home screen
+    app.review.skip()
     app.assert_screen("skip_review")
-    app.review.enable_blindsign.confirm()
+    app.review.enable_skip.confirm()
     app.expect_apdu_return("9000")
     app.send_apdu("800f01ffeb51e4a5190ad5b12b251069d9b48092f4010e0106000000fa000000086d65737361676530000000086d65737361676531000000086d65737361676532000000086d65737361676533000000086d65737361676534000000086d65737361676535000000086d65737361676536000000086d65737361676537000000086d65737361676538000000086d65737361676539000000096d6573736167653130000000096d6573736167653131000000096d6573736167653132000000096d6573736167653133000000096d6573736167653134000000096d6573736167653135000000096d6573736167653136")
     app.expect_apdu_return("9000")

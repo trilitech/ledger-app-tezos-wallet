@@ -914,10 +914,10 @@ handle_data_apdu_clear(command_t *cmd)
 #define OPERATION_TYPE_STR_LENGTH 22
 
 static void
-get_blindsign_type(char *type)
+get_blindsign_type(char *type, size_t type_size)
 {
     TZ_PREAMBLE(("type=%s", type));
-    TZ_ASSERT(strlen(type) == OPERATION_TYPE_STR_LENGTH, EXC_WRONG_PARAM);
+    TZ_ASSERT(type_size >= OPERATION_TYPE_STR_LENGTH, EXC_MEMORY_ERROR);
     // clang-format off
     switch (global.keys.apdu.sign.tag) {
     case 0x01:
@@ -1018,7 +1018,7 @@ getTagValuePair(uint8_t pairIndex)
     }
 
     char num_buffer[DECIMAL_SIZE]        = {0};
-    char type[OPERATION_TYPE_STR_LENGTH] = "Micheline\nexpression";
+    char type[OPERATION_TYPE_STR_LENGTH] = "Unknown types";
     char
         hash[TZ_BASE58_BUFFER_SIZE(sizeof(global.keys.apdu.hash.final_hash))];
 
@@ -1047,7 +1047,7 @@ getTagValuePair(uint8_t pairIndex)
                         (char **)&(pair.value));
     } break;
     case SUMMARY_INDEX_TYPE: {
-        get_blindsign_type(type);
+        get_blindsign_type(type, sizeof(type));
         pair.item = "Type";
         ui_strings_push(type, strlen(type), (char **)&(pair.value));
     }
@@ -1089,7 +1089,7 @@ continue_blindsign_cb(void)
         useCaseTagValueList.startIndex = 0;
         useCaseTagValueList.nbPairs    = 5;
     }
-    PRINTF("[DEBUG] SIGN Stauts: %d,  start_index %d Number of pairs:%d ",
+    PRINTF("[DEBUG] SIGN Status: %d,  start_index %d Number of pairs:%d ",
            global.step, useCaseTagValueList.startIndex,
            useCaseTagValueList.nbPairs);
     useCaseTagValueList.smallCaseForValue = false;
@@ -1117,8 +1117,8 @@ handle_data_apdu_blind(void)
 
 #ifdef HAVE_BAGL
 
-    char type[OPERATION_TYPE_STR_LENGTH] = "Michelline\nexpression";
-    get_blindsign_type(type);
+    char type[OPERATION_TYPE_STR_LENGTH] = "Unknown type";
+    get_blindsign_type(type, sizeof(type));
     tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB, "Sign Hash", type,
                           TZ_UI_LAYOUT_BN, TZ_UI_ICON_NONE);
 

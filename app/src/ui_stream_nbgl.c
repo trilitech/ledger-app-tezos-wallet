@@ -95,6 +95,8 @@ blindsign_choice(bool confirm)
     } else {
         tz_ui_stream_t *s = &global.stream;
 
+        TZ_ASSERT(EXC_UNEXPECTED_STATE,
+                  global.blindsign_reason != REASON_NONE);
         if (global.blindsign_reason == REASON_TOO_MANY_SCREENS) {
             s->cb(TZ_UI_STREAM_CB_SUMMARY);
         } else {

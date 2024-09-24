@@ -47,8 +47,8 @@ if __name__ == "__main__":
     app.review.next()
 
     app.assert_screen("tbtd_review_blindsign_on_0")
-    app.welcome.settings() # skip button
-    app.review.enable_blindsign.confirm()
+    app.review.skip() # skip button
+    app.review.enable_skip.confirm()
     app.assert_screen("too_deep_blindsign_warning")
     with app.fading_screen("loading_operation"):
         app.review.enable_blindsign.reject()

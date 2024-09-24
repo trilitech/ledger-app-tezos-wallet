@@ -28,6 +28,7 @@ from ragger.firmware import Firmware
 from ragger.firmware.touch.element import Center
 from ragger.firmware.touch.screen import MetaScreen
 from ragger.firmware.touch.use_cases import (
+    UseCaseHome,
     UseCaseHomeExt,
     UseCaseSettings as OriginalUseCaseSettings,
     UseCaseAddressConfirmation as OriginalUseCaseAddressConfirmation,
@@ -66,8 +67,10 @@ class UseCaseReview(OriginalUseCaseReview):
     reject_tx:        UseCaseChoice
     enable_expert:    UseCaseChoice
     enable_blindsign: UseCaseChoice
+    enable_skip:    UseCaseChoice
     back_to_safety:   UseCaseChoice
     details:          UseCaseViewDetails
+    __skip_screen:             UseCaseHome
 
     _center: Center
     MORE_POSITIONS = {
@@ -81,8 +84,10 @@ class UseCaseReview(OriginalUseCaseReview):
         self.enable_expert    = UseCaseChoice(client, firmware)
         self.enable_blindsign = UseCaseChoice(client, firmware)
         self.back_to_safety   = UseCaseChoice(client, firmware)
-        self._center = Center(client, firmware)
-        self.details = UseCaseViewDetails(client, firmware)
+        self.enable_skip    = UseCaseChoice(client, firmware)
+        self._center          = Center(client, firmware)
+        self.details          = UseCaseViewDetails(client, firmware)
+        self.__skip_screen      = UseCaseHome(client, firmware)
 
     @property
     def more_position(self) -> Position:
@@ -97,6 +102,9 @@ class UseCaseReview(OriginalUseCaseReview):
         """Tap to show more."""
         self.client.finger_touch(*self.more_position)
 
+    def skip(self) -> None:
+        """Press the skip button."""
+        self.__skip_screen.settings()
 
 class UseCaseAddressConfirmation(OriginalUseCaseAddressConfirmation):
     """Extension of UseCaseAddressConfirmation for our app."""

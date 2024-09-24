@@ -14,7 +14,6 @@
 # limitations under the License.
 
 from utils import tezos_app, BlindsigningStatus
-import os
 
 if __name__ == "__main__":
     app = tezos_app(__file__)
