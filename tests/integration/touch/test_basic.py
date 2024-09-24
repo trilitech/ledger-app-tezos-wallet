@@ -18,28 +18,21 @@ from utils import tezos_app, BlindsigningStatus
 if __name__ == "__main__":
     app = tezos_app(__file__)
 
-    app.remove_info_page()
     app.assert_home()
 
     app.welcome.settings()
-    app.assert_expert_mode()
+    app.set_expert_mode(initial_status=False)
+    app.set_expert_mode(initial_status=True)
+    app.set_blindsigning_status(BlindsigningStatus.Large_Tx_only)
+    app.set_blindsigning_status(BlindsigningStatus.ON)
+    app.set_blindsigning_status(BlindsigningStatus.OFF)
 
-    app.settings.toggle_expert_mode()
-    app.assert_expert_mode(expert_mode=True)
-
-    app.settings.toggle_expert_mode()
-    app.assert_expert_mode()
-
+    app.welcome.settings()
     app.settings.next()
-    app.assert_blindsigning_status(blindsignStatus=BlindsigningStatus.Large_Tx_only)
-    app.settings.set_blindigning(2)
-    app.assert_blindsigning_status(blindsignStatus=BlindsigningStatus.ON)
-    app.settings.set_blindigning(3)
-    app.assert_blindsigning_status(blindsignStatus=BlindsigningStatus.OFF)
     app.settings.next()
     app.assert_info()
 
-    app.settings.exit()
+    app.settings.multi_page_exit()
     app.assert_home()
 
     app.quit()

@@ -81,6 +81,7 @@
 
 typedef uint8_t tz_ui_cb_type_t;
 #define TZ_UI_STREAM_CB_NOCB               0x00u
+#define TZ_UI_STREAM_CB_SUMMARY            0x0Du
 #define TZ_UI_STREAM_CB_BLINDSIGN          0x0Eu
 #define TZ_UI_STREAM_CB_VALIDATE           0x0Fu
 #define TZ_UI_STREAM_CB_REFILL             0xEFu
@@ -287,3 +288,7 @@ void tz_reject(void);
  */
 void tz_reject_ui(void);
 #endif
+
+void drop_last_screen(void);
+
+void push_str(const char *text, size_t len, char **out);
