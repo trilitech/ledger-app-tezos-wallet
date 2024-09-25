@@ -119,14 +119,9 @@ tz_ui_stream_push_risky_accept_reject(tz_ui_cb_type_t accept_cb_type,
     FUNC_LEAVE();
 }
 
-void
-tz_ui_stream_push_warning_not_trusted(
-#ifdef TARGET_NANOS
-    void
-#else
-    const char *title_reason, const char *value_reason
-#endif
-)
+static void
+tz_ui_stream_push_warning_not_trusted(const char *title_reason,
+                                      const char *value_reason)
 {
     FUNC_ENTER(("void"));
 #ifdef TARGET_NANOS
@@ -137,8 +132,12 @@ tz_ui_stream_push_warning_not_trusted(
     tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "The transaction",
                       "cannot be trusted.", TZ_UI_LAYOUT_HOME_PB,
                       TZ_UI_ICON_WARNING);
-    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, title_reason, value_reason,
-                      TZ_UI_LAYOUT_HOME_N, TZ_UI_ICON_NONE);
+#endif
+    if ((title_reason != NULL) && (value_reason != NULL)) {
+        tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, title_reason, value_reason,
+                          TZ_UI_LAYOUT_HOME_N, TZ_UI_ICON_NONE);
+    }
+#ifndef TARGET_NANOS
     tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "It may not be safe",
                       "to sign this\ntransaction.", TZ_UI_LAYOUT_HOME_N,
                       TZ_UI_ICON_NONE);
@@ -373,11 +372,12 @@ refill_error(void)
 #ifdef HAVE_BAGL
     tz_ui_stream_init(stream_cb);
 
-    tz_ui_stream_push_warning_not_trusted(
-#ifndef TARGET_NANOS
-            "This transaction", "could not be\ndecoded correctly."
+#ifdef TARGET_NANOS
+    tz_ui_stream_push_warning_not_trusted(NULL, NULL);
+#else
+    tz_ui_stream_push_warning_not_trusted("This transaction",
+                                          "could not be\ndecoded correctly.");
 #endif
-        );
 
     tz_ui_stream_push_all(TZ_UI_STREAM_CB_NOCB,
                           "Parsing error",
@@ -670,15 +670,12 @@ init_too_many_screens_stream(void)
 {
     tz_ui_stream_init(too_many_screens_stream_cb);
 
-    tz_ui_stream_push_warning_not_trusted(
-#ifndef TARGET_NANOS
-        "Operation too long", "Proceed to\nblindsign."
-#endif
-    );
 #ifdef TARGET_NANOS
-    tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Operation too long",
-                      "Accept blindsign.", TZ_UI_LAYOUT_HOME_B,
-                      TZ_UI_ICON_NONE);
+    tz_ui_stream_push_warning_not_trusted("Operation too long",
+                                          "Accept blindsign");
+#else
+    tz_ui_stream_push_warning_not_trusted("Operation too long",
+                                          "Proceed to\nblindsign.");
 #endif
     tz_ui_stream_push_risky_accept_reject(TZ_UI_STREAM_CB_VALIDATE,
                                           TZ_UI_STREAM_CB_REJECT);
