@@ -43,12 +43,13 @@ tz_ui_stream_init(void (*cb)(tz_ui_cb_type_t cb_type))
 
     FUNC_ENTER(("cb=%p", cb));
     memset(s, 0x0, sizeof(*s));
-    s->cb            = cb;
-    s->full          = false;
-    s->current       = 0;
-    s->pressed_right = false;
-    s->total         = -1;
-    s->last          = 0;
+    s->cb                   = cb;
+    s->full                 = false;
+    s->current              = 0;
+    s->pressed_right        = false;
+    s->total                = -1;
+    s->last                 = 0;
+    global.blindsign_reason = REASON_NONE;
 
     ui_strings_init();
 
