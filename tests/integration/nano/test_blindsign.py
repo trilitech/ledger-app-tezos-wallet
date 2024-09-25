@@ -120,15 +120,26 @@ def test_blind_sign_basic_operation(app):
 
     def navigate() -> None:
         app.navigate_until_text(Screen_text.blindsign(app.backend), path / "clear")
+        app.navigate_until_text(Screen_text.Accept_risk, path / "blind_warning")
         app.navigate_until_text(Screen_text.Sign_accept, path / "summary")
 
     _blind_sign(app, basic_operation, navigate)
 
-def test_blind_reject_basic_operation(app):
-    path = basic_test_path / "reject"
+def test_blind_reject_basic_operation_at_blind_warning(app):
+    path = basic_test_path / "reject_at_blind_warning"
 
     def navigate() -> None:
         app.navigate_until_text(Screen_text.blindsign(app.backend), path / "clear")
+        app.navigate_until_text(Screen_text.Sign_reject, path / "blind_warning")
+
+    _blind_reject(app, basic_operation, StatusCode.REJECT, navigate)
+
+def test_blind_reject_basic_operation_at_summary(app):
+    path = basic_test_path / "reject_at_summary"
+
+    def navigate() -> None:
+        app.navigate_until_text(Screen_text.blindsign(app.backend), path / "clear")
+        app.navigate_until_text(Screen_text.Accept_risk, path / "blind_warning")
         app.navigate_until_text(Screen_text.Sign_reject, path / "summary")
 
     _blind_reject(app, basic_operation, StatusCode.REJECT, navigate)

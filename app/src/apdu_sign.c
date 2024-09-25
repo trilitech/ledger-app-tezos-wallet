@@ -67,6 +67,7 @@ static void handle_data_apdu_blind(void);
 static void pass_from_clear_to_summary(void);
 #ifdef HAVE_BAGL
 static void init_too_many_screens_stream(void);
+static void init_blind_warning_stream(void);
 #endif
 #ifdef HAVE_NBGL
 static void continue_blindsign_cb(void);
@@ -336,7 +337,7 @@ refill_blo_done(void)
         if (global.blindsign_reason == REASON_TOO_MANY_SCREENS) {
             init_too_many_screens_stream();
         } else {
-            init_summary_stream();
+            init_blind_warning_stream();
         }
         TZ_SUCCEED();
     }
@@ -650,7 +651,7 @@ init_summary_stream(void)
 
 #ifdef HAVE_BAGL
 static void
-too_many_screens_stream_cb(tz_ui_cb_type_t cb_type)
+pass_to_summary_stream_cb(tz_ui_cb_type_t cb_type)
 {
     TZ_PREAMBLE(("cb_type=%u", cb_type));
 
@@ -668,7 +669,7 @@ too_many_screens_stream_cb(tz_ui_cb_type_t cb_type)
 static void
 init_too_many_screens_stream(void)
 {
-    tz_ui_stream_init(too_many_screens_stream_cb);
+    tz_ui_stream_init(pass_to_summary_stream_cb);
 
 #ifdef TARGET_NANOS
     tz_ui_stream_push_warning_not_trusted("Operation too long",
@@ -677,6 +678,20 @@ init_too_many_screens_stream(void)
     tz_ui_stream_push_warning_not_trusted("Operation too long",
                                           "Proceed to\nblindsign.");
 #endif
+    tz_ui_stream_push_risky_accept_reject(TZ_UI_STREAM_CB_VALIDATE,
+                                          TZ_UI_STREAM_CB_REJECT);
+
+    tz_ui_stream_close();
+
+    tz_ui_stream();
+}
+
+static void
+init_blind_warning_stream(void)
+{
+    tz_ui_stream_init(pass_to_summary_stream_cb);
+
+    tz_ui_stream_push_warning_not_trusted(NULL, NULL);
     tz_ui_stream_push_risky_accept_reject(TZ_UI_STREAM_CB_VALIDATE,
                                           TZ_UI_STREAM_CB_REJECT);
 
