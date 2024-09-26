@@ -421,6 +421,20 @@ class ManagerOperation(Operation):
         self.storage_limit = storage_limit
         Operation.__init__(self, **kwargs)
 
+class OperationGroup(Operation):
+    """Class representing a group of tezos manager operation."""
+
+    operations: List[ManagerOperation]
+
+    def __init__(self,
+                 operations: List[ManagerOperation] = [],
+                 **kwargs):
+        self.operations = operations
+        Operation.__init__(self, **kwargs)
+
+    def forge(self) -> bytes:
+        return b''.join(map(lambda op: op.forge(), self.operations))
+
 class Reveal(ManagerOperation):
     """Class representing a tezos reveal."""
 
