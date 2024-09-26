@@ -36,12 +36,12 @@ void        tz_ui_home_redisplay(uint8_t page);
 //  -----------------------------------------------------------
 //  --------------------- SETTINGS MENU -----------------------
 //  -----------------------------------------------------------
-#define SETTING_INFO_NB      2
+#define SETTING_INFO_NB      3
 #define SETTINGS_SWITCHES_NB 1
 #define SETTINGS_RADIO_NB    3
-static const char *const infoTypes[] = {"Version", "Developer"};
-static const char *const infoContents[]
-    = {APPVERSION, "Trilitech Kanvas Limited et al."};
+static const char *const infoTypes[]    = {"Version", "Developer", "Contact"};
+static const char *const infoContents[] = {
+    APPVERSION, "Trilitech Kanvas Limited et al.", "ledger-tezos@trili.tech"};
 
 enum {
     EXPERT_MODE_TOKEN = FIRST_USER_TOKEN,

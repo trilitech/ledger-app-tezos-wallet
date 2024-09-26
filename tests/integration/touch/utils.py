@@ -291,7 +291,12 @@ class TezosAppScreen(metaclass=MetaScreen):
         self.assert_screen("home", True)
 
     def assert_info(self):
-        self.assert_screen("info", True)
+        if(Firmware.STAX == self.firmware):
+            self.assert_screen("info_stax", True)
+        else:
+            self.assert_screen("info_flex_1", True)
+            self.review.next()
+            self.assert_screen("info_flex_2", True)
 
     def assert_expert_mode(self, expert_mode=False):
         suffix = ""

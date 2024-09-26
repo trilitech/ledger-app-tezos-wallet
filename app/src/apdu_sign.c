@@ -273,7 +273,7 @@ refill_blo_im_full(void)
 #elif HAVE_NBGL
     PRINTF("[DEBUG] field=%s complex=%d\n", st->field_info.field_name,
            st->field_info.is_field_complex);
-    if ((N_settings.blindsign_status == ST_BLINDSIGN_LARGE_TX)
+    if ((N_settings.blindsign_status != ST_BLINDSIGN_OFF)
         && (SCREEN_DISPLAYED >= NB_MAX_SCREEN_ALLOWED)) {
         strncpy(global.error_code, "TOO_MANY_SCREENS", ERROR_CODE_SIZE);
         tz_ui_stream_push_all(TZ_UI_STREAM_CB_CANCEL,
