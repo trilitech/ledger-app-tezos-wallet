@@ -18,7 +18,7 @@
 from pathlib import Path
 
 from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
-from utils.message import Message
+from utils.message import RawMessage
 
 # Operation (0): Delegation
 # Fee: 0.2 XTZ
@@ -31,7 +31,7 @@ def test_sign_delegation(app: TezosAppScreen):
 
     app.assert_screen(Screen.HOME)
 
-    message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000006e01774d99da021b92d8c3dfc2e814c7658440319be2c09a0cf40509f906ff00591e842444265757d6a65e3670ca18b5e662f9c0")
+    message = RawMessage("0300000000000000000000000000000000000000000000000000000000000000006e01774d99da021b92d8c3dfc2e814c7658440319be2c09a0cf40509f906ff00591e842444265757d6a65e3670ca18b5e662f9c0")
 
     data = app.sign(DEFAULT_ACCOUNT,
                     message,

@@ -17,14 +17,14 @@
 
 from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
 from utils.backend import Ins, StatusCode
-from utils.message import Message
+from utils.message import RawMessage
 
 def test_change_sign_instruction(app: TezosAppScreen):
     """Check signing instruction changes behaviour"""
 
     app.assert_screen(Screen.HOME)
 
-    message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316")
+    message = RawMessage("0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316")
     payload=bytes(message)
 
     app.backend._ask_sign(Ins.SIGN_WITH_HASH, DEFAULT_ACCOUNT)

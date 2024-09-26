@@ -18,7 +18,7 @@
 from pathlib import Path
 
 from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
-from utils.message import Message
+from utils.message import RawMessage
 
 # Operation (0): Register global constant
 # Fee: 0.01 XTZ
@@ -31,7 +31,7 @@ def test_sign_register_global_constant(app: TezosAppScreen):
 
     app.setup_expert_mode()
 
-    message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000006f00ffdd6102321bc251e4a5190ad5b12b251069d9b4904e0203040000000a07070100000001310002")
+    message = RawMessage("0300000000000000000000000000000000000000000000000000000000000000006f00ffdd6102321bc251e4a5190ad5b12b251069d9b4904e0203040000000a07070100000001310002")
 
     data = app.sign(DEFAULT_ACCOUNT,
                     message,

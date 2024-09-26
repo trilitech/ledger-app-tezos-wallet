@@ -18,7 +18,7 @@
 from pathlib import Path
 
 from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
-from utils.message import Message
+from utils.message import RawMessage
 
 # Operation (0): SR: originate
 # Fee: 0.01 XTZ
@@ -40,7 +40,7 @@ def test_sign_sc_rollup_originate(app: TezosAppScreen):
 
     def check_sign(name: str, whitelist: str):
 
-        message = Message.from_bytes(sc_rollup_originate_with_missing_white_list + whitelist)
+        message = RawMessage(sc_rollup_originate_with_missing_white_list + whitelist)
 
         data = app.sign(DEFAULT_ACCOUNT,
                         message,

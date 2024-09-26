@@ -18,7 +18,7 @@
 from pathlib import Path
 
 from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
-from utils.message import Message
+from utils.message import RawMessage
 
 # Operation (0): Increase paid storage
 # Fee: 0.01 XTZ
@@ -32,7 +32,7 @@ def test_sign_increase_paid_storage(app: TezosAppScreen):
 
     app.assert_screen(Screen.HOME)
 
-    message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000007100ffdd6102321bc251e4a5190ad5b12b251069d9b4904e0203040501000000000000000000000000000000000000000000")
+    message = RawMessage("0300000000000000000000000000000000000000000000000000000000000000007100ffdd6102321bc251e4a5190ad5b12b251069d9b4904e0203040501000000000000000000000000000000000000000000")
 
     data = app.sign(DEFAULT_ACCOUNT,
                     message,

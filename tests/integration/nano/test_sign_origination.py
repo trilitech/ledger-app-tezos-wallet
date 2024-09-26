@@ -18,7 +18,7 @@
 from pathlib import Path
 
 from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
-from utils.message import Message
+from utils.message import RawMessage
 
 # Operation (0): Origination
 # Fee: 0.01 XTZ
@@ -34,7 +34,7 @@ def test_sign_origination(app: TezosAppScreen):
 
     app.setup_expert_mode()
 
-    message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000006d00ffdd6102321bc251e4a5190ad5b12b251069d9b4904e020304a0c21e0000000002037a0000000a07650100000001310002")
+    message = RawMessage("0300000000000000000000000000000000000000000000000000000000000000006d00ffdd6102321bc251e4a5190ad5b12b251069d9b4904e020304a0c21e0000000002037a0000000a07650100000001310002")
 
     data = app.sign(DEFAULT_ACCOUNT,
                     message,

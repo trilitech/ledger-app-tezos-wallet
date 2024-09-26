@@ -19,7 +19,7 @@ from pathlib import Path
 
 from utils.account import Account, SigType
 from utils.app import Screen, TezosAppScreen
-from utils.message import Message
+from utils.message import RawMessage
 
 # Expression: {"CACA";"POPO";"BOUDIN"}
 
@@ -33,7 +33,7 @@ def test_tz1_ed25519_sign_micheline_basic(app: TezosAppScreen):
                       SigType.ED25519,
                       "edpkuXX2VdkdXzkN11oLCb8Aurdo1BTAtQiK8ZY9UPj2YMt3AHEpcY")
 
-    message = Message.from_bytes("05020000001d0100000004434143410100000004504f504f0100000006424f5544494e")
+    message = RawMessage("05020000001d0100000004434143410100000004504f504f0100000006424f5544494e")
 
     data = app.sign(account,
                     message,

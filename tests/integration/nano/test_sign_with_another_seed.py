@@ -21,7 +21,7 @@ import pytest
 
 from utils.account import Account, SigType
 from utils.app import TezosAppScreen
-from utils.message import Message
+from utils.message import RawMessage
 
 # Operation (0): Transaction
 # Fee: 0.05 XTZ
@@ -42,7 +42,7 @@ def test_sign_with_another_seed(app: TezosAppScreen):
                       SigType.ED25519,
                       "edpkupntwMyERpYniuK1GDWquPaPU1wYsQgMirJPLGmC4Y5dMUsQNo")
 
-    message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316")
+    message = RawMessage("0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316")
 
     data = app.sign(account,
                     message,

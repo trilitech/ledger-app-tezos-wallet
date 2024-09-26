@@ -19,7 +19,7 @@ from pathlib import Path
 
 from utils.account import Account
 from utils.app import send_and_navigate, Screen, ScreenText, TezosAppScreen, DEFAULT_ACCOUNT
-from utils.message import Message
+from utils.message import Message, RawMessage
 
 def test_sign_with_small_packet(app: TezosAppScreen):
     """Check signing using small packet instead of full size packets"""
@@ -46,7 +46,7 @@ def test_sign_with_small_packet(app: TezosAppScreen):
 
     check_sign_with_small_packet(
         account=DEFAULT_ACCOUNT,
-        message=Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316"),
+        message=RawMessage("0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316"),
         path=test_name)
 
     app.quit()

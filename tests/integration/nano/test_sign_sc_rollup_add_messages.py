@@ -18,7 +18,7 @@
 from pathlib import Path
 
 from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
-from utils.message import Message
+from utils.message import RawMessage
 
 # Operation (0): SR: send messages
 # Fee: 0.01 XTZ
@@ -33,7 +33,7 @@ def test_sign_sc_rollup_add_messages(app: TezosAppScreen):
 
     app.assert_screen(Screen.HOME)
 
-    message = Message.from_bytes("030000000000000000000000000000000000000000000000000000000000000000c900ffdd6102321bc251e4a5190ad5b12b251069d9b4904e020304000000140000000301234500000001670000000489abcdef")
+    message = RawMessage("030000000000000000000000000000000000000000000000000000000000000000c900ffdd6102321bc251e4a5190ad5b12b251069d9b4904e020304000000140000000301234500000001670000000489abcdef")
 
     data = app.sign(DEFAULT_ACCOUNT,
                     message,

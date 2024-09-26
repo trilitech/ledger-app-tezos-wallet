@@ -19,8 +19,8 @@ from pathlib import Path
 from typing import Callable
 
 from utils.app import ScreenText, TezosAppScreen, DEFAULT_ACCOUNT
-from utils.message import Message
 from utils.backend import StatusCode
+from utils.message import RawMessage
 
 test_path = Path(Path(__file__).stem)
 
@@ -32,7 +32,7 @@ def _sign_too_long(app: TezosAppScreen,
     app.setup_expert_mode()
     app.setup_blindsign_on()
 
-    message = Message.from_bytes(msg)
+    message = RawMessage(msg)
 
     data = app._sign(
         DEFAULT_ACCOUNT,
@@ -67,7 +67,7 @@ def _reject_too_long(
     app.setup_expert_mode()
     app.setup_blindsign_on()
 
-    message = Message.from_bytes(msg)
+    message = RawMessage(msg)
 
     app._failing_signing(
         DEFAULT_ACCOUNT,

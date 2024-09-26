@@ -14,35 +14,31 @@
 
 """Implemenation of sent messages."""
 
-from hashlib import blake2b
+from abc import ABC, abstractmethod
 from typing import Union
 
-class Message:
-    """Class representing messages."""
+from pytezos.crypto.key import blake2b_32
 
-    HASH_SIZE = 32
-
-    value: bytes
-
-    def __init__(self, value: bytes):
-        self.value = value
-
-    @classmethod
-    def from_bytes(cls, value: Union[str, bytes]) -> 'Message':
-        """Get message from bytes or hex."""
-
-        if isinstance(value, str):
-            value = bytes.fromhex(value)
-        return cls(value)
+class Message(ABC):
+    """Class representing a message."""
 
     @property
     def hash(self) -> bytes:
-        """Hash of the message."""
+        """hash of the message."""
+        return blake2b_32(bytes(self)).digest()
 
-        return blake2b(
-            self.value,
-            digest_size=Message.HASH_SIZE
-        ).digest()
+    @abstractmethod
+    def __bytes__(self) -> bytes:
+        raise NotImplementedError
+
+class RawMessage(Message):
+    """Class representing a raw message."""
+
+    _value: bytes
+
+    def __init__(self, value: Union[str, bytes]):
+        self._value = value if isinstance(value, bytes) else \
+            bytes.fromhex(value)
 
     def __bytes__(self) -> bytes:
-        return self.value
+        return self._value

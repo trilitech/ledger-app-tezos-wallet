@@ -18,7 +18,7 @@
 from pathlib import Path
 
 from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
-from utils.message import Message
+from utils.message import RawMessage
 
 # Operation (0): Set consensus key
 # Fee: 0.01 XTZ
@@ -31,7 +31,7 @@ def test_sign_set_consensus_key(app: TezosAppScreen):
 
     app.assert_screen(Screen.HOME)
 
-    message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000007200c921d4487c90b4472da6cc566a58d79f0d991dbf904e02030400747884d9abdf16b3ab745158925f567e222f71225501826fa83347f6cbe9c393")
+    message = RawMessage("0300000000000000000000000000000000000000000000000000000000000000007200c921d4487c90b4472da6cc566a58d79f0d991dbf904e02030400747884d9abdf16b3ab745158925f567e222f71225501826fa83347f6cbe9c393")
 
     data = app.sign(DEFAULT_ACCOUNT,
                     message,

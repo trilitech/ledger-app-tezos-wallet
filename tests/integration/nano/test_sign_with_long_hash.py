@@ -18,7 +18,7 @@
 from pathlib import Path
 
 from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
-from utils.message import Message
+from utils.message import RawMessage
 
 # Operation (0): Transaction
 # Fee: 0.01 XTZ
@@ -34,7 +34,7 @@ def test_sign_with_long_hash(app: TezosAppScreen):
 
     app.setup_expert_mode()
 
-    message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000006c00ffdd6102321bc251e4a5190ad5b12b251069d9b4904e020304000156dcfb211fa76c525fd7c4566c09a5e3e4d5b81000ff01000000020000")
+    message = RawMessage("0300000000000000000000000000000000000000000000000000000000000000006c00ffdd6102321bc251e4a5190ad5b12b251069d9b4904e020304000156dcfb211fa76c525fd7c4566c09a5e3e4d5b81000ff01000000020000")
 
     data = app.sign(DEFAULT_ACCOUNT,
                     message,
