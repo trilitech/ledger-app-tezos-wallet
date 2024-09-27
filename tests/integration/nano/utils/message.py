@@ -32,6 +32,7 @@ from pytezos.operation.forge import (
     forge_register_global_constant,
     forge_transfer_ticket,
     forge_smart_rollup_add_messages,
+    forge_smart_rollup_execute_outbox_message,
 )
 
 class Message(ABC):
@@ -63,11 +64,13 @@ Micheline = Union[List, Dict]
 
 class Default:
     """Class holding default values."""
-    BLOCK_HASH: str              = 'BKiHLREqU3JkXfzEDYAkmmfX48gBDtYhMrpA98s7Aq4SzbUAB6M'
-    ED25519_PUBLIC_KEY_HASH: str = 'tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU'
-    ORIGINATED_ADDRESS: str      = 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT'
-    ED25519_PUBLIC_KEY: str      = 'edpkteDwHwoNPB18tKToFKeSCykvr1ExnoMV5nawTJy9Y9nLTfQ541'
-    ENTRYPOINT: str              = 'default'
+    BLOCK_HASH: str                      = 'BKiHLREqU3JkXfzEDYAkmmfX48gBDtYhMrpA98s7Aq4SzbUAB6M'
+    ED25519_PUBLIC_KEY_HASH: str         = 'tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU'
+    ORIGINATED_ADDRESS: str              = 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT'
+    ORIGINATED_SMART_ROLLUP_ADDRESS: str = 'sr163Lv22CdE8QagCwf48PWDTquk6isQwv57'
+    SMART_ROLLUP_COMMITMENT_HASH: str    = 'src12UJzB8mg7yU6nWPzicH7ofJbFjyJEbHvwtZdfRXi8DQHNp1LY8'
+    ED25519_PUBLIC_KEY: str              = 'edpkteDwHwoNPB18tKToFKeSCykvr1ExnoMV5nawTJy9Y9nLTfQ541'
+    ENTRYPOINT: str                      = 'default'
 
     class DefaultMicheline:
         """Class holding Micheline default values."""
@@ -350,6 +353,37 @@ class ScRollupAddMessage(ManagerOperation):
         return forge_smart_rollup_add_messages(
             self.smart_rollup_add_messages(
                 self.message,
+                self.source,
+                self.counter,
+                self.fee,
+                self.gas_limit,
+                self.storage_limit
+            )
+        )
+
+class ScRollupExecuteOutboxMessage(ManagerOperation):
+    """Class representing a tezos smart rollup execute outbox message."""
+
+    rollup: str
+    cemented_commitment: str
+    output_proof: bytes
+
+    def __init__(self,
+                 rollup: str = Default.ORIGINATED_SMART_ROLLUP_ADDRESS,
+                 cemented_commitment: str = Default.SMART_ROLLUP_COMMITMENT_HASH,
+                 output_proof: bytes = b'',
+                 **kwargs):
+        self.rollup = rollup
+        self.cemented_commitment = cemented_commitment
+        self.output_proof = output_proof
+        ManagerOperation.__init__(self, **kwargs)
+
+    def forge(self) -> bytes:
+        return forge_smart_rollup_execute_outbox_message(
+            self.smart_rollup_execute_outbox_message(
+                self.rollup,
+                self.cemented_commitment,
+                self.output_proof,
                 self.source,
                 self.counter,
                 self.fee,
