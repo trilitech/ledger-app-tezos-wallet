@@ -30,7 +30,7 @@ from .message import Message
 from .account import Account, SIGNATURE_TYPE
 from .backend import StatusCode, TezosBackend, APP_KIND
 
-version: Tuple[int, int, int] = (3, 0, 4)
+version: Tuple[int, int, int] = (3, 0, 5)
 
 class TezosAPDUChecker:
 
