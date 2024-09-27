@@ -26,6 +26,7 @@ from pytezos.michelson.forge import (
     forge_base58,
     forge_bool,
     forge_int32,
+    forge_micheline,
     forge_nat,
     forge_public_key,
 )
@@ -72,6 +73,7 @@ class Default:
     ED25519_PUBLIC_KEY: str              = 'edpkteDwHwoNPB18tKToFKeSCykvr1ExnoMV5nawTJy9Y9nLTfQ541'
     ENTRYPOINT: str                      = 'default'
     BALLOT: str                          = 'yay'
+    SMART_ROLLUP_KIND: str               = 'arith'
 
     class DefaultMicheline:
         """Class holding Micheline default values."""
@@ -162,6 +164,35 @@ class OperationBuilder(ContentMixin):
             }
         )
 
+    def smart_rollup_originate(
+            self,
+            pvm_kind: str = '',
+            kernel: str = '',
+            parameters_ty: Micheline = Default.DefaultMicheline.TYPE,
+            whitelist: Optional[List[str]] = None,
+            source: str = '',
+            counter: int = 0,
+            fee: int = 0,
+            gas_limit: int = 0,
+            storage_limit: int = 0):
+        """Build a Tezos smart rollup originate."""
+        content = {
+            'kind': 'smart_rollup_originate',
+            'source': source,
+            'fee': format_mutez(fee),
+            'counter': str(counter),
+            'gas_limit': str(gas_limit),
+            'storage_limit': str(storage_limit),
+            'pvm_kind': pvm_kind,
+            'kernel': kernel,
+            'parameters_ty': parameters_ty,
+        }
+
+        if whitelist is not None:
+            content['whitelist'] = whitelist
+
+        return self.operation(content)
+
 class OperationForge:
     """Class to helps forging Tezos operation."""
 
@@ -175,6 +206,7 @@ class OperationForge:
     operation_tags['set_deposit_limit'] = 112
     operation_tags['increase_paid_storage'] = 113
     operation_tags['update_consensus_key'] = 114
+    operation_tags['smart_rollup_originate'] = 200
 
     failing_noop = forge_operation.forge_failing_noop
     reveal = forge_operation.forge_reveal
@@ -248,6 +280,34 @@ class OperationForge:
         res += forge_nat(int(content['gas_limit']))
         res += forge_nat(int(content['storage_limit']))
         res += forge_public_key(content['pk'])
+        return res
+
+    PVM_KIND_TAG = { 'arith': 0, 'wasm_2_0_0': 1, 'riscv': 2 }
+
+    @staticmethod
+    def smart_rollup_originate(content: Dict[str, Any]) -> bytes:
+        """Forge a Tezos smart rollup originate."""
+        res = forge_tag(operation_tags[content['kind']])
+        res += forge_address(content['source'], tz_only=True)
+        res += forge_nat(int(content['fee']))
+        res += forge_nat(int(content['counter']))
+        res += forge_nat(int(content['gas_limit']))
+        res += forge_nat(int(content['storage_limit']))
+        res += forge_int_fixed(
+            OperationForge.PVM_KIND_TAG[content['pvm_kind']], 1
+        )
+        res += forge_array(bytes.fromhex(content['kernel']))
+        res += forge_array(forge_micheline(content['parameters_ty']))
+
+        if content.get('whitelist') is not None:
+            res += forge_bool(True)
+            res += forge_array(b''.join(
+                forge_address(pkh, tz_only=True)
+                for pkh in content['whitelist']
+            ))
+        else:
+            res += forge_bool(False)
+
         return res
 
 class Operation(Message, OperationBuilder):
@@ -608,6 +668,41 @@ class TransferTicket(ManagerOperation):
                 self.ticket_amount,
                 self.destination,
                 self.entrypoint,
+                self.source,
+                self.counter,
+                self.fee,
+                self.gas_limit,
+                self.storage_limit
+            )
+        )
+
+class ScRollupOriginate(ManagerOperation):
+    """Class representing a tezos smart rollup originate."""
+
+    pvm_kind: str
+    kernel: str
+    parameters_ty: Micheline
+    whitelist: Optional[List[str]]
+
+    def __init__(self,
+                 pvm_kind: str = Default.SMART_ROLLUP_KIND,
+                 kernel: str = "",
+                 parameters_ty: Micheline = Default.DefaultMicheline.TYPE,
+                 whitelist: Optional[List[str]] = None,
+                 **kwargs):
+        self.pvm_kind = pvm_kind
+        self.kernel = kernel
+        self.parameters_ty = parameters_ty
+        self.whitelist = whitelist
+        ManagerOperation.__init__(self, **kwargs)
+
+    def forge(self) -> bytes:
+        return OperationForge.smart_rollup_originate(
+            self.smart_rollup_originate(
+                self.pvm_kind,
+                self.kernel,
+                self.parameters_ty,
+                self.whitelist,
                 self.source,
                 self.counter,
                 self.fee,
