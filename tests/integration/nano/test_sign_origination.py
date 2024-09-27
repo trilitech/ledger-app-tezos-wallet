@@ -18,15 +18,7 @@
 from pathlib import Path
 
 from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
-from utils.message import RawMessage
-
-# Operation (0): Origination
-# Fee: 0.01 XTZ
-# Storage limit: 4
-# Balance: 0.5 XTZ
-# Delegate: Field unset
-# Code: UNPAIR
-# Storage: pair "1" 2
+from utils.message import Origination
 
 def test_sign_origination(app: TezosAppScreen):
     """Check signing origination"""
@@ -34,7 +26,16 @@ def test_sign_origination(app: TezosAppScreen):
 
     app.setup_expert_mode()
 
-    message = RawMessage("0300000000000000000000000000000000000000000000000000000000000000006d00ffdd6102321bc251e4a5190ad5b12b251069d9b4904e020304a0c21e0000000002037a0000000a07650100000001310002")
+    message = Origination(
+        source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
+        fee = 10000,
+        counter = 2,
+        gas_limit = 3,
+        storage_limit = 4,
+        code = {'prim': 'UNPAIR'},
+        storage = {'prim': 'pair', 'args': [{'string': '1'}, {'int': 2}]},
+        balance = 500000
+    )
 
     data = app.sign(DEFAULT_ACCOUNT,
                     message,

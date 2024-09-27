@@ -16,7 +16,7 @@
 
 from abc import ABC, abstractmethod
 from enum import IntEnum
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 
 from pytezos.block.forge import forge_int_fixed
 from pytezos.crypto.key import blake2b_32
@@ -27,6 +27,7 @@ from pytezos.operation.forge import (
     forge_failing_noop,
     forge_transaction,
     forge_reveal,
+    forge_origination,
 )
 
 class Message(ABC):
@@ -66,6 +67,8 @@ class Default:
     class DefaultMicheline:
         """Class holding Micheline default values."""
         VALUE: Micheline = {'prim': 'Unit'}
+        TYPE: Micheline  = {'prim': 'unit'}
+        CODE: Micheline  = [{'prim': 'CDR'}, {'prim': 'NIL', 'args': [{'prim': 'operation'}]}, {'prim': 'PAIR'}]
 
 class Watermark(IntEnum):
     """Class hodling messages watermark."""
@@ -183,6 +186,41 @@ class Transaction(ManagerOperation):
                 self.destination,
                 self.amount,
                 parameters,
+                self.source,
+                self.counter,
+                self.fee,
+                self.gas_limit,
+                self.storage_limit
+            )
+        )
+
+class Origination(ManagerOperation):
+    """Class representing a tezos origination."""
+
+    code: Micheline
+    storage: Micheline
+    balance: int
+    delegate: Optional[str]
+
+    def __init__(self,
+                 code: Micheline = Default.DefaultMicheline.CODE,
+                 storage: Micheline = Default.DefaultMicheline.TYPE,
+                 balance: int = 0,
+                 delegate: Optional[str] = None,
+                 **kwargs):
+        self.code = code
+        self.storage = storage
+        self.balance = balance
+        self.delegate = delegate
+        ManagerOperation.__init__(self, **kwargs)
+
+    def forge(self) -> bytes:
+        script = { "code": self.code, "storage": self.storage }
+        return forge_origination(
+            self.origination(
+                script,
+                self.balance,
+                self.delegate,
                 self.source,
                 self.counter,
                 self.fee,
