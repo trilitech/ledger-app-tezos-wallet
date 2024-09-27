@@ -16,24 +16,20 @@
 
 from abc import ABC, abstractmethod
 from enum import IntEnum
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from pytezos.block.forge import forge_int_fixed
 from pytezos.crypto.key import blake2b_32
-from pytezos.michelson.forge import forge_base58
-from pytezos.operation.content import ContentMixin
-from pytezos.operation.forge import (
-    reserved_entrypoints,
-    forge_failing_noop,
-    forge_transaction,
-    forge_reveal,
-    forge_origination,
-    forge_delegation,
-    forge_register_global_constant,
-    forge_transfer_ticket,
-    forge_smart_rollup_add_messages,
-    forge_smart_rollup_execute_outbox_message,
+from pytezos.michelson.forge import (
+    forge_address,
+    forge_array,
+    forge_base58,
+    forge_int32,
 )
+from pytezos.operation.content import ContentMixin
+import pytezos.operation.forge as forge_operation
+from pytezos.operation.forge import reserved_entrypoints, forge_tag
+from pytezos.rpc.kind import operation_tags
 
 class Message(ABC):
     """Class representing a message."""
@@ -65,6 +61,7 @@ Micheline = Union[List, Dict]
 class Default:
     """Class holding default values."""
     BLOCK_HASH: str                      = 'BKiHLREqU3JkXfzEDYAkmmfX48gBDtYhMrpA98s7Aq4SzbUAB6M'
+    PROTOCOL_HASH: str                   = 'PrihK96nBAFSxVL1GLJTVhu9YnzkMFiBeuJRPA8NwuZVZCE1L6i'
     ED25519_PUBLIC_KEY_HASH: str         = 'tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU'
     ORIGINATED_ADDRESS: str              = 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT'
     ORIGINATED_SMART_ROLLUP_ADDRESS: str = 'sr163Lv22CdE8QagCwf48PWDTquk6isQwv57'
@@ -83,12 +80,6 @@ class Watermark(IntEnum):
     MANAGER_OPERATION = 0x03
 
 
-# Insert new reserved entrypoint
-reserved_entrypoints['stake'] = b'\x06'
-reserved_entrypoints['unstake'] = b'\x07'
-reserved_entrypoints['finalize_unstake'] = b'\x08'
-reserved_entrypoints['delegate_parameters'] = b'\x09'
-
 class OperationBuilder(ContentMixin):
     """Class representing to extends and fix pytezos.ContentMixin."""
 
@@ -100,6 +91,33 @@ class OperationBuilder(ContentMixin):
 
         return delegation
 
+class OperationForge:
+    """Class to helps forging Tezos operation."""
+
+    # Insert new reserved entrypoint
+    reserved_entrypoints['stake'] = b'\x06'
+    reserved_entrypoints['unstake'] = b'\x07'
+    reserved_entrypoints['finalize_unstake'] = b'\x08'
+    reserved_entrypoints['delegate_parameters'] = b'\x09'
+
+    failing_noop = forge_operation.forge_failing_noop
+    reveal = forge_operation.forge_reveal
+    transaction = forge_operation.forge_transaction
+    origination = forge_operation.forge_origination
+    delegation = forge_operation.forge_delegation
+    register_global_constant = forge_operation.forge_register_global_constant
+    transfer_ticket = forge_operation.forge_transfer_ticket
+    smart_rollup_add_messages = forge_operation.forge_smart_rollup_add_messages
+    smart_rollup_execute_outbox_message = forge_operation.forge_smart_rollup_execute_outbox_message
+
+    @staticmethod
+    def proposals(content: Dict[str, Any]) -> bytes:
+        """Forge a Tezos proposals."""
+        res = forge_tag(operation_tags[content['kind']])
+        res += forge_address(content['source'], tz_only=True)
+        res += forge_int32(int(content['period']))
+        res += forge_array(b''.join(map(forge_base58, content['proposals'])))
+        return res
 
 class Operation(Message, OperationBuilder):
     """Class representing a tezos operation."""
@@ -121,6 +139,32 @@ class Operation(Message, OperationBuilder):
         raw += self.forge()
         return raw
 
+class Proposals(Operation):
+    """Class representing a tezos proposals."""
+
+    proposals_: List[str]
+    source: str
+    period: int
+
+    def __init__(self,
+                 proposals: List[str] = [Default.PROTOCOL_HASH],
+                 source: str = Default.ED25519_PUBLIC_KEY_HASH,
+                 period: int = 0,
+                 **kwargs):
+        self.proposals_ = proposals
+        self.source = source
+        self.period = period
+        Operation.__init__(self, **kwargs)
+
+    def forge(self) -> bytes:
+        return OperationForge.proposals(
+            self.proposals(
+                self.proposals_,
+                self.source,
+                self.period
+            )
+        )
+
 class FailingNoop(Operation):
     """Class representing a tezos failing-noop."""
 
@@ -131,7 +175,7 @@ class FailingNoop(Operation):
         Operation.__init__(self, **kwargs)
 
     def forge(self) -> bytes:
-        return forge_failing_noop(self.failing_noop(self.message))
+        return OperationForge.failing_noop(self.failing_noop(self.message))
 
 class ManagerOperation(Operation):
     """Class representing a tezos manager operation."""
@@ -168,7 +212,7 @@ class Reveal(ManagerOperation):
         ManagerOperation.__init__(self, **kwargs)
 
     def forge(self) -> bytes:
-        return forge_reveal(
+        return OperationForge.reveal(
             self.reveal(
                 self.public_key,
                 self.source,
@@ -201,7 +245,7 @@ class Transaction(ManagerOperation):
 
     def forge(self) -> bytes:
         parameters = { "entrypoint": self.entrypoint, "value": self.parameter }
-        return forge_transaction(
+        return OperationForge.transaction(
             self.transaction(
                 self.destination,
                 self.amount,
@@ -236,7 +280,7 @@ class Origination(ManagerOperation):
 
     def forge(self) -> bytes:
         script = { "code": self.code, "storage": self.storage }
-        return forge_origination(
+        return OperationForge.origination(
             self.origination(
                 script,
                 self.balance,
@@ -261,7 +305,7 @@ class Delegation(ManagerOperation):
         ManagerOperation.__init__(self, **kwargs)
 
     def forge(self) -> bytes:
-        return forge_delegation(
+        return OperationForge.delegation(
             self.delegation(
                 self.delegate,
                 self.source,
@@ -284,7 +328,7 @@ class RegisterGlobalConstant(ManagerOperation):
         ManagerOperation.__init__(self, **kwargs)
 
     def forge(self) -> bytes:
-        return forge_register_global_constant(
+        return OperationForge.register_global_constant(
             self.register_global_constant(
                 self.value,
                 self.source,
@@ -322,7 +366,7 @@ class TransferTicket(ManagerOperation):
         ManagerOperation.__init__(self, **kwargs)
 
     def forge(self) -> bytes:
-        return forge_transfer_ticket(
+        return OperationForge.transfer_ticket(
             self.transfer_ticket(
                 self.ticket_contents,
                 self.ticket_ty,
@@ -350,7 +394,7 @@ class ScRollupAddMessage(ManagerOperation):
         ManagerOperation.__init__(self, **kwargs)
 
     def forge(self) -> bytes:
-        return forge_smart_rollup_add_messages(
+        return OperationForge.smart_rollup_add_messages(
             self.smart_rollup_add_messages(
                 self.message,
                 self.source,
@@ -379,7 +423,7 @@ class ScRollupExecuteOutboxMessage(ManagerOperation):
         ManagerOperation.__init__(self, **kwargs)
 
     def forge(self) -> bytes:
-        return forge_smart_rollup_execute_outbox_message(
+        return OperationForge.smart_rollup_execute_outbox_message(
             self.smart_rollup_execute_outbox_message(
                 self.rollup,
                 self.cemented_commitment,
