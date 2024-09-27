@@ -30,6 +30,7 @@ from pytezos.operation.forge import (
     forge_origination,
     forge_delegation,
     forge_register_global_constant,
+    forge_transfer_ticket,
 )
 
 class Message(ABC):
@@ -63,6 +64,7 @@ class Default:
     """Class holding default values."""
     BLOCK_HASH: str              = 'BKiHLREqU3JkXfzEDYAkmmfX48gBDtYhMrpA98s7Aq4SzbUAB6M'
     ED25519_PUBLIC_KEY_HASH: str = 'tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU'
+    ORIGINATED_ADDRESS: str      = 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT'
     ED25519_PUBLIC_KEY: str      = 'edpkteDwHwoNPB18tKToFKeSCykvr1ExnoMV5nawTJy9Y9nLTfQ541'
     ENTRYPOINT: str              = 'default'
 
@@ -281,6 +283,49 @@ class RegisterGlobalConstant(ManagerOperation):
         return forge_register_global_constant(
             self.register_global_constant(
                 self.value,
+                self.source,
+                self.counter,
+                self.fee,
+                self.gas_limit,
+                self.storage_limit
+            )
+        )
+
+class TransferTicket(ManagerOperation):
+    """Class representing a tezos transfer ticket."""
+
+    ticket_contents: Micheline
+    ticket_ty: Micheline
+    ticket_ticketer: str
+    ticket_amount: int
+    destination: str
+    entrypoint: str
+
+    def __init__(self,
+                 ticket_contents: Micheline = Default.DefaultMicheline.VALUE,
+                 ticket_ty: Micheline = Default.DefaultMicheline.TYPE,
+                 ticket_ticketer: str = Default.ORIGINATED_ADDRESS,
+                 ticket_amount: int = 0,
+                 destination: str = Default.ORIGINATED_ADDRESS,
+                 entrypoint: str = Default.ENTRYPOINT,
+                 **kwargs):
+        self.ticket_contents = ticket_contents
+        self.ticket_ty = ticket_ty
+        self.ticket_ticketer = ticket_ticketer
+        self.ticket_amount = ticket_amount
+        self.destination = destination
+        self.entrypoint = entrypoint
+        ManagerOperation.__init__(self, **kwargs)
+
+    def forge(self) -> bytes:
+        return forge_transfer_ticket(
+            self.transfer_ticket(
+                self.ticket_contents,
+                self.ticket_ty,
+                self.ticket_ticketer,
+                self.ticket_amount,
+                self.destination,
+                self.entrypoint,
                 self.source,
                 self.counter,
                 self.fee,
