@@ -31,6 +31,7 @@ from pytezos.operation.forge import (
     forge_delegation,
     forge_register_global_constant,
     forge_transfer_ticket,
+    forge_smart_rollup_add_messages,
 )
 
 class Message(ABC):
@@ -326,6 +327,29 @@ class TransferTicket(ManagerOperation):
                 self.ticket_amount,
                 self.destination,
                 self.entrypoint,
+                self.source,
+                self.counter,
+                self.fee,
+                self.gas_limit,
+                self.storage_limit
+            )
+        )
+
+class ScRollupAddMessage(ManagerOperation):
+    """Class representing a tezos smart rollup add message."""
+
+    message: List[bytes]
+
+    def __init__(self,
+                 message: List[bytes] = [b''],
+                 **kwargs):
+        self.message = message
+        ManagerOperation.__init__(self, **kwargs)
+
+    def forge(self) -> bytes:
+        return forge_smart_rollup_add_messages(
+            self.smart_rollup_add_messages(
+                self.message,
                 self.source,
                 self.counter,
                 self.fee,
