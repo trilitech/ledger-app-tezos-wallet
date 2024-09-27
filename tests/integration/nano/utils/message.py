@@ -117,6 +117,29 @@ class OperationBuilder(ContentMixin):
 
         return self.operation(content)
 
+    def increase_paid_storage(
+            self,
+            amount: int = 0,
+            destination: str = '',
+            source: str = '',
+            counter: int = 0,
+            fee: int = 0,
+            gas_limit: int = 0,
+            storage_limit: int = 0):
+        """Build a Tezos increase-paid-storage."""
+        return self.operation(
+            {
+                'kind': 'increase_paid_storage',
+                'source': source,
+                'fee': format_mutez(fee),
+                'counter': str(counter),
+                'gas_limit': str(gas_limit),
+                'storage_limit': str(storage_limit),
+                'amount': str(amount),
+                'destination': destination,
+            }
+        )
+
 class OperationForge:
     """Class to helps forging Tezos operation."""
 
@@ -128,6 +151,7 @@ class OperationForge:
 
     # Insert new operation tag
     operation_tags['set_deposit_limit'] = 112
+    operation_tags['increase_paid_storage'] = 113
 
     failing_noop = forge_operation.forge_failing_noop
     reveal = forge_operation.forge_reveal
@@ -176,6 +200,19 @@ class OperationForge:
         else:
             res += forge_bool(False)
 
+        return res
+
+    @staticmethod
+    def increase_paid_storage(content: Dict[str, Any]) -> bytes:
+        """Forge a Tezos increase-paid-storage."""
+        res = forge_tag(operation_tags[content['kind']])
+        res += forge_address(content['source'], tz_only=True)
+        res += forge_nat(int(content['fee']))
+        res += forge_nat(int(content['counter']))
+        res += forge_nat(int(content['gas_limit']))
+        res += forge_nat(int(content['storage_limit']))
+        res += forge_nat(int(content['amount']))
+        res += forge_address(content['destination'])
         return res
 
 class Operation(Message, OperationBuilder):
@@ -443,6 +480,33 @@ class SetDepositLimit(ManagerOperation):
         return OperationForge.set_deposit_limit(
             self.set_deposit_limit(
                 self.limit,
+                self.source,
+                self.counter,
+                self.fee,
+                self.gas_limit,
+                self.storage_limit
+            )
+        )
+
+class IncreasePaidStorage(ManagerOperation):
+    """Class representing a tezos increase paid storage."""
+
+    amount: int
+    destination: str
+
+    def __init__(self,
+                 amount: int = 0,
+                 destination: str = Default.ORIGINATED_ADDRESS,
+                 **kwargs):
+        self.amount = amount
+        self.destination = destination
+        ManagerOperation.__init__(self, **kwargs)
+
+    def forge(self) -> bytes:
+        return OperationForge.increase_paid_storage(
+            self.increase_paid_storage(
+                self.amount,
+                self.destination,
                 self.source,
                 self.counter,
                 self.fee,
