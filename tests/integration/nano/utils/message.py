@@ -24,9 +24,11 @@ from pytezos.michelson.forge import (
     forge_address,
     forge_array,
     forge_base58,
+    forge_bool,
     forge_int32,
+    forge_nat,
 )
-from pytezos.operation.content import ContentMixin
+from pytezos.operation.content import ContentMixin, format_mutez
 import pytezos.operation.forge as forge_operation
 from pytezos.operation.forge import reserved_entrypoints, forge_tag
 from pytezos.rpc.kind import operation_tags
@@ -92,6 +94,29 @@ class OperationBuilder(ContentMixin):
 
         return delegation
 
+    def set_deposit_limit(
+            self,
+            limit: Optional[int] = None,
+            source: str = '',
+            counter: int = 0,
+            fee: int = 0,
+            gas_limit: int = 0,
+            storage_limit: int = 0):
+        """Build a Tezos set-deposit-limit."""
+        content = {
+            'kind': 'set_deposit_limit',
+            'source': source,
+            'fee': format_mutez(fee),
+            'counter': str(counter),
+            'gas_limit': str(gas_limit),
+            'storage_limit': str(storage_limit),
+        }
+
+        if limit is not None:
+            content['limit'] = format_mutez(limit)
+
+        return self.operation(content)
+
 class OperationForge:
     """Class to helps forging Tezos operation."""
 
@@ -100,6 +125,9 @@ class OperationForge:
     reserved_entrypoints['unstake'] = b'\x07'
     reserved_entrypoints['finalize_unstake'] = b'\x08'
     reserved_entrypoints['delegate_parameters'] = b'\x09'
+
+    # Insert new operation tag
+    operation_tags['set_deposit_limit'] = 112
 
     failing_noop = forge_operation.forge_failing_noop
     reveal = forge_operation.forge_reveal
@@ -130,6 +158,24 @@ class OperationForge:
         res += forge_int32(int(content['period']))
         res += forge_base58(content['proposal'])
         res += forge_int_fixed(OperationForge.BALLOT_TAG[content['ballot']], 1)
+        return res
+
+    @staticmethod
+    def set_deposit_limit(content: Dict[str, Any]) -> bytes:
+        """Forge a Tezos set-deposit-limit."""
+        res = forge_tag(operation_tags[content['kind']])
+        res += forge_address(content['source'], tz_only=True)
+        res += forge_nat(int(content['fee']))
+        res += forge_nat(int(content['counter']))
+        res += forge_nat(int(content['gas_limit']))
+        res += forge_nat(int(content['storage_limit']))
+
+        if content.get('limit'):
+            res += forge_bool(True)
+            res += forge_nat(int(content['limit']))
+        else:
+            res += forge_bool(False)
+
         return res
 
 class Operation(Message, OperationBuilder):
@@ -374,6 +420,29 @@ class RegisterGlobalConstant(ManagerOperation):
         return OperationForge.register_global_constant(
             self.register_global_constant(
                 self.value,
+                self.source,
+                self.counter,
+                self.fee,
+                self.gas_limit,
+                self.storage_limit
+            )
+        )
+
+class SetDepositLimit(ManagerOperation):
+    """Class representing a tezos set deposit limit."""
+
+    limit: Optional[int]
+
+    def __init__(self,
+                 limit: Optional[int] = None,
+                 **kwargs):
+        self.limit = limit
+        ManagerOperation.__init__(self, **kwargs)
+
+    def forge(self) -> bytes:
+        return OperationForge.set_deposit_limit(
+            self.set_deposit_limit(
+                self.limit,
                 self.source,
                 self.counter,
                 self.fee,
