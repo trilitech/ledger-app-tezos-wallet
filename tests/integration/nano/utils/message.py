@@ -28,6 +28,7 @@ from pytezos.operation.forge import (
     forge_transaction,
     forge_reveal,
     forge_origination,
+    forge_delegation,
 )
 
 class Message(ABC):
@@ -81,7 +82,19 @@ reserved_entrypoints['unstake'] = b'\x07'
 reserved_entrypoints['finalize_unstake'] = b'\x08'
 reserved_entrypoints['delegate_parameters'] = b'\x09'
 
-class Operation(Message, ContentMixin):
+class OperationBuilder(ContentMixin):
+    """Class representing to extends and fix pytezos.ContentMixin."""
+
+    def delegation(self, delegate, *args, **kwargs):
+        delegation = super().delegation(delegate, *args, **kwargs)
+
+        if delegate is None:
+            delegation.pop('delegate')
+
+        return delegation
+
+
+class Operation(Message, OperationBuilder):
     """Class representing a tezos operation."""
 
     branch: str
@@ -220,6 +233,29 @@ class Origination(ManagerOperation):
             self.origination(
                 script,
                 self.balance,
+                self.delegate,
+                self.source,
+                self.counter,
+                self.fee,
+                self.gas_limit,
+                self.storage_limit
+            )
+        )
+
+class Delegation(ManagerOperation):
+    """Class representing a tezos delegation."""
+
+    delegate: Optional[str]
+
+    def __init__(self,
+                 delegate: Optional[str] = None,
+                 **kwargs):
+        self.delegate = delegate
+        ManagerOperation.__init__(self, **kwargs)
+
+    def forge(self) -> bytes:
+        return forge_delegation(
+            self.delegation(
                 self.delegate,
                 self.source,
                 self.counter,
