@@ -27,6 +27,7 @@ from pytezos.michelson.forge import (
     forge_bool,
     forge_int32,
     forge_nat,
+    forge_public_key,
 )
 from pytezos.operation.content import ContentMixin, format_mutez
 import pytezos.operation.forge as forge_operation
@@ -140,6 +141,27 @@ class OperationBuilder(ContentMixin):
             }
         )
 
+    def update_consensus_key(
+            self,
+            pk: str = '',
+            source: str = '',
+            counter: int = 0,
+            fee: int = 0,
+            gas_limit: int = 0,
+            storage_limit: int = 0):
+        """Build a Tezos update-consensus-key."""
+        return self.operation(
+            {
+                'kind': 'update_consensus_key',
+                'source': source,
+                'fee': format_mutez(fee),
+                'counter': str(counter),
+                'gas_limit': str(gas_limit),
+                'storage_limit': str(storage_limit),
+                'pk': pk,
+            }
+        )
+
 class OperationForge:
     """Class to helps forging Tezos operation."""
 
@@ -152,6 +174,7 @@ class OperationForge:
     # Insert new operation tag
     operation_tags['set_deposit_limit'] = 112
     operation_tags['increase_paid_storage'] = 113
+    operation_tags['update_consensus_key'] = 114
 
     failing_noop = forge_operation.forge_failing_noop
     reveal = forge_operation.forge_reveal
@@ -213,6 +236,18 @@ class OperationForge:
         res += forge_nat(int(content['storage_limit']))
         res += forge_nat(int(content['amount']))
         res += forge_address(content['destination'])
+        return res
+
+    @staticmethod
+    def update_consensus_key(content: Dict[str, Any]) -> bytes:
+        """Forge a Tezos update-consensus-key."""
+        res = forge_tag(operation_tags[content['kind']])
+        res += forge_address(content['source'], tz_only=True)
+        res += forge_nat(int(content['fee']))
+        res += forge_nat(int(content['counter']))
+        res += forge_nat(int(content['gas_limit']))
+        res += forge_nat(int(content['storage_limit']))
+        res += forge_public_key(content['pk'])
         return res
 
 class Operation(Message, OperationBuilder):
@@ -507,6 +542,29 @@ class IncreasePaidStorage(ManagerOperation):
             self.increase_paid_storage(
                 self.amount,
                 self.destination,
+                self.source,
+                self.counter,
+                self.fee,
+                self.gas_limit,
+                self.storage_limit
+            )
+        )
+
+class UpdateConsensusKey(ManagerOperation):
+    """Class representing a tezos update consensus key."""
+
+    pk: str
+
+    def __init__(self,
+                 pk: str = Default.ED25519_PUBLIC_KEY,
+                 **kwargs):
+        self.pk = pk
+        ManagerOperation.__init__(self, **kwargs)
+
+    def forge(self) -> bytes:
+        return OperationForge.update_consensus_key(
+            self.update_consensus_key(
+                self.pk,
                 self.source,
                 self.counter,
                 self.fee,

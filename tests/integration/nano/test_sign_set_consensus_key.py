@@ -18,12 +18,7 @@
 from pathlib import Path
 
 from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
-from utils.message import RawMessage
-
-# Operation (0): Set consensus key
-# Fee: 0.01 XTZ
-# Storage limit: 4
-# Public key: edpkuXX2VdkdXzkN11oLCb8Aurdo1BTAtQiK8ZY9UPj2YMt3AHEpcY
+from utils.message import UpdateConsensusKey
 
 def test_sign_set_consensus_key(app: TezosAppScreen):
     """Check signing set consensus key"""
@@ -31,7 +26,14 @@ def test_sign_set_consensus_key(app: TezosAppScreen):
 
     app.assert_screen(Screen.HOME)
 
-    message = RawMessage("0300000000000000000000000000000000000000000000000000000000000000007200c921d4487c90b4472da6cc566a58d79f0d991dbf904e02030400747884d9abdf16b3ab745158925f567e222f71225501826fa83347f6cbe9c393")
+    message = UpdateConsensusKey(
+        source = 'tz1dyX3B1CFYa2DfdFLyPtiJCfQRUgPVME6E',
+        fee = 10000,
+        counter = 2,
+        gas_limit = 3,
+        storage_limit = 4,
+        pk = "edpkuXX2VdkdXzkN11oLCb8Aurdo1BTAtQiK8ZY9UPj2YMt3AHEpcY"
+    )
 
     data = app.sign(DEFAULT_ACCOUNT,
                     message,
