@@ -68,6 +68,7 @@ class Default:
     SMART_ROLLUP_COMMITMENT_HASH: str    = 'src12UJzB8mg7yU6nWPzicH7ofJbFjyJEbHvwtZdfRXi8DQHNp1LY8'
     ED25519_PUBLIC_KEY: str              = 'edpkteDwHwoNPB18tKToFKeSCykvr1ExnoMV5nawTJy9Y9nLTfQ541'
     ENTRYPOINT: str                      = 'default'
+    BALLOT: str                          = 'yay'
 
     class DefaultMicheline:
         """Class holding Micheline default values."""
@@ -119,6 +120,18 @@ class OperationForge:
         res += forge_array(b''.join(map(forge_base58, content['proposals'])))
         return res
 
+    BALLOT_TAG = { 'yay': 0, 'nay': 1, 'pass': 2 }
+
+    @staticmethod
+    def ballot(content: Dict[str, Any]) -> bytes:
+        """Forge a Tezos ballot."""
+        res = forge_tag(operation_tags[content['kind']])
+        res += forge_address(content['source'], tz_only=True)
+        res += forge_int32(int(content['period']))
+        res += forge_base58(content['proposal'])
+        res += forge_int_fixed(OperationForge.BALLOT_TAG[content['ballot']], 1)
+        return res
+
 class Operation(Message, OperationBuilder):
     """Class representing a tezos operation."""
 
@@ -160,6 +173,36 @@ class Proposals(Operation):
         return OperationForge.proposals(
             self.proposals(
                 self.proposals_,
+                self.source,
+                self.period
+            )
+        )
+
+class Ballot(Operation):
+    """Class representing a tezos ballot."""
+
+    proposal : str
+    ballot_ : str
+    source : str
+    period: int
+
+    def __init__(self,
+                 proposal: str = Default.PROTOCOL_HASH,
+                 ballot: str = Default.BALLOT,
+                 source: str = Default.ED25519_PUBLIC_KEY_HASH,
+                 period: int = 0,
+                 **kwargs):
+        self.proposal = proposal
+        self.ballot_ = ballot
+        self.source = source
+        self.period = period
+        Operation.__init__(self, **kwargs)
+
+    def forge(self) -> bytes:
+        return OperationForge.ballot(
+            self.ballot(
+                self.proposal,
+                self.ballot_,
                 self.source,
                 self.period
             )

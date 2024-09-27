@@ -18,13 +18,7 @@
 from pathlib import Path
 
 from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
-from utils.message import RawMessage
-
-# Operation (0): Ballot
-# Source: tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa
-# Period: 32
-# Proposal: ProtoALphaALphaALphaALphaALphaALphaALpha61322gcLUGH
-# Ballot: yay
+from utils.message import Ballot
 
 def test_sign_ballot(app: TezosAppScreen):
     """Check signing ballot"""
@@ -32,7 +26,12 @@ def test_sign_ballot(app: TezosAppScreen):
 
     app.assert_screen(Screen.HOME)
 
-    message = RawMessage("0300000000000000000000000000000000000000000000000000000000000000000600ffdd6102321bc251e4a5190ad5b12b251069d9b4000000200bcd7b2cadcd87ecb0d5c50330fb59feed7432bffecede8a09a2b86cfb33847b00")
+    message = Ballot(
+        source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
+        proposal = 'ProtoALphaALphaALphaALphaALphaALphaALpha61322gcLUGH',
+        ballot = 'yay',
+        period = 32
+    )
 
     data = app.sign(DEFAULT_ACCOUNT,
                     message,
