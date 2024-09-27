@@ -29,6 +29,7 @@ from pytezos.operation.forge import (
     forge_reveal,
     forge_origination,
     forge_delegation,
+    forge_register_global_constant,
 )
 
 class Message(ABC):
@@ -257,6 +258,29 @@ class Delegation(ManagerOperation):
         return forge_delegation(
             self.delegation(
                 self.delegate,
+                self.source,
+                self.counter,
+                self.fee,
+                self.gas_limit,
+                self.storage_limit
+            )
+        )
+
+class RegisterGlobalConstant(ManagerOperation):
+    """Class representing a tezos register global constant."""
+
+    value: Micheline
+
+    def __init__(self,
+                 value: Micheline = Default.DefaultMicheline.VALUE,
+                 **kwargs):
+        self.value = value
+        ManagerOperation.__init__(self, **kwargs)
+
+    def forge(self) -> bytes:
+        return forge_register_global_constant(
+            self.register_global_constant(
+                self.value,
                 self.source,
                 self.counter,
                 self.fee,
