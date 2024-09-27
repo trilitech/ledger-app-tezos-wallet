@@ -24,6 +24,7 @@ from pytezos.michelson.forge import forge_base58
 from pytezos.operation.content import ContentMixin
 from pytezos.operation.forge import (
     reserved_entrypoints,
+    forge_failing_noop,
     forge_transaction,
 )
 
@@ -94,6 +95,18 @@ class Operation(Message, ContentMixin):
         raw += forge_base58(self.branch)
         raw += self.forge()
         return raw
+
+class FailingNoop(Operation):
+    """Class representing a tezos failing-noop."""
+
+    message: str
+
+    def __init__(self, message: str = "", **kwargs):
+        self.message = message
+        Operation.__init__(self, **kwargs)
+
+    def forge(self) -> bytes:
+        return forge_failing_noop(self.failing_noop(self.message))
 
 class ManagerOperation(Operation):
     """Class representing a tezos manager operation."""
