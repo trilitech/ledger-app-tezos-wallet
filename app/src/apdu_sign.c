@@ -67,7 +67,6 @@ static void handle_data_apdu_blind(void);
 static void pass_from_clear_to_summary(void);
 #ifdef HAVE_BAGL
 static void init_too_many_screens_stream(void);
-static void init_blind_warning_stream(void);
 #endif
 #ifdef HAVE_NBGL
 static void continue_blindsign_cb(void);
@@ -239,7 +238,6 @@ refill_blo_im_full(void)
 #ifdef HAVE_BAGL
     if ((N_settings.blindsign_status != ST_BLINDSIGN_OFF)
         && (SCREEN_DISPLAYED >= NB_MAX_SCREEN_ALLOWED)) {
-        global.blindsign_reason = REASON_TOO_MANY_SCREENS;
         pass_from_clear_to_summary();
         TZ_SUCCEED();
     }
@@ -334,11 +332,7 @@ refill_blo_done(void)
 
 #ifdef HAVE_BAGL
     if (global.step == ST_SUMMARY_SIGN) {
-        if (global.blindsign_reason == REASON_TOO_MANY_SCREENS) {
-            init_too_many_screens_stream();
-        } else {
-            init_blind_warning_stream();
-        }
+        init_too_many_screens_stream();
         TZ_SUCCEED();
     }
     tz_ui_stream_push_accept_reject();
@@ -540,7 +534,9 @@ stream_cb(tz_ui_cb_type_t cb_type)
     case TZ_UI_STREAM_CB_BLINDSIGN_REJECT: send_reject(EXC_PARSE_ERROR);           break;
     case TZ_UI_STREAM_CB_CANCEL:           TZ_CHECK(send_cancel());                break;
     case TZ_UI_STREAM_CB_BLINDSIGN:        TZ_CHECK(pass_from_clear_to_blind());   break;
+#ifdef HAVE_NBGL
     case TZ_UI_STREAM_CB_SUMMARY:          TZ_CHECK(pass_from_clear_to_summary()); break;
+#endif
     default: TZ_FAIL(EXC_UNKNOWN);                                                 break;
     }
     // clang-format on
@@ -687,20 +683,6 @@ init_too_many_screens_stream(void)
 }
 
 static void
-init_blind_warning_stream(void)
-{
-    tz_ui_stream_init(pass_to_summary_stream_cb);
-
-    tz_ui_stream_push_warning_not_trusted(NULL, NULL);
-    tz_ui_stream_push_risky_accept_reject(TZ_UI_STREAM_CB_VALIDATE,
-                                          TZ_UI_STREAM_CB_REJECT);
-
-    tz_ui_stream_close();
-
-    tz_ui_stream();
-}
-
-static void
 bs_push_next(void)
 {
 #define BLINDSIGN_STEP global.keys.apdu.sign.u.blind.step
@@ -814,16 +796,6 @@ handle_first_apdu_clear(__attribute__((unused)) command_t *cmd)
         tz_ui_stream_push(TZ_UI_STREAM_CB_NOCB, "Review", "operation",
                           TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_EYE);
 #endif
-        if (N_settings.blindsign_status == ST_BLINDSIGN_ON) {
-#ifdef TARGET_NANOS
-            tz_ui_stream_push(TZ_UI_STREAM_CB_SUMMARY, "Blindsign?", "",
-                              TZ_UI_LAYOUT_HOME_PB, TZ_UI_ICON_WARNING);
-#else
-            tz_ui_stream_push(TZ_UI_STREAM_CB_SUMMARY, "Switch to",
-                              "blindsign?", TZ_UI_LAYOUT_HOME_PB,
-                              TZ_UI_ICON_WARNING);
-#endif
-        }
 #endif
 #ifdef HAVE_SWAP
     } else {

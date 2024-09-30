@@ -76,11 +76,13 @@ typedef enum {
 #define NB_MAX_SCREEN_ALLOWED 8
 #endif
 
+#ifdef HAVE_NBGL
 typedef enum {
     REASON_NONE             = 0,
     REASON_PARSING_ERROR    = 1,
     REASON_TOO_MANY_SCREENS = 2
 } blindsign_reason_t;
+#endif
 
 /**
  * @brief Global structure holding state of operations and buffer of the data
@@ -114,9 +116,9 @@ typedef struct {
                                     /// "ON" , "OFF"
 #endif
 
-    blindsign_reason_t
-        blindsign_reason;  /// Blindsigning flow Summary or parsing error.
 #ifdef HAVE_NBGL
+    blindsign_reason_t
+         blindsign_reason;  /// Blindsigning flow Summary or parsing error.
     char error_code[ERROR_CODE_SIZE];  /// Error code for parsing error.
 #endif
     main_step_t step;  /// Current operational state of app.
