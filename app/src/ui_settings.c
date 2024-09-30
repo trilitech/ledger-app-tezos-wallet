@@ -64,16 +64,12 @@ ui_settings_init(int16_t page)
     }
 
     switch (N_settings.blindsign_status) {
-    case ST_BLINDSIGN_LARGE_TX:
-    default:
-        strncpy(global.blindsign_state_desc, "For Large Tx",
-                sizeof(global.blindsign_state_desc));
-        break;
     case ST_BLINDSIGN_ON:
         strncpy(global.blindsign_state_desc, "ON",
                 sizeof(global.blindsign_state_desc));
         break;
     case ST_BLINDSIGN_OFF:
+    default:
         strncpy(global.blindsign_state_desc, "OFF",
                 sizeof(global.blindsign_state_desc));
         break;

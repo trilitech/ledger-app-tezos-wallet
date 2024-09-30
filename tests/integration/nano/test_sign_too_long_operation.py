@@ -25,6 +25,7 @@ test_path = Path(Path(__file__).stem)
 def _sign_too_long(app, msg: str, navigate: Callable[[], None]):
 
     app.setup_expert_mode()
+    app.setup_blindsign_on()
 
     message = Message.from_bytes(msg)
 
@@ -57,6 +58,7 @@ def _reject_too_long(
         navigate: Callable[[], None]):
 
     app.setup_expert_mode()
+    app.setup_blindsign_on()
 
     message = Message.from_bytes(msg)
 

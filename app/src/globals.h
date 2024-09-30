@@ -63,9 +63,14 @@ typedef enum {
 } main_step_t;
 
 typedef enum {
+#ifdef HAVE_BAGL
+    ST_BLINDSIGN_OFF = 0,
+    ST_BLINDSIGN_ON
+#else
     ST_BLINDSIGN_LARGE_TX = 0,
     ST_BLINDSIGN_ON       = 1,
     ST_BLINDSIGN_OFF      = 2
+#endif
 } blindsign_state_t;
 
 #ifdef TARGET_NANOS
