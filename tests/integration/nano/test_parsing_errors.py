@@ -21,6 +21,17 @@ from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
 from utils.backend import StatusCode
 from utils.message import RawMessage
 
+# Operation (0): Transaction
+# Source: tz2JPgTWZZpxZZLqHMfS69UAy1UHm4Aw5iHu
+# Fee: 0.05 XTZ
+# Gas limit: 54
+# Counter: 8
+# Storage limit: 45
+# Amount: 0.24 XTZ
+# Destination: KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT
+# Entrypoint: do
+# Parameter: CAR
+
 # original bytes : 0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316
 
 def test_parsing_errors(app: TezosAppScreen):

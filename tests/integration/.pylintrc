@@ -1,6 +1,7 @@
 [MESSAGES CONTROL]
 disable=
     broad-exception-caught,
+    dangerous-default-value,
     global-statement,
     line-too-long,
     protected-access,
