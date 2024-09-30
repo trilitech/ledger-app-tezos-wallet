@@ -144,7 +144,6 @@ class Screen(str, Enum):
     Settings = "settings"
     Settings_expert_mode_disabled = "settings_expert_mode_disabled"
     Settings_expert_mode_enabled = "settings_expert_mode_enabled"
-    Settings_blindsign_large_tx = "settings_blindsign_large_tx"
     Settings_blindsign_on = "settings_blindsign_on"
     Settings_blindsign_off = "settings_blindsign_off"
     Settings_back = "back"
@@ -245,28 +244,9 @@ class TezosAppScreen():
         self.backend.both_click()
         # expert_mode screen
         self.backend.right_click()
-        self.assert_screen(Screen.Settings_blindsign_large_tx)
-        self.backend.both_click()
-        self.assert_screen(Screen.Settings_blindsign_on)
-        self.backend.right_click()
-        self.assert_screen(Screen.Settings_back)
-        self.backend.both_click()
-        self.assert_screen(Screen.Home)
-
-    def setup_blindsign_off(self) -> None:
-        self.assert_screen(Screen.Home)
-        self.backend.right_click()
-        self.assert_screen(Screen.Version)
-        self.backend.right_click()
-        self.assert_screen(Screen.Settings)
-        self.backend.both_click()
-        # expert_mode screen
-        self.backend.right_click()
-        self.assert_screen(Screen.Settings_blindsign_large_tx)
-        self.backend.both_click()
-        self.assert_screen(Screen.Settings_blindsign_on)
-        self.backend.both_click()
         self.assert_screen(Screen.Settings_blindsign_off)
+        self.backend.both_click()
+        self.assert_screen(Screen.Settings_blindsign_on)
         self.backend.right_click()
         self.assert_screen(Screen.Settings_back)
         self.backend.both_click()

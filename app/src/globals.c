@@ -58,6 +58,6 @@ set_blindsign_status(blindsign_state_t status)
 void
 toggle_blindsign_status(void)
 {
-    blindsign_state_t status = (N_settings.blindsign_status + 1) % 3;
+    blindsign_state_t status = (N_settings.blindsign_status + 1) % 2;
     set_blindsign_status(status);
 }

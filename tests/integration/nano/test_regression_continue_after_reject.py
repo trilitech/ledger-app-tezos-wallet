@@ -25,7 +25,6 @@ def test_regression_continue_after_reject(app):
         return Path(test_name) / name
 
     app.setup_expert_mode()
-    app.setup_blindsign_off()
 
     app.reject_public_key(DEFAULT_ACCOUNT, make_path("reject_public_key"))
 
