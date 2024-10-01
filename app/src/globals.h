@@ -77,15 +77,12 @@ typedef enum {
 #define NB_MAX_SCREEN_ALLOWED 20
 #elif defined(HAVE_BAGL)
 #define NB_MAX_SCREEN_ALLOWED 12
-#else
-#define NB_MAX_SCREEN_ALLOWED 8
 #endif
 
 #ifdef HAVE_NBGL
 typedef enum {
-    REASON_NONE             = 0,
-    REASON_PARSING_ERROR    = 1,
-    REASON_TOO_MANY_SCREENS = 2
+    REASON_NONE          = 0,
+    REASON_PARSING_ERROR = 1
 } blindsign_reason_t;
 #endif
 

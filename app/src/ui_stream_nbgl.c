@@ -32,7 +32,6 @@ void        drop_last_screen(void);
 void        push_str(const char *text, size_t len, char **out);
 void        switch_to_blindsigning_on_error(void);
 static void ui_stream_init(void);
-#define SCREEN_DISPLAYED global.keys.apdu.sign.u.clear.screen_displayed
 
 void
 tz_reject(void)
@@ -73,7 +72,6 @@ blindsign_skip_callback(void)
     TZ_PREAMBLE(("Blindsign reason: %d", global.blindsign_reason));
 
     if (global.blindsign_reason == REASON_NONE) {
-        global.blindsign_reason = REASON_TOO_MANY_SCREENS;
         tz_ui_stream_close();
         tz_ui_stream_t *s = &global.stream;
         s->cb(TZ_UI_STREAM_CB_SUMMARY);
@@ -88,20 +86,14 @@ blindsign_choice(bool confirm)
 {
     TZ_PREAMBLE(("void"));
     if (confirm) {
-        if (global.blindsign_reason != REASON_TOO_MANY_SCREENS) {
-            global.step = ST_BLIND_SIGN;
-        }
+        global.step = ST_BLIND_SIGN;
         tz_reject_ui();
     } else {
         tz_ui_stream_t *s = &global.stream;
 
         TZ_ASSERT(EXC_UNEXPECTED_STATE,
                   global.blindsign_reason != REASON_NONE);
-        if (global.blindsign_reason == REASON_TOO_MANY_SCREENS) {
-            s->cb(TZ_UI_STREAM_CB_SUMMARY);
-        } else {
-            s->cb(TZ_UI_STREAM_CB_BLINDSIGN);
-        }
+        s->cb(TZ_UI_STREAM_CB_BLINDSIGN);
     }
 
     TZ_POSTAMBLE;
@@ -531,7 +523,6 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
         || (!append && (++(s->screens[bucket].nb_pairs) == max_pairs))
         || (append && (offset == 0))) {
         s->total++;
-        SCREEN_DISPLAYED++;
         if ((s->total > 0)
             && ((s->total % TZ_UI_STREAM_HISTORY_SCREENS)
                 == (s->last % TZ_UI_STREAM_HISTORY_SCREENS))) {

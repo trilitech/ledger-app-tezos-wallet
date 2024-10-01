@@ -88,7 +88,9 @@ static void init_summary_stream(void);
 #define APDU_SIGN_ASSERT_STEP(x) \
     APDU_SIGN_ASSERT(global.keys.apdu.sign.step == (x))
 
+#ifdef HAVE_BAGL
 #define SCREEN_DISPLAYED global.keys.apdu.sign.u.clear.screen_displayed
+#endif
 
 #ifdef HAVE_BAGL
 void
@@ -271,17 +273,6 @@ refill_blo_im_full(void)
 #elif HAVE_NBGL
     PRINTF("[DEBUG] field=%s complex=%d\n", st->field_info.field_name,
            st->field_info.is_field_complex);
-    if ((N_settings.blindsign_status != ST_BLINDSIGN_OFF)
-        && (SCREEN_DISPLAYED >= NB_MAX_SCREEN_ALLOWED)) {
-        strncpy(global.error_code, "TOO_MANY_SCREENS", ERROR_CODE_SIZE);
-        tz_ui_stream_push_all(TZ_UI_STREAM_CB_CANCEL,
-                              st->field_info.field_name, "TOO_MANY_SCREENS",
-                              TZ_UI_LAYOUT_BN, TZ_UI_ICON_NONE);
-
-        global.blindsign_reason = REASON_TOO_MANY_SCREENS;
-
-        TZ_SUCCEED();
-    }
     if (st->field_info.is_field_complex
         && !global.keys.apdu.sign.u.clear.displayed_expert_warning) {
         global.keys.apdu.sign.u.clear.last_field_index
