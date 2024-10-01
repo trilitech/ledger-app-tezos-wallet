@@ -113,9 +113,9 @@ if __name__ == "__main__":
     app.settings.exit()
 
     if(app.firmware == Firmware.STAX):
-        navigate_common(app, skip=True, group_counts=[3, 1, 6, 2])
+        navigate_common(app, skip=True, group_counts=[4, 1, 6, 2])
     else:
-        navigate_common(app, skip=True, group_counts=[4, 2, 5, 3])
+        navigate_common(app, skip=True, group_counts=[7, 3, 6, 3])
 
     app.assert_home()
     app.welcome.settings()
