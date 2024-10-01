@@ -62,25 +62,18 @@ typedef enum {
     ST_ERROR          /// In error state.
 } main_step_t;
 
-typedef enum {
-    ST_BLINDSIGN_LARGE_TX = 0,
-    ST_BLINDSIGN_ON       = 1,
-    ST_BLINDSIGN_OFF      = 2
-} blindsign_state_t;
-
 #ifdef TARGET_NANOS
 #define NB_MAX_SCREEN_ALLOWED 20
 #elif defined(HAVE_BAGL)
 #define NB_MAX_SCREEN_ALLOWED 12
-#else
-#define NB_MAX_SCREEN_ALLOWED 8
 #endif
 
+#ifdef HAVE_NBGL
 typedef enum {
-    REASON_NONE             = 0,
-    REASON_PARSING_ERROR    = 1,
-    REASON_TOO_MANY_SCREENS = 2
+    REASON_NONE          = 0,
+    REASON_PARSING_ERROR = 1
 } blindsign_reason_t;
+#endif
 
 /**
  * @brief Global structure holding state of operations and buffer of the data
@@ -114,9 +107,9 @@ typedef struct {
                                     /// "ON" , "OFF"
 #endif
 
-    blindsign_reason_t
-        blindsign_reason;  /// Blindsigning flow Summary or parsing error.
 #ifdef HAVE_NBGL
+    blindsign_reason_t
+         blindsign_reason;  /// Blindsigning flow Summary or parsing error.
     char error_code[ERROR_CODE_SIZE];  /// Error code for parsing error.
 #endif
     main_step_t step;  /// Current operational state of app.
@@ -124,9 +117,9 @@ typedef struct {
 
 /* Settings */
 typedef struct {
-    bool              expert_mode;       /// enable expert mode
-    blindsign_state_t blindsign_status;  /// Blindsign status
-} settings_t;  /// Special settings available in the app.
+    bool expert_mode;   /// enable expert mode
+    bool blindsigning;  /// Blindsign status
+} settings_t;           /// Special settings available in the app.
 
 extern globals_t global;
 
@@ -149,9 +142,6 @@ void init_globals(void);
 /// Toggles the persisted expert_mode setting
 void toggle_expert_mode(void);
 
-/// Toggles the persisted blindsign setting between "For large tx", "ON",
+/// Toggles the persisted blindsign setting between "ON",
 /// "OFF".
-void toggle_blindsign_status(void);
-
-/// set the blindsign setting between "For large tx", "ON", "OFF".
-void set_blindsign_status(blindsign_state_t status);
+void toggle_blindsigning(void);

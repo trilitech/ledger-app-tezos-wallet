@@ -13,26 +13,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from utils import tezos_app, BlindsigningStatus
+from utils import tezos_app
 
 if __name__ == "__main__":
     app = tezos_app(__file__)
 
     app.assert_home()
+    app.remove_settings_and_info()
 
     app.welcome.settings()
-    app.set_expert_mode(initial_status=False)
-    app.set_expert_mode(initial_status=True)
-    app.set_blindsigning_status(BlindsigningStatus.Large_Tx_only)
-    app.set_blindsigning_status(BlindsigningStatus.ON)
-    app.set_blindsigning_status(BlindsigningStatus.OFF)
+    app.assert_settings()
 
-    app.welcome.settings()
-    app.settings.next()
+    app.settings.toggle_blindsigning()
+    app.assert_settings(blindsigning=True)
+
+    app.settings.toggle_expert_mode()
+    app.assert_settings(blindsigning=True, expert_mode=True)
+
+    app.settings.toggle_blindsigning()
+    app.assert_settings(expert_mode=True)
+
+    app.settings.toggle_expert_mode()
+    app.assert_settings()
+
     app.settings.next()
     app.assert_info()
 
-    app.settings.multi_page_exit()
+    app.settings.exit()
     app.assert_home()
 
     app.quit()
