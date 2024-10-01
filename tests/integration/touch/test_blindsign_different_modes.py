@@ -80,15 +80,6 @@ if __name__ == "__main__":
     else:
         navigate_common(app, skip=False, group_counts=[4, 2, 5, 3])
 
-# Blindsign status For Large Tx only
-    app.assert_home()
-    app.set_blindsigning_status(BlindsigningStatus.Large_Tx_only)
-
-    if(app.firmware == Firmware.STAX):
-        navigate_common(app, skip=False, group_counts=[3, 1, 6, 2])
-    else:
-        navigate_common(app, skip=False, group_counts=[4, 2, 5, 3])
-
 # Blindsign status ON
     app.assert_home()
     app.set_blindsigning_status(BlindsigningStatus.ON)

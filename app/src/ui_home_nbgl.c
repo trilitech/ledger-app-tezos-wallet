@@ -38,7 +38,7 @@ void        tz_ui_home_redisplay(uint8_t page);
 //  -----------------------------------------------------------
 #define SETTING_INFO_NB      3
 #define SETTINGS_SWITCHES_NB 1
-#define SETTINGS_RADIO_NB    3
+#define SETTINGS_RADIO_NB    2
 static const char *const infoTypes[]    = {"Version", "Developer", "Contact"};
 static const char *const infoContents[] = {
     APPVERSION, "Trilitech Kanvas Limited et al.", "ledger-tezos@trili.tech"};
@@ -63,7 +63,7 @@ static const nbgl_contentInfoList_t infoList = {.nbInfos   = SETTING_INFO_NB,
                                                 .infoContents = infoContents};
 
 static const char *const blindsign_choices_text[]
-    = {"Blindsign For Large Tx", "Blindsigning ON", "Blindsigning OFF"};
+    = {"Blindsigning OFF", "Blindsigning ON"};
 
 static void
 get_contents(uint8_t index, nbgl_content_t *content)
@@ -97,7 +97,7 @@ controls_callback(int token, __attribute__((unused)) uint8_t index,
         expert_mode_switch.initState = (nbgl_state_t)(switch_value);
     }
     if (token == BLINDSIGN_MODE_TOKEN) {
-        blindsign_state_t blindsign_status = (blindsign_state_t)(index % 3);
+        blindsign_state_t blindsign_status = (blindsign_state_t)(index % 2);
         set_blindsign_status(blindsign_status);
         tz_ui_home_redisplay(BLINDSIGN_PAGE);
     }

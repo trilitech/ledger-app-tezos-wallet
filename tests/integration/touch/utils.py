@@ -135,9 +135,8 @@ class UseCaseAddressConfirmation(OriginalUseCaseAddressConfirmation):
 
 
 class BlindsigningStatus(Enum):
-    Large_Tx_only = 1
+    OFF = 1
     ON = 2
-    OFF = 3
 
 class BlindsigningType(Enum):
     NO_BLINDSIGN = 0
@@ -159,11 +158,9 @@ class UseCaseSettings(OriginalUseCaseSettings):
         self._toggle_list.choose(1)
 
     def set_blindigning(self, status: BlindsigningStatus):
-        if status == BlindsigningStatus.Large_Tx_only:
-            if self.firmware == Firmware.STAX:
-                self.client.finger_touch(200, 180)
-            else:
-                self.client.finger_touch(240, 140)
+        if status == BlindsigningStatus.OFF and \
+           self.firmware == Firmware.STAX:
+            self.client.finger_touch(200, 180)
         else:
             self._toggle_list.choose(status.value)
 
@@ -242,9 +239,6 @@ class TezosAppScreen(metaclass=MetaScreen):
     def remove_blindsigning_pages(self):
         """ Delete the blindsigning pages for golden tests"""
         if self.__golden:
-            blindsigning_path=os.path.join(self.__snapshots_path, "settings_BlindsigningStatus_Large_Tx_only.png")
-            if os.path.exists(blindsigning_path):
-                os.remove(blindsigning_path)
             blindsigning_path=os.path.join(self.__snapshots_path, "settings_BlindsigningStatus_ON.png")
             if os.path.exists(blindsigning_path):
                 os.remove(blindsigning_path)
@@ -304,7 +298,7 @@ class TezosAppScreen(metaclass=MetaScreen):
             suffix += "_expert_on"
         self.assert_screen("settings" + suffix)
 
-    def assert_blindsigning_status(self, blindsignStatus=BlindsigningStatus.Large_Tx_only):
+    def assert_blindsigning_status(self, blindsignStatus=BlindsigningStatus.OFF):
         suffix = "settings_" + str(blindsignStatus).replace(".", "_")
         self.assert_screen(suffix, True)
 

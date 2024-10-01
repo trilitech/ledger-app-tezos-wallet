@@ -20,10 +20,8 @@ if __name__ == "__main__":
 
     app.assert_home()
 
-    app.welcome.settings()
     app.set_expert_mode(initial_status=False)
     app.set_expert_mode(initial_status=True)
-    app.set_blindsigning_status(BlindsigningStatus.Large_Tx_only)
     app.set_blindsigning_status(BlindsigningStatus.ON)
     app.set_blindsigning_status(BlindsigningStatus.OFF)
 
