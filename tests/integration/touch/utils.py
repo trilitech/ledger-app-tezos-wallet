@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import glob
 import os
 import time
 from enum import Enum
@@ -134,10 +135,6 @@ class UseCaseAddressConfirmation(OriginalUseCaseAddressConfirmation):
         self.client.finger_touch(*self.qr_position)
 
 
-class BlindsigningStatus(Enum):
-    OFF = 1
-    ON = 2
-
 class BlindsigningType(Enum):
     NO_BLINDSIGN = 0
     BLINDSIGN = 2
@@ -157,12 +154,9 @@ class UseCaseSettings(OriginalUseCaseSettings):
         """Toggle the expert_mode switch."""
         self._toggle_list.choose(1)
 
-    def set_blindigning(self, status: BlindsigningStatus):
-        if status == BlindsigningStatus.OFF and \
-           self.firmware == Firmware.STAX:
-            self.client.finger_touch(200, 180)
-        else:
-            self._toggle_list.choose(status.value)
+    def toggle_blindsigning(self):
+        """Toggle the blindsigning switch."""
+        self._toggle_list.choose(2)
 
     def exit(self) -> None:
         """Exits settings."""
@@ -219,6 +213,11 @@ class TezosAppScreen(metaclass=MetaScreen):
         """Send hex-encoded bytes to the apdu"""
         self.__backend.send_raw(bytes.fromhex(data))
 
+    def remove_settings_and_info(self):
+        if self.__golden and self.__update_fixed:
+            self.remove_settings_pages()
+            self.remove_info_page()
+
     def remove_info_page(self):
         """ Delete the info page for golden tests"""
         if self.__golden:
@@ -226,25 +225,12 @@ class TezosAppScreen(metaclass=MetaScreen):
             if os.path.exists(info_path):
                 os.remove(info_path)
 
-    def remove_expert_mode_pages(self):
-        """ Delete the info page for golden tests"""
+    def remove_settings_pages(self):
+        """ Delete the settings page for golden tests"""
         if self.__golden:
-            info_path=os.path.join(self.__snapshots_path, "settings_expert_mode_on.png")
-            if os.path.exists(info_path):
-                os.remove(info_path)
-            info_path=os.path.join(self.__snapshots_path, "settings_expert_mode_off.png")
-            if os.path.exists(info_path):
-                os.remove(info_path)
-
-    def remove_blindsigning_pages(self):
-        """ Delete the blindsigning pages for golden tests"""
-        if self.__golden:
-            blindsigning_path=os.path.join(self.__snapshots_path, "settings_BlindsigningStatus_ON.png")
-            if os.path.exists(blindsigning_path):
-                os.remove(blindsigning_path)
-            blindsigning_path=os.path.join(self.__snapshots_path, "settings_BlindsigningStatus_OFF.png")
-            if os.path.exists(blindsigning_path):
-                os.remove(blindsigning_path)
+            settings_path=os.path.join(self.__snapshots_path, "settings_*.png")
+            for file in glob.glob(settings_path):
+                os.remove(file)
 
     def expect_apdu_return(self, expected):
         """Expect hex-encoded response from the apdu"""
@@ -284,6 +270,23 @@ class TezosAppScreen(metaclass=MetaScreen):
     def assert_home(self):
         self.assert_screen("home", True)
 
+
+    def assert_settings(self,
+                        blindsigning = False,
+                        expert_mode = False):
+        bs_suffix="blindsigning_"
+        if blindsigning:
+            bs_suffix += "on"
+        else:
+            bs_suffix += "off"
+        expert_mode_suffix = "_expert_mode_"
+        if expert_mode:
+            expert_mode_suffix += "on_"
+        else:
+            expert_mode_suffix += "off_"
+        self.assert_screen("settings" + expert_mode_suffix + bs_suffix,fixed=True)
+
+
     def assert_info(self):
         if(Firmware.STAX == self.firmware):
             self.assert_screen("info_stax", True)
@@ -291,16 +294,6 @@ class TezosAppScreen(metaclass=MetaScreen):
             self.assert_screen("info_flex_1", True)
             self.review.next()
             self.assert_screen("info_flex_2", True)
-
-    def assert_expert_mode(self, expert_mode=False):
-        suffix = ""
-        if expert_mode:
-            suffix += "_expert_on"
-        self.assert_screen("settings" + suffix)
-
-    def assert_blindsigning_status(self, blindsignStatus=BlindsigningStatus.OFF):
-        suffix = "settings_" + str(blindsignStatus).replace(".", "_")
-        self.assert_screen(suffix, True)
 
     def quit(self):
         if os.getenv("NOQUIT") == None:
@@ -354,25 +347,6 @@ class TezosAppScreen(metaclass=MetaScreen):
         self.assert_screen("enable_expert_mode")
         with self.fading_screen("enabled_expert_mode"):
             self.review.enable_expert.confirm()
-
-
-    def set_expert_mode(self,initial_status: bool):
-        self.assert_home()
-        suffix = initial_status and "_on" or "_off"
-        suffix_2 = initial_status and "_off" or "_on"
-        self.welcome.settings()
-        self.assert_screen("settings_expert_mode" + suffix, True)
-        self.settings.toggle_expert_mode()
-        self.assert_screen("settings_expert_mode" + suffix_2, True )
-        self.settings.multi_page_exit()
-
-    def set_blindsigning_status(self, status: BlindsigningStatus):
-        self.assert_home()
-        self.welcome.settings()
-        self.settings.next()
-        self.settings.set_blindigning(status)
-        self.assert_blindsigning_status(status)
-        self.settings.multi_page_exit()
 
     def expert_mode_splash(self):
         self.enable_expert_mode()

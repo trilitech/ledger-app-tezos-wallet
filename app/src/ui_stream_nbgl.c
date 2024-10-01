@@ -218,7 +218,7 @@ tz_ui_stream_cb(void)
         tz_ui_stream_t         *s = &global.stream;
         tz_ui_stream_display_t *c = &s->current_screen;
 
-        if (N_settings.blindsign_status == ST_BLINDSIGN_ON) {
+        if (N_settings.blindsigning) {
             nbgl_useCaseReviewStreamingContinueExt(
                 &c->list, tz_transaction_choice, blindsign_skip_callback);
         } else {
@@ -292,7 +292,7 @@ tz_ui_stream_init(void (*cb)(tz_ui_cb_type_t cb_type))
     global.blindsign_reason = REASON_NONE;
     memset(&global.error_code, '\0', ERROR_CODE_SIZE);
     nbgl_operationType_t op_type = TYPE_TRANSACTION;
-    if (N_settings.blindsign_status == ST_BLINDSIGN_ON) {
+    if (N_settings.blindsigning) {
         op_type |= SKIPPABLE_OPERATION;
     }
     nbgl_useCaseReviewStreamingStart(op_type, &C_tezos,

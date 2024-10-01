@@ -238,7 +238,7 @@ refill_blo_im_full(void)
 
     global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
 #ifdef HAVE_BAGL
-    if ((N_settings.blindsign_status != ST_BLINDSIGN_OFF)
+    if (N_settings.blindsigning
         && (SCREEN_DISPLAYED >= NB_MAX_SCREEN_ALLOWED)) {
         pass_from_clear_to_summary();
         TZ_SUCCEED();

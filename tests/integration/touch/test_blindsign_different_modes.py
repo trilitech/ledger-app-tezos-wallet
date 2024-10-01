@@ -17,8 +17,7 @@
 from utils import (
     tezos_app,
     TezosAppScreen,
-    send_payload,
-    BlindsigningStatus,
+    send_payload
 )
 
 from ragger.firmware import Firmware
@@ -69,11 +68,17 @@ if __name__ == "__main__":
     app = tezos_app(__file__)
 
     app.assert_home()
-    app.set_expert_mode(initial_status=False)
+    app.welcome.settings()
+    app.assert_settings()
+    app.settings.toggle_expert_mode()
+    app.assert_settings(expert_mode=True)
+    app.settings.exit()
 
 # Blindsign status OFF
     app.assert_home()
-    app.set_blindsigning_status(BlindsigningStatus.OFF)
+    app.welcome.settings()
+    app.assert_settings(blindsigning=False, expert_mode=True)
+    app.settings.exit()
 
     if(app.firmware == Firmware.STAX):
         navigate_common(app, skip=False, group_counts=[3, 1, 6, 2])
@@ -82,7 +87,11 @@ if __name__ == "__main__":
 
 # Blindsign status ON
     app.assert_home()
-    app.set_blindsigning_status(BlindsigningStatus.ON)
+    app.welcome.settings()
+    app.assert_settings(expert_mode=True)
+    app.settings.toggle_blindsigning()
+    app.assert_settings(blindsigning=True, expert_mode=True)
+    app.settings.exit()
 
     app.send_initialize_msg( "800f000011048000002c800006c18000000080000000")
     send_payload(app, "800f01ffeb0300000000000000000000000000000000000000000000000000000000000000006b00ffdd6102321bc251e4a5190ad5b12b251069d9b4c0843d0b0104020320182716513907b6bab33f905396d031931c07e01bddd780780c1a56b9c086da6c00ffdd6102321bc251e4a5190ad5b12b251069d9b480897a0c0107c08db701000278eb8b6ab9a768579cd5146b480789650c83f28effff0d7570646174655f636f6e6669670000000607070005030a6e00ffdd6102321bc251e4a5190ad5b12b251069d9b4c08db7010d0105ff01ee572f02e5be5d097ba17369789582882e8abb87c900ffdd6102321bc2")
@@ -99,9 +108,20 @@ if __name__ == "__main__":
 
 # Blindsign status ON but continue clear signing
     app.assert_home()
-    app.set_blindsigning_status(BlindsigningStatus.ON)
+    app.welcome.settings()
+    app.assert_settings(blindsigning=True, expert_mode=True)
+    app.settings.exit()
 
     if(app.firmware == Firmware.STAX):
         navigate_common(app, skip=True, group_counts=[3, 1, 6, 2])
     else:
         navigate_common(app, skip=True, group_counts=[4, 2, 5, 3])
+
+    app.assert_home()
+    app.welcome.settings()
+    app.assert_settings(blindsigning=True, expert_mode=True)
+    app.settings.toggle_blindsigning()
+    app.settings.toggle_expert_mode()
+    app.assert_settings()
+    app.settings.exit()
+    app.assert_home()

@@ -62,11 +62,6 @@ typedef enum {
     ST_ERROR          /// In error state.
 } main_step_t;
 
-typedef enum {
-    ST_BLINDSIGN_OFF = 0,
-    ST_BLINDSIGN_ON
-} blindsign_state_t;
-
 #ifdef TARGET_NANOS
 #define NB_MAX_SCREEN_ALLOWED 20
 #elif defined(HAVE_BAGL)
@@ -122,9 +117,9 @@ typedef struct {
 
 /* Settings */
 typedef struct {
-    bool              expert_mode;       /// enable expert mode
-    blindsign_state_t blindsign_status;  /// Blindsign status
-} settings_t;  /// Special settings available in the app.
+    bool expert_mode;   /// enable expert mode
+    bool blindsigning;  /// Blindsign status
+} settings_t;           /// Special settings available in the app.
 
 extern globals_t global;
 
@@ -147,8 +142,6 @@ void init_globals(void);
 /// Toggles the persisted expert_mode setting
 void toggle_expert_mode(void);
 
-/// Toggles the persisted blindsign setting between "OFF", "ON".
-void toggle_blindsign_status(void);
-
-/// set the blindsign setting between "OFF", "ON".
-void set_blindsign_status(blindsign_state_t status);
+/// Toggles the persisted blindsign setting between "ON",
+/// "OFF".
+void toggle_blindsigning(void);

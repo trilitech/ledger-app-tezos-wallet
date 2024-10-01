@@ -28,115 +28,95 @@
 #include "globals.h"
 #include "nbgl_use_case.h"
 
-static void controls_callback(int                             token,
-                              __attribute__((unused)) uint8_t index,
-                              __attribute__((unused)) int     page);
-void        tz_ui_home_redisplay(uint8_t page);
+void tz_ui_home_redisplay(void);
 
 //  -----------------------------------------------------------
 //  --------------------- SETTINGS MENU -----------------------
 //  -----------------------------------------------------------
-#define SETTING_INFO_NB      3
-#define SETTINGS_SWITCHES_NB 1
-#define SETTINGS_RADIO_NB    2
+#define SETTING_INFO_NB 3
+
 static const char *const infoTypes[]    = {"Version", "Developer", "Contact"};
 static const char *const infoContents[] = {
     APPVERSION, "Trilitech Kanvas Limited et al.", "ledger-tezos@trili.tech"};
 
 enum {
     EXPERT_MODE_TOKEN = FIRST_USER_TOKEN,
-    BLINDSIGN_MODE_TOKEN
+    BLIND_SIGNING_TOKEN
 };
 enum {
     EXPERT_MODE_TOKEN_ID = 0,
-    BLINDSIGN_MODE_TOKEN_ID,
-    SETTINGS_CONTENTS_NB
-};
-enum {
-    EXPERT_MODE_PAGE = 0,
-    BLINDSIGN_PAGE   = 1
+    BLIND_SIGNING_TOKEN_ID,
+    SETTINGS_SWITCHES_NB
 };
 
-static nbgl_contentSwitch_t         expert_mode_switch = {0};
+static nbgl_layoutSwitch_t switches[SETTINGS_SWITCHES_NB] = {0};
+
 static const nbgl_contentInfoList_t infoList = {.nbInfos   = SETTING_INFO_NB,
                                                 .infoTypes = infoTypes,
                                                 .infoContents = infoContents};
-
-static const char *const blindsign_choices_text[]
-    = {"Blindsigning OFF", "Blindsigning ON"};
-
-static void
-get_contents(uint8_t index, nbgl_content_t *content)
-{
-    FUNC_ENTER(("Index: %d", index));
-    if (index == EXPERT_MODE_TOKEN_ID) {
-        content->content.switchesList.nbSwitches = SETTINGS_SWITCHES_NB;
-        content->content.switchesList.switches   = &expert_mode_switch;
-        content->type                            = SWITCHES_LIST;
-        content->contentActionCallback           = controls_callback;
-    } else {
-        content->content.choicesList.nbChoices  = SETTINGS_RADIO_NB;
-        content->content.choicesList.names      = blindsign_choices_text;
-        content->content.choicesList.token      = BLINDSIGN_MODE_TOKEN;
-        content->content.choicesList.initChoice = N_settings.blindsign_status;
-        content->type                           = CHOICES_LIST;
-        content->contentActionCallback          = controls_callback;
-    }
-    FUNC_LEAVE();
-}
 
 static void
 controls_callback(int token, __attribute__((unused)) uint8_t index,
                   __attribute__((unused)) int page)
 {
-    FUNC_ENTER(("Token : %d, Index:  %d, Page: %d", token, index, page));
     uint8_t switch_value;
-    if (token == EXPERT_MODE_TOKEN) {
+    if (token == BLIND_SIGNING_TOKEN) {
+        switch_value = !N_settings.blindsigning;
+        toggle_blindsigning();
+        switches[BLIND_SIGNING_TOKEN_ID].initState
+            = (nbgl_state_t)(switch_value);
+    } else if (token == EXPERT_MODE_TOKEN) {
         switch_value = !N_settings.expert_mode;
         toggle_expert_mode();
-        expert_mode_switch.initState = (nbgl_state_t)(switch_value);
+        switches[EXPERT_MODE_TOKEN_ID].initState
+            = (nbgl_state_t)(switch_value);
     }
-    if (token == BLINDSIGN_MODE_TOKEN) {
-        blindsign_state_t blindsign_status = (blindsign_state_t)(index % 2);
-        set_blindsign_status(blindsign_status);
-        tz_ui_home_redisplay(BLINDSIGN_PAGE);
-    }
-    FUNC_LEAVE();
 }
 
-#define HOME_TEXT "This app enables signing transactions on the Tezos Network"
+#define SETTINGS_CONTENTS_NB 1
+static const nbgl_content_t contentsList[SETTINGS_CONTENTS_NB] = {
+    {.content.switchesList.nbSwitches = SETTINGS_SWITCHES_NB,
+     .content.switchesList.switches   = switches,
+     .type                            = SWITCHES_LIST,
+     .contentActionCallback           = controls_callback}
+};
 
+static const nbgl_genericContents_t tezos_settingContents
+    = {.callbackCallNeeded = false,
+       .contentsList       = contentsList,
+       .nbContents         = SETTINGS_CONTENTS_NB};
+;
+
+#define HOME_TEXT "This app enables signing transactions on the Tezos Network"
 void
 initSettings(void)
 {
-    expert_mode_switch.initState = (nbgl_state_t)(N_settings.expert_mode);
-    expert_mode_switch.text      = "Expert mode";
-    expert_mode_switch.subText   = "Enable expert mode signing";
-    expert_mode_switch.token     = EXPERT_MODE_TOKEN;
-    expert_mode_switch.tuneId    = TUNE_TAP_CASUAL;
+    switches[EXPERT_MODE_TOKEN_ID].initState
+        = (nbgl_state_t)(N_settings.expert_mode);
+    switches[EXPERT_MODE_TOKEN_ID].text    = "Expert mode";
+    switches[EXPERT_MODE_TOKEN_ID].subText = "Enable expert mode signing";
+    switches[EXPERT_MODE_TOKEN_ID].token   = EXPERT_MODE_TOKEN;
+    switches[EXPERT_MODE_TOKEN_ID].tuneId  = TUNE_TAP_CASUAL;
+
+    switches[BLIND_SIGNING_TOKEN_ID].initState
+        = (nbgl_state_t)(N_settings.blindsigning);
+    switches[BLIND_SIGNING_TOKEN_ID].text = "Blind signing";
+    switches[BLIND_SIGNING_TOKEN_ID].subText
+        = "Enable transaction blind signing";
+    switches[BLIND_SIGNING_TOKEN_ID].token  = BLIND_SIGNING_TOKEN;
+    switches[BLIND_SIGNING_TOKEN_ID].tuneId = TUNE_TAP_CASUAL;
 }
 
 void
-tz_ui_home_redisplay(uint8_t page)
+tz_ui_home_redisplay(void)
 {
     FUNC_ENTER(("void"));
 
     initSettings();
-    static nbgl_genericContents_t tezos_settingContents = {0};
-    tezos_settingContents.callbackCallNeeded            = false;
-    tezos_settingContents.nbContents = SETTINGS_CONTENTS_NB;
 
-    static nbgl_content_t contents[SETTINGS_CONTENTS_NB] = {0};
-    get_contents(EXPERT_MODE_TOKEN_ID, &contents[EXPERT_MODE_TOKEN_ID]);
-    get_contents(BLINDSIGN_MODE_TOKEN_ID, &contents[BLINDSIGN_MODE_TOKEN_ID]);
-
-    tezos_settingContents.contentsList = contents;
-
-    PRINTF("Entered settings and initialized\n");
-
-    nbgl_useCaseHomeAndSettings("Tezos Wallet", &C_tezos, HOME_TEXT, page,
-                                &tezos_settingContents, &infoList, NULL,
-                                app_exit);
+    nbgl_useCaseHomeAndSettings("Tezos Wallet", &C_tezos, HOME_TEXT,
+                                INIT_HOME_PAGE, &tezos_settingContents,
+                                &infoList, NULL, app_exit);
 
     FUNC_LEAVE();
 }

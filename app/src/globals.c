@@ -47,17 +47,10 @@ toggle_expert_mode(void)
 }
 
 void
-set_blindsign_status(blindsign_state_t status)
+toggle_blindsigning(void)
 {
     settings_t tmp;
     memcpy(&tmp, (void *)&N_settings, sizeof(tmp));
-    tmp.blindsign_status = status;
+    tmp.blindsigning = !N_settings.blindsigning;
     nvm_write((void *)&N_settings, (void *)&tmp, sizeof(N_settings));
-}
-
-void
-toggle_blindsign_status(void)
-{
-    blindsign_state_t status = (N_settings.blindsign_status + 1) % 2;
-    set_blindsign_status(status);
 }

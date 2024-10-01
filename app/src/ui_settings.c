@@ -35,7 +35,7 @@ static void
 blindsign_toggle()
 {
     FUNC_ENTER();
-    toggle_blindsign_status();
+    toggle_blindsigning();
     ui_settings_init(SETTINGS_BLINDSIGN_PAGE);
     FUNC_LEAVE();
 }
@@ -52,8 +52,8 @@ UX_FLOW(ux_expert_mode_flow, &ux_expert_mode_step, &ux_blindsign_step,
 void
 ui_settings_init(int16_t page)
 {
-    FUNC_ENTER(("%d, Expert Mode: %d, Max_Screen: ", page,
-                N_settings.expert_mode, N_settings.blindsign_status));
+    FUNC_ENTER(("%d, Expert Mode: %d, BlindSigning Mode: %d", page,
+                N_settings.expert_mode, N_settings.blindsigning));
 
     if (N_settings.expert_mode) {
         strncpy(global.expert_mode_state, "ENABLED",
@@ -63,17 +63,14 @@ ui_settings_init(int16_t page)
                 sizeof(global.expert_mode_state));
     }
 
-    switch (N_settings.blindsign_status) {
-    case ST_BLINDSIGN_ON:
+    if (N_settings.blindsigning) {
         strncpy(global.blindsign_state_desc, "ON",
                 sizeof(global.blindsign_state_desc));
-        break;
-    case ST_BLINDSIGN_OFF:
-    default:
+    } else {
         strncpy(global.blindsign_state_desc, "OFF",
                 sizeof(global.blindsign_state_desc));
-        break;
     }
+
     if (page == SETTINGS_HOME_PAGE) {
         ux_flow_init(0, ux_expert_mode_flow, &ux_expert_mode_step);
     } else if (page == SETTINGS_BLINDSIGN_PAGE) {
