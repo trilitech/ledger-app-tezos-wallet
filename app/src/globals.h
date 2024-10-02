@@ -39,8 +39,11 @@
 #include "ui_commons.h"
 #include "ui_stream.h"
 #include "ui_home.h"
-#include "ui_settings.h"
 #include "utils.h"
+
+#ifdef HAVE_BAGL
+#include "ui_settings.h"
+#endif
 
 #include "parser/parser_state.h"
 
