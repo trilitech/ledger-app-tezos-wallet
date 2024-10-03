@@ -18,9 +18,7 @@
 from pathlib import Path
 
 from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
-from utils.message import RawMessage
-
-# Expression: {"CACA";"POPO";"BOUDIN"}
+from utils.message import MichelineExpr
 
 def test_sign_micheline_without_hash(app: TezosAppScreen):
     """Check signing micheline wihout getting hash"""
@@ -28,7 +26,7 @@ def test_sign_micheline_without_hash(app: TezosAppScreen):
 
     app.assert_screen(Screen.HOME)
 
-    message = RawMessage("05020000001d0100000004434143410100000004504f504f0100000006424f5544494e")
+    message = MichelineExpr([{'string': 'CACA'}, {'string': 'POPO'}, {'string': 'BOUDIN'}])
 
     data = app.sign(DEFAULT_ACCOUNT,
                     message,

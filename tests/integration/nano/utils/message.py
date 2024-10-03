@@ -83,7 +83,23 @@ class Default:
 
 class Watermark(IntEnum):
     """Class hodling messages watermark."""
-    MANAGER_OPERATION = 0x03
+    MANAGER_OPERATION    = 0x03
+    MICHELINE_EXPRESSION = 0x05
+
+
+class MichelineExpr(Message):
+    """Class representing a tezos micheline expression."""
+
+    expr: Micheline
+
+    def __init__(self, expr: Micheline):
+        self.expr = expr
+
+    def __bytes__(self) -> bytes:
+        raw = b''
+        raw += forge_int_fixed(Watermark.MICHELINE_EXPRESSION, 1)
+        raw += forge_micheline(self.expr)
+        return raw
 
 
 class OperationBuilder(ContentMixin):
