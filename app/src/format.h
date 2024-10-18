@@ -18,8 +18,17 @@
    See the License for the specific language governing permissions and
    limitations under the License. */
 
+#pragma once
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
 
+/**
+ * @brief Prints mutez as XTZ
+ *
+ * @param obuf: output buffer
+ * @param olen: length of the output buffer
+ * @param amount: amount in mutez
+ * @return bool: true on success
+ */
 bool tz_mutez_to_string(char *obuf, size_t olen, uint64_t amount);
