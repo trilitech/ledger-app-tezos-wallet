@@ -898,7 +898,7 @@ static void
 get_blindsign_type(char *type, size_t type_size)
 {
     TZ_PREAMBLE(("type=%s", type));
-    TZ_ASSERT(type_size >= OPERATION_TYPE_STR_LENGTH, EXC_MEMORY_ERROR);
+    TZ_ASSERT(EXC_MEMORY_ERROR, type_size >= OPERATION_TYPE_STR_LENGTH);
     // clang-format off
     switch (global.keys.apdu.sign.tag) {
     case 0x01:
