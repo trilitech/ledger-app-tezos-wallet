@@ -19,46 +19,64 @@
    See the License for the specific language governing permissions and
    limitations under the License. */
 
+#ifdef HAVE_BAGL
 #include "globals.h"
 
-static void cb(tz_ui_cb_type_t cb_type);
-
-#define EXPERT_MODE 0x01
-#define BACK        0x02
+static void
+expert_mode_toggle()
+{
+    FUNC_ENTER();
+    toggle_expert_mode();
+    ui_settings_init(SETTINGS_HOME_PAGE);
+    FUNC_LEAVE();
+}
 
 static void
-cb(tz_ui_cb_type_t cb_type)
+blindsign_toggle()
 {
-    FUNC_ENTER(("cb_type=%u", cb_type));
-    switch (cb_type) {
-    case EXPERT_MODE:
-        toggle_expert_mode();
-        ui_settings_init(SETTINGS_HOME_PAGE);
-        break;
-    case BACK:
-        ui_home_init();
-        break;
-    }
+    FUNC_ENTER();
+    toggle_blindsigning();
+    ui_settings_init(SETTINGS_BLINDSIGN_PAGE);
+    FUNC_LEAVE();
 }
+
+UX_STEP_CB(ux_expert_mode_step, bn, expert_mode_toggle(),
+           {"Expert mode", global.expert_mode_state});
+UX_STEP_CB(ux_blindsign_step, bn, blindsign_toggle(),
+           {"Allow Blindsigning", global.blindsign_state_desc});
+UX_STEP_CB(ux_back_step, pb, ui_home_init(), {&C_icon_back, "Back"});
+
+UX_FLOW(ux_expert_mode_flow, &ux_expert_mode_step, &ux_blindsign_step,
+        &ux_back_step, FLOW_LOOP);
 
 void
 ui_settings_init(int16_t page)
 {
-    const char *exp_mode = "DISABLED";
-
-    FUNC_ENTER(("void"));
+    FUNC_ENTER(("%d, Expert Mode: %d, BlindSigning Mode: %d", page,
+                N_settings.expert_mode, N_settings.blindsigning));
 
     if (N_settings.expert_mode) {
-        exp_mode = "ENABLED";
+        strncpy(global.expert_mode_state, "ENABLED",
+                sizeof(global.expert_mode_state));
+    } else {
+        strncpy(global.expert_mode_state, "DISABLED",
+                sizeof(global.expert_mode_state));
     }
 
-    tz_ui_stream_init(cb);
-    tz_ui_stream_push(EXPERT_MODE, "Expert mode", exp_mode,
-                      TZ_UI_LAYOUT_HOME_BN, TZ_UI_ICON_NONE);
-    tz_ui_stream_push(BACK, "Back", "", TZ_UI_LAYOUT_HOME_PB,
-                      TZ_UI_ICON_BACK);
-    tz_ui_stream_close();
-    global.stream.current = page;
-    tz_ui_stream_start();
+    if (N_settings.blindsigning) {
+        strncpy(global.blindsign_state_desc, "ON",
+                sizeof(global.blindsign_state_desc));
+    } else {
+        strncpy(global.blindsign_state_desc, "OFF",
+                sizeof(global.blindsign_state_desc));
+    }
+
+    if (page == SETTINGS_HOME_PAGE) {
+        ux_flow_init(0, ux_expert_mode_flow, &ux_expert_mode_step);
+    } else if (page == SETTINGS_BLINDSIGN_PAGE) {
+        ux_flow_init(0, ux_expert_mode_flow, &ux_blindsign_step);
+    }
     FUNC_LEAVE();
 }
+
+#endif

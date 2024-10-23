@@ -39,50 +39,44 @@
 #include "ui_commons.h"
 #include "ui_stream.h"
 #include "ui_home.h"
-#include "ui_settings.h"
 #include "utils.h"
 
-#include "parser/parser_state.h"
-/**
- * @brief  Zeros out all application-specific globals and SDK-specific
- * UI/exchange buffers.
- */
-void init_globals(void);
+#ifdef HAVE_BAGL
+#include "ui_settings.h"
+#endif
 
-/// Toggles the persisted expert_mode setting
-void toggle_expert_mode(void);
+#include "parser/parser_state.h"
 
 #define MAX_APDU_SIZE      235
 #define MAX_SIGNATURE_SIZE 100
 #define ERROR_CODE_SIZE    15
-/**
- * @brief Home screen pages in order
- *
- */
-typedef enum {
-#ifdef HAVE_BAGL
-    SCREEN_HOME = 0,
-#else
-    SCREEN_CLEAR_SIGN = 0,
-    SCREEN_BLIND_SIGN,
-#endif
-    SCREEN_VERSION,
-    SCREEN_SETTINGS,
-    SCREEN_QUIT,
-} screen_t;
 
 /**
  * @brief State of the app
  *
  */
 typedef enum {
-    ST_IDLE,        /// Idle state
-    ST_CLEAR_SIGN,  /// Clearsigning an operation
-    ST_BLIND_SIGN,  /// blindisigning an operation
-    ST_PROMPT,      /// Waiting for user prompt
-    ST_SWAP_SIGN,   /// Performing swap operations
-    ST_ERROR        /// In error state.
+    ST_IDLE,          /// Idle state
+    ST_CLEAR_SIGN,    /// Clear signing an operation
+    ST_BLIND_SIGN,    /// Blind signing an operation
+    ST_SUMMARY_SIGN,  /// Summary signing an operation
+    ST_PROMPT,        /// Waiting for user prompt
+    ST_SWAP_SIGN,     /// Performing swap operations
+    ST_ERROR          /// In error state.
 } main_step_t;
+
+#ifdef TARGET_NANOS
+#define NB_MAX_SCREEN_ALLOWED 20
+#elif defined(HAVE_BAGL)
+#define NB_MAX_SCREEN_ALLOWED 12
+#endif
+
+#ifdef HAVE_NBGL
+typedef enum {
+    REASON_NONE          = 0,
+    REASON_PARSING_ERROR = 1
+} blindsign_reason_t;
+#endif
 
 /**
  * @brief Global structure holding state of operations and buffer of the data
@@ -91,7 +85,6 @@ typedef enum {
  */
 typedef struct {
     /* State */
-    main_step_t             step;    /// Current operational state of app.
     tz_ui_stream_t          stream;  /// UX and display related information
     bip32_path_with_curve_t path_with_curve;  /// Derivation path
     union {
@@ -112,18 +105,24 @@ typedef struct {
     struct {
         bagl_element_t bagls[4 + TZ_SCREEN_LINES_11PX];
     } ux;  /// Config for history screens for nano devices.
+    char expert_mode_state[10];  /// Expert mode text:  "ENAELED", "DISABLED"
+    char blindsign_state_desc[14];  /// Blindsigning text: "For Large Tx",
+                                    /// "ON" , "OFF"
 #endif
 
 #ifdef HAVE_NBGL
-    char error_code[ERROR_CODE_SIZE];  /// Error codes to be displayed in
-                                       /// blindsigning.
+    blindsign_reason_t
+         blindsign_reason;  /// Blindsigning flow Summary or parsing error.
+    char error_code[ERROR_CODE_SIZE];  /// Error code for parsing error.
 #endif
+    main_step_t step;  /// Current operational state of app.
 } globals_t;
 
 /* Settings */
 typedef struct {
-    bool expert_mode;  /// enable expert mode
-} settings_t;          /// Special settings available in the app.
+    bool expert_mode;   /// enable expert mode
+    bool blindsigning;  /// Blindsign status
+} settings_t;           /// Special settings available in the app.
 
 extern globals_t global;
 
@@ -136,3 +135,16 @@ extern unsigned int app_stack_canary;  // From SDK
  *
  */
 extern unsigned char G_io_seproxyhal_spi_buffer[IO_SEPROXYHAL_BUFFER_SIZE_B];
+
+/**
+ * @brief  Zeros out all application-specific globals and SDK-specific
+ * UI/exchange buffers.
+ */
+void init_globals(void);
+
+/// Toggles the persisted expert_mode setting
+void toggle_expert_mode(void);
+
+/// Toggles the persisted blindsign setting between "ON",
+/// "OFF".
+void toggle_blindsigning(void);

@@ -18,13 +18,19 @@ from utils import tezos_app
 if __name__ == "__main__":
     app = tezos_app(__file__)
 
-    app.remove_info_page()
     app.assert_home()
+    app.remove_settings_and_info()
 
     app.welcome.settings()
     app.assert_settings()
 
+    app.settings.toggle_blindsigning()
+    app.assert_settings(blindsigning=True)
+
     app.settings.toggle_expert_mode()
+    app.assert_settings(blindsigning=True, expert_mode=True)
+
+    app.settings.toggle_blindsigning()
     app.assert_settings(expert_mode=True)
 
     app.settings.toggle_expert_mode()

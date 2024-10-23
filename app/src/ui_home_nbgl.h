@@ -22,6 +22,6 @@
 
 #ifdef HAVE_NBGL
 
-void tz_ui_home_redisplay(void);
+void tz_ui_home_redisplay(uint8_t page);
 
 #endif

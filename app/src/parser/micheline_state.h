@@ -129,4 +129,5 @@ typedef struct {
         stack[TZ_MICHELINE_STACK_DEPTH];  /// stack of frames
     tz_micheline_parser_frame *frame;     /// current frame
                                           /// init == stack, NULL when done
+    bool is_unit;  /// indicates whether the micheline read is a unit
 } tz_micheline_state;

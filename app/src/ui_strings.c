@@ -143,6 +143,7 @@ ui_strings_push(const char *in, size_t len, char **out)
     PRINT_STRINGS;
 
     /* Preconditions */
+    PRINTF("[DEBUG] in = %p, out = %p\n", in, *out);
     TZ_ASSERT(EXC_MEMORY_ERROR, (*out == NULL));
     TZ_ASSERT_NOTNULL(in);
     TZ_ASSERT(EXC_MEMORY_ERROR, (len > 0));

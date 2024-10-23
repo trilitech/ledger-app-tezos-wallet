@@ -211,6 +211,14 @@ let operation_to_screens
     in
     List.mapi aux values
   in
+  let first_expert_mode_screen =
+    let is_first = ref true in
+    fun title ->
+      if !is_first then (
+        is_first := false;
+        [ need_expert_mode_screen title ])
+      else []
+  in
   let screen_of_manager n (type t)
       (Manager_operation { source; fee; operation; storage_limit; _ } :
         t Kind.manager contents) =
@@ -244,22 +252,21 @@ let operation_to_screens
           ]
     | Origination { delegate; script = { code; storage }; credit } ->
         aux ~kind:"Origination"
-          [
-            make_screen ~title:"Balance" "%a" pp_tz credit;
-            make_screen ~title:"Delegate" "%a"
-              (pp_opt_field Tezos_crypto.Signature.Public_key_hash.pp)
-              delegate;
-            need_expert_mode_screen "Code";
+        @@ [
+             make_screen ~title:"Balance" "%a" pp_tz credit;
+             make_screen ~title:"Delegate" "%a"
+               (pp_opt_field Tezos_crypto.Signature.Public_key_hash.pp)
+               delegate;
+           ]
+        @ first_expert_mode_screen "Code"
+        @ [
             make_screen ~title:"Code" "%a" pp_lazy_expr code;
-            need_expert_mode_screen "Storage";
             make_screen ~title:"Storage" "%a" pp_lazy_expr storage;
           ]
     | Register_global_constant { value } ->
         aux ~kind:"Register global constant"
-          [
-            need_expert_mode_screen "Value";
-            make_screen ~title:"Value" "%a" pp_lazy_expr value;
-          ]
+        @@ first_expert_mode_screen "Value"
+        @ [ make_screen ~title:"Value" "%a" pp_lazy_expr value ]
     | Reveal public_key ->
         aux ~kind:"Reveal"
           [
@@ -278,11 +285,9 @@ let operation_to_screens
             && Protocol.Entrypoint_repr.is_default entrypoint
           then []
           else
-            [
-              make_screen ~title:"Entrypoint" "%a" Entrypoint.pp entrypoint;
-              need_expert_mode_screen "Parameter";
-              make_screen ~title:"Parameter" "%a" pp_lazy_expr parameters;
-            ]
+            [ make_screen ~title:"Entrypoint" "%a" Entrypoint.pp entrypoint ]
+            @ first_expert_mode_screen "Parameter"
+            @ [ make_screen ~title:"Parameter" "%a" pp_lazy_expr parameters ]
         in
         aux ~kind:"Transaction"
           ([
@@ -293,10 +298,9 @@ let operation_to_screens
     | Transfer_ticket
         { contents; ty; ticketer; amount; destination; entrypoint } ->
         aux ~kind:"Transfer ticket"
-          [
-            need_expert_mode_screen "Contents";
+        @@ first_expert_mode_screen "Contents"
+        @ [
             make_screen ~title:"Contents" "%a" pp_lazy_expr contents;
-            need_expert_mode_screen "Type";
             make_screen ~title:"Type" "%a" pp_lazy_expr ty;
             make_screen ~title:"Ticketer" "%a" Contract.pp ticketer;
             make_screen ~title:"Amount" "%s"
@@ -316,11 +320,13 @@ let operation_to_screens
     | Sc_rollup_execute_outbox_message
         { rollup; cemented_commitment; output_proof } ->
         aux ~kind:"SR: execute outbox message"
-          [
-            make_screen ~title:"Rollup" "%a" Sc_rollup.Address.pp rollup;
-            make_screen ~title:"Commitment" "%a" Sc_rollup.Commitment.Hash.pp
-              cemented_commitment;
-            need_expert_mode_screen "Output proof";
+        @@ [
+             make_screen ~title:"Rollup" "%a" Sc_rollup.Address.pp rollup;
+             make_screen ~title:"Commitment" "%a" Sc_rollup.Commitment.Hash.pp
+               cemented_commitment;
+           ]
+        @ first_expert_mode_screen "Output proof"
+        @ [
             make_screen ~title:"Output proof" "%a" pp_string_binary output_proof;
           ]
     | Sc_rollup_originate { kind; boot_sector; parameters_ty; whitelist } ->
@@ -332,14 +338,13 @@ let operation_to_screens
                 Tezos_crypto.Signature.Public_key_hash.pp whitelist
         in
         aux ~kind:"SR: originate"
-          ([
-             make_screen ~title:"Kind" "%a" Sc_rollup.Kind.pp kind;
-             need_expert_mode_screen "Kernel";
-             make_screen ~title:"Kernel" "%a" pp_string_binary boot_sector;
-             need_expert_mode_screen "Parameters";
-             make_screen ~title:"Parameters" "%a" pp_lazy_expr parameters_ty;
-           ]
-          @ whitelist)
+        @@ [ make_screen ~title:"Kind" "%a" Sc_rollup.Kind.pp kind ]
+        @ first_expert_mode_screen "Kernel"
+        @ [
+            make_screen ~title:"Kernel" "%a" pp_string_binary boot_sector;
+            make_screen ~title:"Parameters" "%a" pp_lazy_expr parameters_ty;
+          ]
+        @ whitelist
     | _ -> assert false
   in
   let screen_of_operation (type t) (operation : t contents) =
@@ -375,7 +380,9 @@ let operation_to_screens
    fun n -> function
     | Single (Manager_operation _ as m) -> screen_of_manager n m
     | Cons ((Manager_operation _ as m), rest) ->
-        screen_of_manager n m @ screen_of_operations (succ n) rest
+        let screen_of_manager = screen_of_manager n m in
+        let screen_of_operations = screen_of_operations (succ n) rest in
+        screen_of_manager @ screen_of_operations
     | Single op -> screen_of_operation op
   in
   screen_of_operations 0 contents

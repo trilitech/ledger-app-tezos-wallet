@@ -80,11 +80,6 @@ dispatch(command_t *cmd)
         TZ_FAIL(EXC_CLASS);
     }
 
-    if (tz_ui_stream_get_cb_type() == SCREEN_QUIT) {
-        PRINTF("[ERROR] received instruction whilst on Quit screen\n");
-        TZ_FAIL(EXC_UNEXPECTED_STATE);
-    }
-
     // clang-format off
     switch (cmd->ins) {
     case INS_VERSION:                   f = handle_apdu_version;        break;

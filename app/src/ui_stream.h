@@ -80,8 +80,12 @@
  */
 
 typedef uint8_t tz_ui_cb_type_t;
-#define TZ_UI_STREAM_CB_NOCB               0x00u
+#define TZ_UI_STREAM_CB_NOCB 0x00u
+#ifdef HAVE_NBGL
+#define TZ_UI_STREAM_CB_SUMMARY 0x0Du
+#endif
 #define TZ_UI_STREAM_CB_BLINDSIGN          0x0Eu
+#define TZ_UI_STREAM_CB_VALIDATE           0x0Fu
 #define TZ_UI_STREAM_CB_REFILL             0xEFu
 #define TZ_UI_STREAM_CB_MAINMASK           0xF0u
 #define TZ_UI_STREAM_CB_EXPERT_MODE_FIELD  0xFAu
@@ -139,12 +143,12 @@ typedef struct {
 #ifdef HAVE_BAGL
     tz_ui_icon_t icon;  /// Icon to display on the screen.
     tz_ui_layout_type_t
-        layout_type;  /// Layout type for the screen. CAN BP, BNP, NP, PB or
-                      /// HOME_X where X can be one of the BP, BNP, PB.
-    char *title;      /// Title to display on the screen.
-    char *body[TZ_UI_STREAM_CONTENTS_LINES];  /// Body to display on the
-                                              /// screen (Below title).
-    short body_len;  /// number of non-empty lines in the body.
+        layout_type;   /// Layout type for the screen. CAN BP, BNP, NP, PB or
+                       /// HOME_X where X can be one of the BP, BNP, PB.
+    uint8_t body_len;  /// number of non-empty lines in the body.
+    char   *title;     /// Title to display on the screen.
+    char   *body[TZ_UI_STREAM_CONTENTS_LINES];  /// Body to display on the
+                                                /// screen (Below title).
 #else
     nbgl_layoutTagValue_t
         pairs[NB_MAX_DISPLAYED_PAIRS_IN_REVIEW];  /// Title-value pairs to be
@@ -286,3 +290,7 @@ void tz_reject(void);
  */
 void tz_reject_ui(void);
 #endif
+
+void drop_last_screen(void);
+
+void push_str(const char *text, size_t len, char **out);

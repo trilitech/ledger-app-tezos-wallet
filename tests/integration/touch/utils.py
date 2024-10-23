@@ -13,8 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import glob
 import os
 import time
+from enum import Enum
 
 from pathlib import Path
 from typing import Generator, List
@@ -27,6 +29,7 @@ from ragger.firmware import Firmware
 from ragger.firmware.touch.element import Center
 from ragger.firmware.touch.screen import MetaScreen
 from ragger.firmware.touch.use_cases import (
+    UseCaseHome,
     UseCaseHomeExt,
     UseCaseSettings as OriginalUseCaseSettings,
     UseCaseAddressConfirmation as OriginalUseCaseAddressConfirmation,
@@ -52,7 +55,7 @@ def with_retry(f, attempts=MAX_ATTEMPTS):
             return f()
         except Exception as e:
             if attempts <= 0:
-                print("- with_retry: attempts exhausted -")
+                print("- with_retry: attempts exhausted -{e}")
                 raise e
         attempts -= 1
         # Give plenty of time for speculos to update - can take a long time on CI machines
@@ -65,7 +68,10 @@ class UseCaseReview(OriginalUseCaseReview):
     reject_tx:        UseCaseChoice
     enable_expert:    UseCaseChoice
     enable_blindsign: UseCaseChoice
+    enable_skip:    UseCaseChoice
+    back_to_safety:   UseCaseChoice
     details:          UseCaseViewDetails
+    __skip_screen:             UseCaseHome
 
     _center: Center
     MORE_POSITIONS = {
@@ -78,8 +84,11 @@ class UseCaseReview(OriginalUseCaseReview):
         self.reject_tx        = UseCaseChoice(client, firmware)
         self.enable_expert    = UseCaseChoice(client, firmware)
         self.enable_blindsign = UseCaseChoice(client, firmware)
-        self._center = Center(client, firmware)
-        self.details = UseCaseViewDetails(client, firmware)
+        self.back_to_safety   = UseCaseChoice(client, firmware)
+        self.enable_skip    = UseCaseChoice(client, firmware)
+        self._center          = Center(client, firmware)
+        self.details          = UseCaseViewDetails(client, firmware)
+        self.__skip_screen      = UseCaseHome(client, firmware)
 
     @property
     def more_position(self) -> Position:
@@ -94,6 +103,9 @@ class UseCaseReview(OriginalUseCaseReview):
         """Tap to show more."""
         self.client.finger_touch(*self.more_position)
 
+    def skip(self) -> None:
+        """Press the skip button."""
+        self.__skip_screen.settings()
 
 class UseCaseAddressConfirmation(OriginalUseCaseAddressConfirmation):
     """Extension of UseCaseAddressConfirmation for our app."""
@@ -121,6 +133,12 @@ class UseCaseAddressConfirmation(OriginalUseCaseAddressConfirmation):
     def show_qr(self) -> None:
         """Tap to show qr code."""
         self.client.finger_touch(*self.qr_position)
+
+
+class BlindsigningType(Enum):
+    NO_BLINDSIGN = 0
+    BLINDSIGN = 2
+    SUMMARYSIGN = 3
 
 
 class UseCaseSettings(OriginalUseCaseSettings):
@@ -164,7 +182,7 @@ class TezosAppScreen(metaclass=MetaScreen):
     __golden:                  bool
     __snapshots_path:          str
     __prefixed_snapshots_path: str
-    __snapshotted:             List[str]  = []
+    __snapshotted:             List[str]  = [ ]
 
     def __init__(self,
                  backend: BackendInterface,
@@ -183,20 +201,22 @@ class TezosAppScreen(metaclass=MetaScreen):
         self.commit = commit
         self.version = version
         self.__golden = golden
+        self.__update_fixed = os.getenv("UPDATE_FIXED") is not None
         if golden:
             # Setup for golden
             path = f"{self.__prefixed_snapshots_path}"
             Path(path).mkdir(parents=True, exist_ok=True)
             for filename in os.listdir(path):
                 os.remove(os.path.join(path, filename))
-            path = f"{self.__snapshots_path}"
-            home_path = os.path.join(path, "home.png")
-            if os.path.exists(home_path):
-                os.remove(home_path)
 
     def send_apdu(self, data):
         """Send hex-encoded bytes to the apdu"""
         self.__backend.send_raw(bytes.fromhex(data))
+
+    def remove_settings_and_info(self):
+        if self.__golden and self.__update_fixed:
+            self.remove_settings_pages()
+            self.remove_info_page()
 
     def remove_info_page(self):
         """ Delete the info page for golden tests"""
@@ -204,6 +224,13 @@ class TezosAppScreen(metaclass=MetaScreen):
             info_path=os.path.join(self.__snapshots_path, "info.png")
             if os.path.exists(info_path):
                 os.remove(info_path)
+
+    def remove_settings_pages(self):
+        """ Delete the settings page for golden tests"""
+        if self.__golden:
+            settings_path=os.path.join(self.__snapshots_path, "settings_*.png")
+            for file in glob.glob(settings_path):
+                os.remove(file)
 
     def expect_apdu_return(self, expected):
         """Expect hex-encoded response from the apdu"""
@@ -223,14 +250,16 @@ class TezosAppScreen(metaclass=MetaScreen):
 
     def assert_screen(self, screen, fixed: bool = False):
         golden = self.__golden and screen not in self.__snapshotted
-        if golden:
-            self.__snapshotted = self.__snapshotted + [screen]
-            input(f"Press ENTER to snapshot {screen}")
 
         if fixed:
             path = f'{self.__snapshots_path}/{screen}.png'
+            golden = golden and self.__update_fixed
         else:
             path = f'{self.__prefixed_snapshots_path}/{screen}.png'
+
+        if golden:
+            self.__snapshotted = self.__snapshotted + [screen]
+            input(f"Press ENTER to snapshot {screen}")
 
         def check():
             print(f"- Expecting {screen} -")
@@ -241,20 +270,30 @@ class TezosAppScreen(metaclass=MetaScreen):
     def assert_home(self):
         self.assert_screen("home", True)
 
-    def assert_info(self):
-        self.assert_screen("info", True)
 
     def assert_settings(self,
                         blindsigning = False,
                         expert_mode = False):
-        suffix=""
+        bs_suffix="blindsigning_"
         if blindsigning:
-            suffix += "_blindsigning"
+            bs_suffix += "on"
+        else:
+            bs_suffix += "off"
+        expert_mode_suffix = "_expert_mode_"
         if expert_mode:
-            suffix += "_expert"
-        if suffix != "":
-            suffix += "_on"
-        self.assert_screen("settings" + suffix)
+            expert_mode_suffix += "on_"
+        else:
+            expert_mode_suffix += "off_"
+        self.assert_screen("settings" + expert_mode_suffix + bs_suffix,fixed=True)
+
+
+    def assert_info(self):
+        if(Firmware.STAX == self.firmware):
+            self.assert_screen("info_stax", True)
+        else:
+            self.assert_screen("info_flex_1", True)
+            self.review.next()
+            self.assert_screen("info_flex_2", True)
 
     def quit(self):
         if os.getenv("NOQUIT") == None:
@@ -275,10 +314,10 @@ class TezosAppScreen(metaclass=MetaScreen):
         self.__backend.resume_ticker()
 
     @contextmanager
-    def fading_screen(self, screen) -> Generator[None, None, None]:
+    def fading_screen(self, screen, fixed=False) -> Generator[None, None, None]:
         with self.manual_ticker():
             yield
-            self.assert_screen(screen)
+            self.assert_screen(screen, fixed)
             self.review.tap() # Not waiting for the screen to fade on its own
 
     def start_loading_operation(self, first_packet):
@@ -291,7 +330,15 @@ class TezosAppScreen(metaclass=MetaScreen):
             self.send_apdu(first_packet)
         self.expect_apdu_return("9000")
 
-    def review_confirm_signing(self, expected_apdu):
+    def review_confirm_signing(self, expected_apdu, blindsigning_type : BlindsigningType= BlindsigningType.NO_BLINDSIGN):
+        self.review.next()
+        if blindsigning_type == BlindsigningType.NO_BLINDSIGN:
+            self.assert_screen("operation_sign")
+        elif blindsigning_type == BlindsigningType.BLINDSIGN:
+            self.assert_screen("operation_sign_blindsign")
+        else:
+            self.assert_screen("operation_sign_summary")
+
         with self.fading_screen("signing_successful"):
             self.review.confirm()
         self.expect_apdu_return(expected_apdu)
@@ -315,12 +362,23 @@ class TezosAppScreen(metaclass=MetaScreen):
             with self.fading_screen("reject_review"):
                 self.review.reject_tx.confirm()
 
-    def process_blindsign_warnings(self, landing_screen: str):
+    def process_blindsign_warnings(self, apdu: str = None, loading_operation: bool = True):
         self.assert_screen("unsafe_operation_warning_1")
-        self.review.reject()
+        if loading_operation:
+            with self.fading_screen("loading_operation"):
+                self.review.back_to_safety.reject()
+        else:
+            self.review.back_to_safety.reject()
+        if apdu:
+            self.send_apdu(apdu)
         self.assert_screen("unsafe_operation_warning_2")
-        with self.fading_screen(landing_screen):
-            self.review.enable_blindsign.confirm()
+        self.review.back_to_safety.reject()
+
+
+    def send_initialize_msg(self, apdu):
+        self.send_apdu(apdu)
+        self.expect_apdu_return("9000")
+        self.assert_screen("review_screen", True)
 
 
 def tezos_app(prefix) -> TezosAppScreen:
@@ -339,19 +397,18 @@ def assert_home_with_code(app, code):
     app.expect_apdu_failure(code)
 
 
-def send_initialize_msg(app, apdu):
-    app.send_apdu(apdu)
-    app.expect_apdu_return("9000")
-    app.assert_screen("review_request_sign_operation")
-
-
 def send_payload(app, apdu):
     app.send_apdu(apdu)
-    app.assert_screen("review_request_sign_operation")
+    app.assert_screen("review_screen", True)
 
+
+def verify_parsing_err_reject_response(app, tag):
+    app.assert_screen(tag)
+    app.review.back_to_safety.confirm()
+    reject_flow(app, "9405")
 
 def verify_err_reject_response(app, tag):
-    verify_reject_response_common(app, tag, "9405")
+    verify_reject_response_common(app, tag, "9405" )
 
 
 def verify_reject_response(app, tag):

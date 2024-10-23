@@ -122,7 +122,7 @@ error:
 
 typedef struct {
     uint64_t amount;
-    uint64_t fee;
+    uint64_t fee;  /// Contains transaction fees plus reveal fees, if any.
     char     destination_address[ADDRESS_MAX_SIZE];
 } swap_transaction_parameters_t;
 
@@ -204,8 +204,8 @@ swap_check_validity(void)
     TZ_ASSERT(EXC_REJECT, op->nb_reveal <= 1);
     TZ_ASSERT(EXC_REJECT, (op->batch_index - op->nb_reveal) == 1);
     TZ_ASSERT(EXC_REJECT, op->last_tag == TZ_OPERATION_TAG_TRANSACTION);
-    TZ_ASSERT(EXC_REJECT, op->last_amount == G_swap_params.amount);
-    TZ_ASSERT(EXC_REJECT, op->last_fee == G_swap_params.fee);
+    TZ_ASSERT(EXC_REJECT, op->total_amount == G_swap_params.amount);
+    TZ_ASSERT(EXC_REJECT, op->total_fee == G_swap_params.fee);
 
     tz_format_address(op->destination, 22, dstaddr, sizeof(dstaddr));
 

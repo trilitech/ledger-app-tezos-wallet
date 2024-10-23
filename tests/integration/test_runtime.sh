@@ -179,7 +179,7 @@ set_expert_mode() {
     expect_section_content 'Expert mode' 'DISABLED'
     press_button both
     expect_section_content 'Expert mode' 'ENABLED'
-    press_button right
+    press_button left
     expect_section_content 'Back'
     press_button both
     expected_home
@@ -193,7 +193,7 @@ quit_app() {
     press_button right
     expect_full_text "Settings"
     press_button right
-    expect_full_text "Quit?"
+    expect_full_text "Quit"
     press_button both
     expect_exited
 }
