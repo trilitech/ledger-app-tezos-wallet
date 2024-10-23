@@ -13,9 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Check signing origination"""
+
 from pathlib import Path
 
-from utils.app import Screen, DEFAULT_ACCOUNT
+from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
 from utils.message import Message
 
 # Operation (0): Origination
@@ -26,7 +28,8 @@ from utils.message import Message
 # Code: UNPAIR
 # Storage: pair "1" 2
 
-def test_sign_origination(app):
+def test_sign_origination(app: TezosAppScreen):
+    """Check signing origination"""
     test_name = Path(__file__).stem
 
     app.setup_expert_mode()

@@ -13,9 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Check signing smart rollup execute outbox message"""
+
 from pathlib import Path
 
-from utils.app import Screen, DEFAULT_ACCOUNT
+from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
 from utils.message import Message
 
 # Operation (0): SR: execute outbox message
@@ -25,7 +27,8 @@ from utils.message import Message
 # Commitment: src12UJzB8mg7yU6nWPzicH7ofJbFjyJEbHvwtZdfRXi8DQHNp1LY8
 # Output proof: 396630396632393532643334353238633733336639343631356366633339626335353536313966633535306464346136376261323230386365386538363761613364313361366566393964666265333263363937346161396132313530643231656361323963333334396535396331336239303831663163313162343430616334643334353564656462653465653064653135613861663632306434633836323437643964313332646531626236646132336435666639643864666664613232626139613834
 
-def test_sign_sc_rollup_execute_outbox_message(app):
+def test_sign_sc_rollup_execute_outbox_message(app: TezosAppScreen):
+    """Check signing smart rollup execute outbox message"""
     test_name = Path(__file__).stem
 
     app.setup_expert_mode()

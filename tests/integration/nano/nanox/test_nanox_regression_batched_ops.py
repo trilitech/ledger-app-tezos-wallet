@@ -13,19 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import sys
-
-file_path=os.path.abspath(__file__)
-dir_path=os.path.dirname(file_path)
-root_path=os.path.dirname(dir_path)
-sys.path.append(root_path)
-
-from conftest import requires_device
+"""Check signing batch operation"""
 
 from pathlib import Path
 
-from utils.app import Screen, DEFAULT_ACCOUNT
+from conftest import requires_device
+
+from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
 from utils.message import Message
 
 # Operation (0): Transaction
@@ -42,7 +36,8 @@ from utils.message import Message
 # Destination: KT1CYT8oACUcCSNTu2qfgB4fj5bD7szYrpti
 
 @requires_device("nanox")
-def test_nanox_regression_batched_ops(app):
+def test_nanox_regression_batched_ops(app: TezosAppScreen):
+    """Check signing batch operation"""
     test_name = Path(__file__).stem
 
     app.setup_expert_mode()

@@ -13,21 +13,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Check signing with bip25519"""
+
 from pathlib import Path
 
-from utils.account import Account, SIGNATURE_TYPE
-from utils.app import Screen
+from utils.account import Account, SigType
+from utils.app import Screen, TezosAppScreen
 from utils.message import Message
 
 # Expression: {"CACA";"POPO";"BOUDIN"}
 
-def test_tz1_bip25519_sign_micheline_basic(app):
+def test_tz1_bip25519_sign_micheline_basic(app: TezosAppScreen):
+    """Check signing with bip25519"""
     test_name = Path(__file__).stem
 
-    app.assert_screen(Screen.Home)
+    app.assert_screen(Screen.HOME)
 
     account = Account("m/44'/1729'/0'/0'",
-                      SIGNATURE_TYPE.BIP32_ED25519,
+                      SigType.BIP32_ED25519,
                       "edpkumJgSsSxkpiB5hmTq6eZcrmc6BsJtLAhYceFTiziFqje4mongz")
 
     message = Message.from_bytes("05020000001d0100000004434143410100000004504f504f0100000006424f5544494e")

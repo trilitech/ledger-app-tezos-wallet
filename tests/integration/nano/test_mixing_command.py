@@ -13,44 +13,47 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from utils.app import Screen, DEFAULT_ACCOUNT
-from utils.backend import INS, StatusCode
+"""Check that mixing instruction fails"""
 
-def test_mixing_command(app):
+from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
+from utils.backend import Ins, StatusCode
 
-    app.assert_screen(Screen.Home)
+def test_mixing_command(app: TezosAppScreen):
+    """Check that mixing instruction fails"""
 
-    app.backend._ask_sign(INS.SIGN, DEFAULT_ACCOUNT)
+    app.assert_screen(Screen.HOME)
+
+    app.backend._ask_sign(Ins.SIGN, DEFAULT_ACCOUNT)
     with app.expect_apdu_failure(StatusCode.UNEXPECTED_STATE):
         app.backend.version()
 
-    app.assert_screen(Screen.Home)
+    app.assert_screen(Screen.HOME)
 
-    app.backend._ask_sign(INS.SIGN_WITH_HASH, DEFAULT_ACCOUNT)
+    app.backend._ask_sign(Ins.SIGN_WITH_HASH, DEFAULT_ACCOUNT)
     with app.expect_apdu_failure(StatusCode.UNEXPECTED_STATE):
-        app.backend._ask_sign(INS.SIGN, DEFAULT_ACCOUNT)
+        app.backend._ask_sign(Ins.SIGN, DEFAULT_ACCOUNT)
 
-    app.assert_screen(Screen.Home)
+    app.assert_screen(Screen.HOME)
 
-    app.backend._ask_sign(INS.SIGN, DEFAULT_ACCOUNT)
+    app.backend._ask_sign(Ins.SIGN, DEFAULT_ACCOUNT)
     with app.expect_apdu_failure(StatusCode.UNEXPECTED_STATE):
-        app.backend._ask_sign(INS.SIGN_WITH_HASH, DEFAULT_ACCOUNT)
+        app.backend._ask_sign(Ins.SIGN_WITH_HASH, DEFAULT_ACCOUNT)
 
-    app.assert_screen(Screen.Home)
+    app.assert_screen(Screen.HOME)
 
-    app.backend._ask_sign(INS.SIGN, DEFAULT_ACCOUNT)
+    app.backend._ask_sign(Ins.SIGN, DEFAULT_ACCOUNT)
     with app.expect_apdu_failure(StatusCode.UNEXPECTED_STATE):
         app.backend.get_public_key(DEFAULT_ACCOUNT, with_prompt=True)
 
-    app.assert_screen(Screen.Home)
+    app.assert_screen(Screen.HOME)
 
-    app.backend._ask_sign(INS.SIGN, DEFAULT_ACCOUNT)
+    app.backend._ask_sign(Ins.SIGN, DEFAULT_ACCOUNT)
     with app.expect_apdu_failure(StatusCode.UNEXPECTED_STATE):
         app.backend.get_public_key(DEFAULT_ACCOUNT, with_prompt=False)
 
-    app.assert_screen(Screen.Home)
+    app.assert_screen(Screen.HOME)
 
-    app.backend._ask_sign(INS.SIGN, DEFAULT_ACCOUNT)
+    app.backend._ask_sign(Ins.SIGN, DEFAULT_ACCOUNT)
     with app.expect_apdu_failure(StatusCode.UNEXPECTED_STATE):
         app.backend.git()
 

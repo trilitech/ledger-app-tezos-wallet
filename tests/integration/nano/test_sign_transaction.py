@@ -13,9 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Check signing transaction"""
+
 from pathlib import Path
 
-from utils.app import Screen, Screen_text, DEFAULT_ACCOUNT
+from utils.app import Screen, ScreenText, TezosAppScreen, DEFAULT_ACCOUNT
 from utils.backend import StatusCode
 from utils.message import Message
 
@@ -29,7 +31,8 @@ test_path = Path(Path(__file__).stem)
 # Destination: KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT
 # Entrypoint: do
 # Parameter: CAR
-def test_sign_transaction(app):
+def test_sign_transaction(app: TezosAppScreen):
+    """Check signing transaction"""
     path = test_path / "basic"
 
     app.setup_expert_mode()
@@ -57,7 +60,8 @@ def test_sign_transaction(app):
 # Destination: KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT
 # Entrypoint: root
 # Data: {pair "[" (pair "Z" (pair "Y" (pair "X" (pair "W" (pair "V" (pair "U" (pair "T" (pair "S" (pair "R" (pair "Q" (pair "P" (pair "O" (pair "N" (pair "M" (pair "L" (pair "K" (pair "J" (pair "I" (pair "H" (pair "G" (pair "F" (pair "E" (pair "D" (pair "C" (pair "B" {})))))))))))))))))))))))));pair 10 (pair 9 (pair 8 (pair 7 (pair 6 (pair 5 (pair 4 (pair 3 (pair 2 (pair 1 {})))))))))}
-def test_reject_transaction(app):
+def test_reject_transaction(app: TezosAppScreen):
+    """Check reject transaction"""
     path = test_path / "reject"
 
     app.setup_expert_mode()
@@ -77,7 +81,8 @@ def test_reject_transaction(app):
 # Storage limit: 4
 # Amount: 0.01 XTZ
 # Destination: KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT
-def test_sign_simple_transaction(app):
+def test_sign_simple_transaction(app: TezosAppScreen):
+    """Check sign not complex transaction"""
     path = test_path / "simple"
 
     app.setup_expert_mode()
@@ -105,9 +110,10 @@ def test_sign_simple_transaction(app):
 # Destination: KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT
 # Entrypoint: do
 # Parameter: CAR
-def test_too_complex_transaction(app):
+def test_too_complex_transaction(app: TezosAppScreen):
+    """Check sign complex transaction"""
     path = test_path / "complex"
-    app.assert_screen(Screen.Home)
+    app.assert_screen(Screen.HOME)
 
     message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316")
 
@@ -115,7 +121,7 @@ def test_too_complex_transaction(app):
                          message,
                          with_hash=True,
                          navigate=(lambda: app.navigate_until_text(
-                             Screen_text.Back_home,
+                             ScreenText.BACK_HOME,
                              path)),
                          status_code=StatusCode.REJECT)
 
@@ -129,7 +135,8 @@ def test_too_complex_transaction(app):
 # Destination: tz2CJBeWWLsUDjVUDqGZL6od3DeBCNzYXrXk
 # Entrypoint: stake
 # Parameter: Unit
-def test_sign_stake_transaction(app):
+def test_sign_stake_transaction(app: TezosAppScreen):
+    """Check sign stake"""
     path = test_path / "stake"
 
     app.setup_expert_mode()
@@ -157,7 +164,8 @@ def test_sign_stake_transaction(app):
 # Destination: tz2CJBeWWLsUDjVUDqGZL6od3DeBCNzYXrXk
 # Entrypoint: unstake
 # Parameter: Unit
-def test_sign_unstake_transaction(app):
+def test_sign_unstake_transaction(app: TezosAppScreen):
+    """Check sign unstake"""
     path = test_path / "unstake"
 
     app.setup_expert_mode()
@@ -185,7 +193,8 @@ def test_sign_unstake_transaction(app):
 # Destination: tz2CJBeWWLsUDjVUDqGZL6od3DeBCNzYXrXk
 # Entrypoint: finalize_unstake
 # Parameter: Unit
-def test_sign_finalize_unstake_transaction(app):
+def test_sign_finalize_unstake_transaction(app: TezosAppScreen):
+    """Check sign finalize_unstake"""
     path = test_path / "finalize_unstake"
 
     app.setup_expert_mode()
@@ -213,7 +222,8 @@ def test_sign_finalize_unstake_transaction(app):
 # Destination: tz2CJBeWWLsUDjVUDqGZL6od3DeBCNzYXrXk
 # Entrypoint: set_delegate_parameters
 # Parameter: Pair 4000000 (Pair 20000000 Unit)
-def test_sign_set_delegate_parameters_transaction(app):
+def test_sign_set_delegate_parameters_transaction(app: TezosAppScreen):
+    """Check sign set delegate parameters"""
     path = test_path / "delegate_parameters"
 
     app.setup_expert_mode()

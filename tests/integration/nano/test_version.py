@@ -13,11 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from utils.app import Screen
+"""Module to test version instruction."""
 
-def test_version(app):
+from utils.app import Screen, TezosAppScreen
 
-    app.assert_screen(Screen.Home)
+def test_version(app: TezosAppScreen):
+    """Test that the app version is the same as the current version."""
+    app.assert_screen(Screen.HOME)
 
     data = app.backend.version()
 

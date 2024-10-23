@@ -13,9 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Check signing transfer ticket"""
+
 from pathlib import Path
 
-from utils.app import Screen, DEFAULT_ACCOUNT
+from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
 from utils.message import Message
 
 # Operation (0): Transfer ticket
@@ -28,7 +30,8 @@ from utils.message import Message
 # Destination: KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT
 # Entrypoint: default
 
-def test_sign_transfer_ticket(app):
+def test_sign_transfer_ticket(app: TezosAppScreen):
+    """Check signing transfer ticket"""
     test_name = Path(__file__).stem
 
     app.setup_expert_mode()

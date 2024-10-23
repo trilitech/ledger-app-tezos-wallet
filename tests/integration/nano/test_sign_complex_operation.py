@@ -13,10 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Check signing complex operation"""
+
 from pathlib import Path
 
-from utils.app import Screen, Screen_text, DEFAULT_ACCOUNT
-from utils.backend import StatusCode
+from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
 from utils.message import Message
 
 # Operation (0): Transaction
@@ -46,10 +47,11 @@ from utils.message import Message
 # Destination: tz3eydffbLkjdVb8zx42BvxpGV87zaRnqL3r
 # Entrypoint: default
 
-def test_sign_complex_operation(app):
+def test_sign_complex_operation(app: TezosAppScreen):
+    """Check signing complex operation"""
     test_name = Path(__file__).stem
 
-    app.assert_screen(Screen.Home)
+    app.assert_screen(Screen.HOME)
     app.setup_expert_mode()
 
     message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000006d00ffdd6102321bc251e4a5190ad5b12b251069d9b4a0c21e040304c0843d0000000004050d036a000000060764035c038d9e00ffdd6102321bc251e4a5190ad5b12b251069d9b4904e05040500000002030600000004056303620000591e842444265757d6a65e3670ca18b5e662f9c0070002cc8e146741cf31fc00123b8c26baf95c57421a3c0000000764656661756c74")

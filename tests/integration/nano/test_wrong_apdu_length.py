@@ -13,32 +13,34 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from utils.account import SIGNATURE_TYPE
-from utils.app import Screen
-from utils.backend import CLA, INDEX, INS, StatusCode
+"""Check wrong apdu length behaviour"""
 
-def test_wrong_apdu_length(app):
+from utils.account import SigType
+from utils.app import Screen, TezosAppScreen
+from utils.backend import Cla, Index, Ins, StatusCode
 
-    app.assert_screen(Screen.Home)
+def test_wrong_apdu_length(app: TezosAppScreen):
+    """Check wrong apdu length behaviour"""
+    app.assert_screen(Screen.HOME)
 
     raw = \
-        int(CLA.DEFAULT).to_bytes(1, 'big') + \
-        int(INS.VERSION).to_bytes(1, 'big') + \
-        int(INDEX.FIRST).to_bytes(1, 'big') + \
-        int(SIGNATURE_TYPE.ED25519).to_bytes(1, 'big') + \
+        int(Cla.DEFAULT).to_bytes(1, 'big') + \
+        int(Ins.VERSION).to_bytes(1, 'big') + \
+        int(Index.FIRST).to_bytes(1, 'big') + \
+        int(SigType.ED25519).to_bytes(1, 'big') + \
         int(0x00).to_bytes(1, 'big') + \
         int(0x00).to_bytes(1, 'big') # right size = 0x01
 
     with app.expect_apdu_failure(StatusCode.WRONG_LENGTH_FOR_INS):
         app.backend.exchange_raw(raw)
 
-    app.assert_screen(Screen.Home)
+    app.assert_screen(Screen.HOME)
 
     raw = \
-        int(CLA.DEFAULT).to_bytes(1, 'big') + \
-        int(INS.VERSION).to_bytes(1, 'big') + \
-        int(INDEX.FIRST).to_bytes(1, 'big') + \
-        int(SIGNATURE_TYPE.ED25519).to_bytes(1, 'big') + \
+        int(Cla.DEFAULT).to_bytes(1, 'big') + \
+        int(Ins.VERSION).to_bytes(1, 'big') + \
+        int(Index.FIRST).to_bytes(1, 'big') + \
+        int(SigType.ED25519).to_bytes(1, 'big') + \
         int(0x01).to_bytes(1, 'big') # right size = 0x00
 
     with app.expect_apdu_failure(StatusCode.WRONG_LENGTH_FOR_INS):

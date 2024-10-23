@@ -13,9 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Check signing delegation"""
+
 from pathlib import Path
 
-from utils.app import Screen, DEFAULT_ACCOUNT
+from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
 from utils.message import Message
 
 # Operation (0): Delegation
@@ -23,10 +25,11 @@ from utils.message import Message
 # Storage limit: 889
 # Delegate: tz1TmFPVZsGQ8MnrBJtnECJgkFUwLa6EWYDm
 
-def test_sign_delegation(app):
+def test_sign_delegation(app: TezosAppScreen):
+    """Check signing delegation"""
     test_name = Path(__file__).stem
 
-    app.assert_screen(Screen.Home)
+    app.assert_screen(Screen.HOME)
 
     message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000006e01774d99da021b92d8c3dfc2e814c7658440319be2c09a0cf40509f906ff00591e842444265757d6a65e3670ca18b5e662f9c0")
 

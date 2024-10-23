@@ -13,9 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Check signing smart rollup originate"""
+
 from pathlib import Path
 
-from utils.app import Screen, DEFAULT_ACCOUNT
+from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
 from utils.message import Message
 
 # Operation (0): SR: originate
@@ -28,14 +30,15 @@ from utils.message import Message
 # Whitelist (1): tz2WmivuMG8MMRKMEmzKRMMxMApxZQWYNS4W
 # Whitelist (2): tz3XMQscBFM9vPmpbYMavMmwxRMUWvWGZMQQ
 
-def test_sign_sc_rollup_originate(app):
+def test_sign_sc_rollup_originate(app: TezosAppScreen):
+    """Check signing smart rollup originate"""
     test_name = Path(__file__).stem
 
     app.setup_expert_mode()
 
     sc_rollup_originate_with_missing_white_list = "030000000000000000000000000000000000000000000000000000000000000000c800ffdd6102321bc251e4a5190ad5b12b251069d9b4904e02030400000000c63966303966323935326433343532386337333366393436313563666333396263353535363139666335353064643461363762613232303863653865383637616133643133613665663939646662653332633639373461613961323135306432316563613239633333343965353963313362393038316631633131623434306163346433343535646564626534656530646531356138616636323064346338363234376439643133326465316262366461323364356666396438646666646132326261396138340000000a07070100000001310002"
 
-    def check_sign(name: str, whitelist: bytes):
+    def check_sign(name: str, whitelist: str):
 
         message = Message.from_bytes(sc_rollup_originate_with_missing_white_list + whitelist)
 
@@ -61,6 +64,9 @@ def test_sign_sc_rollup_originate(app):
     #   tz2WmivuMG8MMRKMEmzKRMMxMApxZQWYNS4W;
     #   tz3XMQscBFM9vPmpbYMavMmwxRMUWvWGZMQQ
     # ]
-    check_sign("with_whitelist", "ff0000003f00ffdd6102321bc251e4a5190ad5b12b251069d9b401f6552df4f5ff51c3d13347cab045cfdb8b9bd8030278eb8b6ab9a768579cd5146b480789650c83f28e")
+    check_sign(
+        "with_whitelist",
+        "ff0000003f00ffdd6102321bc251e4a5190ad5b12b251069d9b401f6552df4f5ff51c3d13347cab045cfdb8b9bd8030278eb8b6ab9a768579cd5146b480789650c83f28e"
+    )
 
     app.quit()

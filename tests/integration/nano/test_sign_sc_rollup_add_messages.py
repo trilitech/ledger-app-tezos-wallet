@@ -13,9 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Check signing smart rollup add message"""
+
 from pathlib import Path
 
-from utils.app import Screen, DEFAULT_ACCOUNT
+from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
 from utils.message import Message
 
 # Operation (0): SR: send messages
@@ -25,10 +27,11 @@ from utils.message import Message
 # Message (1): 67
 # Message (2): 89abcdef
 
-def test_sign_sc_rollup_add_messages(app):
+def test_sign_sc_rollup_add_messages(app: TezosAppScreen):
+    """Check signing smart rollup add message"""
     test_name = Path(__file__).stem
 
-    app.assert_screen(Screen.Home)
+    app.assert_screen(Screen.HOME)
 
     message = Message.from_bytes("030000000000000000000000000000000000000000000000000000000000000000c900ffdd6102321bc251e4a5190ad5b12b251069d9b4904e020304000000140000000301234500000001670000000489abcdef")
 

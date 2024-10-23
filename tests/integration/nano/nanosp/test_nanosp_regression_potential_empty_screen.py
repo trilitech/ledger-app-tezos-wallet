@@ -13,19 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import sys
-
-file_path=os.path.abspath(__file__)
-dir_path=os.path.dirname(file_path)
-root_path=os.path.dirname(dir_path)
-sys.path.append(root_path)
-
-from conftest import requires_device
+"""Check signing operation that display potentially empty screens"""
 
 from pathlib import Path
 
-from utils.app import Screen, DEFAULT_ACCOUNT
+from conftest import requires_device
+
+from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
 from utils.message import Message
 
 # Operation (0): Transfer ticket
@@ -43,7 +37,8 @@ from utils.message import Message
 # S
 
 @requires_device("nanosp")
-def test_nanosp_regression_potential_empty_screen(app):
+def test_nanosp_regression_potential_empty_screen(app: TezosAppScreen):
+    """Check signing operation that display potentially empty screens"""
     test_name = Path(__file__).stem
 
     app.setup_expert_mode()

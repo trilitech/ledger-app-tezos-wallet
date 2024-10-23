@@ -13,9 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Check signing register global constant"""
+
 from pathlib import Path
 
-from utils.app import Screen, DEFAULT_ACCOUNT
+from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
 from utils.message import Message
 
 # Operation (0): Register global constant
@@ -23,7 +25,8 @@ from utils.message import Message
 # Storage limit: 4
 # Value: Pair "1" 2
 
-def test_sign_register_global_constant(app):
+def test_sign_register_global_constant(app: TezosAppScreen):
+    """Check signing register global constant"""
     test_name = Path(__file__).stem
 
     app.setup_expert_mode()

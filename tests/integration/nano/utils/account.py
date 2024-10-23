@@ -12,33 +12,46 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import base58
+"""Module providing an account interface."""
+
 from enum import IntEnum
-from pytezos import pytezos
-from ragger.bip import pack_derivation_path
 from typing import Union
 
-class SIGNATURE_TYPE(IntEnum):
+import base58
+from pytezos import pytezos
+from ragger.bip import pack_derivation_path
+
+
+class SigType(IntEnum):
+    """Class representing signature type."""
+
     ED25519       = 0x00
     SECP256K1     = 0x01
     SECP256R1     = 0x02
     BIP32_ED25519 = 0x03
 
 class Signature:
+    """Class representing signature."""
 
     GENERIC_SIGNATURE_PREFIX = bytes.fromhex("04822b") # sig(96)
 
+    value: bytes
+
     def __init__(self, value: bytes):
         value = Signature.GENERIC_SIGNATURE_PREFIX + value
-        self.value: bytes = base58.b58encode_check(value)
+        self.value = base58.b58encode_check(value)
 
     def __repr__(self) -> str:
         return self.value.hex()
 
     @classmethod
-    def from_tlv(self, tlv: Union[bytes, bytearray]) -> 'Signature':
-        if isinstance(tlv, bytes): tlv = bytearray(tlv)
-        # See: https://developers.ledger.com/docs/embedded-app/crypto-api/lcx__ecdsa_8h/#cx_ecdsa_sign
+    def from_tlv(cls, tlv: Union[bytes, bytearray]) -> 'Signature':
+        """Get Signature from tlv."""
+
+        if isinstance(tlv, bytes):
+            tlv = bytearray(tlv)
+        # See:
+        # https://developers.ledger.com/docs/embedded-app/crypto-api/lcx__ecdsa_8h/#cx_ecdsa_sign
         # TLV: 30 || L || 02 || Lr || r || 02 || Ls || s
         header_tag_index = 0
         # Remove the unwanted parity information set here.
@@ -64,38 +77,45 @@ class Signature:
         s = tlv[s_index : s_index + s_len]
         # Sometimes \x00 are added or removed
         # A size adjustment is required here.
-        def adjust_size(bytes, size):
-            return bytes[-size:].rjust(size, b'\x00')
-        return Signature(adjust_size(r, 32) + adjust_size(s, 32))
+        def adjust_size(raw, size):
+            return raw[-size:].rjust(size, b'\x00')
+        return cls(adjust_size(r, 32) + adjust_size(s, 32))
 
 class Account:
+    """Class representing account."""
+
+    path: bytes
+    sig_type: Union[SigType, int]
+    public_key: str
+
     def __init__(self,
                  path: Union[str, bytes],
-                 sig_type: SIGNATURE_TYPE,
+                 sig_type: Union[SigType, int],
                  public_key: str):
-        self.path: bytes = \
+        self.path = \
             pack_derivation_path(path) if isinstance(path, str) \
             else path
-        self.sig_type: SIGNATURE_TYPE = sig_type
-        self.public_key: str = public_key
+        self.sig_type = sig_type
+        self.public_key = public_key
 
     def __repr__(self) -> str:
         return self.public_key
 
     @property
     def base58_decoded(self) -> bytes:
+        """Decodes public_key from base58 encoding."""
 
         # Get the public_key without prefix
         public_key = base58.b58decode_check(self.public_key)
 
         if self.sig_type in [
-                SIGNATURE_TYPE.ED25519,
-                SIGNATURE_TYPE.BIP32_ED25519
+                SigType.ED25519,
+                SigType.BIP32_ED25519
         ]:
             prefix = bytes.fromhex("0d0f25d9") # edpk(54)
-        elif self.sig_type == SIGNATURE_TYPE.SECP256K1:
+        elif self.sig_type == SigType.SECP256K1:
             prefix = bytes.fromhex("03fee256") # sppk(55)
-        elif self.sig_type == SIGNATURE_TYPE.SECP256R1:
+        elif self.sig_type == SigType.SECP256R1:
             prefix = bytes.fromhex("03b28b7f") # p2pk(55)
         else:
             assert False, \
@@ -106,8 +126,8 @@ class Account:
         public_key = public_key[len(prefix):]
 
         if self.sig_type in [
-                SIGNATURE_TYPE.SECP256K1,
-                SIGNATURE_TYPE.SECP256R1
+                SigType.SECP256K1,
+                SigType.SECP256R1
         ]:
             assert public_key[0] in [0x02, 0x03], \
                 "Expected a prefix kind of 0x02 or 0x03 but got {public_key[0]}"
@@ -116,6 +136,7 @@ class Account:
         return public_key
 
     def check_public_key(self, data: bytes) -> None:
+        """Checks if the data correspond to the public_key."""
 
         # `data` should be:
         # length + kind + pk
@@ -138,12 +159,15 @@ class Account:
     def check_signature(self,
                         signature: Union[bytes, Signature],
                         message: Union[str, bytes]):
-        if isinstance(message, str): message = bytes.fromhex(message)
+        """Checks if signature correspond to a signature of message sign by the account."""
+
+        if isinstance(message, str):
+            message = bytes.fromhex(message)
         if isinstance(signature, bytes):
             signature = Signature(signature) \
                 if self.sig_type in [
-                        SIGNATURE_TYPE.ED25519,
-                        SIGNATURE_TYPE.BIP32_ED25519
+                        SigType.ED25519,
+                        SigType.BIP32_ED25519
                 ] \
                 else Signature.from_tlv(signature)
         ctxt = pytezos.using(key=self.public_key)
