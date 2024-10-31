@@ -26,6 +26,7 @@ from pytezos.operation.forge import (
     reserved_entrypoints,
     forge_failing_noop,
     forge_transaction,
+    forge_reveal,
 )
 
 class Message(ABC):
@@ -59,6 +60,7 @@ class Default:
     """Class holding default values."""
     BLOCK_HASH: str              = 'BKiHLREqU3JkXfzEDYAkmmfX48gBDtYhMrpA98s7Aq4SzbUAB6M'
     ED25519_PUBLIC_KEY_HASH: str = 'tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU'
+    ED25519_PUBLIC_KEY: str      = 'edpkteDwHwoNPB18tKToFKeSCykvr1ExnoMV5nawTJy9Y9nLTfQ541'
     ENTRYPOINT: str              = 'default'
 
     class DefaultMicheline:
@@ -130,6 +132,29 @@ class ManagerOperation(Operation):
         self.gas_limit = gas_limit
         self.storage_limit = storage_limit
         Operation.__init__(self, **kwargs)
+
+class Reveal(ManagerOperation):
+    """Class representing a tezos reveal."""
+
+    public_key: str
+
+    def __init__(self,
+                 public_key: str = Default.ED25519_PUBLIC_KEY,
+                 **kwargs):
+        self.public_key = public_key
+        ManagerOperation.__init__(self, **kwargs)
+
+    def forge(self) -> bytes:
+        return forge_reveal(
+            self.reveal(
+                self.public_key,
+                self.source,
+                self.counter,
+                self.fee,
+                self.gas_limit,
+                self.storage_limit
+            )
+        )
 
 class Transaction(ManagerOperation):
     """Class representing a tezos transaction."""
