@@ -33,5 +33,6 @@ docker run --rm -it -v "$(realpath .):/app"              	\
     -c " apk add gmp-dev curl jq libsodium-dev git xxd procps; \
 		python3 -m venv tezos_test_env --system-site-package;      \
 		source ./tezos_test_env/bin/activate;                      \
+		python3 -m pip install --upgrade pip -q;    \
 		python3 -m pip install -r tests/requirements.txt -q;    \
      ./tests/integration/run_test_local.sh -F -m $*"
