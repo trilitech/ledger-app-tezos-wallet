@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-# Copyright 2023 Functori <contact@functori.com>
+# Copyright 2024 Functori <contact@functori.com>
+# Copyright 2024 Trilitech <contact@trili.tech>
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,27 +14,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Check signing proposals"""
+"""Gathering of tests related to Failing-noop operations."""
 
 from pathlib import Path
 
 from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
-from utils.message import Proposals
+from utils.message import FailingNoop
 
-def test_sign_proposals(app: TezosAppScreen):
-    """Check signing proposals"""
+def test_sign_failing_noop(app: TezosAppScreen):
+    """Check signing failing noop"""
     test_name = Path(__file__).stem
 
     app.assert_screen(Screen.HOME)
 
-    message = Proposals(
-        source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
-        proposals = [
-            'ProtoALphaALphaALphaALphaALphaALphaALpha61322gcLUGH',
-            'ProtoALphaALphaALphaALphaALphaALphaALphabc2a7ebx6WB'
-        ],
-        period = 32
-    )
+    message = FailingNoop("9f09f2952d34528c733f94615cfc39bc555619fc550dd4a67ba2208ce8e867aa3d13a6ef99dfbe32c6974aa9a2150d21eca29c3349e59c13b9081f1c11b440ac4d3455dedbe4ee0de15a8af620d4c86247d9d132de1bb6da23d5ff9d8dffda22ba9a84")
 
     data = app.sign(DEFAULT_ACCOUNT,
                     message,

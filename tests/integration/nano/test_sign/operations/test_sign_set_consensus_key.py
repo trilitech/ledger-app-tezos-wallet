@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-# Copyright 2023 Functori <contact@functori.com>
+# Copyright 2024 Functori <contact@functori.com>
+# Copyright 2024 Trilitech <contact@trili.tech>
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,20 +14,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Check signing failing noop"""
+"""Gathering of tests related to Set-consensus-key operations."""
 
 from pathlib import Path
 
 from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
-from utils.message import FailingNoop
+from utils.message import UpdateConsensusKey
 
-def test_sign_failing_noop(app: TezosAppScreen):
-    """Check signing failing noop"""
+def test_sign_set_consensus_key(app: TezosAppScreen):
+    """Check signing set consensus key"""
     test_name = Path(__file__).stem
 
     app.assert_screen(Screen.HOME)
 
-    message = FailingNoop("9f09f2952d34528c733f94615cfc39bc555619fc550dd4a67ba2208ce8e867aa3d13a6ef99dfbe32c6974aa9a2150d21eca29c3349e59c13b9081f1c11b440ac4d3455dedbe4ee0de15a8af620d4c86247d9d132de1bb6da23d5ff9d8dffda22ba9a84")
+    message = UpdateConsensusKey(
+        source = 'tz1dyX3B1CFYa2DfdFLyPtiJCfQRUgPVME6E',
+        fee = 10000,
+        counter = 2,
+        gas_limit = 3,
+        storage_limit = 4,
+        pk = "edpkuXX2VdkdXzkN11oLCb8Aurdo1BTAtQiK8ZY9UPj2YMt3AHEpcY"
+    )
 
     data = app.sign(DEFAULT_ACCOUNT,
                     message,

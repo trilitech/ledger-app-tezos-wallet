@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-# Copyright 2023 Functori <contact@functori.com>
+# Copyright 2024 Functori <contact@functori.com>
+# Copyright 2024 Trilitech <contact@trili.tech>
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,28 +14,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Check signing smart rollup execute outbox message"""
+"""Gathering of tests related to Increase-paid-storage operations."""
 
 from pathlib import Path
 
-from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
-from utils.message import ScRollupExecuteOutboxMessage
+from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
+from utils.message import IncreasePaidStorage
 
-def test_sign_sc_rollup_execute_outbox_message(app: TezosAppScreen):
-    """Check signing smart rollup execute outbox message"""
+def test_sign_increase_paid_storage(app: TezosAppScreen):
+    """Check signing increase paid storage"""
     test_name = Path(__file__).stem
 
-    app.setup_expert_mode()
+    app.assert_screen(Screen.HOME)
 
-    message = ScRollupExecuteOutboxMessage(
+    message = IncreasePaidStorage(
         source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
         fee = 10000,
         counter = 2,
         gas_limit = 3,
         storage_limit = 4,
-        rollup = 'sr163Lv22CdE8QagCwf48PWDTquk6isQwv57',
-        cemented_commitment = 'src12UJzB8mg7yU6nWPzicH7ofJbFjyJEbHvwtZdfRXi8DQHNp1LY8',
-        output_proof = b'9f09f2952d34528c733f94615cfc39bc555619fc550dd4a67ba2208ce8e867aa3d13a6ef99dfbe32c6974aa9a2150d21eca29c3349e59c13b9081f1c11b440ac4d3455dedbe4ee0de15a8af620d4c86247d9d132de1bb6da23d5ff9d8dffda22ba9a84'
+        amount = 5,
+        destination = "KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT"
     )
 
     data = app.sign(DEFAULT_ACCOUNT,

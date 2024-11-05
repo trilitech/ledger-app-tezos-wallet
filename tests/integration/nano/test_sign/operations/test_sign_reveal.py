@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-# Copyright 2023 Functori <contact@functori.com>
+# Copyright 2024 Functori <contact@functori.com>
+# Copyright 2024 Trilitech <contact@trili.tech>
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,24 +14,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Check signing ballot"""
+"""Gathering of tests related to Reveal operations."""
 
 from pathlib import Path
 
 from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
-from utils.message import Ballot
+from utils.message import Reveal
 
-def test_sign_ballot(app: TezosAppScreen):
-    """Check signing ballot"""
+def test_sign_reveal(app: TezosAppScreen):
+    """Check signing reveal"""
     test_name = Path(__file__).stem
 
     app.assert_screen(Screen.HOME)
 
-    message = Ballot(
+    message = Reveal(
         source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
-        proposal = 'ProtoALphaALphaALphaALphaALphaALphaALpha61322gcLUGH',
-        ballot = 'yay',
-        period = 32
+        fee = 10000,
+        counter = 2,
+        gas_limit = 3,
+        storage_limit = 4,
+        public_key = 'edpkuXX2VdkdXzkN11oLCb8Aurdo1BTAtQiK8ZY9UPj2YMt3AHEpcY'
     )
 
     data = app.sign(DEFAULT_ACCOUNT,
