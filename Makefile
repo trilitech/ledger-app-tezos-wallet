@@ -111,9 +111,7 @@ integration_tests_basic_flex:	app_flex.tgz		\
 
 integration_tests_basic_%:	app_%.tgz   \
 				app_%_dbg.tgz			\
-				tests/integration/*		\
-				tests/integration/nano/*	\
-				tests/integration/nano/%/*
+				$(shell find tests/integration/nano -type f)
 	docker run --rm -i -v "$(realpath .):/app" \
 	--entrypoint=/bin/sh ledger-app-tezos-integration-tests -c "  \
 		TMP_DIR=\$$(mktemp -d /tmp/foo-XXXXXX);                   \
