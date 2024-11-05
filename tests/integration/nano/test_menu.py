@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-# Copyright 2023 Functori <contact@functori.com>
+# Copyright 2024 Functori <contact@functori.com>
+# Copyright 2024 Trilitech <contact@trili.tech>
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,12 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Check main menu operation"""
+"""Gathering of tests related to app menu."""
 
 from utils.app import Screen, TezosAppScreen
 
-def test_basic(app: TezosAppScreen):
-    """Check main menu operation"""
+def test_menu(app: TezosAppScreen):
+    """Check main menu flow"""
     app.assert_screen(Screen.HOME)
     app.backend.right_click()
     app.assert_screen(Screen.VERSION)
