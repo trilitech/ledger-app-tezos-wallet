@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-# Copyright 2023 Functori <contact@functori.com>
+# Copyright 2024 Functori <contact@functori.com>
+# Copyright 2024 Trilitech <contact@trili.tech>
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,30 +14,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Check signing transfer ticket"""
+"""Gathering of tests related to Delegation operations."""
 
 from pathlib import Path
 
-from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
-from utils.message import TransferTicket
+from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
+from utils.message import Delegation
 
-def test_sign_transfer_ticket(app: TezosAppScreen):
-    """Check signing transfer ticket"""
+def test_sign_delegation(app: TezosAppScreen):
+    """Check signing delegation"""
     test_name = Path(__file__).stem
 
-    app.setup_expert_mode()
+    app.assert_screen(Screen.HOME)
 
-    message = TransferTicket(
-        source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
-        fee = 10000,
-        counter = 2,
-        gas_limit = 3,
-        storage_limit = 4,
-        ticket_contents = {'prim': 'UNPAIR'},
-        ticket_ty = {'prim': 'pair', 'args': [{'string': '1'}, {'int': 2}]},
-        ticket_ticketer = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
-        ticket_amount = 1,
-        destination = 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT'
+    message = Delegation(
+        source = 'tz2KC42yW9FXFMJpkUooae2NFYQsM5do3E8H',
+        fee = 200000,
+        counter = 756,
+        gas_limit = 9,
+        storage_limit = 889,
+        delegate = 'tz1TmFPVZsGQ8MnrBJtnECJgkFUwLa6EWYDm'
     )
 
     data = app.sign(DEFAULT_ACCOUNT,

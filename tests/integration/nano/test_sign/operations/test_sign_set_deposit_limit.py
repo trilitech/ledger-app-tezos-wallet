@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-# Copyright 2023 Functori <contact@functori.com>
+# Copyright 2024 Functori <contact@functori.com>
+# Copyright 2024 Trilitech <contact@trili.tech>
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,26 +14,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Check signing smart rollup add message"""
+"""Gathering of tests related to Set-deposit-limit operations."""
 
 from pathlib import Path
 
 from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
-from utils.message import ScRollupAddMessage
+from utils.message import SetDepositLimit
 
-def test_sign_sc_rollup_add_messages(app: TezosAppScreen):
-    """Check signing smart rollup add message"""
+def test_sign_set_deposit_limit(app: TezosAppScreen):
+    """Check signing set deposit limit"""
     test_name = Path(__file__).stem
 
     app.assert_screen(Screen.HOME)
 
-    message = ScRollupAddMessage(
-        source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
-        fee = 10000,
-        counter = 2,
-        gas_limit = 3,
+    message = SetDepositLimit(
+        source = 'tz3XeTwXXJeWNgVR3LqMcyBDdnxjbZ7TeEGH',
+        fee = 60000,
+        counter = 4,
+        gas_limit = 376,
         storage_limit = 4,
-        message = [bytes.fromhex('012345'), bytes.fromhex('67'), bytes.fromhex('89abcdef')]
+        limit = 20000
     )
 
     data = app.sign(DEFAULT_ACCOUNT,

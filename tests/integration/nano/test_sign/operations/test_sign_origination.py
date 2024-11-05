@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-# Copyright 2023 Functori <contact@functori.com>
+# Copyright 2024 Functori <contact@functori.com>
+# Copyright 2024 Trilitech <contact@trili.tech>
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,26 +14,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Check signing set consensus key"""
+"""Gathering of tests related to Origination operations."""
 
 from pathlib import Path
 
-from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
-from utils.message import UpdateConsensusKey
+from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
+from utils.message import Origination
 
-def test_sign_set_consensus_key(app: TezosAppScreen):
-    """Check signing set consensus key"""
+def test_sign_origination(app: TezosAppScreen):
+    """Check signing origination"""
     test_name = Path(__file__).stem
 
-    app.assert_screen(Screen.HOME)
+    app.setup_expert_mode()
 
-    message = UpdateConsensusKey(
-        source = 'tz1dyX3B1CFYa2DfdFLyPtiJCfQRUgPVME6E',
+    message = Origination(
+        source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
         fee = 10000,
         counter = 2,
         gas_limit = 3,
         storage_limit = 4,
-        pk = "edpkuXX2VdkdXzkN11oLCb8Aurdo1BTAtQiK8ZY9UPj2YMt3AHEpcY"
+        code = {'prim': 'UNPAIR'},
+        storage = {'prim': 'pair', 'args': [{'string': '1'}, {'int': 2}]},
+        balance = 500000
     )
 
     data = app.sign(DEFAULT_ACCOUNT,
