@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-# Copyright 2023 Functori <contact@functori.com>
+# Copyright 2024 Functori <contact@functori.com>
+# Copyright 2024 Trilitech <contact@trili.tech>
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,34 +14,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Check signing operation that display potentially empty screens"""
+"""Gathering of tests related to Smart-rollup Add-message operations."""
 
 from pathlib import Path
 
-from conftest import requires_device
+from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
+from utils.message import ScRollupAddMessage
 
-from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
-from utils.message import TransferTicket
-
-@requires_device("nanosp")
-def test_nanosp_regression_potential_empty_screen(app: TezosAppScreen):
-    """Check signing operation that display potentially empty screens"""
+def test_sign_sc_rollup_add_messages(app: TezosAppScreen):
+    """Check signing smart rollup add message"""
     test_name = Path(__file__).stem
 
-    app.setup_expert_mode()
+    app.assert_screen(Screen.HOME)
 
-    message = TransferTicket(
+    message = ScRollupAddMessage(
         source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
         fee = 10000,
         counter = 2,
         gas_limit = 3,
         storage_limit = 4,
-        ticket_contents = {'prim': 'UNPAIR'},
-        ticket_ty = {'prim': 'pair', 'args': [{'string': '1'}, {'int': 2}]},
-        ticket_ticketer = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
-        ticket_amount = 1,
-        destination = 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT',
-        entrypoint = 'S\n\nS\nS\nS'
+        message = [bytes.fromhex('012345'), bytes.fromhex('67'), bytes.fromhex('89abcdef')]
     )
 
     data = app.sign(DEFAULT_ACCOUNT,
