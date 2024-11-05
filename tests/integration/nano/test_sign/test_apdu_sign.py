@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-# Copyright 2023 Functori <contact@functori.com>
+# Copyright 2024 Functori <contact@functori.com>
+# Copyright 2024 Trilitech <contact@trili.tech>
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,19 +14,80 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Check no need to click right two times between APDUs during signing flow"""
-
-from pathlib import Path
+"""Gathering of tests related to Sign instructions."""
 
 from conftest import requires_device
+from utils.account import Account
+from utils.app import send_and_navigate, Screen, ScreenText, TezosAppScreen, DEFAULT_ACCOUNT
+from utils.message import Message, MichelineExpr, Transaction
 
-from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
-from utils.message import MichelineExpr
+def test_sign_micheline_without_hash(app: TezosAppScreen):
+    """Check signing micheline wihout getting hash"""
+    test_name = "test_sign_micheline_without_hash"
+
+    app.assert_screen(Screen.HOME)
+
+    message = MichelineExpr([{'string': 'CACA'}, {'string': 'POPO'}, {'string': 'BOUDIN'}])
+
+    data = app.sign(DEFAULT_ACCOUNT,
+                    message,
+                    with_hash=False,
+                    path=test_name)
+
+    app.checker.check_signature(
+        account=DEFAULT_ACCOUNT,
+        message=message,
+        with_hash=False,
+        data=data)
+
+    app.quit()
+
+def test_sign_with_small_packet(app: TezosAppScreen):
+    """Check signing using small packet instead of full size packets"""
+    test_name = "test_sign_with_small_packet"
+
+    app.setup_expert_mode()
+
+    def check_sign_with_small_packet(
+            account: Account,
+            message: Message,
+            path: str) -> None:
+
+        app.assert_screen(Screen.HOME)
+
+        data = send_and_navigate(
+            send=lambda: app.backend.sign(account, message, apdu_size=10),
+            navigate=lambda: app.navigate_until_text(ScreenText.SIGN_ACCEPT, path))
+
+        app.checker.check_signature(
+            account,
+            message,
+            with_hash=False,
+            data=data)
+
+    message = Transaction(
+        source = 'tz2JPgTWZZpxZZLqHMfS69UAy1UHm4Aw5iHu',
+        fee = 50000,
+        counter = 8,
+        gas_limit = 54,
+        storage_limit = 45,
+        destination = 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT',
+        amount = 240000,
+        entrypoint = 'do',
+        parameter = {'prim': 'CAR'}
+    )
+
+    check_sign_with_small_packet(
+        account=DEFAULT_ACCOUNT,
+        message=message,
+        path=test_name)
+
+    app.quit()
 
 @requires_device("nanosp")
 def test_nanosp_regression_press_right_works_across_apdu_recieves(app: TezosAppScreen):
     """Check no need to click right two times between APDUs during signing flow"""
-    test_name = Path(__file__).stem
+    test_name = "test_nanosp_regression_press_right_works_across_apdu_recieves"
 
     app.assert_screen(Screen.HOME)
 
