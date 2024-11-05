@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Copyright 2024 Functori <contact@functori.com>
+# Copyright 2024 Trilitech <contact@trili.tech>
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,15 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Check signing too long operation behaviour"""
+"""Gathering of tests related to Blindsign."""
 
+from multiprocessing import Process, Queue
 from pathlib import Path
 from typing import Callable
 
-from utils.app import ScreenText, TezosAppScreen, DEFAULT_ACCOUNT
+from utils.app import Screen, ScreenText, TezosAppScreen, send_and_navigate, DEFAULT_ACCOUNT
 from utils.backend import StatusCode
 from utils.message import (
     Message,
+    MichelineExpr,
     Proposals,
     OperationGroup,
     Reveal,
@@ -31,8 +34,6 @@ from utils.message import (
     SetDepositLimit,
     ScRollupAddMessage
 )
-
-test_path = Path(Path(__file__).stem)
 
 def _sign_too_long(app: TezosAppScreen,
                    message: Message,
@@ -88,7 +89,7 @@ def _reject_too_long(
 
 ### Too long operation ###
 
-basic_test_path = test_path / "basic"
+basic_test_path = Path("test_sign_too_long_operation", "basic")
 
 BASIC_OPERATION = OperationGroup([
     Reveal(
@@ -241,7 +242,7 @@ def test_sign_too_long_operation_with_only_transactions(app: TezosAppScreen):
             amount = 5000000
         )
     ])
-    _sign_decodable_too_long(app, message, test_path / "only_transactions")
+    _sign_decodable_too_long(app, message, Path("test_sign_too_long_operation", "only_transactions"))
 
 def test_sign_too_long_operation_without_fee_or_amount(app: TezosAppScreen):
     """Check sign too long operation that doesn't have fees or amount"""
@@ -271,12 +272,12 @@ def test_sign_too_long_operation_without_fee_or_amount(app: TezosAppScreen):
         ],
         period = 32
     )
-    _sign_decodable_too_long(app, message, test_path / "without_fee_or_amount")
+    _sign_decodable_too_long(app, message, Path("test_sign_too_long_operation", "without_fee_or_amount"))
 
 
 ### Too long operation containing a too large number ###
 
-too_large_test_path = test_path / "too_large"
+too_large_test_path = Path("test_sign_too_long_operation", "too_large")
 
 OPERATION_WITH_TOO_LARGE = OperationGroup([
     ScRollupAddMessage(
@@ -356,3 +357,114 @@ def test_reject_too_long_operation_with_too_large_at_blindsigning(app: TezosAppS
         app.navigate_until_text(ScreenText.SIGN_REJECT, path / "blindsigning")
 
     _reject_too_long(app, OPERATION_WITH_TOO_LARGE, StatusCode.REJECT, navigate)
+
+def test_blindsign_too_deep(app: TezosAppScreen):
+    """Check blindsigning on too deep expression"""
+    test_name = "test_blindsign_too_deep"
+
+    app.assert_screen(Screen.HOME)
+
+    expression = MichelineExpr([[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[{'int':42}]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]])
+
+    if app.backend.firmware.device == "nanos":
+        def send(result_queue: Queue) -> None:
+            res = app.backend.sign(DEFAULT_ACCOUNT, expression, with_hash=True)
+            result_queue.put(res)
+        def assert_screen_i(i):
+            app.assert_screen(f"{str(i).zfill(5)}", path=Path(test_name) / "clear")
+
+        result_queue: Queue = Queue()
+        send_process = Process(target=send, args=(result_queue,))
+        send_process.start()
+
+        app.backend.wait_for_text_not_on_screen(ScreenText.HOME)
+
+        for i in range(6):
+            # 'Review operation'
+            # 'Expression {{{...{{{'
+            # 'Expression {{{...{{{'
+            # 'The transaction cannot be trusted.'
+            # 'Parsing error ERR_TOO_DEEP'
+            # 'Learn More: bit.ly/ledger-tez'
+            assert_screen_i(i)
+            app.backend.right_click()
+
+        # 'Accept risk' screen
+        assert_screen_i(i+1)
+
+        def blind_navigate() -> None:
+            app.navigate_until_text(ScreenText.SIGN_ACCEPT, Path(test_name) / "blind")
+        navigate_process = Process(target=blind_navigate)
+        navigate_process.start()
+
+        app.backend.both_click()
+
+        navigate_process.join()
+        assert navigate_process.exitcode == 0, "Should have terminate successfully"
+
+        send_process.join()
+        assert send_process.exitcode == 0, "Should have terminate successfully"
+
+        data = result_queue.get()
+    else:
+        data = app.blind_sign(DEFAULT_ACCOUNT,
+                              expression,
+                              with_hash=True,
+                              path=test_name)
+
+    app.checker.check_signature(
+        account=DEFAULT_ACCOUNT,
+        message=expression,
+        with_hash=True,
+        data=data)
+
+    app.quit()
+
+def test_blindsign_too_large(app: TezosAppScreen):
+    """Check blindsigning on too large expression"""
+    test_name = "test_blindsign_too_large"
+
+    app.assert_screen(Screen.HOME)
+
+    message = MichelineExpr({'int':12345678901234567890123456789012345678901234567890123456789012345678901234567890})
+
+    data = app.blind_sign(DEFAULT_ACCOUNT,
+                          message=message,
+                          with_hash=True,
+                          path=test_name)
+
+    app.checker.check_signature(
+        account=DEFAULT_ACCOUNT,
+        message=message,
+        with_hash=True,
+        data=data)
+
+    app.quit()
+
+def test_blindsign_reject(app: TezosAppScreen):
+    """Check blindsigning rejection"""
+    test_name = "test_blindsign_reject"
+
+    expression = MichelineExpr({'int':12345678901234567890123456789012345678901234567890123456789012345678901234567890})
+
+    app.parsing_error_signing(DEFAULT_ACCOUNT,
+                              expression,
+                              with_hash=False,
+                              path=Path(test_name) / "reject_from_clear")
+
+    def expected_failure_send() -> bytes:
+        with app.expect_apdu_failure(StatusCode.REJECT):
+            app.backend.sign(DEFAULT_ACCOUNT, expression, with_hash=False)
+        return b''
+
+    path = Path(test_name) / "reject_from_blind"
+
+    def navigate() -> None:
+        app.navigate_until_text(ScreenText.ACCEPT_RISK, path / "clear")
+        app.navigate_until_text(ScreenText.SIGN_REJECT, path / "blind")
+
+    send_and_navigate(
+        send=expected_failure_send,
+        navigate=navigate)
+
+    app.quit()
