@@ -16,85 +16,57 @@
 
 """Gathering of tests related to public key."""
 
+from pathlib import Path
+
+import pytest
+
 from utils.account import Account, SigType
 from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
 
-def test_get_pk(app: TezosAppScreen):
+accounts = [
+    Account("m/44'/1729'/0'/0'",
+            SigType.ED25519,
+            "edpkuXX2VdkdXzkN11oLCb8Aurdo1BTAtQiK8ZY9UPj2YMt3AHEpcY"),
+    Account("m/44'/1729'/0'/0'",
+            SigType.SECP256K1,
+            "sppk7bVy617DmGvXsMqcwsiLtnedTN2trUi5ugXcNig7en4rHJyunK1"),
+    Account("m/44'/1729'/0'/0'",
+            SigType.SECP256R1,
+            "p2pk67fq5pzuMMABZ9RDrooYbLrgmnQbLt8z7PTGM9mskf7LXS5tdBG"),
+    Account("m/44'/1729'/0'/0'",
+            SigType.BIP32_ED25519,
+            "edpkumJgSsSxkpiB5hmTq6eZcrmc6BsJtLAhYceFTiziFqje4mongz")
+]
+
+@pytest.mark.parametrize("account", accounts, ids=lambda account: f"{account.sig_type}")
+def test_get_pk(app: TezosAppScreen, account: Account):
     """Test that public keys get from the app are correct."""
-    accounts = [
-        Account("m/44'/1729'/0'/0'",
-                SigType.ED25519,
-                "edpkuXX2VdkdXzkN11oLCb8Aurdo1BTAtQiK8ZY9UPj2YMt3AHEpcY"),
-        Account("m/44'/1729'/0'/0'",
-                SigType.SECP256K1,
-                "sppk7bVy617DmGvXsMqcwsiLtnedTN2trUi5ugXcNig7en4rHJyunK1"),
-        Account("m/44'/1729'/0'/0'",
-                SigType.SECP256R1,
-                "p2pk67fq5pzuMMABZ9RDrooYbLrgmnQbLt8z7PTGM9mskf7LXS5tdBG"),
-        Account("m/44'/1729'/0'/0'",
-                SigType.BIP32_ED25519,
-                "edpkumJgSsSxkpiB5hmTq6eZcrmc6BsJtLAhYceFTiziFqje4mongz")
-    ]
 
-    for account in accounts:
+    app.assert_screen(Screen.HOME)
 
-        app.assert_screen(Screen.HOME)
+    data = app.backend.get_public_key(account, with_prompt=False)
 
-        data = app.backend.get_public_key(account, with_prompt=False)
-
-        app.checker.check_public_key(account, data)
+    app.checker.check_public_key(account, data)
 
     app.quit()
 
-def test_provide_pk(app: TezosAppScreen):
+@pytest.mark.parametrize("account", accounts, ids=lambda account: f"{account.sig_type}")
+def test_provide_pk(app: TezosAppScreen, account: Account, snapshot_dir: Path):
     """Test that public keys get from the app are correct and correctly displayed."""
-    test_name = "test_provide_pk"
 
     app.assert_screen(Screen.HOME)
 
-    accounts = [
-        (
-            Account("m/44'/1729'/0'/0'",
-                    SigType.ED25519,
-                    "edpkuXX2VdkdXzkN11oLCb8Aurdo1BTAtQiK8ZY9UPj2YMt3AHEpcY"),
-            "ed25519"
-        ),
-        (
-            Account("m/44'/1729'/0'/0'",
-                    SigType.SECP256K1,
-                    "sppk7bVy617DmGvXsMqcwsiLtnedTN2trUi5ugXcNig7en4rHJyunK1"),
-            "secp256k1"
-        ),
-        (
-            Account("m/44'/1729'/0'/0'",
-                    SigType.SECP256R1,
-                    "p2pk67fq5pzuMMABZ9RDrooYbLrgmnQbLt8z7PTGM9mskf7LXS5tdBG"),
-            "secp256r1"
-        ),
-        (
-            Account("m/44'/1729'/0'/0'",
-                    SigType.BIP32_ED25519,
-                    "edpkumJgSsSxkpiB5hmTq6eZcrmc6BsJtLAhYceFTiziFqje4mongz"),
-            "bip32_ed25519"
-        )
-    ]
+    data = app.provide_public_key(account, snapshot_dir)
 
-    for (account, kind) in accounts:
-
-        app.assert_screen(Screen.HOME)
-
-        data = app.provide_public_key(account, test_name + "/" + kind)
-
-        app.checker.check_public_key(account, data)
+    app.checker.check_public_key(account, data)
 
     app.quit()
 
-def test_reject_pk(app: TezosAppScreen):
+def test_reject_pk(app: TezosAppScreen, snapshot_dir: Path):
     """Check reject pk behaviour"""
-    test_name = "test_reject_pk"
 
     app.assert_screen(Screen.HOME)
 
-    app.reject_public_key(DEFAULT_ACCOUNT, test_name)
+    app.reject_public_key(DEFAULT_ACCOUNT, snapshot_dir)
 
     app.quit()

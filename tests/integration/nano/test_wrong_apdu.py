@@ -17,22 +17,21 @@
 """Gathering of tests related to APDU checks."""
 
 from pathlib import Path
+from typing import Any, Callable, Union
+
+import pytest
 
 from utils.account import Account, SigType
 from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
 from utils.backend import Cla, Index, Ins, StatusCode
 from utils.message import Transaction
 
-def test_regression_continue_after_reject(app: TezosAppScreen):
+def test_regression_continue_after_reject(app: TezosAppScreen, snapshot_dir: Path):
     """Check the app still runs after rejects signing"""
-    test_name = "test_regression_continue_after_reject"
-
-    def make_path(name: str) -> Path:
-        return Path(test_name) / name
 
     app.setup_expert_mode()
 
-    app.reject_public_key(DEFAULT_ACCOUNT, make_path("reject_public_key"))
+    app.reject_public_key(DEFAULT_ACCOUNT, snapshot_dir / "reject_public_key")
 
     app.assert_screen(Screen.HOME)
 
@@ -51,7 +50,7 @@ def test_regression_continue_after_reject(app: TezosAppScreen):
     app.reject_signing(DEFAULT_ACCOUNT,
                        message,
                        with_hash=True,
-                       path=make_path("reject_signing"))
+                       path=snapshot_dir / "reject_signing")
 
     data = app.backend.get_public_key(DEFAULT_ACCOUNT, with_prompt=False)
 
@@ -136,87 +135,106 @@ def test_mixing_command(app: TezosAppScreen):
 
     app.quit()
 
-def test_wrong_index(app: TezosAppScreen):
+@pytest.mark.parametrize("ins", [Ins.GET_PUBLIC_KEY, Ins.PROMPT_PUBLIC_KEY], ids=lambda ins: f"{ins}")
+@pytest.mark.parametrize("index", [Index.OTHER, Index.LAST], ids=lambda index: f"{index}")
+def test_wrong_index(app: TezosAppScreen, ins: Ins, index: Index):
     """Check wrong apdu index behaviour"""
-    for ins in [Ins.GET_PUBLIC_KEY,
-                Ins.PROMPT_PUBLIC_KEY]:
-        for index in [Index.OTHER,
-                      Index.LAST]:
 
-            app.assert_screen(Screen.HOME)
+    app.assert_screen(Screen.HOME)
 
-            with app.expect_apdu_failure(StatusCode.WRONG_PARAM):
-                app.backend._exchange(ins,
-                                      index=index,
-                                      sig_type=DEFAULT_ACCOUNT.sig_type,
-                                      payload=DEFAULT_ACCOUNT.path)
+    with app.expect_apdu_failure(StatusCode.WRONG_PARAM):
+        app.backend._exchange(ins,
+                              index=index,
+                              sig_type=DEFAULT_ACCOUNT.sig_type,
+                              payload=DEFAULT_ACCOUNT.path)
 
     app.quit()
 
-def test_wrong_derivation_type(app: TezosAppScreen):
+
+@pytest.mark.parametrize(
+    "sender",
+    [
+        lambda app, account: app.backend.get_public_key(account, with_prompt=False),
+        lambda app, account: app.backend.get_public_key(account, with_prompt=True),
+        lambda app, account: app.backend._ask_sign(Ins.SIGN, account),
+        lambda app, account: app.backend._ask_sign(Ins.SIGN_WITH_HASH, account)
+    ],
+    ids=[
+        "get_pk_without_prompt",
+        "get_pk_with_prompt",
+        "sign_without_hash",
+        "sign_with_hash",
+    ]
+)
+def test_wrong_derivation_type(app: TezosAppScreen, sender: Callable[[TezosAppScreen, Account], Any]):
     """Check wrong derivation type behaviour"""
     account = Account("m/44'/1729'/0'/0'", 0x04, "__unused__")
 
-    for sender in [lambda account: app.backend.get_public_key(account, with_prompt=False),
-                   lambda account: app.backend.get_public_key(account, with_prompt=True),
-                   lambda account: app.backend._ask_sign(Ins.SIGN, account),
-                   lambda account: app.backend._ask_sign(Ins.SIGN_WITH_HASH, account)]:
+    app.assert_screen(Screen.HOME)
 
-        app.assert_screen(Screen.HOME)
-
-        with app.expect_apdu_failure(StatusCode.WRONG_PARAM):
-            sender(account)
+    with app.expect_apdu_failure(StatusCode.WRONG_PARAM):
+        sender(app, account)
 
     app.quit()
 
-def test_wrong_derivation_path(app: TezosAppScreen):
+
+@pytest.mark.parametrize(
+    "sender",
+    [
+        lambda app, account: app.backend.get_public_key(account, with_prompt=False),
+        lambda app, account: app.backend.get_public_key(account, with_prompt=True),
+        lambda app, account: app.backend._ask_sign(Ins.SIGN, account),
+        lambda app, account: app.backend._ask_sign(Ins.SIGN_WITH_HASH, account)
+    ],
+    ids=[
+        "get_pk_without_prompt",
+        "get_pk_with_prompt",
+        "sign_without_hash",
+        "sign_with_hash",
+    ]
+)
+@pytest.mark.parametrize(
+    "account",
+    [
+        Account(
+            bytes.fromhex("058000002c800006c18000000080000000"),
+            SigType.ED25519,
+            "__unused__"),
+        Account(
+            bytes.fromhex("048000002c800006c180000000800000"),
+            SigType.ED25519,
+            "__unused__"),
+        Account(
+            bytes.fromhex("0b8000002c800006c1800000008000000080000000800000008000000080000000800000008000000080000000"),
+            SigType.ED25519,
+            "__unused__"),
+    ],
+    ids=[
+        "wrong_number_index_account",
+        "wrong_length_account",
+        "too_much_index_account",
+    ]
+)
+def test_wrong_derivation_path(
+        app: TezosAppScreen,
+        account: Account,
+        sender: Callable[[TezosAppScreen, Account], Any]):
     """Check wrong derivation path behaviour"""
-    wrong_number_index_account = Account(
-        bytes.fromhex("058000002c800006c18000000080000000"),
-        SigType.ED25519,
-        "__unused__")
-    wrong_length_account = Account(
-        bytes.fromhex("048000002c800006c180000000800000"),
-        SigType.ED25519,
-        "__unused__")
-    too_much_index_account = Account(
-        bytes.fromhex("0b8000002c800006c1800000008000000080000000800000008000000080000000800000008000000080000000"),
-        SigType.ED25519,
-        "__unused__")
 
-    for account in [wrong_number_index_account,
-                    wrong_length_account,
-                    too_much_index_account]:
-        for sender in [lambda account: app.backend.get_public_key(account, with_prompt=False),
-                       lambda account: app.backend.get_public_key(account, with_prompt=True),
-                       lambda account: app.backend._ask_sign(Ins.SIGN, account),
-                       lambda account: app.backend._ask_sign(Ins.SIGN_WITH_HASH, account)]:
+    app.assert_screen(Screen.HOME)
 
-            app.assert_screen(Screen.HOME)
-
-            with app.expect_apdu_failure(StatusCode.WRONG_LENGTH_FOR_INS):
-                sender(account)
+    with app.expect_apdu_failure(StatusCode.WRONG_LENGTH_FOR_INS):
+        sender(app, account)
 
     app.quit()
 
-def test_wrong_class(app: TezosAppScreen):
+@pytest.mark.parametrize("class_", [0x00, 0x81])
+def test_wrong_class(app: TezosAppScreen, class_: int):
     """Check wrong apdu class behaviour"""
     app.assert_screen(Screen.HOME)
 
     raw = \
-        int(0x00).to_bytes(1, 'big') + \
-        int(Ins.VERSION).to_bytes(1, 'big') + \
-        int(Index.FIRST).to_bytes(1, 'big') + \
-        int(SigType.ED25519).to_bytes(1, 'big') + \
-        int(0x00).to_bytes(1, 'big')
-
-    with app.expect_apdu_failure(StatusCode.CLASS):
-        app.backend.exchange_raw(raw)
-
-    app.assert_screen(Screen.HOME)
-
-    raw = \
-        int(0x81).to_bytes(1, 'big') + \
+        class_.to_bytes(1, 'big') + \
         int(Ins.VERSION).to_bytes(1, 'big') + \
         int(Index.FIRST).to_bytes(1, 'big') + \
         int(SigType.ED25519).to_bytes(1, 'big') + \
@@ -227,7 +245,15 @@ def test_wrong_class(app: TezosAppScreen):
 
     app.quit()
 
-def test_wrong_apdu_length(app: TezosAppScreen):
+@pytest.mark.parametrize(
+    "size, data",
+    [
+        (0, b'\x00'),
+        (1, b'')
+    ],
+    ids=lambda param: f"size={param}" if isinstance(param, int) else f"data={param}"
+)
+def test_wrong_apdu_length(app: TezosAppScreen, size: int, data: bytes):
     """Check wrong apdu length behaviour"""
     app.assert_screen(Screen.HOME)
 
@@ -236,44 +262,37 @@ def test_wrong_apdu_length(app: TezosAppScreen):
         int(Ins.VERSION).to_bytes(1, 'big') + \
         int(Index.FIRST).to_bytes(1, 'big') + \
         int(SigType.ED25519).to_bytes(1, 'big') + \
-        int(0x00).to_bytes(1, 'big') + \
-        int(0x00).to_bytes(1, 'big') # right size = 0x01
-
-    with app.expect_apdu_failure(StatusCode.WRONG_LENGTH_FOR_INS):
-        app.backend.exchange_raw(raw)
-
-    app.assert_screen(Screen.HOME)
-
-    raw = \
-        int(Cla.DEFAULT).to_bytes(1, 'big') + \
-        int(Ins.VERSION).to_bytes(1, 'big') + \
-        int(Index.FIRST).to_bytes(1, 'big') + \
-        int(SigType.ED25519).to_bytes(1, 'big') + \
-        int(0x01).to_bytes(1, 'big') # right size = 0x00
+        size.to_bytes(1, 'big') + \
+        data
 
     with app.expect_apdu_failure(StatusCode.WRONG_LENGTH_FOR_INS):
         app.backend.exchange_raw(raw)
 
     app.quit()
 
-def test_unimplemented_commands(app: TezosAppScreen):
+@pytest.mark.parametrize(
+    "ins",
+    [
+        Ins.AUTHORIZE_BAKING,
+        Ins.SIGN_UNSAFE,
+        Ins.RESET,
+        Ins.QUERY_AUTH_KEY,
+        Ins.QUERY_MAIN_HWM,
+        Ins.SETUP,
+        Ins.QUERY_ALL_HWM,
+        Ins.DEAUTHORIZE,
+        Ins.QUERY_AUTH_KEY_WITH_CURVE,
+        Ins.HMAC,
+        0xff
+    ],
+    ids=lambda ins: f"ins={ins}"
+)
+def test_unimplemented_commands(app: TezosAppScreen, ins: Union[int, Ins]):
     """Check unimplemented commands"""
-    for ins in \
-        [Ins.AUTHORIZE_BAKING, \
-         Ins.SIGN_UNSAFE, \
-         Ins.RESET, \
-         Ins.QUERY_AUTH_KEY, \
-         Ins.QUERY_MAIN_HWM, \
-         Ins.SETUP, \
-         Ins.QUERY_ALL_HWM, \
-         Ins.DEAUTHORIZE, \
-         Ins.QUERY_AUTH_KEY_WITH_CURVE, \
-         Ins.HMAC, \
-         0xff]:
 
-        app.assert_screen(Screen.HOME)
+    app.assert_screen(Screen.HOME)
 
-        with app.expect_apdu_failure(StatusCode.INVALID_INS):
-            app.backend._exchange(ins)
+    with app.expect_apdu_failure(StatusCode.INVALID_INS):
+        app.backend._exchange(ins)
 
     app.quit()

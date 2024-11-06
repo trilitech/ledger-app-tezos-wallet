@@ -22,9 +22,8 @@ from conftest import requires_device
 from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
 from utils.message import TransferTicket
 
-def test_sign_transfer_ticket(app: TezosAppScreen):
+def test_sign_transfer_ticket(app: TezosAppScreen, snapshot_dir: Path):
     """Check signing transfer ticket"""
-    test_name = Path(__file__).stem
 
     app.setup_expert_mode()
 
@@ -44,7 +43,7 @@ def test_sign_transfer_ticket(app: TezosAppScreen):
     data = app.sign(DEFAULT_ACCOUNT,
                     message,
                     with_hash=True,
-                    path=test_name)
+                    path=snapshot_dir)
 
     app.checker.check_signature(
         account=DEFAULT_ACCOUNT,
@@ -55,9 +54,8 @@ def test_sign_transfer_ticket(app: TezosAppScreen):
     app.quit()
 
 @requires_device("nanosp")
-def test_nanosp_regression_potential_empty_screen(app: TezosAppScreen):
+def test_nanosp_regression_potential_empty_screen(app: TezosAppScreen, snapshot_dir: Path):
     """Check signing operation that display potentially empty screens"""
-    test_name = "test_nanosp_regression_potential_empty_screen"
 
     app.setup_expert_mode()
 
@@ -78,7 +76,7 @@ def test_nanosp_regression_potential_empty_screen(app: TezosAppScreen):
     data = app.sign(DEFAULT_ACCOUNT,
                     message,
                     with_hash=True,
-                    path=test_name)
+                    path=snapshot_dir)
 
     app.checker.check_signature(
         account=DEFAULT_ACCOUNT,

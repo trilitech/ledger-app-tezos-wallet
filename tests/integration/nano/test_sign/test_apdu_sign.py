@@ -16,14 +16,15 @@
 
 """Gathering of tests related to Sign instructions."""
 
+from pathlib import Path
+
 from conftest import requires_device
 from utils.account import Account
 from utils.app import send_and_navigate, Screen, ScreenText, TezosAppScreen, DEFAULT_ACCOUNT
 from utils.message import Message, MichelineExpr, Transaction
 
-def test_sign_micheline_without_hash(app: TezosAppScreen):
+def test_sign_micheline_without_hash(app: TezosAppScreen, snapshot_dir: Path):
     """Check signing micheline wihout getting hash"""
-    test_name = "test_sign_micheline_without_hash"
 
     app.assert_screen(Screen.HOME)
 
@@ -32,7 +33,7 @@ def test_sign_micheline_without_hash(app: TezosAppScreen):
     data = app.sign(DEFAULT_ACCOUNT,
                     message,
                     with_hash=False,
-                    path=test_name)
+                    path=snapshot_dir)
 
     app.checker.check_signature(
         account=DEFAULT_ACCOUNT,
@@ -42,16 +43,15 @@ def test_sign_micheline_without_hash(app: TezosAppScreen):
 
     app.quit()
 
-def test_sign_with_small_packet(app: TezosAppScreen):
+def test_sign_with_small_packet(app: TezosAppScreen, snapshot_dir: Path):
     """Check signing using small packet instead of full size packets"""
-    test_name = "test_sign_with_small_packet"
 
     app.setup_expert_mode()
 
     def check_sign_with_small_packet(
             account: Account,
             message: Message,
-            path: str) -> None:
+            path: Path) -> None:
 
         app.assert_screen(Screen.HOME)
 
@@ -80,14 +80,13 @@ def test_sign_with_small_packet(app: TezosAppScreen):
     check_sign_with_small_packet(
         account=DEFAULT_ACCOUNT,
         message=message,
-        path=test_name)
+        path=snapshot_dir)
 
     app.quit()
 
 @requires_device("nanosp")
-def test_nanosp_regression_press_right_works_across_apdu_recieves(app: TezosAppScreen):
+def test_nanosp_regression_press_right_works_across_apdu_recieves(app: TezosAppScreen, snapshot_dir: Path):
     """Check no need to click right two times between APDUs during signing flow"""
-    test_name = "test_nanosp_regression_press_right_works_across_apdu_recieves"
 
     app.assert_screen(Screen.HOME)
 
@@ -96,7 +95,7 @@ def test_nanosp_regression_press_right_works_across_apdu_recieves(app: TezosAppS
     data = app.sign(DEFAULT_ACCOUNT,
                     message,
                     with_hash=True,
-                    path=test_name)
+                    path=snapshot_dir)
 
     app.checker.check_signature(
         account=DEFAULT_ACCOUNT,

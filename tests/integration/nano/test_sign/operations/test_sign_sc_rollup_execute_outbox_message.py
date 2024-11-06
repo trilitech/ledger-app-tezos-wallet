@@ -21,9 +21,8 @@ from pathlib import Path
 from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
 from utils.message import ScRollupExecuteOutboxMessage
 
-def test_sign_sc_rollup_execute_outbox_message(app: TezosAppScreen):
+def test_sign_sc_rollup_execute_outbox_message(app: TezosAppScreen, snapshot_dir: Path):
     """Check signing smart rollup execute outbox message"""
-    test_name = Path(__file__).stem
 
     app.setup_expert_mode()
 
@@ -41,7 +40,7 @@ def test_sign_sc_rollup_execute_outbox_message(app: TezosAppScreen):
     data = app.sign(DEFAULT_ACCOUNT,
                     message,
                     with_hash=True,
-                    path=test_name)
+                    path=snapshot_dir)
 
     app.checker.check_signature(
         account=DEFAULT_ACCOUNT,
