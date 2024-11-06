@@ -87,13 +87,16 @@ def pytest_runtest_logreport(report):
     logs[report.head_line].append(report)
 
 @pytest.hookimpl(tryfirst=True)
-def pytest_runtest_logfinish(location):
+def pytest_runtest_logfinish(nodeid, location):
     """Called at the end of running the runtest protocol for a single item."""
     if global_log_dir is not None:
-        log_dir = global_log_dir / Path(location[0]).stem
+        log_dir = Path(nodeid.split(".py")[0])
+        # Remove `tests/integration/nano/`
+        log_dir = Path(*log_dir.parts[3:])
+        log_dir = global_log_dir / log_dir
         log_dir.mkdir(parents=True, exist_ok=True)
         head_line = location[2]
-        log_file = log_dir / f"{head_line.replace(' ', '_')}.log"
+        log_file = log_dir / f"{head_line}.log"
         with open(log_file, 'w', encoding="utf-8") as writer:
             for report in logs[head_line]:
                 writer.write(f"============================== {report.when.capitalize()} {report.outcome} ==============================\n")
@@ -177,6 +180,16 @@ def backend(app_path: Path,
 def app(backend: SpeculosTezosBackend, golden_run: bool) -> TezosAppScreen:
     """Get `app` for pytest."""
     return TezosAppScreen(backend, AppKind.WALLET, golden_run)
+
+@pytest.fixture(scope="function")
+def snapshot_dir(request) -> Path :
+    """Get the test snapshot location."""
+    test_file_path = Path(request.fspath)
+    file_name = test_file_path.stem
+    test_name = request.node.name
+    # Get test directory from the root
+    test_file_snapshot_dir = Path(*test_file_path.parts[len(Path(__file__).parts)-1:-1])
+    return test_file_snapshot_dir / file_name / test_name
 
 def requires_device(device):
     """Wrapper to run the pytest test only with the provided device."""

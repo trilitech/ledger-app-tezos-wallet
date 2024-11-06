@@ -16,6 +16,8 @@
 
 """Gathering of tests related to Batched operations."""
 
+from pathlib import Path
+
 from conftest import requires_device
 
 from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
@@ -27,9 +29,8 @@ from utils.message import (
 )
 
 @requires_device("nanos")
-def test_nanos_regression_batched_ops(app: TezosAppScreen):
+def test_nanos_regression_batched_ops(app: TezosAppScreen, snapshot_dir: Path):
     """Check signing batch operation"""
-    test_name = "test_nanos_regression_batched_ops"
 
     app.setup_expert_mode()
 
@@ -59,7 +60,7 @@ def test_nanos_regression_batched_ops(app: TezosAppScreen):
     data = app.sign(DEFAULT_ACCOUNT,
                     message,
                     with_hash=True,
-                    path=test_name)
+                    path=snapshot_dir)
 
     app.checker.check_signature(
         account=DEFAULT_ACCOUNT,
@@ -70,9 +71,8 @@ def test_nanos_regression_batched_ops(app: TezosAppScreen):
     app.quit()
 
 @requires_device("nanox")
-def test_nanox_regression_batched_ops(app: TezosAppScreen):
+def test_nanox_regression_batched_ops(app: TezosAppScreen, snapshot_dir: Path):
     """Check signing batch operation"""
-    test_name = "test_nanox_regression_batched_ops"
 
     app.setup_expert_mode()
 
@@ -102,7 +102,7 @@ def test_nanox_regression_batched_ops(app: TezosAppScreen):
     data = app.sign(DEFAULT_ACCOUNT,
                     message,
                     with_hash=True,
-                    path=test_name)
+                    path=snapshot_dir)
 
     app.checker.check_signature(
         account=DEFAULT_ACCOUNT,
@@ -112,9 +112,8 @@ def test_nanox_regression_batched_ops(app: TezosAppScreen):
 
     app.quit()
 
-def test_sign_complex_operation(app: TezosAppScreen):
+def test_sign_complex_operation(app: TezosAppScreen, snapshot_dir: Path):
     """Check signing complex operation"""
-    test_name = "test_sign_complex_operation"
 
     app.assert_screen(Screen.HOME)
     app.setup_expert_mode()
@@ -147,7 +146,7 @@ def test_sign_complex_operation(app: TezosAppScreen):
     data = app.sign(DEFAULT_ACCOUNT,
                     message,
                     with_hash=True,
-                    path=test_name)
+                    path=snapshot_dir)
 
     app.checker.check_signature(
         account=DEFAULT_ACCOUNT,

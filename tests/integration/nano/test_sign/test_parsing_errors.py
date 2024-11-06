@@ -18,6 +18,8 @@
 
 from pathlib import Path
 
+import pytest
+
 from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
 from utils.backend import StatusCode
 from utils.message import RawMessage
@@ -35,66 +37,51 @@ from utils.message import RawMessage
 
 # original bytes : 0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316
 
-def test_parsing_errors(app: TezosAppScreen):
+@pytest.mark.parametrize(
+    "raw_msg", [
+        "0100000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316",
+        "03000000000000000000000000000000000000000000000000000000000000000001016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316",
+        "0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e010000000000000000000000000000000000000000ff02000000020316",
+        "0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff0200000002031645",
+        "0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e0100000000000000000000000000000000000000000000ff02000000020316",
+    ],
+    ids=[
+        "unknown_magic_bytes",
+        "unknown_operation",
+        "one_byte_removed_inside",
+        "one_byte_added_at_the_end",
+        "one_byte_added_inside",
+    ]
+)
+def test_parsing_error(app: TezosAppScreen, raw_msg: str, snapshot_dir: Path):
     """Check parsing error handling"""
-    test_name = Path(__file__).stem
-
-    def make_path(name: str) -> Path:
-        return Path(test_name) / name
 
     app.setup_expert_mode()
 
-    unknown_magic_bytes_message = RawMessage("0100000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316")
-
     app.parsing_error_signing(DEFAULT_ACCOUNT,
-                              unknown_magic_bytes_message,
+                              RawMessage(raw_msg),
                               with_hash=True,
-                              path=make_path("unknown_magic_bytes"))
+                              path=snapshot_dir)
 
-    app.assert_screen(Screen.HOME)
+    app.quit()
 
-    unknown_operation_message = RawMessage("03000000000000000000000000000000000000000000000000000000000000000001016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316")
+@pytest.mark.parametrize(
+    "raw_msg", [
+        "030000000000000000000000000000000000000000000000000000000000000000ce00ffdd6102321bc251e4a5190ad5b12b251069d9b4904e02030400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c63966303966323935326433343532386337333366393436313563666333396263353535363139666335353064643461363762613232303863653865383637616133643133613665663939646662653332633639373461613961323135306432316563613239633333343965353963313362393038316631",
+    ],
+    ids=[
+        "wrong_last_packet",
+    ]
+)
+def test_parsing_hard_fail(app: TezosAppScreen, raw_msg: str, snapshot_dir: Path):
+    """Check parsing error hard failing"""
 
-    app.parsing_error_signing(DEFAULT_ACCOUNT,
-                              unknown_operation_message,
-                              with_hash=True,
-                              path=make_path("unknown_operation"))
-
-    app.assert_screen(Screen.HOME)
-
-    one_byte_removed_inside_message = RawMessage("0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e010000000000000000000000000000000000000000ff02000000020316")
-
-    app.parsing_error_signing(DEFAULT_ACCOUNT,
-                              one_byte_removed_inside_message,
-                              with_hash=True,
-                              path=make_path("one_byte_removed_inside"))
-
-    app.assert_screen(Screen.HOME)
-
-    one_byte_added_at_the_end_message = RawMessage("0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff0200000002031645")
-
-    app.parsing_error_signing(DEFAULT_ACCOUNT,
-                              one_byte_added_at_the_end_message,
-                              with_hash=True,
-                              path=make_path("one_byte_added_at_the_end"))
-
-    app.assert_screen(Screen.HOME)
-
-    one_byte_added_inside_message = RawMessage("0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e0100000000000000000000000000000000000000000000ff02000000020316")
-
-    app.parsing_error_signing(DEFAULT_ACCOUNT,
-                              one_byte_added_inside_message,
-                              with_hash=True,
-                              path=make_path("one_byte_added_inside"))
-
-    app.assert_screen(Screen.HOME)
-
-    wrong_last_packet_message = RawMessage("030000000000000000000000000000000000000000000000000000000000000000ce00ffdd6102321bc251e4a5190ad5b12b251069d9b4904e02030400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c63966303966323935326433343532386337333366393436313563666333396263353535363139666335353064643461363762613232303863653865383637616133643133613665663939646662653332633639373461613961323135306432316563613239633333343965353963313362393038316631")
+    app.setup_expert_mode()
 
     app.hard_failing_signing(DEFAULT_ACCOUNT,
-                             wrong_last_packet_message,
+                             RawMessage(raw_msg),
                              with_hash=True,
                              status_code=StatusCode.UNEXPECTED_SIGN_STATE,
-                             path=make_path("wrong_last_packet"))
+                             path=snapshot_dir)
 
     app.quit()

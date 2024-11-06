@@ -21,9 +21,8 @@ from pathlib import Path
 from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
 from utils.message import RegisterGlobalConstant
 
-def test_sign_register_global_constant(app: TezosAppScreen):
+def test_sign_register_global_constant(app: TezosAppScreen, snapshot_dir: Path):
     """Check signing register global constant"""
-    test_name = Path(__file__).stem
 
     app.setup_expert_mode()
 
@@ -39,7 +38,7 @@ def test_sign_register_global_constant(app: TezosAppScreen):
     data = app.sign(DEFAULT_ACCOUNT,
                     message,
                     with_hash=True,
-                    path=test_name)
+                    path=snapshot_dir)
 
     app.checker.check_signature(
         account=DEFAULT_ACCOUNT,
