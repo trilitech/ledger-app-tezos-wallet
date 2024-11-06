@@ -30,6 +30,9 @@ class SigType(IntEnum):
     SECP256R1     = 0x02
     BIP32_ED25519 = 0x03
 
+    def __str__(self) -> str:
+        return self.name
+
 class Signature:
     """Class representing signature."""
 

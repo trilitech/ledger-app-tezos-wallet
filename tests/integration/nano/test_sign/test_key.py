@@ -17,99 +17,41 @@
 """Gathering of tests related to Key signatures."""
 
 from pathlib import Path
+
 import pytest
 
 from utils.account import Account, SigType
 from utils.app import Screen, TezosAppScreen
 from utils.message import MichelineExpr, Transaction
 
-def test_tz1_ed25519_sign_micheline_basic(app: TezosAppScreen):
+@pytest.mark.parametrize(
+    "account", [
+        Account("m/44'/1729'/0'/0'",
+                SigType.ED25519,
+                "edpkuXX2VdkdXzkN11oLCb8Aurdo1BTAtQiK8ZY9UPj2YMt3AHEpcY"),
+        Account("m/44'/1729'/0'/0'",
+                SigType.SECP256K1,
+                "sppk7bVy617DmGvXsMqcwsiLtnedTN2trUi5ugXcNig7en4rHJyunK1"),
+        Account("m/44'/1729'/0'/0'",
+                SigType.SECP256R1,
+                "p2pk67fq5pzuMMABZ9RDrooYbLrgmnQbLt8z7PTGM9mskf7LXS5tdBG"),
+        Account("m/44'/1729'/0'/0'",
+                SigType.BIP32_ED25519,
+                "edpkumJgSsSxkpiB5hmTq6eZcrmc6BsJtLAhYceFTiziFqje4mongz"),
+    ],
+    ids=lambda account: f"{account.sig_type}"
+)
+def test_sign_micheline_basic(app: TezosAppScreen, account: Account, snapshot_dir: Path):
     """Check signing with ed25519"""
-    test_name = Path("test_tz1_ed25519_sign_micheline_basic")
 
     app.assert_screen(Screen.HOME)
 
-    account = Account("m/44'/1729'/0'/0'",
-                      SigType.ED25519,
-                      "edpkuXX2VdkdXzkN11oLCb8Aurdo1BTAtQiK8ZY9UPj2YMt3AHEpcY")
-
     message = MichelineExpr([{'string': 'CACA'}, {'string': 'POPO'}, {'string': 'BOUDIN'}])
 
     data = app.sign(account,
                     message,
                     with_hash=True,
-                    path=test_name)
-
-    app.checker.check_signature(
-        account=account,
-        message=message,
-        with_hash=True,
-        data=data)
-
-    app.quit()
-
-def test_tz2_sign_micheline_basic(app: TezosAppScreen):
-    """Check signing with secp256k1"""
-    test_name = Path("test_tz2_sign_micheline_basic")
-
-    account = Account("m/44'/1729'/0'/0'",
-                      SigType.SECP256K1,
-                      "sppk7bVy617DmGvXsMqcwsiLtnedTN2trUi5ugXcNig7en4rHJyunK1")
-
-    message = MichelineExpr([{'string': 'CACA'}, {'string': 'POPO'}, {'string': 'BOUDIN'}])
-
-    data = app.sign(account,
-                    message,
-                    with_hash=True,
-                    path=test_name)
-
-    app.checker.check_signature(
-        account=account,
-        message=message,
-        with_hash=True,
-        data=data)
-
-    app.quit()
-
-def test_tz3_sign_micheline_basic(app: TezosAppScreen):
-    """Check signing with p256"""
-    test_name = Path("test_tz3_sign_micheline_basic")
-
-    account = Account("m/44'/1729'/0'/0'",
-                      SigType.SECP256R1,
-                      "p2pk67fq5pzuMMABZ9RDrooYbLrgmnQbLt8z7PTGM9mskf7LXS5tdBG")
-
-    message = MichelineExpr([{'string': 'CACA'}, {'string': 'POPO'}, {'string': 'BOUDIN'}])
-
-    data = app.sign(account,
-                    message,
-                    with_hash=True,
-                    path=test_name)
-
-    app.checker.check_signature(
-        account=account,
-        message=message,
-        with_hash=True,
-        data=data)
-
-    app.quit()
-
-def test_tz1_bip25519_sign_micheline_basic(app: TezosAppScreen):
-    """Check signing with bip25519"""
-    test_name = Path("test_tz1_bip25519_sign_micheline_basic")
-
-    app.assert_screen(Screen.HOME)
-
-    account = Account("m/44'/1729'/0'/0'",
-                      SigType.BIP32_ED25519,
-                      "edpkumJgSsSxkpiB5hmTq6eZcrmc6BsJtLAhYceFTiziFqje4mongz")
-
-    message = MichelineExpr([{'string': 'CACA'}, {'string': 'POPO'}, {'string': 'BOUDIN'}])
-
-    data = app.sign(account,
-                    message,
-                    with_hash=True,
-                    path=test_name)
+                    path=snapshot_dir)
 
     app.checker.check_signature(
         account=account,
@@ -120,10 +62,14 @@ def test_tz1_bip25519_sign_micheline_basic(app: TezosAppScreen):
     app.quit()
 
 
-@pytest.mark.parametrize("seed", ["around dignity equal spread between young lawsuit interest climb wide that panther rather mom snake scene ecology reunion ice illegal brush"])
-def test_sign_with_another_seed(app: TezosAppScreen):
+@pytest.mark.parametrize(
+    "seed", [
+        "around dignity equal spread between young lawsuit interest climb wide that panther rather mom snake scene ecology reunion ice illegal brush"
+    ],
+    ids=["seed21"]
+)
+def test_sign_with_another_seed(app: TezosAppScreen, snapshot_dir: Path):
     """Check signing using another seed than [zebra*24]"""
-    test_name = Path("test_sign_with_another_seed")
 
     app.setup_expert_mode()
 
@@ -146,7 +92,7 @@ def test_sign_with_another_seed(app: TezosAppScreen):
     data = app.sign(account,
                     message,
                     with_hash=True,
-                    path=test_name)
+                    path=snapshot_dir)
 
     app.checker.check_signature(
         account=account,

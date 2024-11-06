@@ -21,9 +21,8 @@ from pathlib import Path
 from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
 from utils.message import FailingNoop
 
-def test_sign_failing_noop(app: TezosAppScreen):
+def test_sign_failing_noop(app: TezosAppScreen, snapshot_dir: Path):
     """Check signing failing noop"""
-    test_name = Path(__file__).stem
 
     app.assert_screen(Screen.HOME)
 
@@ -32,7 +31,7 @@ def test_sign_failing_noop(app: TezosAppScreen):
     data = app.sign(DEFAULT_ACCOUNT,
                     message,
                     with_hash=True,
-                    path=test_name)
+                    path=snapshot_dir)
 
     app.checker.check_signature(
         account=DEFAULT_ACCOUNT,

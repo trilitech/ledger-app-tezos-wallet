@@ -22,11 +22,8 @@ from utils.app import Screen, ScreenText, TezosAppScreen, DEFAULT_ACCOUNT
 from utils.backend import StatusCode
 from utils.message import Transaction
 
-test_path = Path(Path(__file__).stem)
-
-def test_sign_transaction(app: TezosAppScreen):
+def test_sign_transaction(app: TezosAppScreen, snapshot_dir: Path):
     """Check signing transaction"""
-    path = test_path / "basic"
 
     app.setup_expert_mode()
 
@@ -45,7 +42,7 @@ def test_sign_transaction(app: TezosAppScreen):
     data = app.sign(DEFAULT_ACCOUNT,
                     message,
                     with_hash=True,
-                    path=path)
+                    path=snapshot_dir)
 
     app.checker.check_signature(
         account=DEFAULT_ACCOUNT,
@@ -55,9 +52,8 @@ def test_sign_transaction(app: TezosAppScreen):
 
     app.quit()
 
-def test_reject_transaction(app: TezosAppScreen):
+def test_reject_transaction(app: TezosAppScreen, snapshot_dir: Path):
     """Check reject transaction"""
-    path = test_path / "reject"
 
     app.setup_expert_mode()
 
@@ -76,13 +72,12 @@ def test_reject_transaction(app: TezosAppScreen):
     app.reject_signing(DEFAULT_ACCOUNT,
                        message,
                        with_hash=True,
-                       path=path)
+                       path=snapshot_dir)
 
     app.quit()
 
-def test_sign_simple_transaction(app: TezosAppScreen):
+def test_sign_simple_transaction(app: TezosAppScreen, snapshot_dir: Path):
     """Check sign not complex transaction"""
-    path = test_path / "simple"
 
     app.setup_expert_mode()
 
@@ -99,7 +94,7 @@ def test_sign_simple_transaction(app: TezosAppScreen):
     data = app.sign(DEFAULT_ACCOUNT,
                     message,
                     with_hash=True,
-                    path=path)
+                    path=snapshot_dir)
 
     app.checker.check_signature(
         account=DEFAULT_ACCOUNT,
@@ -109,9 +104,9 @@ def test_sign_simple_transaction(app: TezosAppScreen):
 
     app.quit()
 
-def test_too_complex_transaction(app: TezosAppScreen):
+def test_too_complex_transaction(app: TezosAppScreen, snapshot_dir: Path):
     """Check sign complex transaction"""
-    path = test_path / "complex"
+
     app.assert_screen(Screen.HOME)
 
     message = Transaction(
@@ -131,14 +126,13 @@ def test_too_complex_transaction(app: TezosAppScreen):
                          with_hash=True,
                          navigate=(lambda: app.navigate_until_text(
                              ScreenText.BACK_HOME,
-                             path)),
+                             snapshot_dir)),
                          status_code=StatusCode.REJECT)
 
     app.quit()
 
-def test_sign_stake_transaction(app: TezosAppScreen):
+def test_sign_stake_transaction(app: TezosAppScreen, snapshot_dir: Path):
     """Check sign stake"""
-    path = test_path / "stake"
 
     app.setup_expert_mode()
 
@@ -156,7 +150,7 @@ def test_sign_stake_transaction(app: TezosAppScreen):
     data = app.sign(DEFAULT_ACCOUNT,
                     message,
                     with_hash=True,
-                    path=path)
+                    path=snapshot_dir)
 
     app.checker.check_signature(
         account=DEFAULT_ACCOUNT,
@@ -166,9 +160,8 @@ def test_sign_stake_transaction(app: TezosAppScreen):
 
     app.quit()
 
-def test_sign_unstake_transaction(app: TezosAppScreen):
+def test_sign_unstake_transaction(app: TezosAppScreen, snapshot_dir: Path):
     """Check sign unstake"""
-    path = test_path / "unstake"
 
     app.setup_expert_mode()
 
@@ -186,7 +179,7 @@ def test_sign_unstake_transaction(app: TezosAppScreen):
     data = app.sign(DEFAULT_ACCOUNT,
                     message,
                     with_hash=True,
-                    path=path)
+                    path=snapshot_dir)
 
     app.checker.check_signature(
         account=DEFAULT_ACCOUNT,
@@ -196,9 +189,8 @@ def test_sign_unstake_transaction(app: TezosAppScreen):
 
     app.quit()
 
-def test_sign_finalize_unstake_transaction(app: TezosAppScreen):
+def test_sign_finalize_unstake_transaction(app: TezosAppScreen, snapshot_dir: Path):
     """Check sign finalize_unstake"""
-    path = test_path / "finalize_unstake"
 
     app.setup_expert_mode()
 
@@ -216,7 +208,7 @@ def test_sign_finalize_unstake_transaction(app: TezosAppScreen):
     data = app.sign(DEFAULT_ACCOUNT,
                     message,
                     with_hash=True,
-                    path=path)
+                    path=snapshot_dir)
 
     app.checker.check_signature(
         account=DEFAULT_ACCOUNT,
@@ -226,9 +218,8 @@ def test_sign_finalize_unstake_transaction(app: TezosAppScreen):
 
     app.quit()
 
-def test_sign_set_delegate_parameters_transaction(app: TezosAppScreen):
+def test_sign_set_delegate_parameters_transaction(app: TezosAppScreen, snapshot_dir: Path):
     """Check sign set delegate parameters"""
-    path = test_path / "delegate_parameters"
 
     app.setup_expert_mode()
 
@@ -255,7 +246,7 @@ def test_sign_set_delegate_parameters_transaction(app: TezosAppScreen):
     data = app.sign(DEFAULT_ACCOUNT,
                     message,
                     with_hash=True,
-                    path=path)
+                    path=snapshot_dir)
 
     app.checker.check_signature(
         account=DEFAULT_ACCOUNT,
@@ -265,9 +256,8 @@ def test_sign_set_delegate_parameters_transaction(app: TezosAppScreen):
 
     app.quit()
 
-def test_sign_with_long_hash(app: TezosAppScreen):
+def test_sign_with_long_hash(app: TezosAppScreen, snapshot_dir: Path):
     """Check signing transaction with a long destination hash"""
-    test_name = "test_sign_with_long_hash"
 
     app.setup_expert_mode()
 
@@ -286,7 +276,7 @@ def test_sign_with_long_hash(app: TezosAppScreen):
     data = app.sign(DEFAULT_ACCOUNT,
                     message,
                     with_hash=True,
-                    path=test_name)
+                    path=snapshot_dir)
 
     app.checker.check_signature(
         account=DEFAULT_ACCOUNT,
@@ -296,9 +286,8 @@ def test_sign_with_long_hash(app: TezosAppScreen):
 
     app.quit()
 
-def test_ensure_always_clearsign(app: TezosAppScreen):
+def test_ensure_always_clearsign(app: TezosAppScreen, snapshot_dir: Path):
     """Check clear signing never blindsign"""
-    test_name = "test_ensure_always_clearsign"
 
     app.setup_expert_mode()
 
@@ -317,7 +306,7 @@ def test_ensure_always_clearsign(app: TezosAppScreen):
     data = app.sign(DEFAULT_ACCOUNT,
                     message,
                     with_hash=True,
-                    path=test_name)
+                    path=snapshot_dir)
 
     app.checker.check_signature(
         account=DEFAULT_ACCOUNT,
