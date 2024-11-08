@@ -18,10 +18,10 @@
 from contextlib import contextmanager
 from enum import Enum
 from io import BytesIO
-from multiprocessing import Process, Queue
+from multiprocessing.pool import ThreadPool
 from pathlib import Path
 import time
-from typing import Callable, Generator, List, Optional, Union
+from typing import Callable, Generator, List, Optional, TypeVar, Union
 
 import requests
 from ragger.backend import SpeculosBackend
@@ -48,28 +48,36 @@ def with_retry(f, attempts=MAX_ATTEMPTS):
         # Give plenty of time for speculos to update - can take a long time on CI machines
         time.sleep(0.5)
 
-def run_simultaneously(processes: List[Process]) -> None:
-    """Executes multiples process at the same time."""
+RESPONSE = TypeVar('RESPONSE')
 
-    for process in processes:
-        process.start()
+def send_and_navigate(
+        send: Callable[[], RESPONSE],
+        navigate: Callable[[], None],
+        timeout: float = 300.0
+) -> RESPONSE:
+    """Sends a request and navigates before receiving a response."""
 
-    for process in processes:
-        process.join()
-        assert process.exitcode == 0, "Should have terminate successfully"
+    with ThreadPool(processes=2) as pool:
 
-def send_and_navigate(send: Callable[[], bytes], navigate: Callable[[], None]) -> bytes:
-    """Sends APDU and navigates."""
+        t = 0.0
+        send_res = pool.apply_async(send)
+        navigate_res = pool.apply_async(navigate)
 
-    def _send(result_queue: Queue) -> None:
-        res = send()
-        result_queue.put(res)
+        while True:
+            if send_res.ready():
+                result = send_res.get()
+                navigate_res.get()
+                break
+            if navigate_res.ready():
+                navigate_res.get()
+                result = send_res.get()
+                break
+            time.sleep(0.1)
+            t += 0.1
+            if timeout is not None and timeout < t:
+                raise TimeoutError("Timeout waiting for Send and Navigate")
 
-    result_queue: Queue = Queue()
-    send_process = Process(target=_send, args=(result_queue,))
-    navigate_process = Process(target=navigate)
-    run_simultaneously([navigate_process, send_process])
-    return result_queue.get()
+        return result
 
 class SpeculosTezosBackend(TezosBackend, SpeculosBackend):
     """Class representing Tezos app running on Speculos."""
