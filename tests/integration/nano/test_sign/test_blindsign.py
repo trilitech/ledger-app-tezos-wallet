@@ -48,8 +48,7 @@ def _sign_too_long(app: TezosAppScreen,
         with_hash=True,
         navigate=navigate)
 
-    app.checker.check_signature(
-        account=DEFAULT_ACCOUNT,
+    DEFAULT_ACCOUNT.check_signature(
         message=message,
         with_hash=True,
         data=data)
@@ -402,8 +401,7 @@ def test_blindsign_too_deep(app: TezosAppScreen, snapshot_dir: Path):
                               with_hash=True,
                               path=snapshot_dir)
 
-    app.checker.check_signature(
-        account=DEFAULT_ACCOUNT,
+    DEFAULT_ACCOUNT.check_signature(
         message=expression,
         with_hash=True,
         data=data)
@@ -422,8 +420,7 @@ def test_blindsign_too_large(app: TezosAppScreen, snapshot_dir: Path):
                           with_hash=True,
                           path=snapshot_dir)
 
-    app.checker.check_signature(
-        account=DEFAULT_ACCOUNT,
+    DEFAULT_ACCOUNT.check_signature(
         message=message,
         with_hash=True,
         data=data)

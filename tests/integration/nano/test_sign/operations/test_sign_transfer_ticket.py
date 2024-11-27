@@ -45,8 +45,7 @@ def test_sign_transfer_ticket(app: TezosAppScreen, snapshot_dir: Path):
                     with_hash=True,
                     path=snapshot_dir)
 
-    app.checker.check_signature(
-        account=DEFAULT_ACCOUNT,
+    DEFAULT_ACCOUNT.check_signature(
         message=message,
         with_hash=True,
         data=data)
@@ -78,8 +77,7 @@ def test_nanosp_regression_potential_empty_screen(app: TezosAppScreen, snapshot_
                     with_hash=True,
                     path=snapshot_dir)
 
-    app.checker.check_signature(
-        account=DEFAULT_ACCOUNT,
+    DEFAULT_ACCOUNT.check_signature(
         message=message,
         with_hash=True,
         data=data)
