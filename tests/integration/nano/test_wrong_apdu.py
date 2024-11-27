@@ -31,7 +31,8 @@ def test_regression_continue_after_reject(app: TezosAppScreen, snapshot_dir: Pat
 
     app.setup_expert_mode()
 
-    app.reject_public_key(DEFAULT_ACCOUNT, snapshot_dir / "reject_public_key")
+    with StatusCode.REJECT.expected():
+        app.reject_public_key(DEFAULT_ACCOUNT, snapshot_dir / "reject_public_key")
 
     app.assert_screen(Screen.HOME)
 
@@ -47,10 +48,11 @@ def test_regression_continue_after_reject(app: TezosAppScreen, snapshot_dir: Pat
         parameter = [{'prim':'pair','args':[{'string':"["},{'prim':'pair','args':[{'string':"Z"},{'prim':'pair','args':[{'string':"Y"},{'prim':'pair','args':[{'string':"X"},{'prim':'pair','args':[{'string':"W"},{'prim':'pair','args':[{'string':"V"},{'prim':'pair','args':[{'string':"U"},{'prim':'pair','args':[{'string':"T"},{'prim':'pair','args':[{'string':"S"},{'prim':'pair','args':[{'string':"R"},{'prim':'pair','args':[{'string':"Q"},{'prim':'pair','args':[{'string':"P"},{'prim':'pair','args':[{'string':"O"},{'prim':'pair','args':[{'string':"N"},{'prim':'pair','args':[{'string':"M"},{'prim':'pair','args':[{'string':"L"},{'prim':'pair','args':[{'string':"K"},{'prim':'pair','args':[{'string':"J"},{'prim':'pair','args':[{'string':"I"},{'prim':'pair','args':[{'string':"H"},{'prim':'pair','args':[{'string':"G"},{'prim':'pair','args':[{'string':"F"},{'prim':'pair','args':[{'string':"E"},{'prim':'pair','args':[{'string':"D"},{'prim':'pair','args':[{'string':"C"},{'prim':'pair','args':[{'string':"B"},[]]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]},{'prim':'pair','args':[{'int':10},{'prim':'pair','args':[{'int':9},{'prim':'pair','args':[{'int':8},{'prim':'pair','args':[{'int':7},{'prim':'pair','args':[{'int':6},{'prim':'pair','args':[{'int':5},{'prim':'pair','args':[{'int':4},{'prim':'pair','args':[{'int':3},{'prim':'pair','args':[{'int':2},{'prim':'pair','args':[{'int':1},[]]}]}]}]}]}]}]}]}]}]}]
     )
 
-    app.reject_signing(DEFAULT_ACCOUNT,
-                       message,
-                       with_hash=True,
-                       path=snapshot_dir / "reject_signing")
+    with StatusCode.REJECT.expected():
+        app.reject_signing(DEFAULT_ACCOUNT,
+                           message,
+                           with_hash=True,
+                           path=snapshot_dir / "reject_signing")
 
     app.backend.get_public_key(DEFAULT_ACCOUNT, with_prompt=False)
 
@@ -75,7 +77,7 @@ def test_change_sign_instruction(app: TezosAppScreen):
 
     app.backend._ask_sign(Ins.SIGN_WITH_HASH, DEFAULT_ACCOUNT)
 
-    with app.expect_apdu_failure(StatusCode.INVALID_INS):
+    with StatusCode.INVALID_INS.expected():
         app.backend._continue_sign(Ins.SIGN,
                                    payload,
                                    last=True)
@@ -84,7 +86,7 @@ def test_change_sign_instruction(app: TezosAppScreen):
 
     app.backend._ask_sign(Ins.SIGN, DEFAULT_ACCOUNT)
 
-    with app.expect_apdu_failure(StatusCode.INVALID_INS):
+    with StatusCode.INVALID_INS.expected():
         app.backend._continue_sign(Ins.SIGN_WITH_HASH,
                                    payload,
                                    last=True)
@@ -97,37 +99,37 @@ def test_mixing_command(app: TezosAppScreen):
     app.assert_screen(Screen.HOME)
 
     app.backend._ask_sign(Ins.SIGN, DEFAULT_ACCOUNT)
-    with app.expect_apdu_failure(StatusCode.UNEXPECTED_STATE):
+    with StatusCode.UNEXPECTED_STATE.expected():
         app.backend.version()
 
     app.assert_screen(Screen.HOME)
 
     app.backend._ask_sign(Ins.SIGN_WITH_HASH, DEFAULT_ACCOUNT)
-    with app.expect_apdu_failure(StatusCode.UNEXPECTED_STATE):
+    with StatusCode.UNEXPECTED_STATE.expected():
         app.backend._ask_sign(Ins.SIGN, DEFAULT_ACCOUNT)
 
     app.assert_screen(Screen.HOME)
 
     app.backend._ask_sign(Ins.SIGN, DEFAULT_ACCOUNT)
-    with app.expect_apdu_failure(StatusCode.UNEXPECTED_STATE):
+    with StatusCode.UNEXPECTED_STATE.expected():
         app.backend._ask_sign(Ins.SIGN_WITH_HASH, DEFAULT_ACCOUNT)
 
     app.assert_screen(Screen.HOME)
 
     app.backend._ask_sign(Ins.SIGN, DEFAULT_ACCOUNT)
-    with app.expect_apdu_failure(StatusCode.UNEXPECTED_STATE):
+    with StatusCode.UNEXPECTED_STATE.expected():
         app.backend.get_public_key(DEFAULT_ACCOUNT, with_prompt=True)
 
     app.assert_screen(Screen.HOME)
 
     app.backend._ask_sign(Ins.SIGN, DEFAULT_ACCOUNT)
-    with app.expect_apdu_failure(StatusCode.UNEXPECTED_STATE):
+    with StatusCode.UNEXPECTED_STATE.expected():
         app.backend.get_public_key(DEFAULT_ACCOUNT, with_prompt=False)
 
     app.assert_screen(Screen.HOME)
 
     app.backend._ask_sign(Ins.SIGN, DEFAULT_ACCOUNT)
-    with app.expect_apdu_failure(StatusCode.UNEXPECTED_STATE):
+    with StatusCode.UNEXPECTED_STATE.expected():
         app.backend.git()
 
     app.quit()
@@ -139,7 +141,7 @@ def test_wrong_index(app: TezosAppScreen, ins: Ins, index: Index):
 
     app.assert_screen(Screen.HOME)
 
-    with app.expect_apdu_failure(StatusCode.WRONG_PARAM):
+    with StatusCode.WRONG_PARAM.expected():
         app.backend._exchange(ins,
                               index=index,
                               sig_type=DEFAULT_ACCOUNT.sig_type,
@@ -169,7 +171,7 @@ def test_wrong_derivation_type(app: TezosAppScreen, sender: Callable[[TezosAppSc
 
     app.assert_screen(Screen.HOME)
 
-    with app.expect_apdu_failure(StatusCode.WRONG_PARAM):
+    with StatusCode.WRONG_PARAM.expected():
         sender(app, account)
 
     app.quit()
@@ -220,7 +222,7 @@ def test_wrong_derivation_path(
 
     app.assert_screen(Screen.HOME)
 
-    with app.expect_apdu_failure(StatusCode.WRONG_LENGTH_FOR_INS):
+    with StatusCode.WRONG_LENGTH_FOR_INS.expected():
         sender(app, account)
 
     app.quit()
@@ -237,7 +239,7 @@ def test_wrong_class(app: TezosAppScreen, class_: int):
         int(SigType.ED25519).to_bytes(1, 'big') + \
         int(0x00).to_bytes(1, 'big')
 
-    with app.expect_apdu_failure(StatusCode.CLASS):
+    with StatusCode.CLASS.expected():
         app.backend.exchange_raw(raw)
 
     app.quit()
@@ -262,7 +264,7 @@ def test_wrong_apdu_length(app: TezosAppScreen, size: int, data: bytes):
         size.to_bytes(1, 'big') + \
         data
 
-    with app.expect_apdu_failure(StatusCode.WRONG_LENGTH_FOR_INS):
+    with StatusCode.WRONG_LENGTH_FOR_INS.expected():
         app.backend.exchange_raw(raw)
 
     app.quit()
@@ -289,7 +291,7 @@ def test_unimplemented_commands(app: TezosAppScreen, ins: Union[int, Ins]):
 
     app.assert_screen(Screen.HOME)
 
-    with app.expect_apdu_failure(StatusCode.INVALID_INS):
+    with StatusCode.INVALID_INS.expected():
         app.backend._exchange(ins)
 
     app.quit()

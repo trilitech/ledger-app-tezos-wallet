@@ -20,7 +20,7 @@ from multiprocessing import Process, Queue
 from pathlib import Path
 from typing import Callable
 
-from utils.app import Screen, ScreenText, TezosAppScreen, send_and_navigate, DEFAULT_ACCOUNT
+from utils.app import Screen, ScreenText, TezosAppScreen, DEFAULT_ACCOUNT
 from utils.backend import StatusCode
 from utils.message import (
     Message,
@@ -76,14 +76,13 @@ def _reject_too_long(
     app.setup_expert_mode()
     app.setup_blindsign_on()
 
-    app._failing_signing(
-        DEFAULT_ACCOUNT,
-        message,
-        with_hash=True,
-        navigate=navigate,
-        status_code=status_code)
-
-    app.quit()
+    with status_code.expected():
+        app._sign(
+            DEFAULT_ACCOUNT,
+            message,
+            with_hash=True,
+            navigate=navigate
+        )
 
 
 ### Too long operation ###
@@ -432,10 +431,13 @@ def test_blindsign_reject_from_clear(app: TezosAppScreen, snapshot_dir: Path):
 
     expression = MichelineExpr({'int':12345678901234567890123456789012345678901234567890123456789012345678901234567890})
 
-    app.parsing_error_signing(DEFAULT_ACCOUNT,
-                              expression,
-                              with_hash=False,
-                              path=snapshot_dir)
+    with StatusCode.PARSE_ERROR.expected():
+        app.reject_signing(
+            DEFAULT_ACCOUNT,
+            expression,
+            with_hash=False,
+            path=snapshot_dir
+        )
 
     app.quit()
 
@@ -444,23 +446,16 @@ def test_blindsign_reject_from_blind(app: TezosAppScreen, snapshot_dir: Path):
 
     expression = MichelineExpr({'int':12345678901234567890123456789012345678901234567890123456789012345678901234567890})
 
-    def expected_failure_send() -> bytes:
-        with app.expect_apdu_failure(StatusCode.REJECT):
-            app.backend.sign(DEFAULT_ACCOUNT, expression, with_hash=False)
-        return b''
-
     def navigate() -> None:
-        app.navigate_until_text(
-            ScreenText.ACCEPT_RISK,
-            snapshot_dir / "clear"
-        )
-        app.navigate_until_text(
-            ScreenText.SIGN_REJECT,
-            snapshot_dir / "blind"
-        )
+        app.navigate_until_text(ScreenText.ACCEPT_RISK, snapshot_dir / "clear")
+        app.navigate_until_text(ScreenText.SIGN_REJECT, snapshot_dir / "blind")
 
-    send_and_navigate(
-        send=expected_failure_send,
-        navigate=navigate)
+    with StatusCode.REJECT.expected():
+        app._sign(
+            DEFAULT_ACCOUNT,
+            expression,
+            with_hash=False,
+            navigate=navigate
+        )
 
     app.quit()

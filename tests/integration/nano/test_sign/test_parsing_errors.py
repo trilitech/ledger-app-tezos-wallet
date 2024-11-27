@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
+from utils.app import ScreenText, TezosAppScreen, DEFAULT_ACCOUNT
 from utils.backend import StatusCode
 from utils.message import RawMessage
 
@@ -58,10 +58,13 @@ def test_parsing_error(app: TezosAppScreen, raw_msg: str, snapshot_dir: Path):
 
     app.setup_expert_mode()
 
-    app.parsing_error_signing(DEFAULT_ACCOUNT,
-                              RawMessage(raw_msg),
-                              with_hash=True,
-                              path=snapshot_dir)
+    with StatusCode.PARSE_ERROR.expected():
+        app.reject_signing(
+            DEFAULT_ACCOUNT,
+            RawMessage(raw_msg),
+            with_hash=True,
+            path=snapshot_dir
+        )
 
     app.quit()
 
@@ -78,10 +81,12 @@ def test_parsing_hard_fail(app: TezosAppScreen, raw_msg: str, snapshot_dir: Path
 
     app.setup_expert_mode()
 
-    app.hard_failing_signing(DEFAULT_ACCOUNT,
-                             RawMessage(raw_msg),
-                             with_hash=True,
-                             status_code=StatusCode.UNEXPECTED_SIGN_STATE,
-                             path=snapshot_dir)
+    with StatusCode.UNEXPECTED_SIGN_STATE.expected():
+        app._sign(
+            DEFAULT_ACCOUNT,
+            RawMessage(raw_msg),
+            with_hash=True,
+            navigate=lambda: app.navigate_until_text(ScreenText.HOME, snapshot_dir)
+        )
 
     app.quit()

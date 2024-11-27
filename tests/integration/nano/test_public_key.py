@@ -22,6 +22,7 @@ import pytest
 
 from utils.account import Account, PublicKey, SigType
 from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
+from utils.backend import StatusCode
 
 accounts = [
     Account("m/44'/1729'/0'/0'",
@@ -71,6 +72,7 @@ def test_reject_pk(app: TezosAppScreen, snapshot_dir: Path):
 
     app.assert_screen(Screen.HOME)
 
-    app.reject_public_key(DEFAULT_ACCOUNT, snapshot_dir)
+    with StatusCode.REJECT.expected():
+        app.reject_public_key(DEFAULT_ACCOUNT, snapshot_dir)
 
     app.quit()
