@@ -44,8 +44,7 @@ def test_sign_transaction(app: TezosAppScreen, snapshot_dir: Path):
                     with_hash=True,
                     path=snapshot_dir)
 
-    app.checker.check_signature(
-        account=DEFAULT_ACCOUNT,
+    DEFAULT_ACCOUNT.check_signature(
         message=message,
         with_hash=True,
         data=data)
@@ -96,8 +95,7 @@ def test_sign_simple_transaction(app: TezosAppScreen, snapshot_dir: Path):
                     with_hash=True,
                     path=snapshot_dir)
 
-    app.checker.check_signature(
-        account=DEFAULT_ACCOUNT,
+    DEFAULT_ACCOUNT.check_signature(
         message=message,
         with_hash=True,
         data=data)
@@ -152,8 +150,7 @@ def test_sign_stake_transaction(app: TezosAppScreen, snapshot_dir: Path):
                     with_hash=True,
                     path=snapshot_dir)
 
-    app.checker.check_signature(
-        account=DEFAULT_ACCOUNT,
+    DEFAULT_ACCOUNT.check_signature(
         message=message,
         with_hash=True,
         data=data)
@@ -181,8 +178,7 @@ def test_sign_unstake_transaction(app: TezosAppScreen, snapshot_dir: Path):
                     with_hash=True,
                     path=snapshot_dir)
 
-    app.checker.check_signature(
-        account=DEFAULT_ACCOUNT,
+    DEFAULT_ACCOUNT.check_signature(
         message=message,
         with_hash=True,
         data=data)
@@ -210,8 +206,7 @@ def test_sign_finalize_unstake_transaction(app: TezosAppScreen, snapshot_dir: Pa
                     with_hash=True,
                     path=snapshot_dir)
 
-    app.checker.check_signature(
-        account=DEFAULT_ACCOUNT,
+    DEFAULT_ACCOUNT.check_signature(
         message=message,
         with_hash=True,
         data=data)
@@ -248,8 +243,7 @@ def test_sign_set_delegate_parameters_transaction(app: TezosAppScreen, snapshot_
                     with_hash=True,
                     path=snapshot_dir)
 
-    app.checker.check_signature(
-        account=DEFAULT_ACCOUNT,
+    DEFAULT_ACCOUNT.check_signature(
         message=message,
         with_hash=True,
         data=data)
@@ -278,8 +272,7 @@ def test_sign_with_long_hash(app: TezosAppScreen, snapshot_dir: Path):
                     with_hash=True,
                     path=snapshot_dir)
 
-    app.checker.check_signature(
-        account=DEFAULT_ACCOUNT,
+    DEFAULT_ACCOUNT.check_signature(
         message=message,
         with_hash=True,
         data=data)
@@ -308,8 +301,7 @@ def test_ensure_always_clearsign(app: TezosAppScreen, snapshot_dir: Path):
                     with_hash=True,
                     path=snapshot_dir)
 
-    app.checker.check_signature(
-        account=DEFAULT_ACCOUNT,
+    DEFAULT_ACCOUNT.check_signature(
         message=message,
         with_hash=True,
         data=data)

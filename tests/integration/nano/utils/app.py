@@ -77,20 +77,6 @@ class TezosAPDUChecker:
         """Check that public_key is the account public key."""
         account.check_public_key(public_key)
 
-    def check_signature(self,
-                        account: Account,
-                        message: Message,
-                        with_hash: bool,
-                        data: bytes) -> None:
-        """Check that data is a signature of message from account."""
-        if with_hash:
-            assert data.startswith(message.hash), \
-                f"Expected a starting hash {message.hash.hex()} but got {data.hex()}"
-
-            data = data[len(message.hash):]
-
-        account.check_signature(data, bytes(message))
-
 MAX_ATTEMPTS = 50
 
 def with_retry(f, attempts=MAX_ATTEMPTS):

@@ -42,8 +42,7 @@ def test_sign_sc_rollup_execute_outbox_message(app: TezosAppScreen, snapshot_dir
                     with_hash=True,
                     path=snapshot_dir)
 
-    app.checker.check_signature(
-        account=DEFAULT_ACCOUNT,
+    DEFAULT_ACCOUNT.check_signature(
         message=message,
         with_hash=True,
         data=data)

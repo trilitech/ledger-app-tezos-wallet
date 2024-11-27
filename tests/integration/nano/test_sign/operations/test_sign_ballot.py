@@ -38,8 +38,7 @@ def test_sign_ballot(app: TezosAppScreen, snapshot_dir: Path):
                     with_hash=True,
                     path=snapshot_dir)
 
-    app.checker.check_signature(
-        account=DEFAULT_ACCOUNT,
+    DEFAULT_ACCOUNT.check_signature(
         message=message,
         with_hash=True,
         data=data)

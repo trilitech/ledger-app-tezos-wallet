@@ -35,8 +35,7 @@ def test_sign_micheline_without_hash(app: TezosAppScreen, snapshot_dir: Path):
                     with_hash=False,
                     path=snapshot_dir)
 
-    app.checker.check_signature(
-        account=DEFAULT_ACCOUNT,
+    DEFAULT_ACCOUNT.check_signature(
         message=message,
         with_hash=False,
         data=data)
@@ -59,9 +58,8 @@ def test_sign_with_small_packet(app: TezosAppScreen, snapshot_dir: Path):
             send=lambda: app.backend.sign(account, message, apdu_size=10),
             navigate=lambda: app.navigate_until_text(ScreenText.SIGN_ACCEPT, path))
 
-        app.checker.check_signature(
-            account,
-            message,
+        account.check_signature(
+            message=message,
             with_hash=False,
             data=data)
 
@@ -97,8 +95,7 @@ def test_nanosp_regression_press_right_works_across_apdu_recieves(app: TezosAppS
                     with_hash=True,
                     path=snapshot_dir)
 
-    app.checker.check_signature(
-        account=DEFAULT_ACCOUNT,
+    DEFAULT_ACCOUNT.check_signature(
         message=message,
         with_hash=True,
         data=data)
