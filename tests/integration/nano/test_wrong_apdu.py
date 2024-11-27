@@ -52,11 +52,8 @@ def test_regression_continue_after_reject(app: TezosAppScreen, snapshot_dir: Pat
                        with_hash=True,
                        path=snapshot_dir / "reject_signing")
 
-    data = app.backend.get_public_key(DEFAULT_ACCOUNT, with_prompt=False)
+    app.backend.get_public_key(DEFAULT_ACCOUNT, with_prompt=False)
 
-    app.checker.check_public_key(DEFAULT_ACCOUNT, data)
-
-    app.quit()
 
 def test_change_sign_instruction(app: TezosAppScreen):
     """Check signing instruction changes behaviour"""

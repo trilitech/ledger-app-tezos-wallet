@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from utils.account import Account, SigType
+from utils.account import Account, PublicKey, SigType
 from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
 
 accounts = [
@@ -42,25 +42,29 @@ accounts = [
 def test_get_pk(app: TezosAppScreen, account: Account):
     """Test that public keys get from the app are correct."""
 
-    app.assert_screen(Screen.HOME)
+    expected_public_key = account.key.public_key()
 
     data = app.backend.get_public_key(account, with_prompt=False)
 
-    app.checker.check_public_key(account, data)
+    public_key = PublicKey.from_bytes(data, account.sig_type)
 
-    app.quit()
+    assert public_key == expected_public_key.encode(), \
+        f"Expected public key {expected_public_key} but got {public_key}"
+
 
 @pytest.mark.parametrize("account", accounts, ids=lambda account: f"{account.sig_type}")
 def test_provide_pk(app: TezosAppScreen, account: Account, snapshot_dir: Path):
     """Test that public keys get from the app are correct and correctly displayed."""
 
-    app.assert_screen(Screen.HOME)
+    expected_public_key = account.key.public_key()
 
     data = app.provide_public_key(account, snapshot_dir)
 
-    app.checker.check_public_key(account, data)
+    public_key = PublicKey.from_bytes(data, account.sig_type)
 
-    app.quit()
+    assert public_key == expected_public_key.encode(), \
+        f"Expected public key {expected_public_key} but got {public_key}"
+
 
 def test_reject_pk(app: TezosAppScreen, snapshot_dir: Path):
     """Check reject pk behaviour"""

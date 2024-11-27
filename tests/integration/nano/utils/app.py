@@ -71,12 +71,6 @@ class TezosAPDUChecker:
         assert raw_version == self.version_bytes, \
             f"Expected version {self.version_bytes.hex()} but got {raw_version.hex()}"
 
-    def check_public_key(self,
-                         account: Account,
-                         public_key: bytes) -> None:
-        """Check that public_key is the account public key."""
-        account.check_public_key(public_key)
-
 MAX_ATTEMPTS = 50
 
 def with_retry(f, attempts=MAX_ATTEMPTS):
