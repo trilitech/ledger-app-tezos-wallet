@@ -17,7 +17,6 @@
 from enum import IntEnum
 from typing import Union
 
-import base58
 from pytezos import pytezos
 from pytezos.crypto.encoding import base58_encode
 from pytezos.crypto.key import Key as PytezosKey
@@ -95,6 +94,64 @@ class Signature(bytes):
         return cls(base58_encode(data, prefix))
 
 
+class PublicKey(bytes):
+    """Class representing public key."""
+
+    def __str__(self) -> str:
+        return self.decode()
+
+    class CompressionKind(IntEnum):
+        """Bytes compression kind"""
+        EVEN         = 0x02
+        ODD          = 0x03
+        UNCOMPRESSED = 0x04
+
+        def __bytes__(self) -> bytes:
+            return bytes([self])
+
+    @classmethod
+    def from_bytes(cls, data: bytes, sig_type: Union[SigType, int]) -> 'PublicKey':
+        """Convert a public key from bytes to string"""
+
+        length, data = data[0], data[1:]
+        assert length == len(data), f"Wrong data size, {length} != {len(data)}"
+
+        # `data` should be:
+        # kind + pk
+        # pk length = 32 for compressed, 64 for uncompressed
+        kind = data[0]
+        data = data[1:]
+
+        # Ed25519
+        if sig_type in [
+                SigType.ED25519,
+                SigType.BIP32_ED25519
+        ]:
+            assert kind == cls.CompressionKind.EVEN, \
+                f"Wrong Ed25519 public key compression kind: {kind}"
+            assert len(data) == 32, \
+                f"Wrong Ed25519 public key length: {len(data)}"
+            return cls(base58_encode(data, b'edpk'))
+
+        # Secp256
+        if sig_type in [
+                SigType.SECP256K1,
+                SigType.SECP256R1
+        ]:
+            assert kind == cls.CompressionKind.UNCOMPRESSED, \
+                f"Wrong Secp256 public key compression kind: {kind}"
+            assert len(data) == 2 * 32, \
+                f"Wrong Secp256 public key length: {len(data)}"
+            kind = cls.CompressionKind.ODD if data[-1] & 1 else \
+                cls.CompressionKind.EVEN
+            prefix = b'sppk' if sig_type == SigType.SECP256K1 \
+                else b'p2pk'
+            data = bytes(kind) + data[:32]
+            return cls(base58_encode(data, prefix))
+
+        assert False, f"Wrong signature type: {sig_type}"
+
+
 class Account:
     """Class representing account."""
 
@@ -114,61 +171,6 @@ class Account:
 
     def __repr__(self) -> str:
         return self.__key
-
-    @property
-    def base58_decoded(self) -> bytes:
-        """Decodes public_key from base58 encoding."""
-
-        # Get the public_key without prefix
-        public_key = base58.b58decode_check(self.key.public_key())
-
-        if self.sig_type in [
-                SigType.ED25519,
-                SigType.BIP32_ED25519
-        ]:
-            prefix = bytes.fromhex("0d0f25d9") # edpk(54)
-        elif self.sig_type == SigType.SECP256K1:
-            prefix = bytes.fromhex("03fee256") # sppk(55)
-        elif self.sig_type == SigType.SECP256R1:
-            prefix = bytes.fromhex("03b28b7f") # p2pk(55)
-        else:
-            assert False, \
-                "Account do not have a right signature type: {account.sig_type}"
-        assert public_key.startswith(prefix), \
-            "Expected prefix {prefix.hex()} but got {public_key.hex()}"
-
-        public_key = public_key[len(prefix):]
-
-        if self.sig_type in [
-                SigType.SECP256K1,
-                SigType.SECP256R1
-        ]:
-            assert public_key[0] in [0x02, 0x03], \
-                "Expected a prefix kind of 0x02 or 0x03 but got {public_key[0]}"
-            public_key = public_key[1:]
-
-        return public_key
-
-    def check_public_key(self, data: bytes) -> None:
-        """Checks if the data correspond to the public_key."""
-
-        # `data` should be:
-        # length + kind + pk
-        # kind : 02=odd, 03=even, 04=uncompressed
-        # pk length = 32 for compressed, 64 for uncompressed
-        assert len(data) == data[0] + 1
-        if data[1] == 0x04: # public key uncompressed
-            assert data[0] == 1 + 32 + 32
-        elif data[1] in [0x02, 0x03]: # public key even or odd (compressed)
-            assert data[0] == 1 + 32
-        else:
-            assert False, \
-                "Expected a prefix kind of 0x02, 0x03 or 0x04 but got {data[1]}"
-        data = data[2:2+32]
-
-        public_key = self.base58_decoded
-        assert data == public_key, \
-            f"Expected public key {public_key.hex()} but got {data.hex()}"
 
     @property
     def key(self) -> PytezosKey:
