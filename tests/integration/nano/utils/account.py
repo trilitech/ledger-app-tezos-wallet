@@ -19,6 +19,7 @@ from typing import Union
 
 import base58
 from pytezos import pytezos
+from pytezos.crypto.key import Key as PytezosKey
 from ragger.bip import pack_derivation_path
 
 
@@ -89,27 +90,27 @@ class Account:
 
     path: bytes
     sig_type: Union[SigType, int]
-    public_key: str
+    __key: str
 
     def __init__(self,
                  path: Union[str, bytes],
                  sig_type: Union[SigType, int],
-                 public_key: str):
+                 key: str):
         self.path = \
             pack_derivation_path(path) if isinstance(path, str) \
             else path
         self.sig_type = sig_type
-        self.public_key = public_key
+        self.__key = key
 
     def __repr__(self) -> str:
-        return self.public_key
+        return self.__key
 
     @property
     def base58_decoded(self) -> bytes:
         """Decodes public_key from base58 encoding."""
 
         # Get the public_key without prefix
-        public_key = base58.b58decode_check(self.public_key)
+        public_key = base58.b58decode_check(self.key.public_key())
 
         if self.sig_type in [
                 SigType.ED25519,
@@ -159,6 +160,11 @@ class Account:
         assert data == public_key, \
             f"Expected public key {public_key.hex()} but got {data.hex()}"
 
+    @property
+    def key(self) -> PytezosKey:
+        """pytezos key of the account."""
+        return pytezos.using(key=self.__key).key
+
     def check_signature(self,
                         signature: Union[bytes, Signature],
                         message: Union[str, bytes]):
@@ -173,8 +179,7 @@ class Account:
                         SigType.BIP32_ED25519
                 ] \
                 else Signature.from_tlv(signature)
-        ctxt = pytezos.using(key=self.public_key)
-        assert ctxt.key.verify(signature.value, message), \
+        assert self.key.verify(signature.value, message), \
             f"Fail to verify signature {signature}, \n\
             with account {self} \n\
             and message {message.hex()}"
