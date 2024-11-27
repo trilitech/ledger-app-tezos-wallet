@@ -19,9 +19,11 @@ from typing import Union
 
 import base58
 from pytezos import pytezos
+from pytezos.crypto.encoding import base58_encode
 from pytezos.crypto.key import Key as PytezosKey
 from ragger.bip import pack_derivation_path
 
+from .message import Message
 
 class SigType(IntEnum):
     """Class representing signature type."""
@@ -34,29 +36,20 @@ class SigType(IntEnum):
     def __str__(self) -> str:
         return self.name
 
-class Signature:
+class Signature(bytes):
     """Class representing signature."""
 
-    GENERIC_SIGNATURE_PREFIX = bytes.fromhex("04822b") # sig(96)
+    def __str__(self) -> str:
+        return self.decode()
 
-    value: bytes
-
-    def __init__(self, value: bytes):
-        value = Signature.GENERIC_SIGNATURE_PREFIX + value
-        self.value = base58.b58encode_check(value)
-
-    def __repr__(self) -> str:
-        return self.value.hex()
-
-    @classmethod
-    def from_tlv(cls, tlv: Union[bytes, bytearray]) -> 'Signature':
-        """Get Signature from tlv."""
-
-        if isinstance(tlv, bytes):
-            tlv = bytearray(tlv)
+    @staticmethod
+    def from_secp256_tlv(tlv: Union[bytes, bytearray]) -> bytes:
+        """Get the signature encapsulated in a TLV."""
         # See:
         # https://developers.ledger.com/docs/embedded-app/crypto-api/lcx__ecdsa_8h/#cx_ecdsa_sign
         # TLV: 30 || L || 02 || Lr || r || 02 || Ls || s
+        if isinstance(tlv, bytes):
+            tlv = bytearray(tlv)
         header_tag_index = 0
         # Remove the unwanted parity information set here.
         tlv[header_tag_index] &= ~0x01
@@ -81,9 +74,26 @@ class Signature:
         s = tlv[s_index : s_index + s_len]
         # Sometimes \x00 are added or removed
         # A size adjustment is required here.
-        def adjust_size(raw, size):
-            return raw[-size:].rjust(size, b'\x00')
-        return cls(adjust_size(r, 32) + adjust_size(s, 32))
+        def adjust_size(data, size):
+            return data[-size:].rjust(size, b'\x00')
+        return adjust_size(r, 32) + adjust_size(s, 32)
+
+    @classmethod
+    def from_bytes(cls, data: bytes, sig_type: SigType) -> 'Signature':
+        """Get the signature according to the SigType."""
+        if sig_type in {SigType.ED25519, SigType.BIP32_ED25519}:
+            prefix = b'edsig'
+        elif sig_type == SigType.SECP256K1:
+            prefix = b'spsig'
+            data = Signature.from_secp256_tlv(data)
+        elif sig_type == SigType.SECP256R1:
+            prefix = b'p2sig'
+            data = Signature.from_secp256_tlv(data)
+        else:
+            assert False, f"Wrong signature type: {sig_type}"
+
+        return cls(base58_encode(data, prefix))
+
 
 class Account:
     """Class representing account."""
@@ -165,21 +175,20 @@ class Account:
         """pytezos key of the account."""
         return pytezos.using(key=self.__key).key
 
-    def check_signature(self,
-                        signature: Union[bytes, Signature],
-                        message: Union[str, bytes]):
+    def check_signature(
+            self,
+            data: bytes,
+            message: Message,
+            with_hash: bool):
         """Checks if signature correspond to a signature of message sign by the account."""
+        if with_hash:
+            assert data.startswith(message.hash), \
+                f"Expected a starting hash {message.hash.hex()} but got {data.hex()}"
+            data = data[len(message.hash):]
 
-        if isinstance(message, str):
-            message = bytes.fromhex(message)
-        if isinstance(signature, bytes):
-            signature = Signature(signature) \
-                if self.sig_type in [
-                        SigType.ED25519,
-                        SigType.BIP32_ED25519
-                ] \
-                else Signature.from_tlv(signature)
-        assert self.key.verify(signature.value, message), \
-            f"Fail to verify signature {signature}, \n\
+        signature = Signature.from_bytes(data, SigType(self.sig_type))
+
+        assert self.key.verify(signature, bytes(message)), \
+            f"Fail to verify signature {signature!r}, \n\
             with account {self} \n\
-            and message {message.hex()}"
+            and message {message}"
