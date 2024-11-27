@@ -15,22 +15,20 @@
 
 """Tezos app backend."""
 
-from contextlib import contextmanager
 from enum import Enum
 from io import BytesIO
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
 import time
-from typing import Callable, Generator, List, Optional, TypeVar, Union
+from typing import Callable, List, Optional, TypeVar, Union
 
 import requests
 from ragger.backend import SpeculosBackend
-from ragger.error import ExceptionRAPDU
 from ragger.navigator import NavInsID, NanoNavigator
 
 from .message import Message
 from .account import Account, SigType
-from .backend import StatusCode, TezosBackend
+from .backend import TezosBackend
 
 
 MAX_ATTEMPTS = 50
@@ -272,34 +270,9 @@ class TezosAppScreen():
                                             test_case_name=path,
                                             screen_change_after_last_instruction=False)
 
-    @contextmanager
-    def expect_apdu_failure(self, code: StatusCode) -> Generator[None, None, None]:
-        """Expect the body to fail with code."""
-        try:
-            yield
-            assert False, f"Expect fail with { code } but succeed"
-        except ExceptionRAPDU as e:
-            failing_code = StatusCode(e.status)
-            assert code == failing_code, \
-                f"Expect fail with { code.name } but fail with { failing_code.name }"
-
-    def _failing_send(self,
-                      send: Callable[[], bytes],
-                      navigate: Callable[[], None],
-                      status_code: StatusCode) -> None:
-        """Expect that send and navigates fails with status_code."""
-        def expected_failure_send() -> bytes:
-            with self.expect_apdu_failure(status_code):
-                send()
-            return b''
-
-        send_and_navigate(
-            send=expected_failure_send,
-            navigate=navigate)
-
     def provide_public_key(self,
-                          account: Account,
-                          path: Union[str, Path]) -> bytes:
+                           account: Account,
+                           path: Union[str, Path]) -> bytes:
         """Get the account's public key from the app after approving it."""
         return send_and_navigate(
             send=lambda: self.backend.get_public_key(account, with_prompt=True),
@@ -307,14 +280,11 @@ class TezosAppScreen():
 
     def reject_public_key(self,
                           account: Account,
-                          path: Union[str, Path]) -> None:
+                          path: Union[str, Path]) -> bytes:
         """Reject the account's public key."""
-        self._failing_send(
-            send=(lambda: self.backend.get_public_key(account, with_prompt=True)),
-            navigate=(lambda: self.navigate_until_text(
-                ScreenText.PUBLIC_KEY_REJECT,
-                path)),
-            status_code=StatusCode.REJECT)
+        return send_and_navigate(
+            send=lambda: self.backend.get_public_key(account, with_prompt=True),
+            navigate=lambda: self.navigate_until_text(ScreenText.PUBLIC_KEY_REJECT, path))
 
     def _sign(self,
               account: Account,
@@ -351,65 +321,23 @@ class TezosAppScreen():
             self.navigate_until_text(ScreenText.ACCEPT_RISK, path / "clear")
             self.navigate_until_text(ScreenText.SIGN_ACCEPT, path / "blind")
 
-        return send_and_navigate(
-            send=(lambda: self.backend.sign(account, message, with_hash)),
+        return self._sign(
+            account,
+            message,
+            with_hash,
             navigate=navigate)
-
-    def _failing_signing(self,
-                         account: Account,
-                         message: Message,
-                         with_hash: bool,
-                         navigate: Callable[[], None],
-                         status_code: StatusCode) -> None:
-        """Expect requests signing and navigate fails with status_code."""
-        self._failing_send(
-            send=(lambda: self.backend.sign(account, message, with_hash)),
-            navigate=navigate,
-            status_code=status_code)
 
     def reject_signing(self,
                        account: Account,
                        message: Message,
                        with_hash: bool,
-                       path: Union[str, Path]) -> None:
+                       path: Union[str, Path]) -> bytes:
         """Request and reject signing the message."""
-        self._failing_signing(
+        return self._sign(
             account,
             message,
             with_hash,
-            navigate=(lambda: self.navigate_until_text(
-                ScreenText.SIGN_REJECT,
-                path)),
-            status_code=StatusCode.REJECT)
-
-    def hard_failing_signing(self,
-                             account: Account,
-                             message: Message,
-                             with_hash: bool,
-                             status_code: StatusCode,
-                             path: Union[str, Path]) -> None:
-        """Expect the signing request to hard fail."""
-        self._failing_signing(account,
-                              message,
-                              with_hash,
-                              navigate=(lambda: self.navigate_until_text(
-                                  ScreenText.HOME,
-                                  path)),
-                              status_code=status_code)
-
-    def parsing_error_signing(self,
-                              account: Account,
-                              message: Message,
-                              with_hash: bool,
-                              path: Union[str, Path]) -> None:
-        """Expect the signing request to fail with parsing error."""
-        self._failing_signing(account,
-                              message,
-                              with_hash,
-                              navigate=(lambda: self.navigate_until_text(
-                                  ScreenText.SIGN_REJECT,
-                                  path)),
-                              status_code=StatusCode.PARSE_ERROR)
+            navigate=lambda: self.navigate_until_text(ScreenText.SIGN_REJECT, path))
 
 DEFAULT_SEED = 'zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra'
 

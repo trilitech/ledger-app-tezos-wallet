@@ -14,9 +14,10 @@
 
 """Tezos app backend."""
 
+from contextlib import contextmanager
 from enum import IntEnum
 from struct import unpack
-from typing import Union
+from typing import Generator, Union
 
 from ragger.backend.interface import BackendInterface, RAPDU
 from ragger.error import ExceptionRAPDU
@@ -136,6 +137,21 @@ class StatusCode(IntEnum):
 
     def __str__(self) -> str:
         return self.name
+
+    @contextmanager
+    def expected(self) -> Generator[None, None, None]:
+        """Fail if the right RAPDU code exception is not raise."""
+        try:
+            yield
+            assert self == StatusCode.OK, \
+                f"Expect fail with {self} but succeed"
+        except ExceptionRAPDU as e:
+            try:
+                status = f"{StatusCode(e.status)}"
+            except ValueError:
+                status = f"0x{e.status:x}"
+            assert self == e.status, \
+                f"Expect fail with {self} but fail with {status}"
 
 
 MAX_APDU_SIZE: int = 235
