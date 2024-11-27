@@ -21,55 +21,17 @@ from io import BytesIO
 from multiprocessing import Process, Queue
 from pathlib import Path
 import time
-from typing import Callable, Generator, List, Optional, Tuple, Union
+from typing import Callable, Generator, List, Optional, Union
 
 import requests
-import git
 from ragger.backend import SpeculosBackend
 from ragger.error import ExceptionRAPDU
 from ragger.navigator import NavInsID, NanoNavigator
 
 from .message import Message
 from .account import Account, SigType
-from .backend import StatusCode, TezosBackend, AppKind
+from .backend import StatusCode, TezosBackend
 
-version: Tuple[int, int, int] = (3, 0, 6)
-
-class TezosAPDUChecker:
-    """Helper to check APDU received."""
-
-    app_kind: AppKind
-
-    def __init__(self, app_kind: AppKind):
-        self.app_kind = app_kind
-
-    @property
-    def commit(self) -> bytes:
-        """Current commit."""
-        repo = git.Repo(".")
-        commit = repo.head.commit.hexsha[:8]
-        if repo.is_dirty():
-            commit += "*"
-        return bytes.fromhex(commit.encode('utf-8').hex() + "00")
-
-    @property
-    def version_bytes(self) -> bytes:
-        """Current version in bytes."""
-        return \
-            self.app_kind.to_bytes(1, byteorder='big') + \
-            version[0].to_bytes(1, byteorder='big') + \
-            version[1].to_bytes(1, byteorder='big') + \
-            version[2].to_bytes(1, byteorder='big')
-
-    def check_commit(self, commit: bytes) -> None:
-        """Check if the commit is the current commit."""
-        assert commit == self.commit, \
-            f"Expected commit {self.commit.hex()} but got {commit.hex()}"
-
-    def check_version(self, raw_version: bytes) -> None:
-        """Check if the version is the current version."""
-        assert raw_version == self.version_bytes, \
-            f"Expected version {self.version_bytes.hex()} but got {raw_version.hex()}"
 
 MAX_ATTEMPTS = 50
 
@@ -176,7 +138,6 @@ class TezosAppScreen():
     """Class representing Tezos app management."""
 
     backend: SpeculosTezosBackend
-    checker: TezosAPDUChecker
     path: Path
     snapshots_dir: Path
     tmp_snapshots_dir: Path
@@ -186,11 +147,8 @@ class TezosAppScreen():
 
     def __init__(self,
                  backend: SpeculosTezosBackend,
-                 app_kind: AppKind,
                  golden_run: bool):
         self.backend = backend
-        self.checker = TezosAPDUChecker(app_kind)
-
         self.path = Path(__file__).resolve().parent.parent
         self.snapshots_dir = self.path / "snapshots" / backend.firmware.name
         self.tmp_snapshots_dir = self.path / "snapshots-tmp" / backend.firmware.name

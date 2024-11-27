@@ -16,24 +16,42 @@
 
 """Gathering of tests related to app version."""
 
-from utils.app import Screen, TezosAppScreen
+import git
+
+from utils.app import TezosAppScreen
+from utils.backend import Version
+
 
 def test_version(app: TezosAppScreen):
     """Test that the app version is the same as the current version."""
-    app.assert_screen(Screen.HOME)
+    current_version = Version(Version.AppKind.WALLET, 3, 0, 6)
 
     data = app.backend.version()
 
-    app.checker.check_version(data)
+    app_version = Version.from_bytes(data)
 
-    app.quit()
+    assert current_version == app_version, \
+        f"Expected {current_version} but got {app_version}"
+
 
 def test_git(app: TezosAppScreen):
     """Test that the app commit is the same as the current git commit."""
-    app.assert_screen(Screen.HOME)
+    git_repo = git.Repo(search_parent_directories=True)
+    git_describe = git_repo.git.describe(
+        tags=True,
+        abbrev=8,
+        always=True,
+        long=True,
+        dirty=True
+    )
+    current_commit = git_describe.replace('-dirty', '*')
 
     data = app.backend.git()
 
-    app.checker.check_commit(data)
+    assert data.endswith(b'\x00'), \
+        f"Should end with by '\x00' but got {data.hex()}"
 
-    app.quit()
+    app_commit = data[:-1].decode('utf-8')
+
+    assert current_commit == app_commit, \
+        f"Expected {current_commit} but got {app_commit}"

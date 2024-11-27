@@ -15,6 +15,7 @@
 """Tezos app backend."""
 
 from enum import IntEnum
+from struct import unpack
 from typing import Union
 
 from ragger.backend.interface import BackendInterface, RAPDU
@@ -22,6 +23,53 @@ from ragger.error import ExceptionRAPDU
 
 from .account import Account, SigType
 from .message import Message
+
+
+class Version:
+    """Class representing the version."""
+
+    class AppKind(IntEnum):
+        """Class representing the kind of app."""
+
+        WALLET = 0x00
+        BAKING = 0x01
+
+        def __str__(self) -> str:
+            return self.name
+
+    app_kind: AppKind
+    major: int
+    minor: int
+    patch: int
+
+    def __init__(self,
+                 app_kind: AppKind,
+                 major: int,
+                 minor: int,
+                 patch: int):
+        self.app_kind = app_kind
+        self.major = major
+        self.minor = minor
+        self.patch = patch
+
+    def __repr__(self) -> str:
+        return f"App {self.app_kind}: {self.major}.{self.minor}.{self.patch}"
+
+    def __eq__(self, other: object):
+        if not isinstance(other, Version):
+            return NotImplemented
+        return \
+            self.app_kind == other.app_kind and \
+            self.major == other.major and \
+            self.minor == other.minor and \
+            self.patch == other.patch
+
+    @classmethod
+    def from_bytes(cls, raw: bytes) -> 'Version':
+        """Create a version from bytes."""
+        (app_kind, major, minor, patch) = unpack('<bbbb', raw)
+        return Version(Version.AppKind(app_kind), major, minor, patch)
+
 
 class Cla(IntEnum):
     """Class representing APDU class."""
@@ -89,14 +137,6 @@ class StatusCode(IntEnum):
     def __str__(self) -> str:
         return self.name
 
-class AppKind(IntEnum):
-    """Class representing the kind of app."""
-
-    WALLET = 0x00
-    BAKING = 0x01
-
-    def __str__(self) -> str:
-        return self.name
 
 MAX_APDU_SIZE: int = 235
 

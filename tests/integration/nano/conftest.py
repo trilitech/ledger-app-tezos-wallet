@@ -23,7 +23,6 @@ import pytest
 from ragger.firmware import Firmware
 
 from utils.app import TezosAppScreen, SpeculosTezosBackend, DEFAULT_SEED
-from utils.backend import AppKind
 
 FIRMWARES: List[Firmware] = [
     Firmware.NANOS,
@@ -179,7 +178,7 @@ def backend(app_path: Path,
 @pytest.fixture(scope="function")
 def app(backend: SpeculosTezosBackend, golden_run: bool) -> TezosAppScreen:
     """Get `app` for pytest."""
-    return TezosAppScreen(backend, AppKind.WALLET, golden_run)
+    return TezosAppScreen(backend, golden_run)
 
 @pytest.fixture(scope="function")
 def snapshot_dir(request) -> Path :
