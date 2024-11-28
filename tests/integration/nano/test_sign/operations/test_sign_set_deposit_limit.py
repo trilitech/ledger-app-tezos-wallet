@@ -24,8 +24,6 @@ from utils.message import SetDepositLimit
 def test_sign_set_deposit_limit(app: TezosAppScreen, snapshot_dir: Path):
     """Check signing set deposit limit"""
 
-    app.assert_screen(Screen.HOME)
-
     message = SetDepositLimit(
         source = 'tz3XeTwXXJeWNgVR3LqMcyBDdnxjbZ7TeEGH',
         fee = 60000,
@@ -44,5 +42,3 @@ def test_sign_set_deposit_limit(app: TezosAppScreen, snapshot_dir: Path):
         message=message,
         with_hash=True,
         data=data)
-
-    app.quit()

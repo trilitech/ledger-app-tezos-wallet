@@ -53,8 +53,6 @@ def _sign_too_long(app: TezosAppScreen,
         with_hash=True,
         data=data)
 
-    app.quit()
-
 def _sign_decodable_too_long(app: TezosAppScreen,
                              message: Message,
                              path: Path):
@@ -372,8 +370,6 @@ def test_reject_too_long_operation_with_too_large_at_blindsigning(app: TezosAppS
 def test_blindsign_too_deep(app: TezosAppScreen, snapshot_dir: Path):
     """Check blindsigning on too deep expression"""
 
-    app.assert_screen(Screen.HOME)
-
     expression = MichelineExpr([[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[{'int':42}]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]])
 
     def navigate() -> None:
@@ -418,12 +414,8 @@ def test_blindsign_too_deep(app: TezosAppScreen, snapshot_dir: Path):
         with_hash=True,
         data=data)
 
-    app.quit()
-
 def test_blindsign_too_large(app: TezosAppScreen, snapshot_dir: Path):
     """Check blindsigning on too large expression"""
-
-    app.assert_screen(Screen.HOME)
 
     message = MichelineExpr({'int':12345678901234567890123456789012345678901234567890123456789012345678901234567890})
 
@@ -448,8 +440,6 @@ def test_blindsign_too_large(app: TezosAppScreen, snapshot_dir: Path):
         with_hash=True,
         data=data)
 
-    app.quit()
-
 def test_blindsign_reject_from_clear(app: TezosAppScreen, snapshot_dir: Path):
     """Check blindsigning rejection"""
 
@@ -462,8 +452,6 @@ def test_blindsign_reject_from_clear(app: TezosAppScreen, snapshot_dir: Path):
             with_hash=False,
             snap_path=snapshot_dir
         )
-
-    app.quit()
 
 def test_blindsign_reject_from_blind(app: TezosAppScreen, snapshot_dir: Path):
     """Check blindsigning rejection"""
@@ -486,5 +474,3 @@ def test_blindsign_reject_from_blind(app: TezosAppScreen, snapshot_dir: Path):
             with_hash=False,
             navigate=navigate
         )
-
-    app.quit()

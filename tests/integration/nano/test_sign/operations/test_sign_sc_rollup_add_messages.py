@@ -24,8 +24,6 @@ from utils.message import ScRollupAddMessage
 def test_sign_sc_rollup_add_messages(app: TezosAppScreen, snapshot_dir: Path):
     """Check signing smart rollup add message"""
 
-    app.assert_screen(Screen.HOME)
-
     message = ScRollupAddMessage(
         source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
         fee = 10000,
@@ -44,5 +42,3 @@ def test_sign_sc_rollup_add_messages(app: TezosAppScreen, snapshot_dir: Path):
         message=message,
         with_hash=True,
         data=data)
-
-    app.quit()

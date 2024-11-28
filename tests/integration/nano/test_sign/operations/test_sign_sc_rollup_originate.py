@@ -67,5 +67,3 @@ def test_sign_sc_rollup_originate(app: TezosAppScreen, whitelist: Optional[List[
         message=message,
         with_hash=True,
         data=data)
-
-    app.quit()

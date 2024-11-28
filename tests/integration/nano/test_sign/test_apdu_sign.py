@@ -26,8 +26,6 @@ from utils.message import Message, MichelineExpr, Transaction
 def test_sign_micheline_without_hash(app: TezosAppScreen, snapshot_dir: Path):
     """Check signing micheline wihout getting hash"""
 
-    app.assert_screen(Screen.HOME)
-
     message = MichelineExpr([{'string': 'CACA'}, {'string': 'POPO'}, {'string': 'BOUDIN'}])
 
     data = app.sign(DEFAULT_ACCOUNT,
@@ -40,8 +38,6 @@ def test_sign_micheline_without_hash(app: TezosAppScreen, snapshot_dir: Path):
         with_hash=False,
         data=data)
 
-    app.quit()
-
 def test_sign_with_small_packet(app: TezosAppScreen, snapshot_dir: Path):
     """Check signing using small packet instead of full size packets"""
 
@@ -51,8 +47,6 @@ def test_sign_with_small_packet(app: TezosAppScreen, snapshot_dir: Path):
             account: Account,
             message: Message,
             path: Path) -> None:
-
-        app.assert_screen(Screen.HOME)
 
         data = send_and_navigate(
             send=lambda: app.backend.sign(account, message, apdu_size=10),
@@ -81,13 +75,9 @@ def test_sign_with_small_packet(app: TezosAppScreen, snapshot_dir: Path):
         message=message,
         path=snapshot_dir)
 
-    app.quit()
-
 @requires_device("nanosp")
 def test_nanosp_regression_press_right_works_across_apdu_recieves(app: TezosAppScreen, snapshot_dir: Path):
     """Check no need to click right two times between APDUs during signing flow"""
-
-    app.assert_screen(Screen.HOME)
 
     message = MichelineExpr([{'prim':'IF_NONE','args':[[[{'prim':'SWAP'},{'prim':'IF','args':[[{'prim':'DIP','args':[[[{'prim':'DROP','args':[{'int':1}]},{'prim':'PUSH','args':[{'prim':'unit'},{'prim':'Unit'}]},{'prim':'PUSH','args':[{'prim':'bool'},{'prim':'True'}]},{'prim':'PUSH','args':[{'prim':'string'},{'string':';L\\S?p$-Fq)VDg\n]te\no4v0_8)\"'}]}]]]}],[[{'prim':'DROP','args':[{'int':2}]},{'prim':'PUSH','args':[{'prim':'unit'},{'prim':'Unit'}]},{'prim':'PUSH','args':[{'prim':'bool'},{'prim':'False'}]},{'prim':'PUSH','args':[{'prim':'string'},{'string':'Li-%*edF6~?E[5Kmu?dyviwJ^2\"\\d$FyQ>>!>D$g(Qg'}]},{'prim':'PUSH','args':[{'prim':'string'},{'string':'*Tx<E`SiG6Yf*A^kZ\\=7?H[mOlQ\n]Ehs'}]}]]]}]],[{'prim':'IF_NONE','args':[[{'prim':'DUP'}],[[{'prim':'DROP','args':[{'int':4}]},{'prim':'PUSH','args':[{'prim':'unit'},{'prim':'Unit'}]},{'prim':'PUSH','args':[{'prim':'bool'},{'prim':'True'}]},{'prim':'PUSH','args':[{'prim':'string'},{'string':'\"\\6_4\n$k%'}]},{'prim':'PUSH','args':[{'prim':'string'},{'string':'c^1\"\\?Ey_1!EVb~9;EX;YU\n#Kj2ZT8h`U!X '}]}]]]}]]},{'prim':'SIZE'}])
 
@@ -100,5 +90,3 @@ def test_nanosp_regression_press_right_works_across_apdu_recieves(app: TezosAppS
         message=message,
         with_hash=True,
         data=data)
-
-    app.quit()

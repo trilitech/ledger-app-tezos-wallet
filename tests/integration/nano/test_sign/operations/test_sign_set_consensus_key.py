@@ -24,8 +24,6 @@ from utils.message import UpdateConsensusKey
 def test_sign_set_consensus_key(app: TezosAppScreen, snapshot_dir: Path):
     """Check signing set consensus key"""
 
-    app.assert_screen(Screen.HOME)
-
     message = UpdateConsensusKey(
         source = 'tz1dyX3B1CFYa2DfdFLyPtiJCfQRUgPVME6E',
         fee = 10000,
@@ -44,5 +42,3 @@ def test_sign_set_consensus_key(app: TezosAppScreen, snapshot_dir: Path):
         message=message,
         with_hash=True,
         data=data)
-
-    app.quit()

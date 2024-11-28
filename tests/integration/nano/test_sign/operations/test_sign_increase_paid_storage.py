@@ -24,8 +24,6 @@ from utils.message import IncreasePaidStorage
 def test_sign_increase_paid_storage(app: TezosAppScreen, snapshot_dir: Path):
     """Check signing increase paid storage"""
 
-    app.assert_screen(Screen.HOME)
-
     message = IncreasePaidStorage(
         source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
         fee = 10000,
@@ -45,5 +43,3 @@ def test_sign_increase_paid_storage(app: TezosAppScreen, snapshot_dir: Path):
         message=message,
         with_hash=True,
         data=data)
-
-    app.quit()

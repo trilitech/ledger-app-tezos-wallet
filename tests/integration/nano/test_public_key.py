@@ -70,9 +70,5 @@ def test_provide_pk(app: TezosAppScreen, account: Account, snapshot_dir: Path):
 def test_reject_pk(app: TezosAppScreen, snapshot_dir: Path):
     """Check reject pk behaviour"""
 
-    app.assert_screen(Screen.HOME)
-
     with StatusCode.REJECT.expected():
         app.reject_public_key(DEFAULT_ACCOUNT, snap_path=snapshot_dir)
-
-    app.quit()

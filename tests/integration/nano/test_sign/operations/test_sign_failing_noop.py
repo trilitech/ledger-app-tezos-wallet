@@ -24,8 +24,6 @@ from utils.message import FailingNoop
 def test_sign_failing_noop(app: TezosAppScreen, snapshot_dir: Path):
     """Check signing failing noop"""
 
-    app.assert_screen(Screen.HOME)
-
     message = FailingNoop("9f09f2952d34528c733f94615cfc39bc555619fc550dd4a67ba2208ce8e867aa3d13a6ef99dfbe32c6974aa9a2150d21eca29c3349e59c13b9081f1c11b440ac4d3455dedbe4ee0de15a8af620d4c86247d9d132de1bb6da23d5ff9d8dffda22ba9a84")
 
     data = app.sign(DEFAULT_ACCOUNT,
@@ -37,5 +35,3 @@ def test_sign_failing_noop(app: TezosAppScreen, snapshot_dir: Path):
         message=message,
         with_hash=True,
         data=data)
-
-    app.quit()

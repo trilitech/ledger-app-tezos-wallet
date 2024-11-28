@@ -24,8 +24,6 @@ from utils.message import Proposals
 def test_sign_proposals(app: TezosAppScreen, snapshot_dir: Path):
     """Check signing proposals"""
 
-    app.assert_screen(Screen.HOME)
-
     message = Proposals(
         source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
         proposals = [
@@ -44,5 +42,3 @@ def test_sign_proposals(app: TezosAppScreen, snapshot_dir: Path):
         message=message,
         with_hash=True,
         data=data)
-
-    app.quit()

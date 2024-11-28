@@ -67,8 +67,6 @@ def test_nanos_regression_batched_ops(app: TezosAppScreen, snapshot_dir: Path):
         with_hash=True,
         data=data)
 
-    app.quit()
-
 @requires_device("nanox")
 def test_nanox_regression_batched_ops(app: TezosAppScreen, snapshot_dir: Path):
     """Check signing batch operation"""
@@ -108,12 +106,9 @@ def test_nanox_regression_batched_ops(app: TezosAppScreen, snapshot_dir: Path):
         with_hash=True,
         data=data)
 
-    app.quit()
-
 def test_sign_complex_operation(app: TezosAppScreen, snapshot_dir: Path):
     """Check signing complex operation"""
 
-    app.assert_screen(Screen.HOME)
     app.setup_expert_mode()
 
     message = OperationGroup([
@@ -150,5 +145,3 @@ def test_sign_complex_operation(app: TezosAppScreen, snapshot_dir: Path):
         message=message,
         with_hash=True,
         data=data)
-
-    app.quit()

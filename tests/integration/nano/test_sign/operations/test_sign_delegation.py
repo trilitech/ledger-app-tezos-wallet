@@ -24,8 +24,6 @@ from utils.message import Delegation
 def test_sign_delegation(app: TezosAppScreen, snapshot_dir: Path):
     """Check signing delegation"""
 
-    app.assert_screen(Screen.HOME)
-
     message = Delegation(
         source = 'tz2KC42yW9FXFMJpkUooae2NFYQsM5do3E8H',
         fee = 200000,
@@ -44,5 +42,3 @@ def test_sign_delegation(app: TezosAppScreen, snapshot_dir: Path):
         message=message,
         with_hash=True,
         data=data)
-
-    app.quit()
