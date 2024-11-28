@@ -43,5 +43,3 @@ def test_sign_register_global_constant(app: TezosAppScreen, snapshot_dir: Path):
         with_hash=True,
         data=result.value
     )
-
-    app.quit()

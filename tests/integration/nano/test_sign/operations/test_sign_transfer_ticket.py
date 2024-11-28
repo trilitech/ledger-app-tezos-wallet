@@ -49,8 +49,6 @@ def test_sign_transfer_ticket(app: TezosAppScreen, snapshot_dir: Path):
         data=result.value
     )
 
-    app.quit()
-
 @requires_device("nanosp")
 def test_nanosp_regression_potential_empty_screen(app: TezosAppScreen, snapshot_dir: Path):
     """Check signing operation that display potentially empty screens"""
@@ -79,5 +77,3 @@ def test_nanosp_regression_potential_empty_screen(app: TezosAppScreen, snapshot_
         with_hash=True,
         data=result.value
     )
-
-    app.quit()

@@ -45,5 +45,3 @@ def test_sign_origination(app: TezosAppScreen, snapshot_dir: Path):
         with_hash=True,
         data=result.value
     )
-
-    app.quit()

@@ -18,13 +18,11 @@
 
 from pathlib import Path
 
-from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
+from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
 from utils.message import Reveal
 
 def test_sign_reveal(app: TezosAppScreen, snapshot_dir: Path):
     """Check signing reveal"""
-
-    app.assert_screen(Screen.HOME)
 
     message = Reveal(
         source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
@@ -43,5 +41,3 @@ def test_sign_reveal(app: TezosAppScreen, snapshot_dir: Path):
         with_hash=True,
         data=result.value
     )
-
-    app.quit()

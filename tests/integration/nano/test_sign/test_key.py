@@ -21,7 +21,7 @@ from pathlib import Path
 import pytest
 
 from utils.account import Account, SigType
-from utils.app import Screen, TezosAppScreen
+from utils.app import TezosAppScreen
 from utils.message import MichelineExpr, Transaction
 
 @pytest.mark.parametrize(
@@ -44,8 +44,6 @@ from utils.message import MichelineExpr, Transaction
 def test_sign_micheline_basic(app: TezosAppScreen, account: Account, snapshot_dir: Path):
     """Check signing with ed25519"""
 
-    app.assert_screen(Screen.HOME)
-
     message = MichelineExpr([{'string': 'CACA'}, {'string': 'POPO'}, {'string': 'BOUDIN'}])
 
     with app.backend.sign(account, message, with_hash=True) as result:
@@ -56,8 +54,6 @@ def test_sign_micheline_basic(app: TezosAppScreen, account: Account, snapshot_di
         with_hash=True,
         data=result.value
     )
-
-    app.quit()
 
 
 @pytest.mark.parametrize(
@@ -95,5 +91,3 @@ def test_sign_with_another_seed(app: TezosAppScreen, snapshot_dir: Path):
         with_hash=True,
         data=result.value
     )
-
-    app.quit()

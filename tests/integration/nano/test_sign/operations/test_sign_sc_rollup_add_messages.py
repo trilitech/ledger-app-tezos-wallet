@@ -18,13 +18,11 @@
 
 from pathlib import Path
 
-from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
+from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
 from utils.message import ScRollupAddMessage
 
 def test_sign_sc_rollup_add_messages(app: TezosAppScreen, snapshot_dir: Path):
     """Check signing smart rollup add message"""
-
-    app.assert_screen(Screen.HOME)
 
     message = ScRollupAddMessage(
         source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
@@ -43,5 +41,3 @@ def test_sign_sc_rollup_add_messages(app: TezosAppScreen, snapshot_dir: Path):
         with_hash=True,
         data=result.value
     )
-
-    app.quit()
