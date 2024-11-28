@@ -21,7 +21,7 @@ from pathlib import Path
 import pytest
 
 from utils.account import Account, PublicKey, SigType
-from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
+from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
 from utils.backend import StatusCode
 
 accounts = [

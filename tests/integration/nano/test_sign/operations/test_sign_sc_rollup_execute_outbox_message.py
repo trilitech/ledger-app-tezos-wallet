@@ -24,7 +24,7 @@ from utils.message import ScRollupExecuteOutboxMessage
 def test_sign_sc_rollup_execute_outbox_message(app: TezosAppScreen, snapshot_dir: Path):
     """Check signing smart rollup execute outbox message"""
 
-    app.setup_expert_mode()
+    app.toggle_expert_mode()
 
     message = ScRollupExecuteOutboxMessage(
         source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',

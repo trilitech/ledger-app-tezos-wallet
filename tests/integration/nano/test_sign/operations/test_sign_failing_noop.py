@@ -18,7 +18,7 @@
 
 from pathlib import Path
 
-from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
+from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
 from utils.message import FailingNoop
 
 def test_sign_failing_noop(app: TezosAppScreen, snapshot_dir: Path):

@@ -20,7 +20,7 @@ from pathlib import Path
 
 from conftest import requires_device
 from utils.account import Account
-from utils.app import send_and_navigate, Screen, TezosAppScreen, DEFAULT_ACCOUNT
+from utils.app import send_and_navigate, TezosAppScreen, DEFAULT_ACCOUNT
 from utils.message import Message, MichelineExpr, Transaction
 
 def test_sign_micheline_without_hash(app: TezosAppScreen, snapshot_dir: Path):
@@ -41,7 +41,7 @@ def test_sign_micheline_without_hash(app: TezosAppScreen, snapshot_dir: Path):
 def test_sign_with_small_packet(app: TezosAppScreen, snapshot_dir: Path):
     """Check signing using small packet instead of full size packets"""
 
-    app.setup_expert_mode()
+    app.toggle_expert_mode()
 
     def check_sign_with_small_packet(
             account: Account,

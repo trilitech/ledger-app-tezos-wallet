@@ -18,9 +18,11 @@
 
 from multiprocessing import Process, Queue
 from pathlib import Path
-from typing import Callable
+from typing import Callable, List, Union
 
-from utils.app import Screen, ScreenText, TezosAppScreen, send_and_navigate, DEFAULT_ACCOUNT
+from ragger.navigator import NavIns, NavInsID
+
+from utils.app import ScreenText, TezosAppScreen, DEFAULT_ACCOUNT
 from utils.backend import StatusCode
 from utils.message import (
     Message,
@@ -39,8 +41,8 @@ def _sign_too_long(app: TezosAppScreen,
                    message: Message,
                    navigate: Callable[[], None]):
 
-    app.setup_expert_mode()
-    app.setup_blindsign_on()
+    app.toggle_expert_mode()
+    app.toggle_blindsign()
 
     data = app.sign(
         DEFAULT_ACCOUNT,
@@ -74,8 +76,8 @@ def _reject_too_long(
         navigate: Callable[[], None]):
     """Reject a too long message"""
 
-    app.setup_expert_mode()
-    app.setup_blindsign_on()
+    app.toggle_expert_mode()
+    app.toggle_blindsign()
 
     with status_code.expected():
         app.sign(
@@ -376,22 +378,23 @@ def test_blindsign_too_deep(app: TezosAppScreen, snapshot_dir: Path):
         if app.backend.firmware.device == "nanos":
             ### Simulate `navigate_review` up to `ACCEPT_RISK` because the nanos screen can look like it hasn't changed.
 
-            def assert_screen_i(i):
-                app.assert_screen(f"{str(i).zfill(5)}", snapshot_dir / "clear")
-
-            app.backend.wait_for_text_not_on_screen(ScreenText.HOME)
-            for i in range(6):
+            instructions: List[Union[NavIns, NavInsID]] = [
                 # 'Review operation'
-                # 'Expression {{{...{{{'
-                # 'Expression {{{...{{{'
-                # 'The transaction cannot be trusted.'
-                # 'Parsing error ERR_TOO_DEEP'
-                # 'Learn More: bit.ly/ledger-tez'
-                assert_screen_i(i)
-                app.backend.right_click()
-            # 'Accept risk' screen
-            assert_screen_i(i+1)
-            app.backend.both_click()
+                NavInsID.RIGHT_CLICK,  # 'Expression {{{...{{{'
+                NavInsID.RIGHT_CLICK,  # 'Expression {{{...{{{'
+                NavInsID.RIGHT_CLICK,  # 'The transaction cannot be trusted.'
+                NavInsID.RIGHT_CLICK,  # 'Parsing error ERR_TOO_DEEP'
+                NavInsID.RIGHT_CLICK,  # 'Learn More: bit.ly/ledger-tez'
+                NavInsID.RIGHT_CLICK,  # 'Accept risk'
+                NavInsID.BOTH_CLICK,
+            ]
+
+            app.unsafe_navigate(
+                instructions=instructions,
+                screen_change_before_first_instruction=True,
+                screen_change_after_last_instruction=False,
+                snap_path=snapshot_dir / "clear",
+            )
         else:
             app.navigate_review(
                 text=ScreenText.ACCEPT_RISK,

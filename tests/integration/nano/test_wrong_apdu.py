@@ -22,14 +22,14 @@ from typing import Any, Callable, Union
 import pytest
 
 from utils.account import Account, SigType
-from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
+from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
 from utils.backend import Cla, Index, Ins, StatusCode
 from utils.message import Transaction
 
 def test_regression_continue_after_reject(app: TezosAppScreen, snapshot_dir: Path):
     """Check the app still runs after rejects signing"""
 
-    app.setup_expert_mode()
+    app.toggle_expert_mode()
 
     with StatusCode.REJECT.expected():
         app.reject_public_key(DEFAULT_ACCOUNT, snap_path=snapshot_dir / "reject_public_key")

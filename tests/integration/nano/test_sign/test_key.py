@@ -21,7 +21,7 @@ from pathlib import Path
 import pytest
 
 from utils.account import Account, SigType
-from utils.app import Screen, TezosAppScreen
+from utils.app import TezosAppScreen
 from utils.message import MichelineExpr, Transaction
 
 @pytest.mark.parametrize(
@@ -66,7 +66,7 @@ def test_sign_micheline_basic(app: TezosAppScreen, account: Account, snapshot_di
 def test_sign_with_another_seed(app: TezosAppScreen, snapshot_dir: Path):
     """Check signing using another seed than [zebra*24]"""
 
-    app.setup_expert_mode()
+    app.toggle_expert_mode()
 
     account = Account("m/44'/1729'/0'/0'",
                       SigType.ED25519,

@@ -18,7 +18,7 @@
 
 from pathlib import Path
 
-from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
+from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
 from utils.message import IncreasePaidStorage
 
 def test_sign_increase_paid_storage(app: TezosAppScreen, snapshot_dir: Path):

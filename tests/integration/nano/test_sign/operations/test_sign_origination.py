@@ -24,7 +24,7 @@ from utils.message import Origination
 def test_sign_origination(app: TezosAppScreen, snapshot_dir: Path):
     """Check signing origination"""
 
-    app.setup_expert_mode()
+    app.toggle_expert_mode()
 
     message = Origination(
         source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',

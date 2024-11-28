@@ -18,7 +18,7 @@
 
 from pathlib import Path
 
-from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
+from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
 from utils.message import UpdateConsensusKey
 
 def test_sign_set_consensus_key(app: TezosAppScreen, snapshot_dir: Path):
