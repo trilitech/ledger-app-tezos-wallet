@@ -51,7 +51,7 @@ def test_sign_micheline_basic(app: TezosAppScreen, account: Account, snapshot_di
     data = app.sign(account,
                     message,
                     with_hash=True,
-                    path=snapshot_dir)
+                    snap_path=snapshot_dir)
 
     account.check_signature(
         message=message,
@@ -91,7 +91,7 @@ def test_sign_with_another_seed(app: TezosAppScreen, snapshot_dir: Path):
     data = app.sign(account,
                     message,
                     with_hash=True,
-                    path=snapshot_dir)
+                    snap_path=snapshot_dir)
 
     account.check_signature(
         message=message,

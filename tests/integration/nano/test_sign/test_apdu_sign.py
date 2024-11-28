@@ -20,7 +20,7 @@ from pathlib import Path
 
 from conftest import requires_device
 from utils.account import Account
-from utils.app import send_and_navigate, Screen, ScreenText, TezosAppScreen, DEFAULT_ACCOUNT
+from utils.app import send_and_navigate, Screen, TezosAppScreen, DEFAULT_ACCOUNT
 from utils.message import Message, MichelineExpr, Transaction
 
 def test_sign_micheline_without_hash(app: TezosAppScreen, snapshot_dir: Path):
@@ -33,7 +33,7 @@ def test_sign_micheline_without_hash(app: TezosAppScreen, snapshot_dir: Path):
     data = app.sign(DEFAULT_ACCOUNT,
                     message,
                     with_hash=False,
-                    path=snapshot_dir)
+                    snap_path=snapshot_dir)
 
     DEFAULT_ACCOUNT.check_signature(
         message=message,
@@ -56,7 +56,8 @@ def test_sign_with_small_packet(app: TezosAppScreen, snapshot_dir: Path):
 
         data = send_and_navigate(
             send=lambda: app.backend.sign(account, message, apdu_size=10),
-            navigate=lambda: app.navigate_until_text(ScreenText.SIGN_ACCEPT, path))
+            navigate=lambda: app.navigate_sign_accept(snap_path=path)
+        )
 
         account.check_signature(
             message=message,
@@ -93,7 +94,7 @@ def test_nanosp_regression_press_right_works_across_apdu_recieves(app: TezosAppS
     data = app.sign(DEFAULT_ACCOUNT,
                     message,
                     with_hash=True,
-                    path=snapshot_dir)
+                    snap_path=snapshot_dir)
 
     DEFAULT_ACCOUNT.check_signature(
         message=message,

@@ -63,7 +63,7 @@ def test_parsing_error(app: TezosAppScreen, raw_msg: str, snapshot_dir: Path):
             DEFAULT_ACCOUNT,
             RawMessage(raw_msg),
             with_hash=True,
-            path=snapshot_dir
+            snap_path=snapshot_dir
         )
 
     app.quit()
@@ -82,11 +82,14 @@ def test_parsing_hard_fail(app: TezosAppScreen, raw_msg: str, snapshot_dir: Path
     app.setup_expert_mode()
 
     with StatusCode.UNEXPECTED_SIGN_STATE.expected():
-        app._sign(
+        app.sign(
             DEFAULT_ACCOUNT,
             RawMessage(raw_msg),
             with_hash=True,
-            navigate=lambda: app.navigate_until_text(ScreenText.HOME, snapshot_dir)
+            navigate=lambda: app.navigate_review(
+                text=ScreenText.HOME,
+                snap_path=snapshot_dir
+            )
         )
 
     app.quit()

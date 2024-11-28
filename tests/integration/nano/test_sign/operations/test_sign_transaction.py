@@ -42,7 +42,7 @@ def test_sign_transaction(app: TezosAppScreen, snapshot_dir: Path):
     data = app.sign(DEFAULT_ACCOUNT,
                     message,
                     with_hash=True,
-                    path=snapshot_dir)
+                    snap_path=snapshot_dir)
 
     DEFAULT_ACCOUNT.check_signature(
         message=message,
@@ -72,7 +72,7 @@ def test_reject_transaction(app: TezosAppScreen, snapshot_dir: Path):
         app.reject_signing(DEFAULT_ACCOUNT,
                            message,
                            with_hash=True,
-                           path=snapshot_dir)
+                           snap_path=snapshot_dir)
 
     app.quit()
 
@@ -94,7 +94,7 @@ def test_sign_simple_transaction(app: TezosAppScreen, snapshot_dir: Path):
     data = app.sign(DEFAULT_ACCOUNT,
                     message,
                     with_hash=True,
-                    path=snapshot_dir)
+                    snap_path=snapshot_dir)
 
     DEFAULT_ACCOUNT.check_signature(
         message=message,
@@ -121,11 +121,11 @@ def test_too_complex_transaction(app: TezosAppScreen, snapshot_dir: Path):
     )
 
     with StatusCode.REJECT.expected():
-        app._sign(
+        app.sign(
             DEFAULT_ACCOUNT,
             message,
             with_hash=True,
-            navigate=lambda: app.navigate_until_text(ScreenText.BACK_HOME, snapshot_dir)
+            navigate=lambda: app.navigate_review(text=ScreenText.BACK_HOME, snap_path=snapshot_dir)
         )
 
     app.quit()
@@ -149,7 +149,7 @@ def test_sign_stake_transaction(app: TezosAppScreen, snapshot_dir: Path):
     data = app.sign(DEFAULT_ACCOUNT,
                     message,
                     with_hash=True,
-                    path=snapshot_dir)
+                    snap_path=snapshot_dir)
 
     DEFAULT_ACCOUNT.check_signature(
         message=message,
@@ -177,7 +177,7 @@ def test_sign_unstake_transaction(app: TezosAppScreen, snapshot_dir: Path):
     data = app.sign(DEFAULT_ACCOUNT,
                     message,
                     with_hash=True,
-                    path=snapshot_dir)
+                    snap_path=snapshot_dir)
 
     DEFAULT_ACCOUNT.check_signature(
         message=message,
@@ -205,7 +205,7 @@ def test_sign_finalize_unstake_transaction(app: TezosAppScreen, snapshot_dir: Pa
     data = app.sign(DEFAULT_ACCOUNT,
                     message,
                     with_hash=True,
-                    path=snapshot_dir)
+                    snap_path=snapshot_dir)
 
     DEFAULT_ACCOUNT.check_signature(
         message=message,
@@ -242,7 +242,7 @@ def test_sign_set_delegate_parameters_transaction(app: TezosAppScreen, snapshot_
     data = app.sign(DEFAULT_ACCOUNT,
                     message,
                     with_hash=True,
-                    path=snapshot_dir)
+                    snap_path=snapshot_dir)
 
     DEFAULT_ACCOUNT.check_signature(
         message=message,
@@ -271,7 +271,7 @@ def test_sign_with_long_hash(app: TezosAppScreen, snapshot_dir: Path):
     data = app.sign(DEFAULT_ACCOUNT,
                     message,
                     with_hash=True,
-                    path=snapshot_dir)
+                    snap_path=snapshot_dir)
 
     DEFAULT_ACCOUNT.check_signature(
         message=message,
@@ -300,7 +300,7 @@ def test_ensure_always_clearsign(app: TezosAppScreen, snapshot_dir: Path):
     data = app.sign(DEFAULT_ACCOUNT,
                     message,
                     with_hash=True,
-                    path=snapshot_dir)
+                    snap_path=snapshot_dir)
 
     DEFAULT_ACCOUNT.check_signature(
         message=message,

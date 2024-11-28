@@ -59,7 +59,7 @@ def test_provide_pk(app: TezosAppScreen, account: Account, snapshot_dir: Path):
 
     expected_public_key = account.key.public_key()
 
-    data = app.provide_public_key(account, snapshot_dir)
+    data = app.provide_public_key(account, snap_path=snapshot_dir)
 
     public_key = PublicKey.from_bytes(data, account.sig_type)
 
@@ -73,6 +73,6 @@ def test_reject_pk(app: TezosAppScreen, snapshot_dir: Path):
     app.assert_screen(Screen.HOME)
 
     with StatusCode.REJECT.expected():
-        app.reject_public_key(DEFAULT_ACCOUNT, snapshot_dir)
+        app.reject_public_key(DEFAULT_ACCOUNT, snap_path=snapshot_dir)
 
     app.quit()
