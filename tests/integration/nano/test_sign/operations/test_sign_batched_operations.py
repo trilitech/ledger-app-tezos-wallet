@@ -20,7 +20,7 @@ from pathlib import Path
 
 from conftest import requires_device
 
-from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
+from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
 from utils.message import (
     OperationGroup,
     Origination,
@@ -66,8 +66,6 @@ def test_nanos_regression_batched_ops(app: TezosAppScreen, snapshot_dir: Path):
         data=result.value
     )
 
-    app.quit()
-
 @requires_device("nanox")
 def test_nanox_regression_batched_ops(app: TezosAppScreen, snapshot_dir: Path):
     """Check signing batch operation"""
@@ -106,12 +104,9 @@ def test_nanox_regression_batched_ops(app: TezosAppScreen, snapshot_dir: Path):
         data=result.value
     )
 
-    app.quit()
-
 def test_sign_complex_operation(app: TezosAppScreen, snapshot_dir: Path):
     """Check signing complex operation"""
 
-    app.assert_screen(Screen.HOME)
     app.setup_expert_mode()
 
     message = OperationGroup([
@@ -147,5 +142,3 @@ def test_sign_complex_operation(app: TezosAppScreen, snapshot_dir: Path):
         with_hash=True,
         data=result.value
     )
-
-    app.quit()

@@ -45,5 +45,3 @@ def test_sign_sc_rollup_execute_outbox_message(app: TezosAppScreen, snapshot_dir
         with_hash=True,
         data=result.value
     )
-
-    app.quit()

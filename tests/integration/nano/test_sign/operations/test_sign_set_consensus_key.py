@@ -18,13 +18,11 @@
 
 from pathlib import Path
 
-from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
+from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
 from utils.message import UpdateConsensusKey
 
 def test_sign_set_consensus_key(app: TezosAppScreen, snapshot_dir: Path):
     """Check signing set consensus key"""
-
-    app.assert_screen(Screen.HOME)
 
     message = UpdateConsensusKey(
         source = 'tz1dyX3B1CFYa2DfdFLyPtiJCfQRUgPVME6E',
@@ -43,5 +41,3 @@ def test_sign_set_consensus_key(app: TezosAppScreen, snapshot_dir: Path):
         with_hash=True,
         data=result.value
     )
-
-    app.quit()

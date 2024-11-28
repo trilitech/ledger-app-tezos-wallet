@@ -18,13 +18,11 @@
 
 from pathlib import Path
 
-from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
+from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
 from utils.message import Delegation
 
 def test_sign_delegation(app: TezosAppScreen, snapshot_dir: Path):
     """Check signing delegation"""
-
-    app.assert_screen(Screen.HOME)
 
     message = Delegation(
         source = 'tz2KC42yW9FXFMJpkUooae2NFYQsM5do3E8H',
@@ -43,5 +41,3 @@ def test_sign_delegation(app: TezosAppScreen, snapshot_dir: Path):
         with_hash=True,
         data=result.value
     )
-
-    app.quit()

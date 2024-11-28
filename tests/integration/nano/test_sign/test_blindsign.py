@@ -19,7 +19,7 @@
 from pathlib import Path
 from typing import Callable
 
-from utils.app import Screen, ScreenText, TezosAppScreen, DEFAULT_ACCOUNT
+from utils.app import ScreenText, TezosAppScreen, DEFAULT_ACCOUNT
 from utils.backend import StatusCode
 from utils.message import (
     Message,
@@ -49,8 +49,6 @@ def _sign_too_long(app: TezosAppScreen,
         with_hash=True,
         data=result.value
     )
-
-    app.quit()
 
 def _sign_decodable_too_long(app: TezosAppScreen,
                              message: Message,
@@ -343,8 +341,6 @@ def test_reject_too_long_operation_with_too_large_at_blindsigning(app: TezosAppS
 def test_blindsign_too_deep(app: TezosAppScreen, snapshot_dir: Path):
     """Check blindsigning on too deep expression"""
 
-    app.assert_screen(Screen.HOME)
-
     expression = MichelineExpr([[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[{'int':42}]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]])
 
     with app.backend.sign(DEFAULT_ACCOUNT, expression, with_hash=True) as result:
@@ -378,12 +374,8 @@ def test_blindsign_too_deep(app: TezosAppScreen, snapshot_dir: Path):
         data=result.value
     )
 
-    app.quit()
-
 def test_blindsign_too_large(app: TezosAppScreen, snapshot_dir: Path):
     """Check blindsigning on too large expression"""
-
-    app.assert_screen(Screen.HOME)
 
     message = MichelineExpr({'int':12345678901234567890123456789012345678901234567890123456789012345678901234567890})
 
@@ -397,8 +389,6 @@ def test_blindsign_too_large(app: TezosAppScreen, snapshot_dir: Path):
         data=result.value
     )
 
-    app.quit()
-
 def test_blindsign_reject_from_clear(app: TezosAppScreen, snapshot_dir: Path):
     """Check blindsigning rejection"""
 
@@ -407,8 +397,6 @@ def test_blindsign_reject_from_clear(app: TezosAppScreen, snapshot_dir: Path):
     with StatusCode.PARSE_ERROR.expected():
         with app.backend.sign(DEFAULT_ACCOUNT, expression, with_hash=False):
             app.reject_sign(snap_path=snapshot_dir)
-
-    app.quit()
 
 def test_blindsign_reject_from_blind(app: TezosAppScreen, snapshot_dir: Path):
     """Check blindsigning rejection"""
@@ -419,5 +407,3 @@ def test_blindsign_reject_from_blind(app: TezosAppScreen, snapshot_dir: Path):
         with app.backend.sign(DEFAULT_ACCOUNT, expression, with_hash=False):
             app.accept_sign_risk(snap_path=snapshot_dir / "clear")
             app.reject_sign(snap_path=snapshot_dir / "blind")
-
-    app.quit()

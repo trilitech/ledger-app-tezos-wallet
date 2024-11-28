@@ -21,7 +21,7 @@ from pathlib import Path
 import pytest
 
 from utils.account import Account, PublicKey, SigType
-from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
+from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
 from utils.backend import StatusCode
 
 accounts = [
@@ -71,10 +71,6 @@ def test_provide_pk(app: TezosAppScreen, account: Account, snapshot_dir: Path):
 def test_reject_pk(app: TezosAppScreen, snapshot_dir: Path):
     """Check reject pk behaviour"""
 
-    app.assert_screen(Screen.HOME)
-
     with StatusCode.REJECT.expected():
         with app.backend.prompt_public_key(DEFAULT_ACCOUNT):
             app.reject_public_key(snap_path=snapshot_dir)
-
-    app.quit()
