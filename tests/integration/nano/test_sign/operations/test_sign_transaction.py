@@ -25,7 +25,7 @@ from utils.message import Transaction
 def test_sign_transaction(app: TezosAppScreen, snapshot_dir: Path):
     """Check signing transaction"""
 
-    app.setup_expert_mode()
+    app.toggle_expert_mode()
 
     message = Transaction(
         source = 'tz2JPgTWZZpxZZLqHMfS69UAy1UHm4Aw5iHu',
@@ -51,7 +51,7 @@ def test_sign_transaction(app: TezosAppScreen, snapshot_dir: Path):
 def test_reject_transaction(app: TezosAppScreen, snapshot_dir: Path):
     """Check reject transaction"""
 
-    app.setup_expert_mode()
+    app.toggle_expert_mode()
 
     message = Transaction(
         source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
@@ -72,7 +72,7 @@ def test_reject_transaction(app: TezosAppScreen, snapshot_dir: Path):
 def test_sign_simple_transaction(app: TezosAppScreen, snapshot_dir: Path):
     """Check sign not complex transaction"""
 
-    app.setup_expert_mode()
+    app.toggle_expert_mode()
 
     message = Transaction(
         source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
@@ -115,7 +115,7 @@ def test_too_complex_transaction(app: TezosAppScreen, snapshot_dir: Path):
 def test_sign_stake_transaction(app: TezosAppScreen, snapshot_dir: Path):
     """Check sign stake"""
 
-    app.setup_expert_mode()
+    app.toggle_expert_mode()
 
     message = Transaction(
         source = 'tz2WmivuMG8MMRKMEmzKRMMxMApxZQWYNS4W',
@@ -140,7 +140,7 @@ def test_sign_stake_transaction(app: TezosAppScreen, snapshot_dir: Path):
 def test_sign_unstake_transaction(app: TezosAppScreen, snapshot_dir: Path):
     """Check sign unstake"""
 
-    app.setup_expert_mode()
+    app.toggle_expert_mode()
 
     message = Transaction(
         source = 'tz2WmivuMG8MMRKMEmzKRMMxMApxZQWYNS4W',
@@ -165,7 +165,7 @@ def test_sign_unstake_transaction(app: TezosAppScreen, snapshot_dir: Path):
 def test_sign_finalize_unstake_transaction(app: TezosAppScreen, snapshot_dir: Path):
     """Check sign finalize_unstake"""
 
-    app.setup_expert_mode()
+    app.toggle_expert_mode()
 
     message = Transaction(
         source = 'tz2WmivuMG8MMRKMEmzKRMMxMApxZQWYNS4W',
@@ -190,7 +190,7 @@ def test_sign_finalize_unstake_transaction(app: TezosAppScreen, snapshot_dir: Pa
 def test_sign_set_delegate_parameters_transaction(app: TezosAppScreen, snapshot_dir: Path):
     """Check sign set delegate parameters"""
 
-    app.setup_expert_mode()
+    app.toggle_expert_mode()
 
     message = Transaction(
         source = 'tz2WmivuMG8MMRKMEmzKRMMxMApxZQWYNS4W',
@@ -224,7 +224,7 @@ def test_sign_set_delegate_parameters_transaction(app: TezosAppScreen, snapshot_
 def test_sign_with_long_hash(app: TezosAppScreen, snapshot_dir: Path):
     """Check signing transaction with a long destination hash"""
 
-    app.setup_expert_mode()
+    app.toggle_expert_mode()
 
     message = Transaction(
         source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
@@ -250,7 +250,7 @@ def test_sign_with_long_hash(app: TezosAppScreen, snapshot_dir: Path):
 def test_ensure_always_clearsign(app: TezosAppScreen, snapshot_dir: Path):
     """Check clear signing never blindsign"""
 
-    app.setup_expert_mode()
+    app.toggle_expert_mode()
 
     message = Transaction(
         source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',

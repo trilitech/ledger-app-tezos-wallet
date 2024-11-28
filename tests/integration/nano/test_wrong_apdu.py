@@ -29,7 +29,7 @@ from utils.message import Transaction
 def test_regression_continue_after_reject(app: TezosAppScreen, snapshot_dir: Path):
     """Check the app still runs after rejects signing"""
 
-    app.setup_expert_mode()
+    app.toggle_expert_mode()
 
     with StatusCode.REJECT.expected():
         with app.backend.prompt_public_key(DEFAULT_ACCOUNT):

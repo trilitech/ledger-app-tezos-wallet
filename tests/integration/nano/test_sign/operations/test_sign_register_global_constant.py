@@ -24,7 +24,7 @@ from utils.message import RegisterGlobalConstant
 def test_sign_register_global_constant(app: TezosAppScreen, snapshot_dir: Path):
     """Check signing register global constant"""
 
-    app.setup_expert_mode()
+    app.toggle_expert_mode()
 
     message = RegisterGlobalConstant(
         source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
