@@ -44,7 +44,7 @@ from utils.message import ScRollupOriginate
 def test_sign_sc_rollup_originate(app: TezosAppScreen, whitelist: Optional[List[str]], snapshot_dir: Path):
     """Check signing smart rollup originate"""
 
-    app.setup_expert_mode()
+    app.toggle_expert_mode()
 
     message = ScRollupOriginate(
         source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',

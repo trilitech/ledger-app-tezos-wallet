@@ -56,7 +56,7 @@ from utils.message import RawMessage
 def test_parsing_error(app: TezosAppScreen, raw_msg: str, snapshot_dir: Path):
     """Check parsing error handling"""
 
-    app.setup_expert_mode()
+    app.toggle_expert_mode()
 
     with StatusCode.PARSE_ERROR.expected():
         with app.backend.sign(
@@ -77,7 +77,7 @@ def test_parsing_error(app: TezosAppScreen, raw_msg: str, snapshot_dir: Path):
 def test_parsing_hard_fail(app: TezosAppScreen, raw_msg: str, snapshot_dir: Path):
     """Check parsing error hard failing"""
 
-    app.setup_expert_mode()
+    app.toggle_expert_mode()
 
     with StatusCode.UNEXPECTED_SIGN_STATE.expected():
         with app.backend.sign(

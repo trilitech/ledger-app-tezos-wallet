@@ -16,12 +16,10 @@
 """Tezos app backend."""
 
 from enum import Enum
-from io import BytesIO
 from pathlib import Path
 import time
 from typing import List, Optional, Union
 
-import requests
 from ragger.backend import SpeculosBackend
 from ragger.navigator import NavIns, NavInsID, NanoNavigator
 
@@ -70,21 +68,6 @@ class SpeculosTezosBackend(TezosBackend, SpeculosBackend):
             self._client.process = process
             return self
 
-class Screen(str, Enum):
-    """Class representing common, known app screens."""
-
-    HOME = "home"
-    VERSION = "version"
-    SETTINGS = "settings"
-    SETTINGS_EXPERT_MODE_DISABLED = "settings_expert_mode_disabled"
-    SETTINGS_EXPERT_MODE_ENABLED = "settings_expert_mode_enabled"
-    SETTINGS_BLINDSIGN_ON = "settings_blindsign_on"
-    SETTINGS_BLINDSIGN_OFF = "settings_blindsign_off"
-    SETTINGS_BACK = "back"
-    QUIT = "quit"
-
-    def __str__(self) -> str:
-        return self.value
 
 class ScreenText(str, Enum):
     """Class representing common, known app screen's text."""
@@ -112,10 +95,6 @@ class TezosAppScreen():
 
     backend: SpeculosTezosBackend
     _root_dir: Path
-    snapshots_dir: Path
-    tmp_snapshots_dir: Path
-    snapshotted: List[str]
-    golden_run: bool
     navigator: NanoNavigator
 
     def __init__(self,
@@ -123,15 +102,6 @@ class TezosAppScreen():
                  golden_run: bool):
         self.backend = backend
         self._root_dir = Path(__file__).resolve().parent.parent
-        self.snapshots_dir = self._root_dir / "snapshots" / backend.firmware.name
-        self.tmp_snapshots_dir = self._root_dir / "snapshots-tmp" / backend.firmware.name
-        if not self.snapshots_dir.is_dir() and golden_run:
-            self.snapshots_dir.mkdir(parents=True)
-        if not self.tmp_snapshots_dir.is_dir():
-            self.tmp_snapshots_dir.mkdir(parents=True)
-        self.snapshotted = []
-
-        self.golden_run = golden_run
         self.navigator = NanoNavigator(backend, backend.firmware, golden_run)
 
     def __enter__(self) -> "TezosAppScreen":
@@ -140,90 +110,6 @@ class TezosAppScreen():
 
     def __exit__(self, *args):
         self.backend.__exit__(*args)
-
-    def assert_screen(self,
-                      screen: Union[str, Screen],
-                      path: Optional[Union[str, Path]] = None) -> None:
-        """Check if the screen is the one expected."""
-        golden_run = self.golden_run and screen not in self.snapshotted
-        if golden_run:
-            self.snapshotted = self.snapshotted + [screen]
-            input(f"Press ENTER to snapshot {screen}")
-
-        snapshots_dir = self.snapshots_dir if path is None \
-            else self.snapshots_dir / path
-        tmp_snapshots_dir = self.tmp_snapshots_dir if path is None \
-            else self.tmp_snapshots_dir / path
-
-        if not snapshots_dir.is_dir() and golden_run:
-            snapshots_dir.mkdir(parents=True)
-        if not tmp_snapshots_dir.is_dir():
-            tmp_snapshots_dir.mkdir(parents=True)
-
-        path = snapshots_dir / f'{screen}.png'
-        tmp_path = tmp_snapshots_dir / f'{screen}.png'
-        def check():
-            print(f"- Expecting {screen} -")
-            assert self.backend.compare_screen_with_snapshot(
-                path,
-                tmp_snap_path=tmp_path,
-                golden_run=golden_run)
-
-        with_retry(check)
-        self.backend._last_screenshot = BytesIO(self.backend._client.get_screenshot())
-
-    def setup_expert_mode(self) -> None:
-        """Enable expert-mode from home screen."""
-        self.assert_screen(Screen.HOME)
-        self.backend.right_click()
-        self.assert_screen(Screen.VERSION)
-        self.backend.right_click()
-        self.assert_screen(Screen.SETTINGS)
-        self.backend.both_click()
-        self.assert_screen(Screen.SETTINGS_EXPERT_MODE_DISABLED)
-        self.backend.both_click()
-        self.assert_screen(Screen.SETTINGS_EXPERT_MODE_ENABLED)
-        self.backend.left_click()
-        self.assert_screen(Screen.SETTINGS_BACK)
-        self.backend.both_click()
-        self.assert_screen(Screen.HOME)
-
-    def setup_blindsign_on(self) -> None:
-        """Enable blindsign from home screen."""
-        self.assert_screen(Screen.HOME)
-        self.backend.right_click()
-        self.assert_screen(Screen.VERSION)
-        self.backend.right_click()
-        self.assert_screen(Screen.SETTINGS)
-        self.backend.both_click()
-        # expert_mode screen
-        self.backend.right_click()
-        self.assert_screen(Screen.SETTINGS_BLINDSIGN_OFF)
-        self.backend.both_click()
-        self.assert_screen(Screen.SETTINGS_BLINDSIGN_ON)
-        self.backend.right_click()
-        self.assert_screen(Screen.SETTINGS_BACK)
-        self.backend.both_click()
-        self.assert_screen(Screen.HOME)
-
-    def _quit(self) -> None:
-        """Ensure quiting exit the app."""
-        self.assert_screen(Screen.QUIT)
-        try:
-            self.backend.both_click()
-            assert False, "Must have lost connection with speculos"
-        except requests.exceptions.ConnectionError:
-            pass
-
-    def quit(self) -> None:
-        """Quit the app from home screen."""
-        self.assert_screen(Screen.HOME)
-        self.backend.right_click()
-        self.assert_screen(Screen.VERSION)
-        self.backend.right_click()
-        self.assert_screen(Screen.SETTINGS)
-        self.backend.right_click()
-        self._quit()
 
     def navigate(self,
                  snap_path: Optional[Path] = None,
@@ -250,6 +136,99 @@ class TezosAppScreen():
             validation_instructions=validation_instructions,
             **kwargs
         )
+
+    def unsafe_navigate(
+            self,
+            instructions: List[Union[NavIns, NavInsID]],
+            snap_path: Optional[Path] = None,
+            timeout: float = 10.0,
+            screen_change_before_first_instruction: bool = False,
+            screen_change_after_last_instruction: bool = True,
+            snap_start_idx: int = 0) -> None:
+        """Navigate using instructions but do not wait for screens to
+        change.  Only use this function if consecutive screens are the
+        same.
+
+        Function based on `ragger.navigator.navigate_and_compare`
+
+        """
+        self.backend.pause_ticker()
+        self.navigator._run_instruction(
+            NavIns(NavInsID.WAIT, (0, )),
+            timeout,
+            wait_for_screen_change=screen_change_before_first_instruction,
+            path=self._root_dir,
+            test_case_name=snap_path,
+            snap_idx=snap_start_idx
+        )
+        for idx, instruction in enumerate(instructions):
+            if idx + 1 != len(instructions) or screen_change_after_last_instruction:
+                self.navigator._run_instruction(
+                    instruction,
+                    timeout,
+                    wait_for_screen_change=False,
+                    path=self._root_dir,
+                    test_case_name=snap_path,
+                    snap_idx=snap_start_idx + idx + 1
+                )
+            else:
+                self.navigator._run_instruction(
+                    instruction,
+                    timeout,
+                    wait_for_screen_change=False,
+                    snap_idx=snap_start_idx + idx + 1
+                )
+        self.backend.resume_ticker()
+
+    def navigate_to_settings(self, **kwargs) -> int:
+        """Navigate from Home screen to settings."""
+        instructions: List[Union[NavIns, NavInsID]] = [
+            # Home
+            NavInsID.RIGHT_CLICK,  # Version
+            NavInsID.RIGHT_CLICK,  # Settings
+            NavInsID.BOTH_CLICK,
+        ]
+        self.navigate(instructions=instructions, **kwargs)
+        snap_start_idx = kwargs['snap_start_idx'] if 'snap_start_idx' in kwargs else 0
+        return snap_start_idx + len(instructions)
+
+    def toggle_expert_mode(self, **kwargs) -> int:
+        """Enable expert-mode from home screen."""
+        go_to_settings_kwargs = kwargs.copy()
+        go_to_settings_kwargs['screen_change_after_last_instruction'] = True
+        snap_idx = self.navigate_to_settings(**go_to_settings_kwargs)
+
+        instructions: List[Union[NavIns, NavInsID]] = [
+            # Expert Mode
+            NavInsID.BOTH_CLICK,
+            NavInsID.RIGHT_CLICK,  # Blind Sign
+            NavInsID.RIGHT_CLICK,  # Back
+            NavInsID.BOTH_CLICK,  # Home
+        ]
+        kwargs['snap_start_idx'] = snap_idx
+        kwargs['screen_change_before_first_instruction'] = False
+        self.navigate(instructions=instructions, **kwargs)
+
+        return snap_idx + len(instructions)
+
+    def toggle_blindsign(self, **kwargs) -> int:
+        """Enable blindsign from home screen."""
+        go_to_settings_kwargs = kwargs.copy()
+        go_to_settings_kwargs['screen_change_after_last_instruction'] = True
+        snap_idx = self.navigate_to_settings(**go_to_settings_kwargs)
+
+        instructions: List[Union[NavIns, NavInsID]] = [
+            # Expert Mode
+            NavInsID.RIGHT_CLICK,  # Blind Sign
+            NavInsID.BOTH_CLICK,
+            NavInsID.RIGHT_CLICK,  # Back
+            NavInsID.BOTH_CLICK,  # Home
+        ]
+        kwargs['snap_start_idx'] = snap_idx
+        kwargs['screen_change_before_first_instruction'] = False
+        self.navigate(instructions=instructions, **kwargs)
+
+        return snap_idx + len(instructions)
 
     def navigate_forward(self, **kwargs) -> None:
         """Navigate forward until the text is found."""

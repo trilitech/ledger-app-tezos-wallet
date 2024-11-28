@@ -25,7 +25,7 @@ from utils.message import TransferTicket
 def test_sign_transfer_ticket(app: TezosAppScreen, snapshot_dir: Path):
     """Check signing transfer ticket"""
 
-    app.setup_expert_mode()
+    app.toggle_expert_mode()
 
     message = TransferTicket(
         source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
@@ -53,7 +53,7 @@ def test_sign_transfer_ticket(app: TezosAppScreen, snapshot_dir: Path):
 def test_nanosp_regression_potential_empty_screen(app: TezosAppScreen, snapshot_dir: Path):
     """Check signing operation that display potentially empty screens"""
 
-    app.setup_expert_mode()
+    app.toggle_expert_mode()
 
     message = TransferTicket(
         source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',

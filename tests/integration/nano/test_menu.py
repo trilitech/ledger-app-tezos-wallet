@@ -16,68 +16,66 @@
 
 """Gathering of tests related to app menu."""
 
-from utils.app import Screen, TezosAppScreen
+from pathlib import Path
+from typing import List, Union
 
-def test_menu(app: TezosAppScreen):
-    """Check main menu flow"""
-    app.assert_screen(Screen.HOME)
-    app.backend.right_click()
-    app.assert_screen(Screen.VERSION)
-    app.backend.both_click()
-    app.assert_screen(Screen.VERSION)
-    app.backend.right_click()
-    app.assert_screen(Screen.SETTINGS)
-    app.backend.right_click()
-    app.assert_screen(Screen.QUIT)
-    app.backend.left_click()
-    app.assert_screen(Screen.SETTINGS)
-    app.backend.left_click()
-    app.assert_screen(Screen.VERSION)
-    app.backend.left_click()
-    app.assert_screen(Screen.HOME)
-    app.backend.both_click()
-    app.assert_screen(Screen.HOME)
-    app.backend.left_click()
-    app.assert_screen(Screen.QUIT)
-    app.backend.right_click()
-    app.assert_screen(Screen.HOME)
-    app.backend.right_click()
-    app.assert_screen(Screen.VERSION)
-    app.backend.right_click()
-    app.assert_screen(Screen.SETTINGS)
-    app.backend.right_click()
-    app.assert_screen(Screen.QUIT)
-    app.backend.right_click()
-    app.assert_screen(Screen.HOME)
-    app.backend.right_click()
-    app.assert_screen(Screen.VERSION)
+import requests
 
-    # Check Settings menu operation
-    app.backend.right_click()
-    app.assert_screen(Screen.SETTINGS)
-    app.backend.both_click()
-    app.assert_screen(Screen.SETTINGS_EXPERT_MODE_DISABLED)
-    app.backend.both_click()
-    app.assert_screen(Screen.SETTINGS_EXPERT_MODE_ENABLED)
-    app.backend.right_click()
-    app.assert_screen(Screen.SETTINGS_BLINDSIGN_OFF)
-    app.backend.both_click()
-    app.assert_screen(Screen.SETTINGS_BLINDSIGN_ON)
-    app.backend.both_click()
-    app.assert_screen(Screen.SETTINGS_BLINDSIGN_OFF)
-    app.backend.right_click()
-    app.assert_screen(Screen.SETTINGS_BACK)
+from ragger.navigator import NavIns, NavInsID
+
+from utils.app import TezosAppScreen
+
+
+def test_home_menu(app: TezosAppScreen, snapshot_dir: Path):
+    """Check home menu flow"""
+    instructions: List[Union[NavIns, NavInsID]] = [
+        # Home
+        NavInsID.RIGHT_CLICK,  # Version
+        NavInsID.RIGHT_CLICK,  # Settings
+        NavInsID.RIGHT_CLICK,  # Quit
+    ]
+    app.navigate(
+        instructions=instructions,
+        snap_path=snapshot_dir,
+    )
+
+
+def test_settings_menu(app: TezosAppScreen, snapshot_dir: Path):
+    """Check settings menu flow"""
+    app.navigate_to_settings()
+    instructions: List[Union[NavIns, NavInsID]] = [
+        # Expert Mode
+        NavInsID.RIGHT_CLICK,  # Blind Sign
+        NavInsID.RIGHT_CLICK,  # Back
+        NavInsID.BOTH_CLICK,  # Home
+    ]
+    app.navigate(
+        instructions=instructions,
+        snap_path=snapshot_dir
+    )
+
+
+def test_toggle_expert_mode(app: TezosAppScreen, snapshot_dir: Path):
+    """Check settings' expert_mode toggle"""
+    snap_idx = app.toggle_expert_mode(snap_path=snapshot_dir)
+    # Toggle back
+    app.toggle_expert_mode(snap_start_idx=snap_idx, snap_path=snapshot_dir)
+
+
+def test_toggle_blindsign(app: TezosAppScreen, snapshot_dir: Path):
+    """Check settings' blindsign toggle"""
+    snap_idx = app.toggle_blindsign(snap_path=snapshot_dir)
+    # Toggle back
+    app.toggle_blindsign(snap_start_idx=snap_idx, snap_path=snapshot_dir)
+
+
+def test_quit(app: TezosAppScreen):
+    """Check quit app"""
+    # Home
     app.backend.left_click()
-    app.assert_screen(Screen.SETTINGS_BLINDSIGN_OFF)
-    app.backend.left_click()
-    app.assert_screen(Screen.SETTINGS_EXPERT_MODE_ENABLED)
-    app.backend.left_click()
-    app.assert_screen(Screen.SETTINGS_BACK)
-    app.backend.right_click()
-    app.assert_screen(Screen.SETTINGS_EXPERT_MODE_ENABLED)
-    app.backend.left_click()
-    app.assert_screen(Screen.SETTINGS_BACK)
-    app.backend.both_click()
-    app.assert_screen(Screen.HOME)
-    app.backend.left_click()
-    app._quit()
+    app.backend.wait_for_screen_change()  # Quit
+    try:
+        app.backend.both_click()
+        assert False, "Must have lost connection with speculos"
+    except requests.exceptions.ConnectionError:
+        pass
