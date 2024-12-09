@@ -18,10 +18,12 @@ from contextlib import contextmanager
 from enum import IntEnum
 from multiprocessing.pool import ThreadPool
 from struct import unpack
+import time
 from typing import Callable, Generator, TypeVar, Union
 
 from types import SimpleNamespace
 
+from ragger.backend import SpeculosBackend
 from ragger.backend.interface import BackendInterface, RAPDU
 from ragger.error import ExceptionRAPDU
 
@@ -275,3 +277,44 @@ class TezosBackend(BackendInterface):
             assert not data, f"No data expected but got {data.hex()}"
 
         assert False, "We should have already returned"
+
+MAX_ATTEMPTS = 50
+
+def with_retry(f, attempts=MAX_ATTEMPTS):
+    """Try f until it succeeds or has been executed attempts times."""
+    while True:
+        try:
+            return f()
+        except Exception as e:
+            if attempts <= 0:
+                print("- with_retry: attempts exhausted -")
+                raise e
+        attempts -= 1
+        # Give plenty of time for speculos to update - can take a long time on CI machines
+        time.sleep(0.5)
+
+class SpeculosTezosBackend(TezosBackend, SpeculosBackend):
+    """Class representing Tezos app running on Speculos."""
+
+    # speculos can be slow to start up in a slow environment.
+    # Here, we expect a little more
+    def __enter__(self) -> "SpeculosTezosBackend":
+        try:
+            super().__enter__()
+            return self
+        except Exception:
+            process = self._client.process
+            try:
+                with_retry(self._client._wait_until_ready, attempts=5)
+                super().__enter__()
+            except Exception as e:
+                self._client.stop()
+                # do not forget to close the first process
+                self._client.process = process
+                self._client.stop()
+                raise e
+            # replace the new process by the first one
+            self._client.process.kill()
+            self._client.process.wait()
+            self._client.process = process
+            return self

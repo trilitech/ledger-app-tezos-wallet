@@ -21,9 +21,11 @@ from typing import Dict, Generator, List, Union
 
 import pytest
 from ragger.firmware import Firmware
+from ragger.navigator import NanoNavigator
 
 from utils.account import Account, DEFAULT_ACCOUNT, DEFAULT_SEED
-from utils.app import TezosAppScreen, SpeculosTezosBackend
+from utils.backend import TezosBackend, SpeculosTezosBackend
+from utils.navigator import TezosNavigator
 
 FIRMWARES: List[Firmware] = [
     Firmware.NANOS,
@@ -163,7 +165,7 @@ def backend(app_path: Path,
             port: int,
             display: bool,
             seed: str,
-            speculos_args: List[str]) -> Generator[SpeculosTezosBackend, None, None]:
+            speculos_args: List[str]) -> Generator[TezosBackend, None, None]:
     """Get `backend` for pytest."""
 
     if display:
@@ -183,9 +185,10 @@ def backend(app_path: Path,
         yield b
 
 @pytest.fixture(scope="function")
-def app(backend: SpeculosTezosBackend, golden_run: bool) -> TezosAppScreen:
-    """Get `app` for pytest."""
-    return TezosAppScreen(backend, golden_run)
+def tezos_navigator(backend: TezosBackend, golden_run: bool) -> TezosNavigator:
+    """Get `navigator` for pytest."""
+    navigator = NanoNavigator(backend, backend.firmware, golden_run)
+    return TezosNavigator(backend, navigator)
 
 @pytest.fixture(scope="function")
 def snapshot_dir(request) -> Path :

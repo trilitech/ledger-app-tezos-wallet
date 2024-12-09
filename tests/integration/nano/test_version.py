@@ -18,15 +18,14 @@
 
 import git
 
-from utils.app import TezosAppScreen
-from utils.backend import Version
+from utils.backend import TezosBackend, Version
 
 
-def test_version(app: TezosAppScreen):
+def test_version(backend: TezosBackend):
     """Test that the app version is the same as the current version."""
     current_version = Version(Version.AppKind.WALLET, 3, 0, 6)
 
-    data = app.backend.version()
+    data = backend.version()
 
     app_version = Version.from_bytes(data)
 
@@ -34,7 +33,7 @@ def test_version(app: TezosAppScreen):
         f"Expected {current_version} but got {app_version}"
 
 
-def test_git(app: TezosAppScreen):
+def test_git(backend: TezosBackend):
     """Test that the app commit is the same as the current git commit."""
     git_repo = git.Repo(search_parent_directories=True)
     git_describe = git_repo.git.describe(
@@ -46,7 +45,7 @@ def test_git(app: TezosAppScreen):
     )
     current_commit = git_describe.replace('-dirty', '*')
 
-    data = app.backend.git()
+    data = backend.git()
 
     assert data.endswith(b'\x00'), \
         f"Should end with by '\x00' but got {data.hex()}"

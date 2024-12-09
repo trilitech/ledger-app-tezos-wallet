@@ -21,8 +21,8 @@ from pathlib import Path
 import pytest
 
 from utils.account import Account, PublicKey, SigType
-from utils.app import TezosAppScreen
-from utils.backend import StatusCode
+from utils.backend import TezosBackend, StatusCode
+from utils.navigator import TezosNavigator
 
 accounts = [
     Account("m/44'/1729'/0'/0'",
@@ -40,12 +40,12 @@ accounts = [
 ]
 
 @pytest.mark.parametrize("account", accounts, ids=lambda account: f"{account.sig_type}")
-def test_get_pk(app: TezosAppScreen, account: Account):
+def test_get_pk(backend: TezosBackend, account: Account):
     """Test that public keys get from the app are correct."""
 
     expected_public_key = account.key.public_key()
 
-    data = app.backend.get_public_key(account)
+    data = backend.get_public_key(account)
 
     public_key = PublicKey.from_bytes(data, account.sig_type)
 
@@ -54,13 +54,18 @@ def test_get_pk(app: TezosAppScreen, account: Account):
 
 
 @pytest.mark.parametrize("account", accounts, ids=lambda account: f"{account.sig_type}")
-def test_provide_pk(app: TezosAppScreen, account: Account, snapshot_dir: Path):
+def test_provide_pk(
+        backend: TezosBackend,
+        tezos_navigator: TezosNavigator,
+        account: Account,
+        snapshot_dir: Path
+):
     """Test that public keys get from the app are correct and correctly displayed."""
 
     expected_public_key = account.key.public_key()
 
-    with app.backend.prompt_public_key(account) as result:
-        app.accept_public_key(snap_path=snapshot_dir)
+    with backend.prompt_public_key(account) as result:
+        tezos_navigator.accept_public_key(snap_path=snapshot_dir)
 
     public_key = PublicKey.from_bytes(result.value, account.sig_type)
 
@@ -68,9 +73,14 @@ def test_provide_pk(app: TezosAppScreen, account: Account, snapshot_dir: Path):
         f"Expected public key {expected_public_key} but got {public_key}"
 
 
-def test_reject_pk(app: TezosAppScreen, account: Account, snapshot_dir: Path):
+def test_reject_pk(
+        backend: TezosBackend,
+        tezos_navigator: TezosNavigator,
+        account: Account,
+        snapshot_dir: Path
+):
     """Check reject pk behaviour"""
 
     with StatusCode.REJECT.expected():
-        with app.backend.prompt_public_key(account):
-            app.reject_public_key(snap_path=snapshot_dir)
+        with backend.prompt_public_key(account):
+            tezos_navigator.reject_public_key(snap_path=snapshot_dir)

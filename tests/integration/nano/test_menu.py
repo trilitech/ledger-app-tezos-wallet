@@ -23,10 +23,11 @@ import requests
 
 from ragger.navigator import NavIns, NavInsID
 
-from utils.app import TezosAppScreen
+from utils.backend import TezosBackend
+from utils.navigator import TezosNavigator
 
 
-def test_home_menu(app: TezosAppScreen, snapshot_dir: Path):
+def test_home_menu(tezos_navigator: TezosNavigator, snapshot_dir: Path):
     """Check home menu flow"""
     instructions: List[Union[NavIns, NavInsID]] = [
         # Home
@@ -34,48 +35,48 @@ def test_home_menu(app: TezosAppScreen, snapshot_dir: Path):
         NavInsID.RIGHT_CLICK,  # Settings
         NavInsID.RIGHT_CLICK,  # Quit
     ]
-    app.navigate(
+    tezos_navigator.navigate(
         instructions=instructions,
         snap_path=snapshot_dir,
     )
 
 
-def test_settings_menu(app: TezosAppScreen, snapshot_dir: Path):
+def test_settings_menu(tezos_navigator: TezosNavigator, snapshot_dir: Path):
     """Check settings menu flow"""
-    app.navigate_to_settings()
+    tezos_navigator.navigate_to_settings()
     instructions: List[Union[NavIns, NavInsID]] = [
         # Expert Mode
         NavInsID.RIGHT_CLICK,  # Blind Sign
         NavInsID.RIGHT_CLICK,  # Back
         NavInsID.BOTH_CLICK,  # Home
     ]
-    app.navigate(
+    tezos_navigator.navigate(
         instructions=instructions,
         snap_path=snapshot_dir
     )
 
 
-def test_toggle_expert_mode(app: TezosAppScreen, snapshot_dir: Path):
+def test_toggle_expert_mode(tezos_navigator: TezosNavigator, snapshot_dir: Path):
     """Check settings' expert_mode toggle"""
-    snap_idx = app.toggle_expert_mode(snap_path=snapshot_dir)
+    snap_idx = tezos_navigator.toggle_expert_mode(snap_path=snapshot_dir)
     # Toggle back
-    app.toggle_expert_mode(snap_start_idx=snap_idx, snap_path=snapshot_dir)
+    tezos_navigator.toggle_expert_mode(snap_start_idx=snap_idx, snap_path=snapshot_dir)
 
 
-def test_toggle_blindsign(app: TezosAppScreen, snapshot_dir: Path):
+def test_toggle_blindsign(tezos_navigator: TezosNavigator, snapshot_dir: Path):
     """Check settings' blindsign toggle"""
-    snap_idx = app.toggle_blindsign(snap_path=snapshot_dir)
+    snap_idx = tezos_navigator.toggle_blindsign(snap_path=snapshot_dir)
     # Toggle back
-    app.toggle_blindsign(snap_start_idx=snap_idx, snap_path=snapshot_dir)
+    tezos_navigator.toggle_blindsign(snap_start_idx=snap_idx, snap_path=snapshot_dir)
 
 
-def test_quit(app: TezosAppScreen):
+def test_quit(backend: TezosBackend):
     """Check quit app"""
     # Home
-    app.backend.left_click()
-    app.backend.wait_for_screen_change()  # Quit
+    backend.left_click()
+    backend.wait_for_screen_change()  # Quit
     try:
-        app.backend.both_click()
+        backend.both_click()
         assert False, "Must have lost connection with speculos"
     except requests.exceptions.ConnectionError:
         pass

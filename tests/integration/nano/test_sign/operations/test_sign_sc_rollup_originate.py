@@ -22,8 +22,9 @@ from typing import List, Optional
 import pytest
 
 from utils.account import Account
-from utils.app import TezosAppScreen
+from utils.backend import TezosBackend
 from utils.message import ScRollupOriginate
+from utils.navigator import TezosNavigator
 
 
 @pytest.mark.parametrize(
@@ -42,10 +43,16 @@ from utils.message import ScRollupOriginate
             "with_whitelist",
         ],
 )
-def test_sign_sc_rollup_originate(app: TezosAppScreen, account: Account, whitelist: Optional[List[str]], snapshot_dir: Path):
+def test_sign_sc_rollup_originate(
+        backend: TezosBackend,
+        tezos_navigator: TezosNavigator,
+        account: Account,
+        whitelist: Optional[List[str]],
+        snapshot_dir: Path
+):
     """Check signing smart rollup originate"""
 
-    app.toggle_expert_mode()
+    tezos_navigator.toggle_expert_mode()
 
     message = ScRollupOriginate(
         source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
@@ -59,8 +66,8 @@ def test_sign_sc_rollup_originate(app: TezosAppScreen, account: Account, whiteli
         whitelist = whitelist
     )
 
-    with app.backend.sign(account, message, with_hash=True) as result:
-        app.accept_sign(snap_path=snapshot_dir)
+    with backend.sign(account, message, with_hash=True) as result:
+        tezos_navigator.accept_sign(snap_path=snapshot_dir)
 
     account.check_signature(
         message=message,

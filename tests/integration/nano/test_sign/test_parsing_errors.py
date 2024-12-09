@@ -21,9 +21,10 @@ from pathlib import Path
 import pytest
 
 from utils.account import Account
-from utils.app import TezosAppScreen
-from utils.backend import StatusCode
+from utils.backend import StatusCode, TezosBackend
 from utils.message import RawMessage
+from utils.navigator import ScreenText, TezosNavigator
+
 
 # Operation (0): Transaction
 # Source: tz2JPgTWZZpxZZLqHMfS69UAy1UHm4Aw5iHu
@@ -54,18 +55,24 @@ from utils.message import RawMessage
         "one_byte_added_inside",
     ]
 )
-def test_parsing_error(app: TezosAppScreen, raw_msg: str, account: Account, snapshot_dir: Path):
+def test_parsing_error(
+        backend: TezosBackend,
+        tezos_navigator: TezosNavigator,
+        raw_msg: str,
+        account: Account,
+        snapshot_dir: Path
+):
     """Check parsing error handling"""
 
-    app.toggle_expert_mode()
+    tezos_navigator.toggle_expert_mode()
 
     with StatusCode.PARSE_ERROR.expected():
-        with app.backend.sign(
+        with backend.sign(
                 account,
                 RawMessage(raw_msg),
                 with_hash=True
         ):
-            app.reject_sign(snap_path=snapshot_dir)
+            tezos_navigator.reject_sign(snap_path=snapshot_dir)
 
 @pytest.mark.parametrize(
     "raw_msg", [
@@ -75,15 +82,21 @@ def test_parsing_error(app: TezosAppScreen, raw_msg: str, account: Account, snap
         "wrong_last_packet",
     ]
 )
-def test_parsing_hard_fail(app: TezosAppScreen, raw_msg: str, account: Account, snapshot_dir: Path):
+def test_parsing_hard_fail(
+        backend: TezosBackend,
+        tezos_navigator: TezosNavigator,
+        raw_msg: str,
+        account: Account,
+        snapshot_dir: Path
+):
     """Check parsing error hard failing"""
 
-    app.toggle_expert_mode()
+    tezos_navigator.toggle_expert_mode()
 
     with StatusCode.UNEXPECTED_SIGN_STATE.expected():
-        with app.backend.sign(
+        with backend.sign(
                 account,
                 RawMessage(raw_msg),
                 with_hash=True
         ):
-            app.hard_reject_sign(snap_path=snapshot_dir)
+            tezos_navigator.hard_reject_sign(snap_path=snapshot_dir)

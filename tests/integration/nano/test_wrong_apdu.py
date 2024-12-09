@@ -22,20 +22,25 @@ from typing import Any, Callable, Union
 import pytest
 
 from utils.account import Account, SigType
-from utils.app import TezosAppScreen
-from utils.backend import Cla, Index, Ins, StatusCode
+from utils.backend import Cla, TezosBackend, Index, Ins, StatusCode
 from utils.message import Transaction
+from utils.navigator import TezosNavigator
 
-def test_regression_continue_after_reject(app: TezosAppScreen, account: Account, snapshot_dir: Path):
+
+def test_regression_continue_after_reject(
+        backend: TezosBackend,
+        tezos_navigator: TezosNavigator,
+        account: Account,
+        snapshot_dir: Path):
     """Check the app still runs after rejects signing"""
 
-    app.toggle_expert_mode()
+    tezos_navigator.toggle_expert_mode()
 
     with StatusCode.REJECT.expected():
-        with app.backend.prompt_public_key(account):
-            app.reject_public_key(snap_path=snapshot_dir / "reject_public_key")
+        with backend.prompt_public_key(account):
+            tezos_navigator.reject_public_key(snap_path=snapshot_dir / "reject_public_key")
 
-    app.backend.wait_for_home_screen()
+    backend.wait_for_home_screen()
 
     message = Transaction(
         source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
@@ -50,13 +55,13 @@ def test_regression_continue_after_reject(app: TezosAppScreen, account: Account,
     )
 
     with StatusCode.REJECT.expected():
-        with app.backend.sign(account, message, with_hash=True):
-            app.reject_sign(snap_path=snapshot_dir / "reject_signing")
+        with backend.sign(account, message, with_hash=True):
+            tezos_navigator.reject_sign(snap_path=snapshot_dir / "reject_signing")
 
-    app.backend.get_public_key(account)
+    backend.get_public_key(account)
 
 
-def test_change_sign_instruction(app: TezosAppScreen, account: Account):
+def test_change_sign_instruction(backend: TezosBackend, account: Account):
     """Check signing instruction changes behaviour"""
 
     message = Transaction(
@@ -72,67 +77,71 @@ def test_change_sign_instruction(app: TezosAppScreen, account: Account):
     )
     payload=bytes(message)
 
-    app.backend._ask_sign(Ins.SIGN_WITH_HASH, account)
+    backend._ask_sign(Ins.SIGN_WITH_HASH, account)
 
     with StatusCode.INVALID_INS.expected():
-        app.backend._continue_sign(Ins.SIGN,
-                                   payload,
-                                   last=True)
+        backend._continue_sign(
+            Ins.SIGN,
+            payload,
+            last=True)
 
-    app.backend._ask_sign(Ins.SIGN, account)
+    backend._ask_sign(Ins.SIGN, account)
 
     with StatusCode.INVALID_INS.expected():
-        app.backend._continue_sign(Ins.SIGN_WITH_HASH,
-                                   payload,
-                                   last=True)
+        backend._continue_sign(
+            Ins.SIGN_WITH_HASH,
+            payload,
+            last=True)
 
-def test_mixing_command(app: TezosAppScreen, account: Account):
+def test_mixing_command(backend: TezosBackend, account: Account):
     """Check that mixing instruction fails"""
 
-    app.backend._ask_sign(Ins.SIGN, account)
+    backend._ask_sign(Ins.SIGN, account)
     with StatusCode.UNEXPECTED_STATE.expected():
-        app.backend.version()
+        backend.version()
 
-    app.backend._ask_sign(Ins.SIGN_WITH_HASH, account)
+    backend._ask_sign(Ins.SIGN_WITH_HASH, account)
     with StatusCode.UNEXPECTED_STATE.expected():
-        app.backend._ask_sign(Ins.SIGN, account)
+        backend._ask_sign(Ins.SIGN, account)
 
-    app.backend._ask_sign(Ins.SIGN, account)
+    backend._ask_sign(Ins.SIGN, account)
     with StatusCode.UNEXPECTED_STATE.expected():
-        app.backend._ask_sign(Ins.SIGN_WITH_HASH, account)
+        backend._ask_sign(Ins.SIGN_WITH_HASH, account)
 
-    app.backend._ask_sign(Ins.SIGN, account)
+    backend._ask_sign(Ins.SIGN, account)
     with StatusCode.UNEXPECTED_STATE.expected():
-        with app.backend.prompt_public_key(account):
+        with backend.prompt_public_key(account):
             pass
 
-    app.backend._ask_sign(Ins.SIGN, account)
+    backend._ask_sign(Ins.SIGN, account)
     with StatusCode.UNEXPECTED_STATE.expected():
-        app.backend.get_public_key(account)
+        backend.get_public_key(account)
 
-    app.backend._ask_sign(Ins.SIGN, account)
+    backend._ask_sign(Ins.SIGN, account)
     with StatusCode.UNEXPECTED_STATE.expected():
-        app.backend.git()
+        backend.git()
 
 @pytest.mark.parametrize("ins", [Ins.GET_PUBLIC_KEY, Ins.PROMPT_PUBLIC_KEY], ids=lambda ins: f"{ins}")
 @pytest.mark.parametrize("index", [Index.OTHER, Index.LAST], ids=lambda index: f"{index}")
-def test_wrong_index(app: TezosAppScreen, account: Account, ins: Ins, index: Index):
+def test_wrong_index(backend: TezosBackend, account: Account, ins: Ins, index: Index):
     """Check wrong apdu index behaviour"""
 
     with StatusCode.WRONG_PARAM.expected():
-        app.backend._exchange(ins,
-                              index=index,
-                              sig_type=account.sig_type,
-                              payload=account.path)
+        backend._exchange(
+            ins,
+            index=index,
+            sig_type=account.sig_type,
+            payload=account.path
+        )
 
 
 @pytest.mark.parametrize(
     "sender",
     [
-        lambda app, account: app.backend._provide_public_key(account, with_prompt=False),
-        lambda app, account: app.backend._provide_public_key(account, with_prompt=True),
-        lambda app, account: app.backend._ask_sign(Ins.SIGN, account),
-        lambda app, account: app.backend._ask_sign(Ins.SIGN_WITH_HASH, account)
+        lambda backend, account: backend._provide_public_key(account, with_prompt=False),
+        lambda backend, account: backend._provide_public_key(account, with_prompt=True),
+        lambda backend, account: backend._ask_sign(Ins.SIGN, account),
+        lambda backend, account: backend._ask_sign(Ins.SIGN_WITH_HASH, account)
     ],
     ids=[
         "get_pk_without_prompt",
@@ -141,21 +150,21 @@ def test_wrong_index(app: TezosAppScreen, account: Account, ins: Ins, index: Ind
         "sign_with_hash",
     ]
 )
-def test_wrong_derivation_type(app: TezosAppScreen, sender: Callable[[TezosAppScreen, Account], Any]):
+def test_wrong_derivation_type(backend: TezosBackend, sender: Callable[[TezosBackend, Account], Any]):
     """Check wrong derivation type behaviour"""
     account = Account("m/44'/1729'/0'/0'", 0x04, "__unused__")
 
     with StatusCode.WRONG_PARAM.expected():
-        sender(app, account)
+        sender(backend, account)
 
 
 @pytest.mark.parametrize(
     "sender",
     [
-        lambda app, account: app.backend._provide_public_key(account, with_prompt=False),
-        lambda app, account: app.backend._provide_public_key(account, with_prompt=True),
-        lambda app, account: app.backend._ask_sign(Ins.SIGN, account),
-        lambda app, account: app.backend._ask_sign(Ins.SIGN_WITH_HASH, account)
+        lambda backend, account: backend._provide_public_key(account, with_prompt=False),
+        lambda backend, account: backend._provide_public_key(account, with_prompt=True),
+        lambda backend, account: backend._ask_sign(Ins.SIGN, account),
+        lambda backend, account: backend._ask_sign(Ins.SIGN_WITH_HASH, account)
     ],
     ids=[
         "get_pk_without_prompt",
@@ -187,16 +196,16 @@ def test_wrong_derivation_type(app: TezosAppScreen, sender: Callable[[TezosAppSc
     ]
 )
 def test_wrong_derivation_path(
-        app: TezosAppScreen,
+        backend: TezosBackend,
         account: Account,
-        sender: Callable[[TezosAppScreen, Account], Any]):
+        sender: Callable[[TezosBackend, Account], Any]):
     """Check wrong derivation path behaviour"""
 
     with StatusCode.WRONG_LENGTH_FOR_INS.expected():
-        sender(app, account)
+        sender(backend, account)
 
 @pytest.mark.parametrize("class_", [0x00, 0x81])
-def test_wrong_class(app: TezosAppScreen, class_: int):
+def test_wrong_class(backend: TezosBackend, class_: int):
     """Check wrong apdu class behaviour"""
 
     raw = \
@@ -207,7 +216,7 @@ def test_wrong_class(app: TezosAppScreen, class_: int):
         int(0x00).to_bytes(1, 'big')
 
     with StatusCode.CLASS.expected():
-        app.backend.exchange_raw(raw)
+        backend.exchange_raw(raw)
 
 @pytest.mark.parametrize(
     "size, data",
@@ -217,7 +226,7 @@ def test_wrong_class(app: TezosAppScreen, class_: int):
     ],
     ids=lambda param: f"size={param}" if isinstance(param, int) else f"data={param}"
 )
-def test_wrong_apdu_length(app: TezosAppScreen, size: int, data: bytes):
+def test_wrong_apdu_length(backend: TezosBackend, size: int, data: bytes):
     """Check wrong apdu length behaviour"""
 
     raw = \
@@ -229,7 +238,7 @@ def test_wrong_apdu_length(app: TezosAppScreen, size: int, data: bytes):
         data
 
     with StatusCode.WRONG_LENGTH_FOR_INS.expected():
-        app.backend.exchange_raw(raw)
+        backend.exchange_raw(raw)
 
 @pytest.mark.parametrize(
     "ins",
@@ -248,8 +257,8 @@ def test_wrong_apdu_length(app: TezosAppScreen, size: int, data: bytes):
     ],
     ids=lambda ins: f"ins={ins}"
 )
-def test_unimplemented_commands(app: TezosAppScreen, ins: Union[int, Ins]):
+def test_unimplemented_commands(backend: TezosBackend, ins: Union[int, Ins]):
     """Check unimplemented commands"""
 
     with StatusCode.INVALID_INS.expected():
-        app.backend._exchange(ins)
+        backend._exchange(ins)
