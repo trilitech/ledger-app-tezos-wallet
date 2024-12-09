@@ -19,14 +19,20 @@
 from pathlib import Path
 
 from utils.account import Account
-from utils.app import TezosAppScreen
-from utils.backend import StatusCode
+from utils.backend import StatusCode, TezosBackend
 from utils.message import Transaction
+from utils.navigator import ScreenText, TezosNavigator
 
-def test_sign_transaction(app: TezosAppScreen, account: Account, snapshot_dir: Path):
+
+def test_sign_transaction(
+        backend: TezosBackend,
+        tezos_navigator: TezosNavigator,
+        account: Account,
+        snapshot_dir: Path
+):
     """Check signing transaction"""
 
-    app.toggle_expert_mode()
+    tezos_navigator.toggle_expert_mode()
 
     message = Transaction(
         source = 'tz2JPgTWZZpxZZLqHMfS69UAy1UHm4Aw5iHu',
@@ -40,8 +46,8 @@ def test_sign_transaction(app: TezosAppScreen, account: Account, snapshot_dir: P
         parameter = {'prim': 'CAR'}
     )
 
-    with app.backend.sign(account, message, with_hash=True) as result:
-        app.accept_sign(snap_path=snapshot_dir)
+    with backend.sign(account, message, with_hash=True) as result:
+        tezos_navigator.accept_sign(snap_path=snapshot_dir)
 
     account.check_signature(
         message=message,
@@ -49,10 +55,15 @@ def test_sign_transaction(app: TezosAppScreen, account: Account, snapshot_dir: P
         data=result.value
     )
 
-def test_reject_transaction(app: TezosAppScreen, account: Account, snapshot_dir: Path):
+def test_reject_transaction(
+        backend: TezosBackend,
+        tezos_navigator: TezosNavigator,
+        account: Account,
+        snapshot_dir: Path
+):
     """Check reject transaction"""
 
-    app.toggle_expert_mode()
+    tezos_navigator.toggle_expert_mode()
 
     message = Transaction(
         source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
@@ -67,13 +78,18 @@ def test_reject_transaction(app: TezosAppScreen, account: Account, snapshot_dir:
     )
 
     with StatusCode.REJECT.expected():
-        with app.backend.sign(account, message, with_hash=True):
-            app.reject_sign(snap_path=snapshot_dir)
+        with backend.sign(account, message, with_hash=True):
+            tezos_navigator.reject_sign(snap_path=snapshot_dir)
 
-def test_sign_simple_transaction(app: TezosAppScreen, account: Account, snapshot_dir: Path):
+def test_sign_simple_transaction(
+        backend: TezosBackend,
+        tezos_navigator: TezosNavigator,
+        account: Account,
+        snapshot_dir: Path
+):
     """Check sign not complex transaction"""
 
-    app.toggle_expert_mode()
+    tezos_navigator.toggle_expert_mode()
 
     message = Transaction(
         source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
@@ -85,8 +101,8 @@ def test_sign_simple_transaction(app: TezosAppScreen, account: Account, snapshot
         amount = 10000
     )
 
-    with app.backend.sign(account, message, with_hash=True) as result:
-        app.accept_sign(snap_path=snapshot_dir)
+    with backend.sign(account, message, with_hash=True) as result:
+        tezos_navigator.accept_sign(snap_path=snapshot_dir)
 
     account.check_signature(
         message=message,
@@ -94,7 +110,12 @@ def test_sign_simple_transaction(app: TezosAppScreen, account: Account, snapshot
         data=result.value
     )
 
-def test_too_complex_transaction(app: TezosAppScreen, account: Account, snapshot_dir: Path):
+def test_too_complex_transaction(
+        backend: TezosBackend,
+        tezos_navigator: TezosNavigator,
+        account: Account,
+        snapshot_dir: Path
+):
     """Check sign complex transaction"""
 
     message = Transaction(
@@ -110,13 +131,18 @@ def test_too_complex_transaction(app: TezosAppScreen, account: Account, snapshot
     )
 
     with StatusCode.REJECT.expected():
-        with app.backend.sign(account, message, with_hash=True):
-            app.expert_reject_sign(snap_path=snapshot_dir)
+        with backend.sign(account, message, with_hash=True):
+            tezos_navigator.expert_reject_sign(snap_path=snapshot_dir)
 
-def test_sign_stake_transaction(app: TezosAppScreen, account: Account, snapshot_dir: Path):
+def test_sign_stake_transaction(
+        backend: TezosBackend,
+        tezos_navigator: TezosNavigator,
+        account: Account,
+        snapshot_dir: Path
+):
     """Check sign stake"""
 
-    app.toggle_expert_mode()
+    tezos_navigator.toggle_expert_mode()
 
     message = Transaction(
         source = 'tz2WmivuMG8MMRKMEmzKRMMxMApxZQWYNS4W',
@@ -129,8 +155,8 @@ def test_sign_stake_transaction(app: TezosAppScreen, account: Account, snapshot_
         entrypoint = 'stake',
     )
 
-    with app.backend.sign(account, message, with_hash=True) as result:
-        app.accept_sign(snap_path=snapshot_dir)
+    with backend.sign(account, message, with_hash=True) as result:
+        tezos_navigator.accept_sign(snap_path=snapshot_dir)
 
     account.check_signature(
         message=message,
@@ -138,10 +164,15 @@ def test_sign_stake_transaction(app: TezosAppScreen, account: Account, snapshot_
         data=result.value
     )
 
-def test_sign_unstake_transaction(app: TezosAppScreen, account: Account, snapshot_dir: Path):
+def test_sign_unstake_transaction(
+        backend: TezosBackend,
+        tezos_navigator: TezosNavigator,
+        account: Account,
+        snapshot_dir: Path
+):
     """Check sign unstake"""
 
-    app.toggle_expert_mode()
+    tezos_navigator.toggle_expert_mode()
 
     message = Transaction(
         source = 'tz2WmivuMG8MMRKMEmzKRMMxMApxZQWYNS4W',
@@ -154,8 +185,8 @@ def test_sign_unstake_transaction(app: TezosAppScreen, account: Account, snapsho
         entrypoint = 'unstake'
     )
 
-    with app.backend.sign(account, message, with_hash=True) as result:
-        app.accept_sign(snap_path=snapshot_dir)
+    with backend.sign(account, message, with_hash=True) as result:
+        tezos_navigator.accept_sign(snap_path=snapshot_dir)
 
     account.check_signature(
         message=message,
@@ -163,10 +194,15 @@ def test_sign_unstake_transaction(app: TezosAppScreen, account: Account, snapsho
         data=result.value
     )
 
-def test_sign_finalize_unstake_transaction(app: TezosAppScreen, account: Account, snapshot_dir: Path):
+def test_sign_finalize_unstake_transaction(
+        backend: TezosBackend,
+        tezos_navigator: TezosNavigator,
+        account: Account,
+        snapshot_dir: Path
+):
     """Check sign finalize_unstake"""
 
-    app.toggle_expert_mode()
+    tezos_navigator.toggle_expert_mode()
 
     message = Transaction(
         source = 'tz2WmivuMG8MMRKMEmzKRMMxMApxZQWYNS4W',
@@ -179,8 +215,8 @@ def test_sign_finalize_unstake_transaction(app: TezosAppScreen, account: Account
         entrypoint = 'finalize_unstake'
     )
 
-    with app.backend.sign(account, message, with_hash=True) as result:
-        app.accept_sign(snap_path=snapshot_dir)
+    with backend.sign(account, message, with_hash=True) as result:
+        tezos_navigator.accept_sign(snap_path=snapshot_dir)
 
     account.check_signature(
         message=message,
@@ -188,10 +224,15 @@ def test_sign_finalize_unstake_transaction(app: TezosAppScreen, account: Account
         data=result.value
     )
 
-def test_sign_set_delegate_parameters_transaction(app: TezosAppScreen, account: Account, snapshot_dir: Path):
+def test_sign_set_delegate_parameters_transaction(
+        backend: TezosBackend,
+        tezos_navigator: TezosNavigator,
+        account: Account,
+        snapshot_dir: Path
+):
     """Check sign set delegate parameters"""
 
-    app.toggle_expert_mode()
+    tezos_navigator.toggle_expert_mode()
 
     message = Transaction(
         source = 'tz2WmivuMG8MMRKMEmzKRMMxMApxZQWYNS4W',
@@ -213,8 +254,8 @@ def test_sign_set_delegate_parameters_transaction(app: TezosAppScreen, account: 
                      ]}
     )
 
-    with app.backend.sign(account, message, with_hash=True) as result:
-        app.accept_sign(snap_path=snapshot_dir)
+    with backend.sign(account, message, with_hash=True) as result:
+        tezos_navigator.accept_sign(snap_path=snapshot_dir)
 
     account.check_signature(
         message=message,
@@ -222,10 +263,15 @@ def test_sign_set_delegate_parameters_transaction(app: TezosAppScreen, account: 
         data=result.value
     )
 
-def test_sign_with_long_hash(app: TezosAppScreen, account: Account, snapshot_dir: Path):
+def test_sign_with_long_hash(
+        backend: TezosBackend,
+        tezos_navigator: TezosNavigator,
+        account: Account,
+        snapshot_dir: Path
+):
     """Check signing transaction with a long destination hash"""
 
-    app.toggle_expert_mode()
+    tezos_navigator.toggle_expert_mode()
 
     message = Transaction(
         source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
@@ -239,8 +285,8 @@ def test_sign_with_long_hash(app: TezosAppScreen, account: Account, snapshot_dir
         parameter = {'int': 0}
     )
 
-    with app.backend.sign(account, message, with_hash=True) as result:
-        app.accept_sign(snap_path=snapshot_dir)
+    with backend.sign(account, message, with_hash=True) as result:
+        tezos_navigator.accept_sign(snap_path=snapshot_dir)
 
     account.check_signature(
         message=message,
@@ -248,10 +294,15 @@ def test_sign_with_long_hash(app: TezosAppScreen, account: Account, snapshot_dir
         data=result.value
     )
 
-def test_ensure_always_clearsign(app: TezosAppScreen, account: Account, snapshot_dir: Path):
+def test_ensure_always_clearsign(
+        backend: TezosBackend,
+        tezos_navigator: TezosNavigator,
+        account: Account,
+        snapshot_dir: Path
+):
     """Check clear signing never blindsign"""
 
-    app.toggle_expert_mode()
+    tezos_navigator.toggle_expert_mode()
 
     message = Transaction(
         source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
@@ -265,8 +316,8 @@ def test_ensure_always_clearsign(app: TezosAppScreen, account: Account, snapshot
         parameter = [{'prim':'pair','args':[{'string':"["},{'prim':'pair','args':[{'string':"Z"},{'prim':'pair','args':[{'string':"Y"},{'prim':'pair','args':[{'string':"X"},{'prim':'pair','args':[{'string':"W"},{'prim':'pair','args':[{'string':"V"},{'prim':'pair','args':[{'string':"U"},{'prim':'pair','args':[{'string':"T"},{'prim':'pair','args':[{'string':"S"},{'prim':'pair','args':[{'string':"R"},{'prim':'pair','args':[{'string':"Q"},{'prim':'pair','args':[{'string':"P"},{'prim':'pair','args':[{'string':"O"},{'prim':'pair','args':[{'string':"N"},{'prim':'pair','args':[{'string':"M"},{'prim':'pair','args':[{'string':"L"},{'prim':'pair','args':[{'string':"K"},{'prim':'pair','args':[{'string':"J"},{'prim':'pair','args':[{'string':"I"},{'prim':'pair','args':[{'string':"H"},{'prim':'pair','args':[{'string':"G"},{'prim':'pair','args':[{'string':"F"},{'prim':'pair','args':[{'string':"E"},{'prim':'pair','args':[{'string':"D"},{'prim':'pair','args':[{'string':"C"},{'prim':'pair','args':[{'string':"B"},[]]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]},{'prim':'pair','args':[{'int':10},{'prim':'pair','args':[{'int':9},{'prim':'pair','args':[{'int':8},{'prim':'pair','args':[{'int':7},{'prim':'pair','args':[{'int':6},{'prim':'pair','args':[{'int':5},{'prim':'pair','args':[{'int':4},{'prim':'pair','args':[{'int':3},{'prim':'pair','args':[{'int':2},{'prim':'pair','args':[{'int':1},[]]}]}]}]}]}]}]}]}]}]}]
     )
 
-    with app.backend.sign(account, message, with_hash=True) as result:
-        app.accept_sign(snap_path=snapshot_dir)
+    with backend.sign(account, message, with_hash=True) as result:
+        tezos_navigator.accept_sign(snap_path=snapshot_dir)
 
     account.check_signature(
         message=message,

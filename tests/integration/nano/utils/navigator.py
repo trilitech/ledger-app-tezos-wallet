@@ -17,55 +17,12 @@
 
 from enum import Enum
 from pathlib import Path
-import time
 from typing import List, Optional, Union
 
-from ragger.backend import SpeculosBackend
-from ragger.navigator import NavIns, NavInsID, NanoNavigator
+from ragger.firmware import Firmware
+from ragger.navigator import NavIns, NavInsID, Navigator
 
 from .backend import TezosBackend
-
-
-MAX_ATTEMPTS = 50
-
-def with_retry(f, attempts=MAX_ATTEMPTS):
-    """Try f until it succeeds or has been executed attempts times."""
-    while True:
-        try:
-            return f()
-        except Exception as e:
-            if attempts <= 0:
-                print("- with_retry: attempts exhausted -")
-                raise e
-        attempts -= 1
-        # Give plenty of time for speculos to update - can take a long time on CI machines
-        time.sleep(0.5)
-
-class SpeculosTezosBackend(TezosBackend, SpeculosBackend):
-    """Class representing Tezos app running on Speculos."""
-
-    # speculos can be slow to start up in a slow environment.
-    # Here, we expect a little more
-    def __enter__(self) -> "SpeculosTezosBackend":
-        try:
-            super().__enter__()
-            return self
-        except Exception:
-            process = self._client.process
-            try:
-                with_retry(self._client._wait_until_ready, attempts=5)
-                super().__enter__()
-            except Exception as e:
-                self._client.stop()
-                # do not forget to close the first process
-                self._client.process = process
-                self._client.stop()
-                raise e
-            # replace the new process by the first one
-            self._client.process.kill()
-            self._client.process.wait()
-            self._client.process = process
-            return self
 
 
 class ScreenText(str, Enum):
@@ -82,40 +39,34 @@ class ScreenText(str, Enum):
     BLINDSIGN_NANOS = "Blindsign"
 
     @classmethod
-    def blindsign(cls, backend: SpeculosTezosBackend) -> "ScreenText":
+    def blindsign(cls, backend: TezosBackend) -> "ScreenText":
         """Get blindsign text depending on device."""
-        if backend.firmware.device == "nanos":
+        if backend.firmware == Firmware.NANOS:
             return cls.BLINDSIGN_NANOS
 
         return cls.BLINDSIGN
 
-class TezosAppScreen():
-    """Class representing Tezos app management."""
 
-    backend: SpeculosTezosBackend
+class TezosNavigator():
+    """Class representing Tezos app navigation."""
+
+    _backend: TezosBackend
     _root_dir: Path
-    navigator: NanoNavigator
+    _navigator: Navigator
 
     def __init__(self,
-                 backend: SpeculosTezosBackend,
-                 golden_run: bool):
-        self.backend = backend
+                 backend: TezosBackend,
+                 navigator: Navigator):
+        self._backend = backend
         self._root_dir = Path(__file__).resolve().parent.parent
-        self.navigator = NanoNavigator(backend, backend.firmware, golden_run)
-
-    def __enter__(self) -> "TezosAppScreen":
-        with_retry(self.backend.__enter__, attempts=3)
-        return self
-
-    def __exit__(self, *args):
-        self.backend.__exit__(*args)
+        self._navigator = navigator
 
     def navigate(self,
                  snap_path: Optional[Path] = None,
                  screen_change_before_first_instruction: bool = False,
                  **kwargs) -> None:
         """Wrapper of `navigator.navigate_and_compare`"""
-        self.navigator.navigate_and_compare(
+        self._navigator.navigate_and_compare(
             path=self._root_dir,
             test_case_name=snap_path,
             screen_change_before_first_instruction=screen_change_before_first_instruction,
@@ -128,7 +79,7 @@ class TezosAppScreen():
                             validation_instructions: List[Union[NavIns, NavInsID]] = [],
                             **kwargs) -> None:
         """Wrapper of `navigator.navigate_until_text_and_compare`"""
-        self.navigator.navigate_until_text_and_compare(
+        self._navigator.navigate_until_text_and_compare(
             path=self._root_dir,
             test_case_name=snap_path,
             screen_change_before_first_instruction=screen_change_before_first_instruction,
@@ -151,8 +102,8 @@ class TezosAppScreen():
         Function based on `ragger.navigator.navigate_and_compare`
 
         """
-        self.backend.pause_ticker()
-        self.navigator._run_instruction(
+        self._backend.pause_ticker()
+        self._navigator._run_instruction(
             NavIns(NavInsID.WAIT, (0, )),
             timeout,
             wait_for_screen_change=screen_change_before_first_instruction,
@@ -162,7 +113,7 @@ class TezosAppScreen():
         )
         for idx, instruction in enumerate(instructions):
             if idx + 1 != len(instructions) or screen_change_after_last_instruction:
-                self.navigator._run_instruction(
+                self._navigator._run_instruction(
                     instruction,
                     timeout,
                     wait_for_screen_change=False,
@@ -171,13 +122,13 @@ class TezosAppScreen():
                     snap_idx=snap_start_idx + idx + 1
                 )
             else:
-                self.navigator._run_instruction(
+                self._navigator._run_instruction(
                     instruction,
                     timeout,
                     wait_for_screen_change=False,
                     snap_idx=snap_start_idx + idx + 1
                 )
-        self.backend.resume_ticker()
+        self._backend.resume_ticker()
 
     def navigate_to_settings(self, **kwargs) -> int:
         """Navigate from Home screen to settings."""
