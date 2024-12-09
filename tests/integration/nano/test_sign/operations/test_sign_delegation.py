@@ -19,10 +19,11 @@
 from pathlib import Path
 
 from utils.account import Account
-from utils.app import TezosAppScreen
 from utils.message import Delegation
+from utils.navigator import TezosNavigator
 
-def test_sign_delegation(app: TezosAppScreen, account: Account, snapshot_dir: Path):
+
+def test_sign_delegation(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
     """Check signing delegation"""
 
     message = Delegation(
@@ -34,10 +35,12 @@ def test_sign_delegation(app: TezosAppScreen, account: Account, snapshot_dir: Pa
         delegate = 'tz1TmFPVZsGQ8MnrBJtnECJgkFUwLa6EWYDm'
     )
 
-    data = app.sign(account,
-                    message,
-                    with_hash=True,
-                    snap_path=snapshot_dir)
+    data = tezos_navigator.sign(
+        account,
+        message,
+        with_hash=True,
+        snap_path=snapshot_dir
+    )
 
     account.check_signature(
         message=message,

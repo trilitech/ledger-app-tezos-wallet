@@ -19,10 +19,11 @@
 from pathlib import Path
 
 from utils.account import Account
-from utils.app import TezosAppScreen
 from utils.message import ScRollupAddMessage
+from utils.navigator import TezosNavigator
 
-def test_sign_sc_rollup_add_messages(app: TezosAppScreen, account: Account, snapshot_dir: Path):
+
+def test_sign_sc_rollup_add_messages(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
     """Check signing smart rollup add message"""
 
     message = ScRollupAddMessage(
@@ -34,10 +35,12 @@ def test_sign_sc_rollup_add_messages(app: TezosAppScreen, account: Account, snap
         message = [bytes.fromhex('012345'), bytes.fromhex('67'), bytes.fromhex('89abcdef')]
     )
 
-    data = app.sign(account,
-                    message,
-                    with_hash=True,
-                    snap_path=snapshot_dir)
+    data = tezos_navigator.sign(
+        account,
+        message,
+        with_hash=True,
+        snap_path=snapshot_dir
+    )
 
     account.check_signature(
         message=message,

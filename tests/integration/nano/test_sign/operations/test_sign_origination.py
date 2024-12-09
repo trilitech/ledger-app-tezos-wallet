@@ -19,13 +19,14 @@
 from pathlib import Path
 
 from utils.account import Account
-from utils.app import TezosAppScreen
 from utils.message import Origination
+from utils.navigator import TezosNavigator
 
-def test_sign_origination(app: TezosAppScreen, account: Account, snapshot_dir: Path):
+
+def test_sign_origination(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
     """Check signing origination"""
 
-    app.toggle_expert_mode()
+    tezos_navigator.toggle_expert_mode()
 
     message = Origination(
         source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
@@ -38,10 +39,12 @@ def test_sign_origination(app: TezosAppScreen, account: Account, snapshot_dir: P
         balance = 500000
     )
 
-    data = app.sign(account,
-                    message,
-                    with_hash=True,
-                    snap_path=snapshot_dir)
+    data = tezos_navigator.sign(
+        account,
+        message,
+        with_hash=True,
+        snap_path=snapshot_dir
+    )
 
     account.check_signature(
         message=message,

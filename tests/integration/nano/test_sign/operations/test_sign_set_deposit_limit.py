@@ -19,10 +19,11 @@
 from pathlib import Path
 
 from utils.account import Account
-from utils.app import TezosAppScreen
 from utils.message import SetDepositLimit
+from utils.navigator import TezosNavigator
 
-def test_sign_set_deposit_limit(app: TezosAppScreen, account: Account, snapshot_dir: Path):
+
+def test_sign_set_deposit_limit(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
     """Check signing set deposit limit"""
 
     message = SetDepositLimit(
@@ -34,10 +35,12 @@ def test_sign_set_deposit_limit(app: TezosAppScreen, account: Account, snapshot_
         limit = 20000
     )
 
-    data = app.sign(account,
-                    message,
-                    with_hash=True,
-                    snap_path=snapshot_dir)
+    data = tezos_navigator.sign(
+        account,
+        message,
+        with_hash=True,
+        snap_path=snapshot_dir
+    )
 
     account.check_signature(
         message=message,

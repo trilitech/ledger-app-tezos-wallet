@@ -19,10 +19,11 @@
 from pathlib import Path
 
 from utils.account import Account
-from utils.app import TezosAppScreen
 from utils.message import Proposals
+from utils.navigator import TezosNavigator
 
-def test_sign_proposals(app: TezosAppScreen, account: Account, snapshot_dir: Path):
+
+def test_sign_proposals(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
     """Check signing proposals"""
 
     message = Proposals(
@@ -34,10 +35,12 @@ def test_sign_proposals(app: TezosAppScreen, account: Account, snapshot_dir: Pat
         period = 32
     )
 
-    data = app.sign(account,
-                    message,
-                    with_hash=True,
-                    snap_path=snapshot_dir)
+    data = tezos_navigator.sign(
+        account,
+        message,
+        with_hash=True,
+        snap_path=snapshot_dir
+    )
 
     account.check_signature(
         message=message,

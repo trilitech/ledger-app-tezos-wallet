@@ -21,8 +21,9 @@ from pathlib import Path
 import pytest
 
 from utils.account import Account, SigType
-from utils.app import TezosAppScreen
 from utils.message import MichelineExpr, Transaction
+from utils.navigator import TezosNavigator
+
 
 @pytest.mark.parametrize(
     "account", [
@@ -41,15 +42,17 @@ from utils.message import MichelineExpr, Transaction
     ],
     ids=lambda account: f"{account.sig_type}"
 )
-def test_sign_micheline_basic(app: TezosAppScreen, account: Account, snapshot_dir: Path):
+def test_sign_micheline_basic(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
     """Check signing with ed25519"""
 
     message = MichelineExpr([{'string': 'CACA'}, {'string': 'POPO'}, {'string': 'BOUDIN'}])
 
-    data = app.sign(account,
-                    message,
-                    with_hash=True,
-                    snap_path=snapshot_dir)
+    data = tezos_navigator.sign(
+        account,
+        message,
+        with_hash=True,
+        snap_path=snapshot_dir
+    )
 
     account.check_signature(
         message=message,
@@ -63,10 +66,10 @@ def test_sign_micheline_basic(app: TezosAppScreen, account: Account, snapshot_di
     ],
     ids=["seed21"]
 )
-def test_sign_with_another_seed(app: TezosAppScreen, snapshot_dir: Path):
+def test_sign_with_another_seed(tezos_navigator: TezosNavigator, snapshot_dir: Path):
     """Check signing using another seed than [zebra*24]"""
 
-    app.toggle_expert_mode()
+    tezos_navigator.toggle_expert_mode()
 
     account = Account("m/44'/1729'/0'/0'",
                       SigType.ED25519,
@@ -84,10 +87,12 @@ def test_sign_with_another_seed(app: TezosAppScreen, snapshot_dir: Path):
         parameter = {'prim': 'CAR'}
     )
 
-    data = app.sign(account,
-                    message,
-                    with_hash=True,
-                    snap_path=snapshot_dir)
+    data = tezos_navigator.sign(
+        account,
+        message,
+        with_hash=True,
+        snap_path=snapshot_dir
+    )
 
     account.check_signature(
         message=message,

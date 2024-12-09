@@ -19,10 +19,11 @@
 from pathlib import Path
 
 from utils.account import Account
-from utils.app import TezosAppScreen
 from utils.message import UpdateConsensusKey
+from utils.navigator import TezosNavigator
 
-def test_sign_set_consensus_key(app: TezosAppScreen, account: Account, snapshot_dir: Path):
+
+def test_sign_set_consensus_key(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
     """Check signing set consensus key"""
 
     message = UpdateConsensusKey(
@@ -34,10 +35,12 @@ def test_sign_set_consensus_key(app: TezosAppScreen, account: Account, snapshot_
         pk = "edpkuXX2VdkdXzkN11oLCb8Aurdo1BTAtQiK8ZY9UPj2YMt3AHEpcY"
     )
 
-    data = app.sign(account,
-                    message,
-                    with_hash=True,
-                    snap_path=snapshot_dir)
+    data = tezos_navigator.sign(
+        account,
+        message,
+        with_hash=True,
+        snap_path=snapshot_dir
+    )
 
     account.check_signature(
         message=message,
