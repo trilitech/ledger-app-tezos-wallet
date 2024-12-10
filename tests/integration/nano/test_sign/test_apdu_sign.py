@@ -18,27 +18,31 @@
 
 from pathlib import Path
 
+import pytest
+
 from utils.account import Account
 from utils.backend import StatusCode, TezosBackend
-from utils.message import MichelineExpr, Transaction
+from utils.message import Transaction
 from utils.navigator import send_and_navigate, TezosNavigator
 
 
-def test_sign_micheline_without_hash(tezos_navigator: TezosNavigator, account: Account):
-    """Check signing micheline wihout getting hash"""
+@pytest.mark.parametrize("with_hash", [True, False])
+def test_sign(tezos_navigator: TezosNavigator, account: Account, with_hash: bool):
+    """Check signing with or wihout getting hash"""
 
-    message = MichelineExpr([{'string': 'CACA'}, {'string': 'POPO'}, {'string': 'BOUDIN'}])
+    message = Transaction()
 
     data = tezos_navigator.sign(
         account,
         message,
-        with_hash=False
+        with_hash=with_hash
     )
 
     account.check_signature(
         message=message,
-        with_hash=False,
-        data=data)
+        with_hash=with_hash,
+        data=data
+    )
 
 def test_reject_operation(
         tezos_navigator: TezosNavigator,
