@@ -20,7 +20,8 @@ from pathlib import Path
 
 from conftest import requires_device
 
-from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
+from utils.account import Account
+from utils.app import TezosAppScreen
 from utils.message import (
     OperationGroup,
     Origination,
@@ -29,7 +30,7 @@ from utils.message import (
 )
 
 @requires_device("nanos")
-def test_nanos_regression_batched_ops(app: TezosAppScreen, snapshot_dir: Path):
+def test_nanos_regression_batched_ops(app: TezosAppScreen, account: Account, snapshot_dir: Path):
     """Check signing batch operation"""
 
     app.toggle_expert_mode()
@@ -57,17 +58,17 @@ def test_nanos_regression_batched_ops(app: TezosAppScreen, snapshot_dir: Path):
         )
     ])
 
-    with app.backend.sign(DEFAULT_ACCOUNT, message, with_hash=True) as result:
+    with app.backend.sign(account, message, with_hash=True) as result:
         app.accept_sign(snap_path=snapshot_dir)
 
-    DEFAULT_ACCOUNT.check_signature(
+    account.check_signature(
         message=message,
         with_hash=True,
         data=result.value
     )
 
 @requires_device("nanox")
-def test_nanox_regression_batched_ops(app: TezosAppScreen, snapshot_dir: Path):
+def test_nanox_regression_batched_ops(app: TezosAppScreen, account: Account, snapshot_dir: Path):
     """Check signing batch operation"""
 
     app.toggle_expert_mode()
@@ -95,16 +96,16 @@ def test_nanox_regression_batched_ops(app: TezosAppScreen, snapshot_dir: Path):
         )
     ])
 
-    with app.backend.sign(DEFAULT_ACCOUNT, message, with_hash=True) as result:
+    with app.backend.sign(account, message, with_hash=True) as result:
         app.accept_sign(snap_path=snapshot_dir)
 
-    DEFAULT_ACCOUNT.check_signature(
+    account.check_signature(
         message=message,
         with_hash=True,
         data=result.value
     )
 
-def test_sign_complex_operation(app: TezosAppScreen, snapshot_dir: Path):
+def test_sign_complex_operation(app: TezosAppScreen, account: Account, snapshot_dir: Path):
     """Check signing complex operation"""
 
     app.toggle_expert_mode()
@@ -134,10 +135,10 @@ def test_sign_complex_operation(app: TezosAppScreen, snapshot_dir: Path):
         )
     ])
 
-    with app.backend.sign(DEFAULT_ACCOUNT, message, with_hash=True) as result:
+    with app.backend.sign(account, message, with_hash=True) as result:
         app.accept_sign(snap_path=snapshot_dir)
 
-    DEFAULT_ACCOUNT.check_signature(
+    account.check_signature(
         message=message,
         with_hash=True,
         data=result.value

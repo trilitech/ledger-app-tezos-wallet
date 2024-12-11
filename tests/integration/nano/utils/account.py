@@ -194,3 +194,12 @@ class Account:
             f"Fail to verify signature {signature!r}, \n\
             with account {self} \n\
             and message {message}"
+
+
+DEFAULT_SEED = ' '.join(['zebra']*24)
+
+DEFAULT_ACCOUNT = Account(
+    "m/44'/1729'/0'/0'",
+    SigType.ED25519,
+    "edpkuXX2VdkdXzkN11oLCb8Aurdo1BTAtQiK8ZY9UPj2YMt3AHEpcY"
+)
