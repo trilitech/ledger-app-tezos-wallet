@@ -17,6 +17,7 @@
 """Gathering of tests related to Micheline."""
 
 from pathlib import Path
+from string import ascii_lowercase, ascii_uppercase, digits
 from typing import List, Tuple
 
 import pytest
@@ -249,6 +250,14 @@ prim_cases: List[Tuple[Micheline, str]] = [
 
     # Constant
     ({"prim": "constant", 'args': [{"string": Default.SCRIPT_EXPR_HASH}]}, "constant"),
+
+    # Annots
+    ({"prim": "unit", "annots": [":annot"]}, "with-annot"),
+    ({"prim": "PAIR", "annots": ["@annot1", "%@annot2"]}, "with-annots"),
+    ({"prim": "LEFT", "annots": ["%annot"], 'args': [{"prim": "unit"}]}, "with-annot-and-arg"),
+    ({"prim": "unit", "annots": [":" + ascii_lowercase + ascii_uppercase + '_' + digits]}, "allowed-char-annot"),
+    ({"prim": "unit", "annots": [":" + (ascii_lowercase * ((254 // len(ascii_lowercase)) + 1))[:254]]}, "max-len-annot"),
+
 ]
 
 
