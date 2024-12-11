@@ -17,7 +17,7 @@
 """Gathering of tests related to Reveal operations."""
 
 from utils.message import Reveal
-from .helper import Flow, TestOperation, pytest_generate_tests
+from .helper import Flow, Field, TestOperation, pytest_generate_tests
 
 
 class TestReveal(TestOperation):
@@ -28,3 +28,12 @@ class TestReveal(TestOperation):
         return Reveal
 
     flows = [Flow('basic')]
+
+    fields = [
+        Field("public_key", "Public key", [
+            Field.Case('edpkvMUjmJu9CYyKBAjUV3jtU8Y89TemDAcD29bSNh393Bc8z8BH3t', "tz1"),
+            Field.Case('sppk7ZT8R42AGSy672NHz9ps6Q4idqWYejAgMwqTWnyYAeq9XZEqWvZ', "tz2"),
+            Field.Case('p2pk665znpiyPRWEwpu8tZ7JdNPipkfYpGUhYALjaS4Tm7F7wcx1iRs', "tz3"),
+            Field.Case('edpkuWUfaAWqaxJoG9QKgQRQUHMWfsN1EmoMMXWMwYoE8kjWMWUGDk', "long-hash"),
+        ]),
+    ]

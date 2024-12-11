@@ -17,7 +17,7 @@
 """Gathering of tests related to Delegation operations."""
 
 from utils.message import Default, Delegation
-from .helper import Flow, TestOperation, pytest_generate_tests
+from .helper import Flow, Field, TestOperation, pytest_generate_tests
 
 
 class TestDelegation(TestOperation):
@@ -28,3 +28,13 @@ class TestDelegation(TestOperation):
         return Delegation
 
     flows = [Flow('basic', delegate=Default.ED25519_PUBLIC_KEY_HASH)]
+
+    fields = [
+        Field("delegate", "Delegate", [
+            Field.Case(None, "none"),
+            Field.Case('tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa', "tz1"),
+            Field.Case('tz2CJBeWWLsUDjVUDqGZL6od3DeBCNzYXrXk', "tz2"),
+            Field.Case('tz3fLwHKthqhTPK6Lar6CTXN1WbDETw1YpGB', "tz3"),
+            Field.Case('tz1Kp8NCAN5WWwvkWkMmQQXMRe68iURmoQ8w', "long-hash"),
+        ]),
+    ]
