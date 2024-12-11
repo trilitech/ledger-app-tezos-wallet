@@ -18,10 +18,11 @@
 
 from pathlib import Path
 
-from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
+from utils.account import Account
+from utils.app import TezosAppScreen
 from utils.message import RegisterGlobalConstant
 
-def test_sign_register_global_constant(app: TezosAppScreen, snapshot_dir: Path):
+def test_sign_register_global_constant(app: TezosAppScreen, account: Account, snapshot_dir: Path):
     """Check signing register global constant"""
 
     app.toggle_expert_mode()
@@ -35,12 +36,12 @@ def test_sign_register_global_constant(app: TezosAppScreen, snapshot_dir: Path):
         value = {'prim': 'Pair', 'args': [{'string': '1'}, {'int': 2}]}
     )
 
-    data = app.sign(DEFAULT_ACCOUNT,
+    data = app.sign(account,
                     message,
                     with_hash=True,
                     snap_path=snapshot_dir)
 
-    DEFAULT_ACCOUNT.check_signature(
+    account.check_signature(
         message=message,
         with_hash=True,
         data=data)

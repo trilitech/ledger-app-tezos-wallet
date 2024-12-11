@@ -18,10 +18,11 @@
 
 from pathlib import Path
 
-from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
+from utils.account import Account
+from utils.app import TezosAppScreen
 from utils.message import Ballot
 
-def test_sign_ballot(app: TezosAppScreen, snapshot_dir: Path):
+def test_sign_ballot(app: TezosAppScreen, account: Account, snapshot_dir: Path):
     """Check signing ballot"""
 
     message = Ballot(
@@ -31,12 +32,12 @@ def test_sign_ballot(app: TezosAppScreen, snapshot_dir: Path):
         period = 32
     )
 
-    data = app.sign(DEFAULT_ACCOUNT,
+    data = app.sign(account,
                     message,
                     with_hash=True,
                     snap_path=snapshot_dir)
 
-    DEFAULT_ACCOUNT.check_signature(
+    account.check_signature(
         message=message,
         with_hash=True,
         data=data)

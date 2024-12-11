@@ -21,7 +21,8 @@ from typing import List, Optional
 
 import pytest
 
-from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
+from utils.account import Account
+from utils.app import TezosAppScreen
 from utils.message import ScRollupOriginate
 
 
@@ -41,7 +42,7 @@ from utils.message import ScRollupOriginate
             "with_whitelist",
         ],
 )
-def test_sign_sc_rollup_originate(app: TezosAppScreen, whitelist: Optional[List[str]], snapshot_dir: Path):
+def test_sign_sc_rollup_originate(app: TezosAppScreen, account: Account, whitelist: Optional[List[str]], snapshot_dir: Path):
     """Check signing smart rollup originate"""
 
     app.toggle_expert_mode()
@@ -58,12 +59,12 @@ def test_sign_sc_rollup_originate(app: TezosAppScreen, whitelist: Optional[List[
         whitelist = whitelist
     )
 
-    data = app.sign(DEFAULT_ACCOUNT,
+    data = app.sign(account,
                     message,
                     with_hash=True,
                     snap_path=snapshot_dir)
 
-    DEFAULT_ACCOUNT.check_signature(
+    account.check_signature(
         message=message,
         with_hash=True,
         data=data)

@@ -26,7 +26,7 @@ from ragger.backend import SpeculosBackend
 from ragger.navigator import NavIns, NavInsID, NanoNavigator
 
 from .message import Message
-from .account import Account, SigType
+from .account import Account
 from .backend import TezosBackend
 
 
@@ -331,9 +331,3 @@ class TezosAppScreen():
         def navigate():
             self.navigate_sign_reject(**kwargs)
         self.sign(account, message, with_hash, navigate)
-
-DEFAULT_SEED = 'zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra'
-
-DEFAULT_ACCOUNT = Account("m/44'/1729'/0'/0'",
-                          SigType.ED25519,
-                          "edpkuXX2VdkdXzkN11oLCb8Aurdo1BTAtQiK8ZY9UPj2YMt3AHEpcY")

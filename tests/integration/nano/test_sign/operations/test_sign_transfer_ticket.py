@@ -19,10 +19,11 @@
 from pathlib import Path
 
 from conftest import requires_device
-from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
+from utils.account import Account
+from utils.app import TezosAppScreen
 from utils.message import TransferTicket
 
-def test_sign_transfer_ticket(app: TezosAppScreen, snapshot_dir: Path):
+def test_sign_transfer_ticket(app: TezosAppScreen, account: Account, snapshot_dir: Path):
     """Check signing transfer ticket"""
 
     app.toggle_expert_mode()
@@ -40,18 +41,18 @@ def test_sign_transfer_ticket(app: TezosAppScreen, snapshot_dir: Path):
         destination = 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT'
     )
 
-    data = app.sign(DEFAULT_ACCOUNT,
+    data = app.sign(account,
                     message,
                     with_hash=True,
                     snap_path=snapshot_dir)
 
-    DEFAULT_ACCOUNT.check_signature(
+    account.check_signature(
         message=message,
         with_hash=True,
         data=data)
 
 @requires_device("nanosp")
-def test_nanosp_regression_potential_empty_screen(app: TezosAppScreen, snapshot_dir: Path):
+def test_nanosp_regression_potential_empty_screen(app: TezosAppScreen, account: Account, snapshot_dir: Path):
     """Check signing operation that display potentially empty screens"""
 
     app.toggle_expert_mode()
@@ -70,12 +71,12 @@ def test_nanosp_regression_potential_empty_screen(app: TezosAppScreen, snapshot_
         entrypoint = 'S\n\nS\nS\nS'
     )
 
-    data = app.sign(DEFAULT_ACCOUNT,
+    data = app.sign(account,
                     message,
                     with_hash=True,
                     snap_path=snapshot_dir)
 
-    DEFAULT_ACCOUNT.check_signature(
+    account.check_signature(
         message=message,
         with_hash=True,
         data=data)
