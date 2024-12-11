@@ -16,36 +16,15 @@
 
 """Gathering of tests related to Set-consensus-key operations."""
 
-from pathlib import Path
-
-from utils.account import Account
-from utils.backend import TezosBackend
 from utils.message import UpdateConsensusKey
-from utils.navigator import TezosNavigator
+from .helper import Flow, TestOperation, pytest_generate_tests
 
 
-def test_sign_set_consensus_key(
-        backend: TezosBackend,
-        tezos_navigator: TezosNavigator,
-        account: Account,
-        snapshot_dir: Path
-):
-    """Check signing set consensus key"""
+class TestUpdateConsensusKey(TestOperation):
+    """Commun tests."""
 
-    message = UpdateConsensusKey(
-        source = 'tz1dyX3B1CFYa2DfdFLyPtiJCfQRUgPVME6E',
-        fee = 10000,
-        counter = 2,
-        gas_limit = 3,
-        storage_limit = 4,
-        pk = "edpkuXX2VdkdXzkN11oLCb8Aurdo1BTAtQiK8ZY9UPj2YMt3AHEpcY"
-    )
+    @property
+    def op_class(self):
+        return UpdateConsensusKey
 
-    with backend.sign(account, message, with_hash=True) as result:
-        tezos_navigator.accept_sign(snap_path=snapshot_dir)
-
-    account.check_signature(
-        message=message,
-        with_hash=True,
-        data=result.value
-    )
+    flows = [Flow('basic')]

@@ -16,36 +16,15 @@
 
 """Gathering of tests related to Reveal operations."""
 
-from pathlib import Path
-
-from utils.account import Account
-from utils.backend import TezosBackend
 from utils.message import Reveal
-from utils.navigator import TezosNavigator
+from .helper import Flow, TestOperation, pytest_generate_tests
 
 
-def test_sign_reveal(
-        backend: TezosBackend,
-        tezos_navigator: TezosNavigator,
-        account: Account,
-        snapshot_dir: Path
-):
-    """Check signing reveal"""
+class TestReveal(TestOperation):
+    """Commun tests."""
 
-    message = Reveal(
-        source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
-        fee = 10000,
-        counter = 2,
-        gas_limit = 3,
-        storage_limit = 4,
-        public_key = 'edpkuXX2VdkdXzkN11oLCb8Aurdo1BTAtQiK8ZY9UPj2YMt3AHEpcY'
-    )
+    @property
+    def op_class(self):
+        return Reveal
 
-    with backend.sign(account, message, with_hash=True) as result:
-        tezos_navigator.accept_sign(snap_path=snapshot_dir)
-
-    account.check_signature(
-        message=message,
-        with_hash=True,
-        data=result.value
-    )
+    flows = [Flow('basic')]

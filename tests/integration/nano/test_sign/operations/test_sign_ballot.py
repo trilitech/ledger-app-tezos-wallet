@@ -16,34 +16,15 @@
 
 """Gathering of tests related to Ballot operations."""
 
-from pathlib import Path
-
-from utils.account import Account
-from utils.backend import TezosBackend
 from utils.message import Ballot
-from utils.navigator import TezosNavigator
+from .helper import Flow, TestOperation, pytest_generate_tests
 
 
-def test_sign_ballot(
-        backend: TezosBackend,
-        tezos_navigator: TezosNavigator,
-        account: Account,
-        snapshot_dir: Path
-):
-    """Check signing ballot"""
+class TestBallot(TestOperation):
+    """Commun tests."""
 
-    message = Ballot(
-        source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
-        proposal = 'ProtoALphaALphaALphaALphaALphaALphaALpha61322gcLUGH',
-        ballot = 'yay',
-        period = 32
-    )
+    @property
+    def op_class(self):
+        return Ballot
 
-    with backend.sign(account, message, with_hash=True) as result:
-        tezos_navigator.accept_sign(snap_path=snapshot_dir)
-
-    account.check_signature(
-        message=message,
-        with_hash=True,
-        data=result.value
-    )
+    flows = [Flow('basic')]

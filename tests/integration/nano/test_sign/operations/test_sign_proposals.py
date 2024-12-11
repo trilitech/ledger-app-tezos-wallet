@@ -16,36 +16,18 @@
 
 """Gathering of tests related to Proposals operations."""
 
-from pathlib import Path
-
-from utils.account import Account
-from utils.backend import TezosBackend
 from utils.message import Proposals
-from utils.navigator import TezosNavigator
+from .helper import Flow, TestOperation, pytest_generate_tests
 
 
-def test_sign_proposals(
-        backend: TezosBackend,
-        tezos_navigator: TezosNavigator,
-        account: Account,
-        snapshot_dir: Path
-):
-    """Check signing proposals"""
+class TestProposals(TestOperation):
+    """Commun tests."""
 
-    message = Proposals(
-        source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
-        proposals = [
-            'ProtoALphaALphaALphaALphaALphaALphaALpha61322gcLUGH',
-            'ProtoALphaALphaALphaALphaALphaALphaALphabc2a7ebx6WB'
-        ],
-        period = 32
-    )
+    @property
+    def op_class(self):
+        return Proposals
 
-    with backend.sign(account, message, with_hash=True) as result:
-        tezos_navigator.accept_sign(snap_path=snapshot_dir)
-
-    account.check_signature(
-        message=message,
-        with_hash=True,
-        data=result.value
-    )
+    flows = [
+        Flow('basic'),
+        Flow('empty-proposals', proposals=[])
+    ]

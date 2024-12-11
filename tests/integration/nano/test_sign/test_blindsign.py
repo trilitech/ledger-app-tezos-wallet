@@ -483,3 +483,34 @@ def test_blindsign_reject_from_blind(
         with backend.sign(account, expression, with_hash=False):
             tezos_navigator.accept_sign_risk(snap_path=snapshot_dir / "clear")
             tezos_navigator.reject_sign(snap_path=snapshot_dir / "blind")
+
+def test_ensure_always_clearsign(
+        backend: TezosBackend,
+        tezos_navigator: TezosNavigator,
+        account: Account,
+        snapshot_dir: Path
+):
+    """Check clear signing never blindsign"""
+
+    tezos_navigator.toggle_expert_mode()
+
+    message = Transaction(
+        source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
+        fee = 10000,
+        counter = 2,
+        gas_limit = 3,
+        storage_limit = 4,
+        destination = 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT',
+        amount = 0,
+        entrypoint = 'root',
+        parameter = [{'prim':'pair','args':[{'string':"["},{'prim':'pair','args':[{'string':"Z"},{'prim':'pair','args':[{'string':"Y"},{'prim':'pair','args':[{'string':"X"},{'prim':'pair','args':[{'string':"W"},{'prim':'pair','args':[{'string':"V"},{'prim':'pair','args':[{'string':"U"},{'prim':'pair','args':[{'string':"T"},{'prim':'pair','args':[{'string':"S"},{'prim':'pair','args':[{'string':"R"},{'prim':'pair','args':[{'string':"Q"},{'prim':'pair','args':[{'string':"P"},{'prim':'pair','args':[{'string':"O"},{'prim':'pair','args':[{'string':"N"},{'prim':'pair','args':[{'string':"M"},{'prim':'pair','args':[{'string':"L"},{'prim':'pair','args':[{'string':"K"},{'prim':'pair','args':[{'string':"J"},{'prim':'pair','args':[{'string':"I"},{'prim':'pair','args':[{'string':"H"},{'prim':'pair','args':[{'string':"G"},{'prim':'pair','args':[{'string':"F"},{'prim':'pair','args':[{'string':"E"},{'prim':'pair','args':[{'string':"D"},{'prim':'pair','args':[{'string':"C"},{'prim':'pair','args':[{'string':"B"},[]]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]},{'prim':'pair','args':[{'int':10},{'prim':'pair','args':[{'int':9},{'prim':'pair','args':[{'int':8},{'prim':'pair','args':[{'int':7},{'prim':'pair','args':[{'int':6},{'prim':'pair','args':[{'int':5},{'prim':'pair','args':[{'int':4},{'prim':'pair','args':[{'int':3},{'prim':'pair','args':[{'int':2},{'prim':'pair','args':[{'int':1},[]]}]}]}]}]}]}]}]}]}]}]
+    )
+
+    with backend.sign(account, message, with_hash=True) as result:
+        tezos_navigator.accept_sign(snap_path=snapshot_dir)
+
+    account.check_signature(
+        message=message,
+        with_hash=True,
+        data=result.value
+    )
