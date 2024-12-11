@@ -16,37 +16,15 @@
 
 """Gathering of tests related to Origination operations."""
 
-from pathlib import Path
-
-from utils.account import Account
-from utils.message import Origination
-from utils.navigator import TezosNavigator
+from utils.message import Default, Origination
+from .helper import Flow, TestOperation, pytest_generate_tests
 
 
-def test_sign_origination(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
-    """Check signing origination"""
+class TestOrigination(TestOperation):
+    """Commun tests."""
 
-    tezos_navigator.toggle_expert_mode()
+    @property
+    def op_class(self):
+        return Origination
 
-    message = Origination(
-        source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
-        fee = 10000,
-        counter = 2,
-        gas_limit = 3,
-        storage_limit = 4,
-        code = {'prim': 'UNPAIR'},
-        storage = {'prim': 'pair', 'args': [{'string': '1'}, {'int': 2}]},
-        balance = 500000
-    )
-
-    data = tezos_navigator.sign(
-        account,
-        message,
-        with_hash=True,
-        snap_path=snapshot_dir
-    )
-
-    account.check_signature(
-        message=message,
-        with_hash=True,
-        data=data)
+    flows = [Flow('basic', delegate=Default.ED25519_PUBLIC_KEY_HASH)]

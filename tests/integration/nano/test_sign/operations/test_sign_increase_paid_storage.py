@@ -16,34 +16,15 @@
 
 """Gathering of tests related to Increase-paid-storage operations."""
 
-from pathlib import Path
-
-from utils.account import Account
 from utils.message import IncreasePaidStorage
-from utils.navigator import TezosNavigator
+from .helper import Flow, TestOperation, pytest_generate_tests
 
 
-def test_sign_increase_paid_storage(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
-    """Check signing increase paid storage"""
+class TestIncreasePaidStorage(TestOperation):
+    """Commun tests."""
 
-    message = IncreasePaidStorage(
-        source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
-        fee = 10000,
-        counter = 2,
-        gas_limit = 3,
-        storage_limit = 4,
-        amount = 5,
-        destination = "KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT"
-    )
+    @property
+    def op_class(self):
+        return IncreasePaidStorage
 
-    data = tezos_navigator.sign(
-        account,
-        message,
-        with_hash=True,
-        snap_path=snapshot_dir
-    )
-
-    account.check_signature(
-        message=message,
-        with_hash=True,
-        data=data)
+    flows = [Flow('basic')]

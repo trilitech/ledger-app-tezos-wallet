@@ -16,35 +16,15 @@
 
 """Gathering of tests related to Register-global-constant operations."""
 
-from pathlib import Path
-
-from utils.account import Account
 from utils.message import RegisterGlobalConstant
-from utils.navigator import TezosNavigator
+from .helper import Flow, TestOperation, pytest_generate_tests
 
 
-def test_sign_register_global_constant(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
-    """Check signing register global constant"""
+class TestRegisterGlobalConstant(TestOperation):
+    """Commun tests."""
 
-    tezos_navigator.toggle_expert_mode()
+    @property
+    def op_class(self):
+        return RegisterGlobalConstant
 
-    message = RegisterGlobalConstant(
-        source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
-        fee = 10000,
-        counter = 2,
-        gas_limit = 3,
-        storage_limit = 4,
-        value = {'prim': 'Pair', 'args': [{'string': '1'}, {'int': 2}]}
-    )
-
-    data = tezos_navigator.sign(
-        account,
-        message,
-        with_hash=True,
-        snap_path=snapshot_dir
-    )
-
-    account.check_signature(
-        message=message,
-        with_hash=True,
-        data=data)
+    flows = [Flow('basic')]

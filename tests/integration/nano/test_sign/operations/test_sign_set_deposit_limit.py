@@ -16,33 +16,15 @@
 
 """Gathering of tests related to Set-deposit-limit operations."""
 
-from pathlib import Path
-
-from utils.account import Account
 from utils.message import SetDepositLimit
-from utils.navigator import TezosNavigator
+from .helper import Flow, TestOperation, pytest_generate_tests
 
 
-def test_sign_set_deposit_limit(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
-    """Check signing set deposit limit"""
+class TestSetDepositLimit(TestOperation):
+    """Commun tests."""
 
-    message = SetDepositLimit(
-        source = 'tz3XeTwXXJeWNgVR3LqMcyBDdnxjbZ7TeEGH',
-        fee = 60000,
-        counter = 4,
-        gas_limit = 376,
-        storage_limit = 4,
-        limit = 20000
-    )
+    @property
+    def op_class(self):
+        return SetDepositLimit
 
-    data = tezos_navigator.sign(
-        account,
-        message,
-        with_hash=True,
-        snap_path=snapshot_dir
-    )
-
-    account.check_signature(
-        message=message,
-        with_hash=True,
-        data=data)
+    flows = [Flow('basic', limit=400)]

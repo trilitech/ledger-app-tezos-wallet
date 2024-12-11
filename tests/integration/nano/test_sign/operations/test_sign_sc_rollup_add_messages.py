@@ -16,33 +16,18 @@
 
 """Gathering of tests related to Smart-rollup Add-message operations."""
 
-from pathlib import Path
-
-from utils.account import Account
 from utils.message import ScRollupAddMessage
-from utils.navigator import TezosNavigator
+from .helper import Flow, TestOperation, pytest_generate_tests
 
 
-def test_sign_sc_rollup_add_messages(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
-    """Check signing smart rollup add message"""
+class TestScRollupAddMessage(TestOperation):
+    """Commun tests."""
 
-    message = ScRollupAddMessage(
-        source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
-        fee = 10000,
-        counter = 2,
-        gas_limit = 3,
-        storage_limit = 4,
-        message = [bytes.fromhex('012345'), bytes.fromhex('67'), bytes.fromhex('89abcdef')]
-    )
+    @property
+    def op_class(self):
+        return ScRollupAddMessage
 
-    data = tezos_navigator.sign(
-        account,
-        message,
-        with_hash=True,
-        snap_path=snapshot_dir
-    )
-
-    account.check_signature(
-        message=message,
-        with_hash=True,
-        data=data)
+    flows = [
+        Flow('basic', message=[bytes.fromhex('0123456789ABCDEF')]),
+        Flow('none', message=[])
+    ]
