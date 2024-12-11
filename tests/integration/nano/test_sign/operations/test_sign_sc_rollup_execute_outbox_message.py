@@ -17,7 +17,7 @@
 """Gathering of tests related to Smart-rollup Execute-outbox operations."""
 
 from utils.message import ScRollupExecuteOutboxMessage
-from .helper import Flow, TestOperation, pytest_generate_tests
+from .helper import Flow, Field, TestOperation, pytest_generate_tests
 
 
 class TestScRollupExecuteOutboxMessage(TestOperation):
@@ -28,3 +28,18 @@ class TestScRollupExecuteOutboxMessage(TestOperation):
         return ScRollupExecuteOutboxMessage
 
     flows = [Flow('basic', output_proof=b'0123456789ABCDEF')]
+
+    fields = [
+        Field("rollup", "Rollup", [
+            Field.Case('sr163Lv22CdE8QagCwf48PWDTquk6isQwv57', "sr1"),
+            Field.Case('sr1M9PWZMtqu3MW2dMNCJNo3NApM2Wx9DwMW', "long-hash"),
+        ]),
+        Field("cemented_commitment", "Commitment", [
+            Field.Case('src12UJzB8mg7yU6nWPzicH7ofJbFjyJEbHvwtZdfRXi8DQHNp1LY8', "src1"),
+            Field.Case('src13w9G1om8PMHmgMNEwX6NMWKAgDSfmU4mZXbkNWbikmCuWhuB7W', "long-hash"),
+        ]),
+        Field("output_proof", "Output proof", [
+            Field.Case(b'', "empty"),
+            Field.Case(b'0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF', "long"),
+        ]),
+    ]

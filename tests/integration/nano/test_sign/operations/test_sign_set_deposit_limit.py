@@ -17,7 +17,7 @@
 """Gathering of tests related to Set-deposit-limit operations."""
 
 from utils.message import SetDepositLimit
-from .helper import Flow, TestOperation, pytest_generate_tests
+from .helper import Flow, Field, TestOperation, pytest_generate_tests
 
 
 class TestSetDepositLimit(TestOperation):
@@ -28,3 +28,14 @@ class TestSetDepositLimit(TestOperation):
         return SetDepositLimit
 
     flows = [Flow('basic', limit=400)]
+
+    fields = [
+        Field("limit", "Staking limit", [
+            Field.Case(None, "none"),
+            Field.Case(0, "0"),
+            Field.Case(1000, "1000"),
+            Field.Case(1000000, "1000000"),
+            Field.Case(1000000000, "1000000000"),
+            Field.Case(0xFFFFFFFFFFFFFFFF, "max"),  # max uint64
+        ]),
+    ]

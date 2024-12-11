@@ -17,7 +17,7 @@
 """Gathering of tests related to Transaction operations."""
 
 from utils.message import Transaction
-from .helper import Flow, TestOperation, pytest_generate_tests
+from .helper import Flow, Field, TestOperation, pytest_generate_tests
 
 
 class TestTransaction(TestOperation):
@@ -60,4 +60,41 @@ class TestTransaction(TestOperation):
                 ]}
             ]}
         ),
+    ]
+
+    fields = [
+        Field("amount", "Amount", [
+            Field.Case(0, "0"),
+            Field.Case(1000, "1000"),
+            Field.Case(1000000, "1000000"),
+            Field.Case(1000000000, "1000000000"),
+            Field.Case(0xFFFFFFFFFFFFFFFF, "max"),  # max uint64
+        ]),
+        Field("destination", "Destination", [
+            Field.Case('tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa', "tz1"),
+            Field.Case('tz2CJBeWWLsUDjVUDqGZL6od3DeBCNzYXrXk', "tz2"),
+            Field.Case('tz3fLwHKthqhTPK6Lar6CTXN1WbDETw1YpGB', "tz3"),
+            Field.Case('KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT', "kt1"),
+            Field.Case('tz1Kp8NCAN5WWwvkWkMmQQXMRe68iURmoQ8w', "long-hash"),
+        ]),
+        Field("entrypoint", "Entrypoint", [
+            # `parameter` is set to make sure `entrypoint` is displayed with `default`
+            Field.Case('default', "default", parameter={'prim': 'None'}),
+            Field.Case('root', "root"),
+            Field.Case('do', "do"),
+            Field.Case('set_delegate', "set_delegate"),
+            Field.Case('remove_delegate', "remove_delegate"),
+            Field.Case('deposit', "deposit"),
+            Field.Case('stake', "stake"),
+            Field.Case('unstake', "unstake"),
+            Field.Case('finalize_unstake', "finalize_unstake"),
+            Field.Case('set_delegate_parameters', "set_delegate_parameters"),
+            Field.Case('custom_entrypoint', "custom_entrypoint"),
+        ]),
+        Field("parameter", "Parameter", [
+            # `entrypoint` is set to make sure `parameter` is displayed with `unit`
+            Field.Case({'prim': 'Unit'}, "unit", entrypoint='entrypoint'),
+            Field.Case({'prim': 'Pair', 'args': [{'string': 'a'}, {'int': 1}]}, "basic"),
+            # More test about Micheline in micheline tests
+        ]),
     ]
