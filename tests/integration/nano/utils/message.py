@@ -74,6 +74,7 @@ class Default:
     ORIGINATED_SMART_ROLLUP_ADDRESS: str = 'sr163Lv22CdE8QagCwf48PWDTquk6isQwv57'
     SMART_ROLLUP_COMMITMENT_HASH: str    = 'src12UJzB8mg7yU6nWPzicH7ofJbFjyJEbHvwtZdfRXi8DQHNp1LY8'
     ED25519_PUBLIC_KEY: str              = 'edpkteDwHwoNPB18tKToFKeSCykvr1ExnoMV5nawTJy9Y9nLTfQ541'
+    SCRIPT_EXPR_HASH: str                = 'exprtWsu7N8st7XBhS685Qa2B4xP6TuTN9ve9UPCU29fV94ySDo5Va'
     ENTRYPOINT: str                      = 'default'
     BALLOT: str                          = 'yay'
     SMART_ROLLUP_KIND: str               = 'arith'

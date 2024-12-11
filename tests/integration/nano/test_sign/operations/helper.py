@@ -20,6 +20,8 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, Dict, List, Type, TypeVar
 
+from ragger.navigator import NavInsID
+
 from utils.account import Account
 from utils.backend import TezosBackend
 from utils.message import Operation
@@ -66,10 +68,85 @@ def parametrize_test_operation_flow(metafunc) -> None:
     )
 
 
+class Field:
+    """Data required to run `test_operation_field`.
+
+    name: str
+    Name of the field in the operation constructor
+
+    text: str
+    Title of the field displayed on the screen
+
+    cases: List[Case]
+    Every cases to test
+
+    """
+
+    class Case:
+        """Data representing a case to test for a given field.
+
+        value: Any
+        Value of the field
+
+        name: str
+        Identifier for naming the test: <field.name>-<name>
+
+        fields: Dict[str, Any]
+        Additionnals fields passed to the operation contstructor
+
+        """
+
+        value: Any
+        name: str
+        fields: Dict[str, Any]
+
+        def __init__(self, value, name, **kwargs):
+            self.value = value
+            self.name = name
+            self.fields = kwargs
+
+    name: str
+    text: str
+    cases: List[Case]
+
+    def __init__(self, name, text, cases):
+        self.name = name
+        self.text = text
+        self.cases = cases
+
+
+def parametrize_test_operation_field(metafunc) -> None:
+    """Parametrize `TestOperation.test_operation_field`."""
+    args_names = ["field", "case_"]
+    args_values = []
+    args_ids = []
+
+    if hasattr(metafunc.cls, 'fields'):
+        fields_args: List[Field] = metafunc.cls.fields
+        args_values = [
+            (field, case_)
+            for field in fields_args
+            for case_ in field.cases
+        ]
+        args_ids = [
+            f"{field.name}-{case_.name}"
+            for field in fields_args
+            for case_ in field.cases
+        ]
+
+    metafunc.parametrize(
+        args_names,
+        args_values,
+        ids=args_ids
+    )
+
+
 def pytest_generate_tests(metafunc) -> None:
     """Need to be include before the `TestOperation` usage."""
     if metafunc.function.__name__ == "test_operation_flow":
         parametrize_test_operation_flow(metafunc)
+    if metafunc.function.__name__ == "test_operation_field":
+        parametrize_test_operation_field(metafunc)
 
 
 class TestOperation(ABC):
@@ -123,3 +200,53 @@ class TestOperation(ABC):
 
         with backend.sign(account, message):
             tezos_navigator.accept_sign(snap_path=snapshot_dir)
+
+    def test_operation_field(
+            self,
+            backend: TezosBackend,
+            tezos_navigator: TezosNavigator,
+            account: Account,
+            field: Field,
+            case_: Field.Case,
+            snapshot_dir: Path
+    ):
+        """Check how fields are displayed
+
+        Will be run for each `Field.Case` of every `Field` in the
+        field `fields`
+
+        """
+
+        fields = case_.fields
+        fields[field.name] = case_.value
+        operation = self.op_class(**fields)
+
+        tezos_navigator.toggle_expert_mode()
+
+        with backend.sign(account, operation):
+            # Navigates until fields
+            tezos_navigator.navigate_forward(
+                text="Operation",
+                validation_instructions=[NavInsID.RIGHT_CLICK],
+                screen_change_before_first_instruction=True,
+            )
+
+            # Navigates until the field
+            tezos_navigator.navigate_forward(
+                text=field.text,
+                # Even if the screen has changed, we know we are on
+                # the right screen because the text has been found
+                screen_change_after_last_instruction=False
+            )
+
+            # Compare all field's screens
+            tezos_navigator.navigate_while_text_and_compare(
+                navigate_instruction=NavInsID.RIGHT_CLICK,
+                text=field.text,
+                snap_path=snapshot_dir,
+            )
+
+            # Finish the signing
+            tezos_navigator.accept_sign(
+                screen_change_before_first_instruction=False
+            )

@@ -17,7 +17,7 @@
 """Gathering of tests related to Ballot operations."""
 
 from utils.message import Ballot
-from .helper import Flow, TestOperation, pytest_generate_tests
+from .helper import Flow, Field, TestOperation, pytest_generate_tests
 
 
 class TestBallot(TestOperation):
@@ -28,3 +28,27 @@ class TestBallot(TestOperation):
         return Ballot
 
     flows = [Flow('basic')]
+
+    fields = [
+        Field("source", "Source", [
+            Field.Case('tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa', "tz1"),
+            Field.Case('tz2CJBeWWLsUDjVUDqGZL6od3DeBCNzYXrXk', "tz2"),
+            Field.Case('tz3fLwHKthqhTPK6Lar6CTXN1WbDETw1YpGB', "tz3"),
+            Field.Case('tz1Kp8NCAN5WWwvkWkMmQQXMRe68iURmoQ8w', "long-hash"),
+        ]),
+        Field("period", "Period", [
+            Field.Case(0, "0"),
+            Field.Case(32, "32"),
+            Field.Case(0x7FFFFFFF, "max"),  # max int32
+            Field.Case(0x80000000, "min"),  # min int32
+        ]),
+        Field("proposal", "Proposal", [
+            Field.Case('PsParisCZo7KAh1Z1smVd9ZMZ1HHn5gkzbM94V3PLCpknFWhUAi', "basic"),
+            Field.Case('Ptd4kYMModZQ6Mh4ZRNMmWpM799PgSzjmGw3GM9Q2SDqqo8WCW8', "long-hash"),
+        ]),
+        Field("ballot", "Ballot", [
+            Field.Case('yay', "yay"),
+            Field.Case('nay', "nay"),
+            Field.Case('pass', "pass"),
+        ]),
+    ]
