@@ -20,7 +20,8 @@ from pathlib import Path
 
 import pytest
 
-from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
+from utils.account import Account
+from utils.app import TezosAppScreen
 from utils.backend import StatusCode
 from utils.message import RawMessage
 
@@ -53,14 +54,14 @@ from utils.message import RawMessage
         "one_byte_added_inside",
     ]
 )
-def test_parsing_error(app: TezosAppScreen, raw_msg: str, snapshot_dir: Path):
+def test_parsing_error(app: TezosAppScreen, raw_msg: str, account: Account, snapshot_dir: Path):
     """Check parsing error handling"""
 
     app.toggle_expert_mode()
 
     with StatusCode.PARSE_ERROR.expected():
         with app.backend.sign(
-                DEFAULT_ACCOUNT,
+                account,
                 RawMessage(raw_msg),
                 with_hash=True
         ):
@@ -74,14 +75,14 @@ def test_parsing_error(app: TezosAppScreen, raw_msg: str, snapshot_dir: Path):
         "wrong_last_packet",
     ]
 )
-def test_parsing_hard_fail(app: TezosAppScreen, raw_msg: str, snapshot_dir: Path):
+def test_parsing_hard_fail(app: TezosAppScreen, raw_msg: str, account: Account, snapshot_dir: Path):
     """Check parsing error hard failing"""
 
     app.toggle_expert_mode()
 
     with StatusCode.UNEXPECTED_SIGN_STATE.expected():
         with app.backend.sign(
-                DEFAULT_ACCOUNT,
+                account,
                 RawMessage(raw_msg),
                 with_hash=True
         ):

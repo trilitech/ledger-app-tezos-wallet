@@ -23,7 +23,6 @@ from typing import List, Optional, Union
 from ragger.backend import SpeculosBackend
 from ragger.navigator import NavIns, NavInsID, NanoNavigator
 
-from .account import Account, SigType
 from .backend import TezosBackend
 
 
@@ -306,9 +305,3 @@ class TezosAppScreen():
             validation_instructions=[NavInsID.BOTH_CLICK],
             **kwargs
         )
-
-DEFAULT_SEED = 'zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra'
-
-DEFAULT_ACCOUNT = Account("m/44'/1729'/0'/0'",
-                          SigType.ED25519,
-                          "edpkuXX2VdkdXzkN11oLCb8Aurdo1BTAtQiK8ZY9UPj2YMt3AHEpcY")
