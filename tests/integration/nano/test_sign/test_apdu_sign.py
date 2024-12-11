@@ -16,8 +16,10 @@
 
 """Gathering of tests related to Sign instructions."""
 
+from pathlib import Path
+
 from utils.account import Account
-from utils.backend import TezosBackend
+from utils.backend import StatusCode, TezosBackend
 from utils.message import MichelineExpr, Transaction
 from utils.navigator import TezosNavigator
 
@@ -39,6 +41,20 @@ def test_sign_micheline_without_hash(
         with_hash=False,
         data=result.value
     )
+
+def test_reject_operation(
+        backend: TezosBackend,
+        tezos_navigator: TezosNavigator,
+        account: Account,
+        snapshot_dir: Path
+):
+    """Check reject transaction"""
+
+    message = Transaction()
+
+    with StatusCode.REJECT.expected():
+        with backend.sign(account, message, with_hash=True):
+            tezos_navigator.reject_sign(snap_path=snapshot_dir)
 
 def test_sign_with_small_packet(
         backend: TezosBackend,
