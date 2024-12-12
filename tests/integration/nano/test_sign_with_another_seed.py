@@ -21,15 +21,7 @@ import pytest
 
 from utils.account import Account, SigType
 from utils.app import TezosAppScreen
-from utils.message import Message
-
-# Operation (0): Transaction
-# Fee: 0.05 XTZ
-# Storage limit: 45
-# Amount: 0.24 XTZ
-# Destination: KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT
-# Entrypoint: do
-# Parameter: CAR
+from utils.message import Transaction
 
 @pytest.mark.parametrize("seed", ["around dignity equal spread between young lawsuit interest climb wide that panther rather mom snake scene ecology reunion ice illegal brush"])
 def test_sign_with_another_seed(app: TezosAppScreen):
@@ -42,7 +34,17 @@ def test_sign_with_another_seed(app: TezosAppScreen):
                       SigType.ED25519,
                       "edpkupntwMyERpYniuK1GDWquPaPU1wYsQgMirJPLGmC4Y5dMUsQNo")
 
-    message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316")
+    message = Transaction(
+        source = 'tz2JPgTWZZpxZZLqHMfS69UAy1UHm4Aw5iHu',
+        fee = 50000,
+        counter = 8,
+        gas_limit = 54,
+        storage_limit = 45,
+        destination = 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT',
+        amount = 240000,
+        entrypoint = 'do',
+        parameter = {'prim': 'CAR'}
+    )
 
     data = app.sign(account,
                     message,

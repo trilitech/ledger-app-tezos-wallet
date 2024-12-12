@@ -18,12 +18,7 @@
 from pathlib import Path
 
 from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
-from utils.message import Message
-
-# Operation (0): Register global constant
-# Fee: 0.01 XTZ
-# Storage limit: 4
-# Value: Pair "1" 2
+from utils.message import RegisterGlobalConstant
 
 def test_sign_register_global_constant(app: TezosAppScreen):
     """Check signing register global constant"""
@@ -31,7 +26,14 @@ def test_sign_register_global_constant(app: TezosAppScreen):
 
     app.setup_expert_mode()
 
-    message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000006f00ffdd6102321bc251e4a5190ad5b12b251069d9b4904e0203040000000a07070100000001310002")
+    message = RegisterGlobalConstant(
+        source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
+        fee = 10000,
+        counter = 2,
+        gas_limit = 3,
+        storage_limit = 4,
+        value = {'prim': 'Pair', 'args': [{'string': '1'}, {'int': 2}]}
+    )
 
     data = app.sign(DEFAULT_ACCOUNT,
                     message,

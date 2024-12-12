@@ -18,34 +18,11 @@
 from pathlib import Path
 
 from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
-from utils.message import Message
-
-# Operation (0): Transaction
-# Fee: 0.05 XTZ
-# Storage limit: 45
-# Amount: 0.24 XTZ
-# Destination: KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT
-# Entrypoint: do
-# Parameter: CAR
-
-## Operation (0): Origination
-# Source: tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa
-# Fee: 0.5 XTZ
-# Storage limit: 4
-# Balance: 1 XTZ
-# Delegate: None
-# Code: UNPACK mutez
-# Storage: or key chest
-## Operation (1): Transfer ticket
-# Source: tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa
-# Fee: 0.01 XTZ
-# Storage limit: 5
-# Contents: None
-# Type: option nat
-# Ticketer: tz1TmFPVZsGQ8MnrBJtnECJgkFUwLa6EWYDm
-# Amount: 7
-# Destination: tz3eydffbLkjdVb8zx42BvxpGV87zaRnqL3r
-# Entrypoint: default
+from utils.message import (
+    OperationGroup,
+    Origination,
+    TransferTicket
+)
 
 def test_sign_complex_operation(app: TezosAppScreen):
     """Check signing complex operation"""
@@ -54,7 +31,30 @@ def test_sign_complex_operation(app: TezosAppScreen):
     app.assert_screen(Screen.HOME)
     app.setup_expert_mode()
 
-    message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000006d00ffdd6102321bc251e4a5190ad5b12b251069d9b4a0c21e040304c0843d0000000004050d036a000000060764035c038d9e00ffdd6102321bc251e4a5190ad5b12b251069d9b4904e05040500000002030600000004056303620000591e842444265757d6a65e3670ca18b5e662f9c0070002cc8e146741cf31fc00123b8c26baf95c57421a3c0000000764656661756c74")
+    message = OperationGroup([
+        Origination(
+            source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
+            fee = 500000,
+            counter = 4,
+            gas_limit = 3,
+            storage_limit = 4,
+            code = {'prim': 'UNPACK', 'args': [{'prim': 'mutez'}]},
+            storage = {'prim': 'or', 'args': [{'prim': 'key'}, {'prim': 'chest'}]},
+            balance = 1000000
+        ),
+        TransferTicket(
+            source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
+            fee = 10000,
+            counter = 5,
+            gas_limit = 4,
+            storage_limit = 5,
+            ticket_contents = {'prim': 'None'},
+            ticket_ty = {'prim': 'option', 'args': [{'prim': 'nat'}]},
+            ticket_ticketer = 'tz1TmFPVZsGQ8MnrBJtnECJgkFUwLa6EWYDm',
+            ticket_amount = 7,
+            destination = 'tz3eydffbLkjdVb8zx42BvxpGV87zaRnqL3r'
+        )
+    ])
 
     data = app.sign(DEFAULT_ACCOUNT,
                     message,

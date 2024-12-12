@@ -18,14 +18,7 @@
 from pathlib import Path
 
 from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
-from utils.message import Message
-
-# Operation (0): SR: send messages
-# Fee: 0.01 XTZ
-# Storage limit: 4
-# Message (0): 012345
-# Message (1): 67
-# Message (2): 89abcdef
+from utils.message import ScRollupAddMessage
 
 def test_sign_sc_rollup_add_messages(app: TezosAppScreen):
     """Check signing smart rollup add message"""
@@ -33,7 +26,14 @@ def test_sign_sc_rollup_add_messages(app: TezosAppScreen):
 
     app.assert_screen(Screen.HOME)
 
-    message = Message.from_bytes("030000000000000000000000000000000000000000000000000000000000000000c900ffdd6102321bc251e4a5190ad5b12b251069d9b4904e020304000000140000000301234500000001670000000489abcdef")
+    message = ScRollupAddMessage(
+        source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
+        fee = 10000,
+        counter = 2,
+        gas_limit = 3,
+        storage_limit = 4,
+        message = [bytes.fromhex('012345'), bytes.fromhex('67'), bytes.fromhex('89abcdef')]
+    )
 
     data = app.sign(DEFAULT_ACCOUNT,
                     message,

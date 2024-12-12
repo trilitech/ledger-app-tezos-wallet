@@ -19,9 +19,7 @@ from pathlib import Path
 
 from utils.account import Account, SigType
 from utils.app import TezosAppScreen
-from utils.message import Message
-
-# Expression: {"CACA";"POPO";"BOUDIN"}
+from utils.message import MichelineExpr
 
 def test_tz3_sign_micheline_basic(app: TezosAppScreen):
     """Check signing with p256"""
@@ -31,7 +29,7 @@ def test_tz3_sign_micheline_basic(app: TezosAppScreen):
                       SigType.SECP256R1,
                       "p2pk67fq5pzuMMABZ9RDrooYbLrgmnQbLt8z7PTGM9mskf7LXS5tdBG")
 
-    message = Message.from_bytes("05020000001d0100000004434143410100000004504f504f0100000006424f5544494e")
+    message = MichelineExpr([{'string': 'CACA'}, {'string': 'POPO'}, {'string': 'BOUDIN'}])
 
     data = app.sign(account,
                     message,

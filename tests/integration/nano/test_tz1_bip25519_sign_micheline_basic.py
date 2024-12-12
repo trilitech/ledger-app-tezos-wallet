@@ -19,9 +19,7 @@ from pathlib import Path
 
 from utils.account import Account, SigType
 from utils.app import Screen, TezosAppScreen
-from utils.message import Message
-
-# Expression: {"CACA";"POPO";"BOUDIN"}
+from utils.message import MichelineExpr
 
 def test_tz1_bip25519_sign_micheline_basic(app: TezosAppScreen):
     """Check signing with bip25519"""
@@ -33,7 +31,7 @@ def test_tz1_bip25519_sign_micheline_basic(app: TezosAppScreen):
                       SigType.BIP32_ED25519,
                       "edpkumJgSsSxkpiB5hmTq6eZcrmc6BsJtLAhYceFTiziFqje4mongz")
 
-    message = Message.from_bytes("05020000001d0100000004434143410100000004504f504f0100000006424f5544494e")
+    message = MichelineExpr([{'string': 'CACA'}, {'string': 'POPO'}, {'string': 'BOUDIN'}])
 
     data = app.sign(account,
                     message,
