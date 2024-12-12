@@ -18,7 +18,9 @@
 
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Dict, List, Type, TypeVar
+from typing import Any, Dict, List, Optional, Type, TypeVar
+
+import pytest
 
 from ragger.navigator import NavInsID
 
@@ -158,6 +160,10 @@ class TestOperation(ABC):
         """Constructor of the Operation class."""
         raise NotImplementedError
 
+    def skip_signature_check(self) -> Optional[str]:
+        """Reason why skipping the `test_sign_operation` test."""
+        return None
+
     def test_sign_operation(
             self,
             backend: TezosBackend,
@@ -168,6 +174,10 @@ class TestOperation(ABC):
             - Hash
             - Signature
         """
+        reason: Optional[str] = self.skip_signature_check()
+        if reason is not None:
+            pytest.skip(reason)
+
         message = self.op_class()
 
         tezos_navigator.toggle_expert_mode()
