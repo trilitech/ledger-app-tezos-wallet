@@ -16,147 +16,87 @@
 
 """Gathering of tests related to Batched operations."""
 
-from pathlib import Path
-
-from conftest import requires_device
-
-from utils.account import Account
-from utils.backend import TezosBackend
 from utils.message import (
     OperationGroup,
-    Origination,
+    Reveal,
     Transaction,
-    TransferTicket
+    Origination,
+    Delegation,
+    RegisterGlobalConstant,
+    SetDepositLimit,
+    IncreasePaidStorage,
+    UpdateConsensusKey,
+    TransferTicket,
+    ScRollupOriginate,
+    ScRollupAddMessage,
+    ScRollupExecuteOutboxMessage,
 )
-from utils.navigator import TezosNavigator
+from .helper import Flow, Field, TestOperation, pytest_generate_tests
 
 
-@requires_device("nanos")
-def test_nanos_regression_batched_ops(
-        backend: TezosBackend,
-        tezos_navigator: TezosNavigator,
-        account: Account,
-        snapshot_dir: Path
-):
-    """Check signing batch operation"""
+class TestManagerOperation(TestOperation):
+    """Commun tests."""
 
-    tezos_navigator.toggle_expert_mode()
+    @property
+    def op_class(self):
+        return Transaction  # A Manager operation
 
-    message = OperationGroup([
-        Transaction(
-            source = 'tz1McCh72NRhYmJBcWr3zDrLJAxnfR9swcFh',
-            fee = 390000,
-            counter = 9,
-            gas_limit = 0,
-            storage_limit = 6,
-            destination = 'tz1cfdVKpBb9VRBdny8BQ5RSK82UudAp2miM',
-            amount = 20000,
-            entrypoint = 'jean_bob',
-            parameter = [{'prim':'Pair','args':[[],{'prim':'Right','args':[{'int':-76723569314251090535296646}]}]},{'prim':'Pair','args':[[{'prim':'Elt','args':[{'prim':'Unit','args':[]},{'prim':'Pair','args':[[{'prim':'Left','args':[{'prim':'Unit','args':[]}]}],{'prim':'Pair','args':[{'prim':'Left','args':[{'bytes':"03F01167865DC63DFEE0E31251329CEAB660D94606"}]},{'prim':'Pair','args':[{'bytes':"0107B21FCA96C5763F67B286752C7AAEFC5931D15A"},{'prim':'Unit','args':[]}]}]}]}]}],{'prim':'Right','args':[{'int':3120123370638446806591421154959427514880865200209654970345}]},]},{'prim':'Pair','args':[[],{'prim':'Left','args':[{'prim':'Some','args':[{'prim':'Unit','args':[]}]}]}]}]
-        ),
-        Transaction(
-            source = 'tz2W3Tvcm64GjcV2bipUynnEsctLFz5Z6yRa',
-            fee = 650000,
-            counter = 6,
-            gas_limit = 50,
-            storage_limit = 2,
-            destination = 'KT1CYT8oACUcCSNTu2qfgB4fj5bD7szYrpti',
-            amount = 60000
-        )
-    ])
+    def skip_signature_check(self):
+        return "no generic ManagerOperation"
 
-    with backend.sign(account, message, with_hash=True) as result:
-        tezos_navigator.accept_sign(snap_path=snapshot_dir)
+    fields = [
+        Field("source", "Source", [
+            Field.Case('tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa', "tz1"),
+            Field.Case('tz2CJBeWWLsUDjVUDqGZL6od3DeBCNzYXrXk', "tz2"),
+            Field.Case('tz3fLwHKthqhTPK6Lar6CTXN1WbDETw1YpGB', "tz3"),
+            Field.Case('tz1Kp8NCAN5WWwvkWkMmQQXMRe68iURmoQ8w', "long-hash"),
+        ]),
+        Field("fee", "Fee", [
+            Field.Case(0, "0"),
+            Field.Case(1000, "1000"),
+            Field.Case(1000000, "1000000"),
+            Field.Case(1000000000, "1000000000"),
+            Field.Case(0xFFFFFFFFFFFFFFFF, "max"),  # max uint64
+        ]),
+        Field("storage_limit", "Storage limit", [
+            Field.Case(0, "min"),
+            Field.Case(0xFFFFFFFFFFFFFFFFFFFF, "max"),
+        ]),
+    ]
 
-    account.check_signature(
-        message=message,
-        with_hash=True,
-        data=result.value
-    )
 
-@requires_device("nanox")
-def test_nanox_regression_batched_ops(
-        backend: TezosBackend,
-        tezos_navigator: TezosNavigator,
-        account: Account,
-        snapshot_dir: Path
-):
-    """Check signing batch operation"""
+class TestOperationGroup(TestOperation):
+    """Commun tests."""
 
-    tezos_navigator.toggle_expert_mode()
+    @property
+    def op_class(self):
+        return OperationGroup
 
-    message = OperationGroup([
-        Transaction(
-            source = 'tz1McCh72NRhYmJBcWr3zDrLJAxnfR9swcFh',
-            fee = 390000,
-            counter = 9,
-            gas_limit = 0,
-            storage_limit = 6,
-            destination = 'tz1cfdVKpBb9VRBdny8BQ5RSK82UudAp2miM',
-            amount = 20000,
-            entrypoint = 'jean_bob',
-            parameter = [{'prim':'Pair','args':[[],{'prim':'Right','args':[{'int':-76723569314251090535296646}]}]},{'prim':'Pair','args':[[{'prim':'Elt','args':[{'prim':'Unit','args':[]},{'prim':'Pair','args':[[{'prim':'Left','args':[{'prim':'Unit','args':[]}]}],{'prim':'Pair','args':[{'prim':'Left','args':[{'bytes':"03F01167865DC63DFEE0E31251329CEAB660D94606"}]},{'prim':'Pair','args':[{'bytes':"0107B21FCA96C5763F67B286752C7AAEFC5931D15A"},{'prim':'Unit','args':[]}]}]}]}]}],{'prim':'Right','args':[{'int':3120123370638446806591421154959427514880865200209654970345}]},]},{'prim':'Pair','args':[[],{'prim':'Left','args':[{'prim':'Some','args':[{'prim':'Unit','args':[]}]}]}]}]
-        ),
-        Transaction(
-            source = 'tz2W3Tvcm64GjcV2bipUynnEsctLFz5Z6yRa',
-            fee = 650000,
-            counter = 6,
-            gas_limit = 50,
-            storage_limit = 2,
-            destination = 'KT1CYT8oACUcCSNTu2qfgB4fj5bD7szYrpti',
-            amount = 60000
-        )
-    ])
+    def skip_signature_check(self):
+        return "no empty OperationGroup"
 
-    with backend.sign(account, message, with_hash=True) as result:
-        tezos_navigator.accept_sign(snap_path=snapshot_dir)
-
-    account.check_signature(
-        message=message,
-        with_hash=True,
-        data=result.value
-    )
-
-def test_sign_complex_operation(
-        backend: TezosBackend,
-        tezos_navigator: TezosNavigator,
-        account: Account,
-        snapshot_dir: Path
-):
-    """Check signing complex operation"""
-
-    tezos_navigator.toggle_expert_mode()
-
-    message = OperationGroup([
-        Origination(
-            source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
-            fee = 500000,
-            counter = 4,
-            gas_limit = 3,
-            storage_limit = 4,
-            code = {'prim': 'UNPACK', 'args': [{'prim': 'mutez'}]},
-            storage = {'prim': 'or', 'args': [{'prim': 'key'}, {'prim': 'chest'}]},
-            balance = 1000000
-        ),
-        TransferTicket(
-            source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
-            fee = 10000,
-            counter = 5,
-            gas_limit = 4,
-            storage_limit = 5,
-            ticket_contents = {'prim': 'None'},
-            ticket_ty = {'prim': 'option', 'args': [{'prim': 'nat'}]},
-            ticket_ticketer = 'tz1TmFPVZsGQ8MnrBJtnECJgkFUwLa6EWYDm',
-            ticket_amount = 7,
-            destination = 'tz3eydffbLkjdVb8zx42BvxpGV87zaRnqL3r'
-        )
-    ])
-
-    with backend.sign(account, message, with_hash=True) as result:
-        tezos_navigator.accept_sign(snap_path=snapshot_dir)
-
-    account.check_signature(
-        message=message,
-        with_hash=True,
-        data=result.value
-    )
+    flows = [
+        Flow('many-transactions', operations=[
+            Transaction(),
+            Transaction(),
+            Transaction(),
+        ]),
+        Flow('reveal-transaction', operations=[
+            Reveal(),
+            Transaction(),
+        ]),
+        Flow('all', operations=[
+            Reveal(),
+            Transaction(),
+            Origination(),
+            Delegation(),
+            RegisterGlobalConstant(),
+            SetDepositLimit(),
+            IncreasePaidStorage(),
+            UpdateConsensusKey(),
+            TransferTicket(),
+            ScRollupOriginate(),
+            ScRollupAddMessage(),
+            ScRollupExecuteOutboxMessage(),
+        ]),
+    ]
