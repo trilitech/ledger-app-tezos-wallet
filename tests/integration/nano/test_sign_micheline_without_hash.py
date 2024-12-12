@@ -13,17 +13,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Check signing micheline wihout getting hash"""
+
 from pathlib import Path
 
-from utils.app import Screen, DEFAULT_ACCOUNT
+from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
 from utils.message import Message
 
 # Expression: {"CACA";"POPO";"BOUDIN"}
 
-def test_sign_micheline_without_hash(app):
+def test_sign_micheline_without_hash(app: TezosAppScreen):
+    """Check signing micheline wihout getting hash"""
     test_name = Path(__file__).stem
 
-    app.assert_screen(Screen.Home)
+    app.assert_screen(Screen.HOME)
 
     message = Message.from_bytes("05020000001d0100000004434143410100000004504f504f0100000006424f5544494e")
 

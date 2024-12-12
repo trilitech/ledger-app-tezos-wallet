@@ -13,9 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Check signing proposals"""
+
 from pathlib import Path
 
-from utils.app import Screen, DEFAULT_ACCOUNT
+from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
 from utils.message import Message
 
 # Operation (0): Proposals
@@ -24,10 +26,11 @@ from utils.message import Message
 # Proposal (0): ProtoALphaALphaALphaALphaALphaALphaALpha61322gcLUGH
 # Proposal (1): ProtoALphaALphaALphaALphaALphaALphaALphabc2a7ebx6WB
 
-def test_sign_proposals(app):
+def test_sign_proposals(app: TezosAppScreen):
+    """Check signing proposals"""
     test_name = Path(__file__).stem
 
-    app.assert_screen(Screen.Home)
+    app.assert_screen(Screen.HOME)
 
     message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000000500ffdd6102321bc251e4a5190ad5b12b251069d9b400000020000000400bcd7b2cadcd87ecb0d5c50330fb59feed7432bffecede8a09a2b86cfb33847b0bcd7b2cadcd87ecb0d5c50330fb59feed7432bffecede8a09a2b86dac301a2d")
 

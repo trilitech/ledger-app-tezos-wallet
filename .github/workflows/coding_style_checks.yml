@@ -23,3 +23,20 @@ jobs:
       source: './app/src'
       extensions: 'h,c'
       version: 15
+
+  pylint_check:
+    name: Python Lint Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+
+      - name: Install pylint
+        run: pip install pylint -r tests/requirements.txt
+
+      - name: Run pylint with .pylintrc
+        run: pylint --errors-only --rcfile=tests/integration/.pylintrc tests/integration/nano/

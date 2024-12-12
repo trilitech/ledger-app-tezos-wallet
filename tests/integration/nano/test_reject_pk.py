@@ -13,14 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Check reject pk behaviour"""
+
 from pathlib import Path
 
-from utils.app import Screen, DEFAULT_ACCOUNT
+from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
 
-def test_reject_pk(app):
+def test_reject_pk(app: TezosAppScreen):
+    """Check reject pk behaviour"""
     test_name = Path(__file__).stem
 
-    app.assert_screen(Screen.Home)
+    app.assert_screen(Screen.HOME)
 
     app.reject_public_key(DEFAULT_ACCOUNT, test_name)
 

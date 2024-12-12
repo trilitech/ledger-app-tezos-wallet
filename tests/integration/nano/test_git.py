@@ -13,11 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from utils.app import Screen
+"""Module to test git instruction."""
 
-def test_git(app):
+from utils.app import Screen, TezosAppScreen
 
-    app.assert_screen(Screen.Home)
+def test_git(app: TezosAppScreen):
+    """Test that the app commit is the same as the current git commit."""
+    app.assert_screen(Screen.HOME)
 
     data = app.backend.git()
 

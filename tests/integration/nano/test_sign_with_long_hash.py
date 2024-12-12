@@ -13,9 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Check signing transaction with a long destination hash"""
+
 from pathlib import Path
 
-from utils.app import Screen, DEFAULT_ACCOUNT
+from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
 from utils.message import Message
 
 # Operation (0): Transaction
@@ -26,7 +28,8 @@ from utils.message import Message
 # Entrypoint: root
 # Parameter: 0
 
-def test_sign_with_long_hash(app):
+def test_sign_with_long_hash(app: TezosAppScreen):
+    """Check signing transaction with a long destination hash"""
     test_name = Path(__file__).stem
 
     app.setup_expert_mode()

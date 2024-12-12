@@ -13,18 +13,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Check signing with secp256k1"""
+
 from pathlib import Path
 
-from utils.account import Account, SIGNATURE_TYPE
+from utils.account import Account, SigType
+from utils.app import TezosAppScreen
 from utils.message import Message
 
 # Expression: {"CACA";"POPO";"BOUDIN"}
 
-def test_tz2_sign_micheline_basic(app):
+def test_tz2_sign_micheline_basic(app: TezosAppScreen):
+    """Check signing with secp256k1"""
     test_name = Path(__file__).stem
 
     account = Account("m/44'/1729'/0'/0'",
-                      SIGNATURE_TYPE.SECP256K1,
+                      SigType.SECP256K1,
                       "sppk7bVy617DmGvXsMqcwsiLtnedTN2trUi5ugXcNig7en4rHJyunK1")
 
     message = Message.from_bytes("05020000001d0100000004434143410100000004504f504f0100000006424f5544494e")

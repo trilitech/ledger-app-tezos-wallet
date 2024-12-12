@@ -3,6 +3,7 @@ setuptools
 pkginfo
 cryptography
 base58
-pytezos
+pytezos==3.13.4
 GitPython
 pytest-xdist
+ragger[tests,speculos,ledgerwallet]

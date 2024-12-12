@@ -13,16 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from utils.app import DEFAULT_ACCOUNT, Screen
-from utils.backend import INDEX, INS, StatusCode
+"""Check wrong apdu index behaviour"""
 
-def test_wrong_index(app):
-    for ins in [INS.GET_PUBLIC_KEY,
-                INS.PROMPT_PUBLIC_KEY]:
-        for index in [INDEX.OTHER,
-                      INDEX.LAST]:
+from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
+from utils.backend import Index, Ins, StatusCode
 
-            app.assert_screen(Screen.Home)
+def test_wrong_index(app: TezosAppScreen):
+    """Check wrong apdu index behaviour"""
+    for ins in [Ins.GET_PUBLIC_KEY,
+                Ins.PROMPT_PUBLIC_KEY]:
+        for index in [Index.OTHER,
+                      Index.LAST]:
+
+            app.assert_screen(Screen.HOME)
 
             with app.expect_apdu_failure(StatusCode.WRONG_PARAM):
                 app.backend._exchange(ins,

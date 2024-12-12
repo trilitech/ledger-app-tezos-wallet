@@ -19,3 +19,12 @@ repos:
         language: system
         files: ^
         types: [file, c]
+
+      - id: pylint
+        name: pylint
+        description: Run pylint with custom .pylintrc configuration
+        entry: pylint
+        language: system
+        pass_filenames: false
+        args: ["--errors-only", "--rcfile=tests/integration/.pylintrc", "tests/integration/nano/"]
+        types: [python]

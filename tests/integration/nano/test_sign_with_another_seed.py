@@ -13,12 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
+"""Check signing using another seed than [zebra*24]"""
 
 from pathlib import Path
 
-from utils.account import Account, SIGNATURE_TYPE
-from utils.app import Screen
+import pytest
+
+from utils.account import Account, SigType
+from utils.app import TezosAppScreen
 from utils.message import Message
 
 # Operation (0): Transaction
@@ -30,13 +32,14 @@ from utils.message import Message
 # Parameter: CAR
 
 @pytest.mark.parametrize("seed", ["around dignity equal spread between young lawsuit interest climb wide that panther rather mom snake scene ecology reunion ice illegal brush"])
-def test_sign_with_another_seed(app):
+def test_sign_with_another_seed(app: TezosAppScreen):
+    """Check signing using another seed than [zebra*24]"""
     test_name = Path(__file__).stem
 
     app.setup_expert_mode()
 
     account = Account("m/44'/1729'/0'/0'",
-                      SIGNATURE_TYPE.ED25519,
+                      SigType.ED25519,
                       "edpkupntwMyERpYniuK1GDWquPaPU1wYsQgMirJPLGmC4Y5dMUsQNo")
 
     message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316")

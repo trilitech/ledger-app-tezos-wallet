@@ -12,28 +12,37 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Implemenation of sent messages."""
+
 from hashlib import blake2b
 from typing import Union
 
 class Message:
+    """Class representing messages."""
 
     HASH_SIZE = 32
 
+    value: bytes
+
     def __init__(self, value: bytes):
-        self.value: bytes = value
+        self.value = value
 
     @classmethod
-    def from_bytes(self, value: Union[str, bytes]) -> 'Message':
-        if isinstance(value, str): value = bytes.fromhex(value)
-        return Message(value)
+    def from_bytes(cls, value: Union[str, bytes]) -> 'Message':
+        """Get message from bytes or hex."""
+
+        if isinstance(value, str):
+            value = bytes.fromhex(value)
+        return cls(value)
 
     @property
     def hash(self) -> bytes:
+        """Hash of the message."""
+
         return blake2b(
             self.value,
             digest_size=Message.HASH_SIZE
         ).digest()
 
-    @property
-    def bytes(self) -> bytes:
+    def __bytes__(self) -> bytes:
         return self.value

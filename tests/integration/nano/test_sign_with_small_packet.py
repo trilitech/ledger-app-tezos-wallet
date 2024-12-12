@@ -13,13 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Check signing using small packet instead of full size packets"""
+
 from pathlib import Path
 
 from utils.account import Account
-from utils.app import send_and_navigate, Screen, Screen_text, DEFAULT_ACCOUNT
+from utils.app import send_and_navigate, Screen, ScreenText, TezosAppScreen, DEFAULT_ACCOUNT
 from utils.message import Message
 
-def test_sign_with_small_packet(app):
+def test_sign_with_small_packet(app: TezosAppScreen):
+    """Check signing using small packet instead of full size packets"""
     test_name = Path(__file__).stem
 
     app.setup_expert_mode()
@@ -29,11 +32,11 @@ def test_sign_with_small_packet(app):
             message: Message,
             path: str) -> None:
 
-        app.assert_screen(Screen.Home)
+        app.assert_screen(Screen.HOME)
 
         data = send_and_navigate(
-            send=(lambda: app.backend.sign(account, message, apdu_size=10)),
-            navigate=(lambda: app.navigate_until_text(Screen_text.Sign_accept, path)))
+            send=lambda: app.backend.sign(account, message, apdu_size=10),
+            navigate=lambda: app.navigate_until_text(ScreenText.SIGN_ACCEPT, path))
 
         app.checker.check_signature(
             account,

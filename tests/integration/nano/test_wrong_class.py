@@ -13,31 +13,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from utils.account import SIGNATURE_TYPE
-from utils.app import Screen
-from utils.backend import INDEX, INS, StatusCode
+"""Check wrong apdu class behaviour"""
 
-def test_wrong_class(app):
+from utils.account import SigType
+from utils.app import Screen, TezosAppScreen
+from utils.backend import Index, Ins, StatusCode
 
-    app.assert_screen(Screen.Home)
+def test_wrong_class(app: TezosAppScreen):
+    """Check wrong apdu class behaviour"""
+    app.assert_screen(Screen.HOME)
 
     raw = \
         int(0x00).to_bytes(1, 'big') + \
-        int(INS.VERSION).to_bytes(1, 'big') + \
-        int(INDEX.FIRST).to_bytes(1, 'big') + \
-        int(SIGNATURE_TYPE.ED25519).to_bytes(1, 'big') + \
+        int(Ins.VERSION).to_bytes(1, 'big') + \
+        int(Index.FIRST).to_bytes(1, 'big') + \
+        int(SigType.ED25519).to_bytes(1, 'big') + \
         int(0x00).to_bytes(1, 'big')
 
     with app.expect_apdu_failure(StatusCode.CLASS):
         app.backend.exchange_raw(raw)
 
-    app.assert_screen(Screen.Home)
+    app.assert_screen(Screen.HOME)
 
     raw = \
         int(0x81).to_bytes(1, 'big') + \
-        int(INS.VERSION).to_bytes(1, 'big') + \
-        int(INDEX.FIRST).to_bytes(1, 'big') + \
-        int(SIGNATURE_TYPE.ED25519).to_bytes(1, 'big') + \
+        int(Ins.VERSION).to_bytes(1, 'big') + \
+        int(Index.FIRST).to_bytes(1, 'big') + \
+        int(SigType.ED25519).to_bytes(1, 'big') + \
         int(0x00).to_bytes(1, 'big')
 
     with app.expect_apdu_failure(StatusCode.CLASS):

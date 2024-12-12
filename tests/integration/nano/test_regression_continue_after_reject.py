@@ -13,12 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Check the app still runs after rejects signing"""
+
 from pathlib import Path
 
-from utils.app import Screen, DEFAULT_ACCOUNT
+from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
 from utils.message import Message
 
-def test_regression_continue_after_reject(app):
+def test_regression_continue_after_reject(app: TezosAppScreen):
+    """Check the app still runs after rejects signing"""
     test_name = Path(__file__).stem
 
     def make_path(name: str) -> Path:
@@ -28,7 +31,7 @@ def test_regression_continue_after_reject(app):
 
     app.reject_public_key(DEFAULT_ACCOUNT, make_path("reject_public_key"))
 
-    app.assert_screen(Screen.Home)
+    app.assert_screen(Screen.HOME)
 
     message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000006c00ffdd6102321bc251e4a5190ad5b12b251069d9b4904e0203040001000000000000000000000000000000000000000000ff01000001070200000102076501000000015b076501000000015a0765010000000159076501000000015807650100000001570765010000000156076501000000015507650100000001540765010000000153076501000000015207650100000001510765010000000150076501000000014f076501000000014e076501000000014d076501000000014c076501000000014b076501000000014a0765010000000149076501000000014807650100000001470765010000000146076501000000014507650100000001440765010000000143076501000000014202000000000765000a0765000907650008076500070765000607650005076500040765000307650002076500010200000000")
 
