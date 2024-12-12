@@ -33,7 +33,7 @@ from .message import Message
 from .account import Account, SigType
 from .backend import StatusCode, TezosBackend, AppKind
 
-version: Tuple[int, int, int] = (3, 0, 5)
+version: Tuple[int, int, int] = (3, 0, 6)
 
 class TezosAPDUChecker:
     """Helper to check APDU received."""
