@@ -28,6 +28,9 @@ class Cla(IntEnum):
 
     DEFAULT = 0x80
 
+    def __str__(self) -> str:
+        return self.name
+
 class Ins(IntEnum):
     """Class representing instruction."""
 
@@ -48,6 +51,9 @@ class Ins(IntEnum):
     HMAC                      = 0x0e
     SIGN_WITH_HASH            = 0x0f
 
+    def __str__(self) -> str:
+        return self.name
+
 class Index(IntEnum):
     """Class representing packet index."""
 
@@ -55,6 +61,9 @@ class Index(IntEnum):
     OTHER      = 0x01
     LAST       = 0x80
     OTHER_LAST = 0x81
+
+    def __str__(self) -> str:
+        return self.name
 
 class StatusCode(IntEnum):
     """Class representing the status code."""
@@ -77,11 +86,17 @@ class StatusCode(IntEnum):
     MEMORY_ERROR              = 0x9200
     PARSE_ERROR               = 0x9405
 
+    def __str__(self) -> str:
+        return self.name
+
 class AppKind(IntEnum):
     """Class representing the kind of app."""
 
     WALLET = 0x00
     BAKING = 0x01
+
+    def __str__(self) -> str:
+        return self.name
 
 MAX_APDU_SIZE: int = 235
 
