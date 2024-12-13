@@ -16,7 +16,6 @@
 
 """Gathering of tests related to APDU checks."""
 
-from pathlib import Path
 from typing import Any, Callable, Union
 
 import pytest
@@ -30,33 +29,23 @@ from utils.navigator import TezosNavigator
 def test_regression_continue_after_reject(
         backend: TezosBackend,
         tezos_navigator: TezosNavigator,
-        account: Account,
-        snapshot_dir: Path):
+        account: Account
+):
     """Check the app still runs after rejects signing"""
 
     tezos_navigator.toggle_expert_mode()
 
     with StatusCode.REJECT.expected():
         with backend.prompt_public_key(account):
-            tezos_navigator.reject_public_key(snap_path=snapshot_dir / "reject_public_key")
+            tezos_navigator.reject_public_key()
 
     backend.wait_for_home_screen()
 
-    message = Transaction(
-        source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
-        fee = 10000,
-        counter = 2,
-        gas_limit = 3,
-        storage_limit = 4,
-        destination = 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT',
-        amount = 0,
-        entrypoint = 'root',
-        parameter = [{'prim':'pair','args':[{'string':"["},{'prim':'pair','args':[{'string':"Z"},{'prim':'pair','args':[{'string':"Y"},{'prim':'pair','args':[{'string':"X"},{'prim':'pair','args':[{'string':"W"},{'prim':'pair','args':[{'string':"V"},{'prim':'pair','args':[{'string':"U"},{'prim':'pair','args':[{'string':"T"},{'prim':'pair','args':[{'string':"S"},{'prim':'pair','args':[{'string':"R"},{'prim':'pair','args':[{'string':"Q"},{'prim':'pair','args':[{'string':"P"},{'prim':'pair','args':[{'string':"O"},{'prim':'pair','args':[{'string':"N"},{'prim':'pair','args':[{'string':"M"},{'prim':'pair','args':[{'string':"L"},{'prim':'pair','args':[{'string':"K"},{'prim':'pair','args':[{'string':"J"},{'prim':'pair','args':[{'string':"I"},{'prim':'pair','args':[{'string':"H"},{'prim':'pair','args':[{'string':"G"},{'prim':'pair','args':[{'string':"F"},{'prim':'pair','args':[{'string':"E"},{'prim':'pair','args':[{'string':"D"},{'prim':'pair','args':[{'string':"C"},{'prim':'pair','args':[{'string':"B"},[]]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]},{'prim':'pair','args':[{'int':10},{'prim':'pair','args':[{'int':9},{'prim':'pair','args':[{'int':8},{'prim':'pair','args':[{'int':7},{'prim':'pair','args':[{'int':6},{'prim':'pair','args':[{'int':5},{'prim':'pair','args':[{'int':4},{'prim':'pair','args':[{'int':3},{'prim':'pair','args':[{'int':2},{'prim':'pair','args':[{'int':1},[]]}]}]}]}]}]}]}]}]}]}]
-    )
+    message = Transaction()
 
     with StatusCode.REJECT.expected():
         with backend.sign(account, message, with_hash=True):
-            tezos_navigator.reject_sign(snap_path=snapshot_dir / "reject_signing")
+            tezos_navigator.reject_sign()
 
     backend.get_public_key(account)
 
@@ -64,18 +53,8 @@ def test_regression_continue_after_reject(
 def test_change_sign_instruction(backend: TezosBackend, account: Account):
     """Check signing instruction changes behaviour"""
 
-    message = Transaction(
-        source = 'tz2JPgTWZZpxZZLqHMfS69UAy1UHm4Aw5iHu',
-        fee = 50000,
-        counter = 8,
-        gas_limit = 54,
-        storage_limit = 45,
-        destination = 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT',
-        amount = 240000,
-        entrypoint = 'do',
-        parameter = {'prim': 'CAR'}
-    )
-    payload=bytes(message)
+    message = Transaction()
+    payload = bytes(message)
 
     backend._ask_sign(Ins.SIGN_WITH_HASH, account)
 
