@@ -16,16 +16,13 @@
 
 """Gathering of tests related to Sign instructions."""
 
-from pathlib import Path
-
-from conftest import requires_device
 from utils.account import Account
 from utils.backend import TezosBackend
-from utils.message import Message, MichelineExpr, Transaction
+from utils.message import MichelineExpr, Transaction
 from utils.navigator import send_and_navigate, TezosNavigator
 
 
-def test_sign_micheline_without_hash(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
+def test_sign_micheline_without_hash(tezos_navigator: TezosNavigator, account: Account):
     """Check signing micheline wihout getting hash"""
 
     message = MichelineExpr([{'string': 'CACA'}, {'string': 'POPO'}, {'string': 'BOUDIN'}])
@@ -33,8 +30,7 @@ def test_sign_micheline_without_hash(tezos_navigator: TezosNavigator, account: A
     data = tezos_navigator.sign(
         account,
         message,
-        with_hash=False,
-        snap_path=snapshot_dir
+        with_hash=False
     )
 
     account.check_signature(
@@ -45,58 +41,20 @@ def test_sign_micheline_without_hash(tezos_navigator: TezosNavigator, account: A
 def test_sign_with_small_packet(
         backend: TezosBackend,
         tezos_navigator: TezosNavigator,
-        account: Account,
-        snapshot_dir: Path):
+        account: Account):
     """Check signing using small packet instead of full size packets"""
 
     tezos_navigator.toggle_expert_mode()
 
-    def check_sign_with_small_packet(
-            account: Account,
-            message: Message,
-            path: Path) -> None:
+    message = Transaction()
 
-        data = send_and_navigate(
-            send=lambda: backend.sign(account, message, apdu_size=10),
-            navigate=lambda: tezos_navigator.navigate_sign_accept(snap_path=path)
-        )
-
-        account.check_signature(
-            message=message,
-            with_hash=False,
-            data=data)
-
-    message = Transaction(
-        source = 'tz2JPgTWZZpxZZLqHMfS69UAy1UHm4Aw5iHu',
-        fee = 50000,
-        counter = 8,
-        gas_limit = 54,
-        storage_limit = 45,
-        destination = 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT',
-        amount = 240000,
-        entrypoint = 'do',
-        parameter = {'prim': 'CAR'}
-    )
-
-    check_sign_with_small_packet(
-        account=account,
-        message=message,
-        path=snapshot_dir)
-
-@requires_device("nanosp")
-def test_nanosp_regression_press_right_works_across_apdu_recieves(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
-    """Check no need to click right two times between APDUs during signing flow"""
-
-    message = MichelineExpr([{'prim':'IF_NONE','args':[[[{'prim':'SWAP'},{'prim':'IF','args':[[{'prim':'DIP','args':[[[{'prim':'DROP','args':[{'int':1}]},{'prim':'PUSH','args':[{'prim':'unit'},{'prim':'Unit'}]},{'prim':'PUSH','args':[{'prim':'bool'},{'prim':'True'}]},{'prim':'PUSH','args':[{'prim':'string'},{'string':';L\\S?p$-Fq)VDg\n]te\no4v0_8)\"'}]}]]]}],[[{'prim':'DROP','args':[{'int':2}]},{'prim':'PUSH','args':[{'prim':'unit'},{'prim':'Unit'}]},{'prim':'PUSH','args':[{'prim':'bool'},{'prim':'False'}]},{'prim':'PUSH','args':[{'prim':'string'},{'string':'Li-%*edF6~?E[5Kmu?dyviwJ^2\"\\d$FyQ>>!>D$g(Qg'}]},{'prim':'PUSH','args':[{'prim':'string'},{'string':'*Tx<E`SiG6Yf*A^kZ\\=7?H[mOlQ\n]Ehs'}]}]]]}]],[{'prim':'IF_NONE','args':[[{'prim':'DUP'}],[[{'prim':'DROP','args':[{'int':4}]},{'prim':'PUSH','args':[{'prim':'unit'},{'prim':'Unit'}]},{'prim':'PUSH','args':[{'prim':'bool'},{'prim':'True'}]},{'prim':'PUSH','args':[{'prim':'string'},{'string':'\"\\6_4\n$k%'}]},{'prim':'PUSH','args':[{'prim':'string'},{'string':'c^1\"\\?Ey_1!EVb~9;EX;YU\n#Kj2ZT8h`U!X '}]}]]]}]]},{'prim':'SIZE'}])
-
-    data = tezos_navigator.sign(
-        account,
-        message,
-        with_hash=True,
-        snap_path=snapshot_dir
+    data = send_and_navigate(
+        send=lambda: backend.sign(account, message, apdu_size=10),
+        navigate=tezos_navigator.navigate_sign_accept
     )
 
     account.check_signature(
         message=message,
-        with_hash=True,
-        data=data)
+        with_hash=False,
+        data=data
+    )

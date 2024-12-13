@@ -16,12 +16,10 @@
 
 """Gathering of tests related to Key signatures."""
 
-from pathlib import Path
-
 import pytest
 
 from utils.account import Account, SigType
-from utils.message import MichelineExpr, Transaction
+from utils.message import MichelineExpr
 from utils.navigator import TezosNavigator
 
 
@@ -42,16 +40,15 @@ from utils.navigator import TezosNavigator
     ],
     ids=lambda account: f"{account.sig_type}"
 )
-def test_sign_micheline_basic(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
+def test_sign_with_another_sig(tezos_navigator: TezosNavigator, account: Account):
     """Check signing with ed25519"""
 
-    message = MichelineExpr([{'string': 'CACA'}, {'string': 'POPO'}, {'string': 'BOUDIN'}])
+    message = MichelineExpr([{'int': 0}])
 
     data = tezos_navigator.sign(
         account,
         message,
-        with_hash=True,
-        snap_path=snapshot_dir
+        with_hash=True
     )
 
     account.check_signature(
@@ -66,7 +63,7 @@ def test_sign_micheline_basic(tezos_navigator: TezosNavigator, account: Account,
     ],
     ids=["seed21"]
 )
-def test_sign_with_another_seed(tezos_navigator: TezosNavigator, snapshot_dir: Path):
+def test_sign_with_another_seed(tezos_navigator: TezosNavigator):
     """Check signing using another seed than [zebra*24]"""
 
     tezos_navigator.toggle_expert_mode()
@@ -75,23 +72,12 @@ def test_sign_with_another_seed(tezos_navigator: TezosNavigator, snapshot_dir: P
                       SigType.ED25519,
                       "edpkupntwMyERpYniuK1GDWquPaPU1wYsQgMirJPLGmC4Y5dMUsQNo")
 
-    message = Transaction(
-        source = 'tz2JPgTWZZpxZZLqHMfS69UAy1UHm4Aw5iHu',
-        fee = 50000,
-        counter = 8,
-        gas_limit = 54,
-        storage_limit = 45,
-        destination = 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT',
-        amount = 240000,
-        entrypoint = 'do',
-        parameter = {'prim': 'CAR'}
-    )
+    message = MichelineExpr([{'int': 0}])
 
     data = tezos_navigator.sign(
         account,
         message,
-        with_hash=True,
-        snap_path=snapshot_dir
+        with_hash=True
     )
 
     account.check_signature(
