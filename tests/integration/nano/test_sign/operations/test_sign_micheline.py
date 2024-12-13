@@ -260,6 +260,94 @@ prim_cases: List[Tuple[Micheline, str]] = [
 
 ]
 
+real_cases: List[Tuple[Micheline, str]] = [
+
+    ({"prim": "pair", 'args': [
+        {"prim": "pair", "annots": [":payload"], 'args': [
+            {"prim": "nat", "annots": [":counter"]},
+            {"prim": "or", "annots": [":action"], 'args': [
+                {"prim": "pair", "annots": [":transfer"], 'args': [
+                    {"prim": "mutez", "annots": [":amount"]},
+                    {"prim": "contract", "annots": [":dest"], 'args': [{"prim": "unit"}]}
+                ]},
+                {"prim": "or", 'args': [
+                    {"prim": "option", "annots": [":delegate"], 'args': [{"prim": "key_hash"}]},
+                    {"prim": "pair", "annots": [":change_keys"], 'args': [
+                        {"prim": "nat", "annots": [":threshold"]},
+                        {"prim": "list", "annots": [":keys"], 'args': [{"prim": "key"}]}
+                    ]}
+                ]}
+            ]}
+        ]},
+        {"prim": "list", "annots": [":sigs"], 'args': [{"prim": "option", 'args': [{"prim": "signature"}]}]}
+    ]}, "type"),
+
+    ({"prim": "Pair", 'args': [
+        {"prim": "Pair", 'args': [
+            {"int": 42},
+            {"prim": "Left", 'args': [
+                {"prim": "Pair", 'args': [
+                    {"int": 123456789},
+                    {"string": "tz1Ke2h7sDdakHJQh8WX4Z372du1KChsksyU"}
+                ]},
+            ]},
+        ]},
+        [
+            {"prim": "Some", 'args': [
+                {"string": "edsigtXomBKi5CTRf5cjATJWSyaRvhfYNHqSUGrn4SdbYRcGwQrUGjzEfQDTuqHhuA8b2d8NarZjz8TRf65WkpQmo423BtomS8Q"}
+            ]},
+            {"prim": "None"}
+        ]
+    ]}, "data"),
+
+    ([
+        {"prim": "UNPAIR"}, {"prim": "SWAP"}, {"prim": "DUP"}, {"prim": "DIP", 'args': [[{"prim": "SWAP"}]]},
+        {"prim": "DIP", 'args': [[
+            {"prim": "UNPAIR"},
+            {"prim": "DUP"}, {"prim": "SELF"}, {"prim": "ADDRESS"}, {"prim": "CHAIN_ID"}, {"prim": "PAIR"}, {"prim": "PAIR"},
+            {"prim": "PACK"},
+            {"prim": "DIP", 'args': [[{"prim": "UNPAIR", "annots": ["@counter"]}, {"prim": "DIP", 'args': [[{"prim": "SWAP"}]]}]]}, {"prim": "SWAP"},
+        ]]},
+        {"prim": "UNPAIR", "annots": ["@stored_counter"]}, {"prim": "DIP", 'args': [[{"prim": "SWAP"}]]},
+        {"prim": "COMPARE"}, {"prim": "EQ"}, {"prim": "IF", 'args': [[], [{"prim": "UNIT"}, {"prim": "FAILWITH"}]]},
+        {"prim": "DIP", 'args': [[{"prim": "SWAP"}]]}, {"prim": "UNPAIR", "annots": ["@threshold", "@keys"]},
+        {"prim": "DIP", 'args': [[
+            {"prim": "PUSH", "annots": ["@valid"], 'args': [{"prim": "nat"}, {"int": 0}]}, {"prim": "SWAP"},
+            {"prim": "ITER", 'args': [[
+                {"prim": "DIP", 'args': [[{"prim": "SWAP"}]]}, {"prim": "SWAP"},
+                {"prim": "IF_CONS", 'args': [
+                    [{"prim": "IF_NONE", 'args': [
+                        [{"prim": "SWAP"}, {"prim": "DROP"}],
+                        [
+                            {"prim": "SWAP"},
+                            {"prim": "DIP", 'args': [[
+                                {"prim": "SWAP"}, {"prim": "DIP", 'args': [[{"prim": "DIP", 'args': [[{"prim": "DUP"}]]}, {"prim": "SWAP"}]]},
+                                {"prim": "CHECK_SIGNATURE"}, {"prim": "IF", 'args': [[], [{"prim": "UNIT"}, {"prim": "FAILWITH"}]]},
+                                {"prim": "PUSH", 'args': [{"prim": "nat"}, {"int": 1}]}, {"prim": "ADD", "annots": ["@valid"]},
+                            ]]},
+                        ],
+                    ]}],
+                    [{"prim": "UNIT"}, {"prim": "FAILWITH"}],
+                ]},
+                {"prim": "SWAP"},
+            ]]},
+        ]]},
+        {"prim": "COMPARE"}, {"prim": "LE"}, {"prim": "IF", 'args': [[], [{"prim": "UNIT"}, {"prim": "FAILWITH"}]]},
+        {"prim": "DROP"}, {"prim": "DROP"},
+        {"prim": "DIP", 'args': [[{"prim": "UNPAIR"}, {"prim": "PUSH", 'args': [{"prim": "nat"}, {"int": 1}]}, {"prim": "ADD", "annots": ["@new_counter"]}, {"prim": "PAIR"}]]},
+        {"prim": "NIL", 'args': [{"prim": "operation"}]}, {"prim": "SWAP"},
+        {"prim": "IF_LEFT", 'args': [
+            [{"prim": "UNPAIR"}, {"prim": "UNIT"}, {"prim": "TRANSFER_TOKENS"}, {"prim": "CONS"}],
+            [{"prim": "IF_LEFT", 'args': [
+                [{"prim": "SET_DELEGATE"}, {"prim": "CONS"}],
+                [{"prim": "DIP", 'args': [[{"prim": "SWAP"}, {"prim": "CAR"}]]}, {"prim": "SWAP"}, {"prim": "PAIR"}, {"prim": "SWAP"}],
+            ]}],
+        ]},
+        {"prim": "PAIR"},
+    ], "code"),
+
+]
+
 
 def _param(micheline: Micheline, name: str, category: str) -> ParameterSet:
     return pytest.param(micheline, id=f'{category}-{name}')
@@ -280,6 +368,7 @@ def _all_params(cases: List[Tuple[List[Tuple[Micheline, str]], str]]) -> List[Pa
         (bytes_cases, "bytes"),
         (string_cases, "string"),
         (prim_cases, "prim"),
+        (real_cases, "real"),
     ])
 )
 def test_sign_micheline(
