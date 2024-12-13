@@ -16,13 +16,11 @@
 
 """Gathering of tests related to Key signatures."""
 
-from pathlib import Path
-
 import pytest
 
 from utils.account import Account, SigType
 from utils.backend import TezosBackend
-from utils.message import MichelineExpr, Transaction
+from utils.message import MichelineExpr
 from utils.navigator import TezosNavigator
 
 
@@ -43,18 +41,17 @@ from utils.navigator import TezosNavigator
     ],
     ids=lambda account: f"{account.sig_type}"
 )
-def test_sign_micheline_basic(
+def test_sign_with_another_sig(
         backend: TezosBackend,
         tezos_navigator: TezosNavigator,
-        account: Account,
-        snapshot_dir: Path
+        account: Account
 ):
     """Check signing with ed25519"""
 
-    message = MichelineExpr([{'string': 'CACA'}, {'string': 'POPO'}, {'string': 'BOUDIN'}])
+    message = MichelineExpr([{'int': 0}])
 
     with backend.sign(account, message, with_hash=True) as result:
-        tezos_navigator.accept_sign(snap_path=snapshot_dir)
+        tezos_navigator.accept_sign()
 
     account.check_signature(
         message=message,
@@ -71,8 +68,7 @@ def test_sign_micheline_basic(
 )
 def test_sign_with_another_seed(
         backend: TezosBackend,
-        tezos_navigator: TezosNavigator,
-        snapshot_dir: Path
+        tezos_navigator: TezosNavigator
 ):
     """Check signing using another seed than [zebra*24]"""
 
@@ -82,20 +78,10 @@ def test_sign_with_another_seed(
                       SigType.ED25519,
                       "edpkupntwMyERpYniuK1GDWquPaPU1wYsQgMirJPLGmC4Y5dMUsQNo")
 
-    message = Transaction(
-        source = 'tz2JPgTWZZpxZZLqHMfS69UAy1UHm4Aw5iHu',
-        fee = 50000,
-        counter = 8,
-        gas_limit = 54,
-        storage_limit = 45,
-        destination = 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT',
-        amount = 240000,
-        entrypoint = 'do',
-        parameter = {'prim': 'CAR'}
-    )
+    message = MichelineExpr([{'int': 0}])
 
     with backend.sign(account, message, with_hash=True) as result:
-        tezos_navigator.accept_sign(snap_path=snapshot_dir)
+        tezos_navigator.accept_sign()
 
     account.check_signature(
         message=message,
