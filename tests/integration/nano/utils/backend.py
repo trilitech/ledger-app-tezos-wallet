@@ -14,14 +14,65 @@
 
 """Tezos app backend."""
 
+from contextlib import contextmanager
 from enum import IntEnum
-from typing import Union
+import time
+from struct import unpack
+from typing import Generator, Union
 
+from ragger.backend import SpeculosBackend
 from ragger.backend.interface import BackendInterface, RAPDU
 from ragger.error import ExceptionRAPDU
 
 from .account import Account, SigType
 from .message import Message
+
+
+class Version:
+    """Class representing the version."""
+
+    class AppKind(IntEnum):
+        """Class representing the kind of app."""
+
+        WALLET = 0x00
+        BAKING = 0x01
+
+        def __str__(self) -> str:
+            return self.name
+
+    app_kind: AppKind
+    major: int
+    minor: int
+    patch: int
+
+    def __init__(self,
+                 app_kind: AppKind,
+                 major: int,
+                 minor: int,
+                 patch: int):
+        self.app_kind = app_kind
+        self.major = major
+        self.minor = minor
+        self.patch = patch
+
+    def __repr__(self) -> str:
+        return f"App {self.app_kind}: {self.major}.{self.minor}.{self.patch}"
+
+    def __eq__(self, other: object):
+        if not isinstance(other, Version):
+            return NotImplemented
+        return \
+            self.app_kind == other.app_kind and \
+            self.major == other.major and \
+            self.minor == other.minor and \
+            self.patch == other.patch
+
+    @classmethod
+    def from_bytes(cls, raw: bytes) -> 'Version':
+        """Create a version from bytes."""
+        (app_kind, major, minor, patch) = unpack('<bbbb', raw)
+        return Version(Version.AppKind(app_kind), major, minor, patch)
+
 
 class Cla(IntEnum):
     """Class representing APDU class."""
@@ -89,14 +140,21 @@ class StatusCode(IntEnum):
     def __str__(self) -> str:
         return self.name
 
-class AppKind(IntEnum):
-    """Class representing the kind of app."""
+    @contextmanager
+    def expected(self) -> Generator[None, None, None]:
+        """Fail if the right RAPDU code exception is not raise."""
+        try:
+            yield
+            assert self == StatusCode.OK, \
+                f"Expect fail with {self} but succeed"
+        except ExceptionRAPDU as e:
+            try:
+                status = f"{StatusCode(e.status)}"
+            except ValueError:
+                status = f"0x{e.status:x}"
+            assert self == e.status, \
+                f"Expect fail with {self} but fail with {status}"
 
-    WALLET = 0x00
-    BAKING = 0x01
-
-    def __str__(self) -> str:
-        return self.name
 
 MAX_APDU_SIZE: int = 235
 
@@ -182,3 +240,44 @@ class TezosBackend(BackendInterface):
             assert not data, f"No data expected but got {data.hex()}"
 
         assert False, "We should have already returned"
+
+MAX_ATTEMPTS = 50
+
+def with_retry(f, attempts=MAX_ATTEMPTS):
+    """Try f until it succeeds or has been executed attempts times."""
+    while True:
+        try:
+            return f()
+        except Exception as e:
+            if attempts <= 0:
+                print("- with_retry: attempts exhausted -")
+                raise e
+        attempts -= 1
+        # Give plenty of time for speculos to update - can take a long time on CI machines
+        time.sleep(0.5)
+
+class SpeculosTezosBackend(TezosBackend, SpeculosBackend):
+    """Class representing Tezos app running on Speculos."""
+
+    # speculos can be slow to start up in a slow environment.
+    # Here, we expect a little more
+    def __enter__(self) -> "SpeculosTezosBackend":
+        try:
+            super().__enter__()
+            return self
+        except Exception:
+            process = self._client.process
+            try:
+                with_retry(self._client._wait_until_ready, attempts=5)
+                super().__enter__()
+            except Exception as e:
+                self._client.stop()
+                # do not forget to close the first process
+                self._client.process = process
+                self._client.stop()
+                raise e
+            # replace the new process by the first one
+            self._client.process.kill()
+            self._client.process.wait()
+            self._client.process = process
+            return self

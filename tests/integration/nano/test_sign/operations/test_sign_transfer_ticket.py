@@ -19,13 +19,15 @@
 from pathlib import Path
 
 from conftest import requires_device
-from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
+from utils.account import Account
 from utils.message import TransferTicket
+from utils.navigator import TezosNavigator
 
-def test_sign_transfer_ticket(app: TezosAppScreen, snapshot_dir: Path):
+
+def test_sign_transfer_ticket(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
     """Check signing transfer ticket"""
 
-    app.setup_expert_mode()
+    tezos_navigator.toggle_expert_mode()
 
     message = TransferTicket(
         source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
@@ -40,24 +42,23 @@ def test_sign_transfer_ticket(app: TezosAppScreen, snapshot_dir: Path):
         destination = 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT'
     )
 
-    data = app.sign(DEFAULT_ACCOUNT,
-                    message,
-                    with_hash=True,
-                    path=snapshot_dir)
+    data = tezos_navigator.sign(
+        account,
+        message,
+        with_hash=True,
+        snap_path=snapshot_dir
+    )
 
-    app.checker.check_signature(
-        account=DEFAULT_ACCOUNT,
+    account.check_signature(
         message=message,
         with_hash=True,
         data=data)
 
-    app.quit()
-
 @requires_device("nanosp")
-def test_nanosp_regression_potential_empty_screen(app: TezosAppScreen, snapshot_dir: Path):
+def test_nanosp_regression_potential_empty_screen(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
     """Check signing operation that display potentially empty screens"""
 
-    app.setup_expert_mode()
+    tezos_navigator.toggle_expert_mode()
 
     message = TransferTicket(
         source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
@@ -73,15 +74,14 @@ def test_nanosp_regression_potential_empty_screen(app: TezosAppScreen, snapshot_
         entrypoint = 'S\n\nS\nS\nS'
     )
 
-    data = app.sign(DEFAULT_ACCOUNT,
-                    message,
-                    with_hash=True,
-                    path=snapshot_dir)
+    data = tezos_navigator.sign(
+        account,
+        message,
+        with_hash=True,
+        snap_path=snapshot_dir
+    )
 
-    app.checker.check_signature(
-        account=DEFAULT_ACCOUNT,
+    account.check_signature(
         message=message,
         with_hash=True,
         data=data)
-
-    app.quit()

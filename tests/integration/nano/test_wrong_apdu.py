@@ -16,148 +16,111 @@
 
 """Gathering of tests related to APDU checks."""
 
-from pathlib import Path
 from typing import Any, Callable, Union
 
 import pytest
 
 from utils.account import Account, SigType
-from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
-from utils.backend import Cla, Index, Ins, StatusCode
+from utils.backend import Cla, TezosBackend, Index, Ins, StatusCode
 from utils.message import Transaction
+from utils.navigator import TezosNavigator
 
-def test_regression_continue_after_reject(app: TezosAppScreen, snapshot_dir: Path):
+
+def test_regression_continue_after_reject(
+        backend: TezosBackend,
+        tezos_navigator: TezosNavigator,
+        account: Account):
     """Check the app still runs after rejects signing"""
 
-    app.setup_expert_mode()
+    tezos_navigator.toggle_expert_mode()
 
-    app.reject_public_key(DEFAULT_ACCOUNT, snapshot_dir / "reject_public_key")
+    with StatusCode.REJECT.expected():
+        tezos_navigator.reject_public_key(account)
 
-    app.assert_screen(Screen.HOME)
+    backend.wait_for_home_screen()
 
-    message = Transaction(
-        source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
-        fee = 10000,
-        counter = 2,
-        gas_limit = 3,
-        storage_limit = 4,
-        destination = 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT',
-        amount = 0,
-        entrypoint = 'root',
-        parameter = [{'prim':'pair','args':[{'string':"["},{'prim':'pair','args':[{'string':"Z"},{'prim':'pair','args':[{'string':"Y"},{'prim':'pair','args':[{'string':"X"},{'prim':'pair','args':[{'string':"W"},{'prim':'pair','args':[{'string':"V"},{'prim':'pair','args':[{'string':"U"},{'prim':'pair','args':[{'string':"T"},{'prim':'pair','args':[{'string':"S"},{'prim':'pair','args':[{'string':"R"},{'prim':'pair','args':[{'string':"Q"},{'prim':'pair','args':[{'string':"P"},{'prim':'pair','args':[{'string':"O"},{'prim':'pair','args':[{'string':"N"},{'prim':'pair','args':[{'string':"M"},{'prim':'pair','args':[{'string':"L"},{'prim':'pair','args':[{'string':"K"},{'prim':'pair','args':[{'string':"J"},{'prim':'pair','args':[{'string':"I"},{'prim':'pair','args':[{'string':"H"},{'prim':'pair','args':[{'string':"G"},{'prim':'pair','args':[{'string':"F"},{'prim':'pair','args':[{'string':"E"},{'prim':'pair','args':[{'string':"D"},{'prim':'pair','args':[{'string':"C"},{'prim':'pair','args':[{'string':"B"},[]]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]},{'prim':'pair','args':[{'int':10},{'prim':'pair','args':[{'int':9},{'prim':'pair','args':[{'int':8},{'prim':'pair','args':[{'int':7},{'prim':'pair','args':[{'int':6},{'prim':'pair','args':[{'int':5},{'prim':'pair','args':[{'int':4},{'prim':'pair','args':[{'int':3},{'prim':'pair','args':[{'int':2},{'prim':'pair','args':[{'int':1},[]]}]}]}]}]}]}]}]}]}]}]
-    )
+    message = Transaction()
 
-    app.reject_signing(DEFAULT_ACCOUNT,
-                       message,
-                       with_hash=True,
-                       path=snapshot_dir / "reject_signing")
+    with StatusCode.REJECT.expected():
+        tezos_navigator.reject_signing(
+            account,
+            message,
+            with_hash=True
+        )
 
-    data = app.backend.get_public_key(DEFAULT_ACCOUNT, with_prompt=False)
+    backend.get_public_key(account, with_prompt=False)
 
-    app.checker.check_public_key(DEFAULT_ACCOUNT, data)
 
-    app.quit()
-
-def test_change_sign_instruction(app: TezosAppScreen):
+def test_change_sign_instruction(backend: TezosBackend, account: Account):
     """Check signing instruction changes behaviour"""
 
-    app.assert_screen(Screen.HOME)
+    message = Transaction()
+    payload = bytes(message)
 
-    message = Transaction(
-        source = 'tz2JPgTWZZpxZZLqHMfS69UAy1UHm4Aw5iHu',
-        fee = 50000,
-        counter = 8,
-        gas_limit = 54,
-        storage_limit = 45,
-        destination = 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT',
-        amount = 240000,
-        entrypoint = 'do',
-        parameter = {'prim': 'CAR'}
-    )
-    payload=bytes(message)
+    backend._ask_sign(Ins.SIGN_WITH_HASH, account)
 
-    app.backend._ask_sign(Ins.SIGN_WITH_HASH, DEFAULT_ACCOUNT)
+    with StatusCode.INVALID_INS.expected():
+        backend._continue_sign(
+            Ins.SIGN,
+            payload,
+            last=True)
 
-    with app.expect_apdu_failure(StatusCode.INVALID_INS):
-        app.backend._continue_sign(Ins.SIGN,
-                                   payload,
-                                   last=True)
+    backend._ask_sign(Ins.SIGN, account)
 
-    app.assert_screen(Screen.HOME)
+    with StatusCode.INVALID_INS.expected():
+        backend._continue_sign(
+            Ins.SIGN_WITH_HASH,
+            payload,
+            last=True)
 
-    app.backend._ask_sign(Ins.SIGN, DEFAULT_ACCOUNT)
-
-    with app.expect_apdu_failure(StatusCode.INVALID_INS):
-        app.backend._continue_sign(Ins.SIGN_WITH_HASH,
-                                   payload,
-                                   last=True)
-
-    app.quit()
-
-def test_mixing_command(app: TezosAppScreen):
+def test_mixing_command(backend: TezosBackend, account: Account):
     """Check that mixing instruction fails"""
 
-    app.assert_screen(Screen.HOME)
+    backend._ask_sign(Ins.SIGN, account)
+    with StatusCode.UNEXPECTED_STATE.expected():
+        backend.version()
 
-    app.backend._ask_sign(Ins.SIGN, DEFAULT_ACCOUNT)
-    with app.expect_apdu_failure(StatusCode.UNEXPECTED_STATE):
-        app.backend.version()
+    backend._ask_sign(Ins.SIGN_WITH_HASH, account)
+    with StatusCode.UNEXPECTED_STATE.expected():
+        backend._ask_sign(Ins.SIGN, account)
 
-    app.assert_screen(Screen.HOME)
+    backend._ask_sign(Ins.SIGN, account)
+    with StatusCode.UNEXPECTED_STATE.expected():
+        backend._ask_sign(Ins.SIGN_WITH_HASH, account)
 
-    app.backend._ask_sign(Ins.SIGN_WITH_HASH, DEFAULT_ACCOUNT)
-    with app.expect_apdu_failure(StatusCode.UNEXPECTED_STATE):
-        app.backend._ask_sign(Ins.SIGN, DEFAULT_ACCOUNT)
+    backend._ask_sign(Ins.SIGN, account)
+    with StatusCode.UNEXPECTED_STATE.expected():
+        backend.get_public_key(account, with_prompt=True)
 
-    app.assert_screen(Screen.HOME)
+    backend._ask_sign(Ins.SIGN, account)
+    with StatusCode.UNEXPECTED_STATE.expected():
+        backend.get_public_key(account, with_prompt=False)
 
-    app.backend._ask_sign(Ins.SIGN, DEFAULT_ACCOUNT)
-    with app.expect_apdu_failure(StatusCode.UNEXPECTED_STATE):
-        app.backend._ask_sign(Ins.SIGN_WITH_HASH, DEFAULT_ACCOUNT)
-
-    app.assert_screen(Screen.HOME)
-
-    app.backend._ask_sign(Ins.SIGN, DEFAULT_ACCOUNT)
-    with app.expect_apdu_failure(StatusCode.UNEXPECTED_STATE):
-        app.backend.get_public_key(DEFAULT_ACCOUNT, with_prompt=True)
-
-    app.assert_screen(Screen.HOME)
-
-    app.backend._ask_sign(Ins.SIGN, DEFAULT_ACCOUNT)
-    with app.expect_apdu_failure(StatusCode.UNEXPECTED_STATE):
-        app.backend.get_public_key(DEFAULT_ACCOUNT, with_prompt=False)
-
-    app.assert_screen(Screen.HOME)
-
-    app.backend._ask_sign(Ins.SIGN, DEFAULT_ACCOUNT)
-    with app.expect_apdu_failure(StatusCode.UNEXPECTED_STATE):
-        app.backend.git()
-
-    app.quit()
+    backend._ask_sign(Ins.SIGN, account)
+    with StatusCode.UNEXPECTED_STATE.expected():
+        backend.git()
 
 @pytest.mark.parametrize("ins", [Ins.GET_PUBLIC_KEY, Ins.PROMPT_PUBLIC_KEY], ids=lambda ins: f"{ins}")
 @pytest.mark.parametrize("index", [Index.OTHER, Index.LAST], ids=lambda index: f"{index}")
-def test_wrong_index(app: TezosAppScreen, ins: Ins, index: Index):
+def test_wrong_index(backend: TezosBackend, account: Account, ins: Ins, index: Index):
     """Check wrong apdu index behaviour"""
 
-    app.assert_screen(Screen.HOME)
-
-    with app.expect_apdu_failure(StatusCode.WRONG_PARAM):
-        app.backend._exchange(ins,
-                              index=index,
-                              sig_type=DEFAULT_ACCOUNT.sig_type,
-                              payload=DEFAULT_ACCOUNT.path)
-
-    app.quit()
+    with StatusCode.WRONG_PARAM.expected():
+        backend._exchange(
+            ins,
+            index=index,
+            sig_type=account.sig_type,
+            payload=account.path
+        )
 
 
 @pytest.mark.parametrize(
     "sender",
     [
-        lambda app, account: app.backend.get_public_key(account, with_prompt=False),
-        lambda app, account: app.backend.get_public_key(account, with_prompt=True),
-        lambda app, account: app.backend._ask_sign(Ins.SIGN, account),
-        lambda app, account: app.backend._ask_sign(Ins.SIGN_WITH_HASH, account)
+        lambda backend, account: backend.get_public_key(account, with_prompt=False),
+        lambda backend, account: backend.get_public_key(account, with_prompt=True),
+        lambda backend, account: backend._ask_sign(Ins.SIGN, account),
+        lambda backend, account: backend._ask_sign(Ins.SIGN_WITH_HASH, account)
     ],
     ids=[
         "get_pk_without_prompt",
@@ -166,25 +129,21 @@ def test_wrong_index(app: TezosAppScreen, ins: Ins, index: Index):
         "sign_with_hash",
     ]
 )
-def test_wrong_derivation_type(app: TezosAppScreen, sender: Callable[[TezosAppScreen, Account], Any]):
+def test_wrong_derivation_type(backend: TezosBackend, sender: Callable[[TezosBackend, Account], Any]):
     """Check wrong derivation type behaviour"""
     account = Account("m/44'/1729'/0'/0'", 0x04, "__unused__")
 
-    app.assert_screen(Screen.HOME)
-
-    with app.expect_apdu_failure(StatusCode.WRONG_PARAM):
-        sender(app, account)
-
-    app.quit()
+    with StatusCode.WRONG_PARAM.expected():
+        sender(backend, account)
 
 
 @pytest.mark.parametrize(
     "sender",
     [
-        lambda app, account: app.backend.get_public_key(account, with_prompt=False),
-        lambda app, account: app.backend.get_public_key(account, with_prompt=True),
-        lambda app, account: app.backend._ask_sign(Ins.SIGN, account),
-        lambda app, account: app.backend._ask_sign(Ins.SIGN_WITH_HASH, account)
+        lambda backend, account: backend.get_public_key(account, with_prompt=False),
+        lambda backend, account: backend.get_public_key(account, with_prompt=True),
+        lambda backend, account: backend._ask_sign(Ins.SIGN, account),
+        lambda backend, account: backend._ask_sign(Ins.SIGN_WITH_HASH, account)
     ],
     ids=[
         "get_pk_without_prompt",
@@ -216,22 +175,17 @@ def test_wrong_derivation_type(app: TezosAppScreen, sender: Callable[[TezosAppSc
     ]
 )
 def test_wrong_derivation_path(
-        app: TezosAppScreen,
+        backend: TezosBackend,
         account: Account,
-        sender: Callable[[TezosAppScreen, Account], Any]):
+        sender: Callable[[TezosBackend, Account], Any]):
     """Check wrong derivation path behaviour"""
 
-    app.assert_screen(Screen.HOME)
-
-    with app.expect_apdu_failure(StatusCode.WRONG_LENGTH_FOR_INS):
-        sender(app, account)
-
-    app.quit()
+    with StatusCode.WRONG_LENGTH_FOR_INS.expected():
+        sender(backend, account)
 
 @pytest.mark.parametrize("class_", [0x00, 0x81])
-def test_wrong_class(app: TezosAppScreen, class_: int):
+def test_wrong_class(backend: TezosBackend, class_: int):
     """Check wrong apdu class behaviour"""
-    app.assert_screen(Screen.HOME)
 
     raw = \
         class_.to_bytes(1, 'big') + \
@@ -240,10 +194,8 @@ def test_wrong_class(app: TezosAppScreen, class_: int):
         int(SigType.ED25519).to_bytes(1, 'big') + \
         int(0x00).to_bytes(1, 'big')
 
-    with app.expect_apdu_failure(StatusCode.CLASS):
-        app.backend.exchange_raw(raw)
-
-    app.quit()
+    with StatusCode.CLASS.expected():
+        backend.exchange_raw(raw)
 
 @pytest.mark.parametrize(
     "size, data",
@@ -253,9 +205,8 @@ def test_wrong_class(app: TezosAppScreen, class_: int):
     ],
     ids=lambda param: f"size={param}" if isinstance(param, int) else f"data={param}"
 )
-def test_wrong_apdu_length(app: TezosAppScreen, size: int, data: bytes):
+def test_wrong_apdu_length(backend: TezosBackend, size: int, data: bytes):
     """Check wrong apdu length behaviour"""
-    app.assert_screen(Screen.HOME)
 
     raw = \
         int(Cla.DEFAULT).to_bytes(1, 'big') + \
@@ -265,10 +216,8 @@ def test_wrong_apdu_length(app: TezosAppScreen, size: int, data: bytes):
         size.to_bytes(1, 'big') + \
         data
 
-    with app.expect_apdu_failure(StatusCode.WRONG_LENGTH_FOR_INS):
-        app.backend.exchange_raw(raw)
-
-    app.quit()
+    with StatusCode.WRONG_LENGTH_FOR_INS.expected():
+        backend.exchange_raw(raw)
 
 @pytest.mark.parametrize(
     "ins",
@@ -287,12 +236,8 @@ def test_wrong_apdu_length(app: TezosAppScreen, size: int, data: bytes):
     ],
     ids=lambda ins: f"ins={ins}"
 )
-def test_unimplemented_commands(app: TezosAppScreen, ins: Union[int, Ins]):
+def test_unimplemented_commands(backend: TezosBackend, ins: Union[int, Ins]):
     """Check unimplemented commands"""
 
-    app.assert_screen(Screen.HOME)
-
-    with app.expect_apdu_failure(StatusCode.INVALID_INS):
-        app.backend._exchange(ins)
-
-    app.quit()
+    with StatusCode.INVALID_INS.expected():
+        backend._exchange(ins)

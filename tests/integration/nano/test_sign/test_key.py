@@ -16,13 +16,12 @@
 
 """Gathering of tests related to Key signatures."""
 
-from pathlib import Path
-
 import pytest
 
 from utils.account import Account, SigType
-from utils.app import Screen, TezosAppScreen
-from utils.message import MichelineExpr, Transaction
+from utils.message import MichelineExpr
+from utils.navigator import TezosNavigator
+
 
 @pytest.mark.parametrize(
     "account", [
@@ -41,25 +40,21 @@ from utils.message import MichelineExpr, Transaction
     ],
     ids=lambda account: f"{account.sig_type}"
 )
-def test_sign_micheline_basic(app: TezosAppScreen, account: Account, snapshot_dir: Path):
+def test_sign_with_another_sig(tezos_navigator: TezosNavigator, account: Account):
     """Check signing with ed25519"""
 
-    app.assert_screen(Screen.HOME)
+    message = MichelineExpr([{'int': 0}])
 
-    message = MichelineExpr([{'string': 'CACA'}, {'string': 'POPO'}, {'string': 'BOUDIN'}])
+    data = tezos_navigator.sign(
+        account,
+        message,
+        with_hash=True
+    )
 
-    data = app.sign(account,
-                    message,
-                    with_hash=True,
-                    path=snapshot_dir)
-
-    app.checker.check_signature(
-        account=account,
+    account.check_signature(
         message=message,
         with_hash=True,
         data=data)
-
-    app.quit()
 
 
 @pytest.mark.parametrize(
@@ -68,36 +63,24 @@ def test_sign_micheline_basic(app: TezosAppScreen, account: Account, snapshot_di
     ],
     ids=["seed21"]
 )
-def test_sign_with_another_seed(app: TezosAppScreen, snapshot_dir: Path):
+def test_sign_with_another_seed(tezos_navigator: TezosNavigator):
     """Check signing using another seed than [zebra*24]"""
 
-    app.setup_expert_mode()
+    tezos_navigator.toggle_expert_mode()
 
     account = Account("m/44'/1729'/0'/0'",
                       SigType.ED25519,
                       "edpkupntwMyERpYniuK1GDWquPaPU1wYsQgMirJPLGmC4Y5dMUsQNo")
 
-    message = Transaction(
-        source = 'tz2JPgTWZZpxZZLqHMfS69UAy1UHm4Aw5iHu',
-        fee = 50000,
-        counter = 8,
-        gas_limit = 54,
-        storage_limit = 45,
-        destination = 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT',
-        amount = 240000,
-        entrypoint = 'do',
-        parameter = {'prim': 'CAR'}
+    message = MichelineExpr([{'int': 0}])
+
+    data = tezos_navigator.sign(
+        account,
+        message,
+        with_hash=True
     )
 
-    data = app.sign(account,
-                    message,
-                    with_hash=True,
-                    path=snapshot_dir)
-
-    app.checker.check_signature(
-        account=account,
+    account.check_signature(
         message=message,
         with_hash=True,
         data=data)
-
-    app.quit()

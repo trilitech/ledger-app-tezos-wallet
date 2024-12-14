@@ -18,13 +18,13 @@
 
 from pathlib import Path
 
-from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
+from utils.account import Account
 from utils.message import Ballot
+from utils.navigator import TezosNavigator
 
-def test_sign_ballot(app: TezosAppScreen, snapshot_dir: Path):
+
+def test_sign_ballot(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
     """Check signing ballot"""
-
-    app.assert_screen(Screen.HOME)
 
     message = Ballot(
         source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
@@ -33,15 +33,14 @@ def test_sign_ballot(app: TezosAppScreen, snapshot_dir: Path):
         period = 32
     )
 
-    data = app.sign(DEFAULT_ACCOUNT,
-                    message,
-                    with_hash=True,
-                    path=snapshot_dir)
+    data = tezos_navigator.sign(
+        account,
+        message,
+        with_hash=True,
+        snap_path=snapshot_dir
+    )
 
-    app.checker.check_signature(
-        account=DEFAULT_ACCOUNT,
+    account.check_signature(
         message=message,
         with_hash=True,
         data=data)
-
-    app.quit()

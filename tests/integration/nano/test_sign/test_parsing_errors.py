@@ -20,9 +20,11 @@ from pathlib import Path
 
 import pytest
 
-from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
+from utils.account import Account
 from utils.backend import StatusCode
 from utils.message import RawMessage
+from utils.navigator import ScreenText, TezosNavigator
+
 
 # Operation (0): Transaction
 # Source: tz2JPgTWZZpxZZLqHMfS69UAy1UHm4Aw5iHu
@@ -53,17 +55,18 @@ from utils.message import RawMessage
         "one_byte_added_inside",
     ]
 )
-def test_parsing_error(app: TezosAppScreen, raw_msg: str, snapshot_dir: Path):
+def test_parsing_error(tezos_navigator: TezosNavigator, raw_msg: str, account: Account, snapshot_dir: Path):
     """Check parsing error handling"""
 
-    app.setup_expert_mode()
+    tezos_navigator.toggle_expert_mode()
 
-    app.parsing_error_signing(DEFAULT_ACCOUNT,
-                              RawMessage(raw_msg),
-                              with_hash=True,
-                              path=snapshot_dir)
-
-    app.quit()
+    with StatusCode.PARSE_ERROR.expected():
+        tezos_navigator.reject_signing(
+            account,
+            RawMessage(raw_msg),
+            with_hash=True,
+            snap_path=snapshot_dir
+        )
 
 @pytest.mark.parametrize(
     "raw_msg", [
@@ -73,15 +76,18 @@ def test_parsing_error(app: TezosAppScreen, raw_msg: str, snapshot_dir: Path):
         "wrong_last_packet",
     ]
 )
-def test_parsing_hard_fail(app: TezosAppScreen, raw_msg: str, snapshot_dir: Path):
+def test_parsing_hard_fail(tezos_navigator: TezosNavigator, raw_msg: str, account: Account, snapshot_dir: Path):
     """Check parsing error hard failing"""
 
-    app.setup_expert_mode()
+    tezos_navigator.toggle_expert_mode()
 
-    app.hard_failing_signing(DEFAULT_ACCOUNT,
-                             RawMessage(raw_msg),
-                             with_hash=True,
-                             status_code=StatusCode.UNEXPECTED_SIGN_STATE,
-                             path=snapshot_dir)
-
-    app.quit()
+    with StatusCode.UNEXPECTED_SIGN_STATE.expected():
+        tezos_navigator.sign(
+            account,
+            RawMessage(raw_msg),
+            with_hash=True,
+            navigate=lambda: tezos_navigator.navigate_review(
+                text=ScreenText.HOME,
+                snap_path=snapshot_dir
+            )
+        )

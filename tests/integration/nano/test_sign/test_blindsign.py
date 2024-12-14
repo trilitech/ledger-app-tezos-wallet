@@ -16,12 +16,14 @@
 
 """Gathering of tests related to Blindsign."""
 
-from multiprocessing import Process, Queue
 from pathlib import Path
-from typing import Callable
+from typing import Callable, List, Union
 
-from utils.app import Screen, ScreenText, TezosAppScreen, send_and_navigate, DEFAULT_ACCOUNT
-from utils.backend import StatusCode
+from ragger.firmware import Firmware
+from ragger.navigator import NavIns, NavInsID
+
+from utils.account import Account
+from utils.backend import TezosBackend, StatusCode
 from utils.message import (
     Message,
     MichelineExpr,
@@ -34,57 +36,61 @@ from utils.message import (
     SetDepositLimit,
     ScRollupAddMessage
 )
+from utils.navigator import ScreenText, TezosNavigator
 
-def _sign_too_long(app: TezosAppScreen,
+
+def _sign_too_long(tezos_navigator: TezosNavigator,
+                   account: Account,
                    message: Message,
                    navigate: Callable[[], None]):
 
-    app.setup_expert_mode()
-    app.setup_blindsign_on()
+    tezos_navigator.toggle_expert_mode()
+    tezos_navigator.toggle_blindsign()
 
-    data = app._sign(
-        DEFAULT_ACCOUNT,
+    data = tezos_navigator.sign(
+        account,
         message,
         with_hash=True,
         navigate=navigate)
 
-    app.checker.check_signature(
-        account=DEFAULT_ACCOUNT,
+    account.check_signature(
         message=message,
         with_hash=True,
         data=data)
 
-    app.quit()
-
-def _sign_decodable_too_long(app: TezosAppScreen,
+def _sign_decodable_too_long(tezos_navigator: TezosNavigator,
+                             account: Account,
                              message: Message,
                              path: Path):
     """Sign a decodable too long message"""
 
     def navigate() -> None:
-        app.navigate_until_text(ScreenText.ACCEPT_RISK, path / "clear_n_too_long_warning")
-        app.navigate_until_text(ScreenText.SIGN_ACCEPT, path / "summary")
+        tezos_navigator.navigate_review(
+            text=ScreenText.ACCEPT_RISK,
+            snap_path=path / "clear_n_too_long_warning"
+        )
+        tezos_navigator.navigate_sign_accept(snap_path=path / "summary")
 
-    _sign_too_long(app, message, navigate)
+    _sign_too_long(tezos_navigator, account, message, navigate)
 
 def _reject_too_long(
-        app: TezosAppScreen,
+        tezos_navigator: TezosNavigator,
+        account: Account,
         message: Message,
         status_code: StatusCode,
         navigate: Callable[[], None]):
     """Reject a too long message"""
 
-    app.setup_expert_mode()
-    app.setup_blindsign_on()
+    tezos_navigator.toggle_expert_mode()
+    tezos_navigator.toggle_blindsign()
 
-    app._failing_signing(
-        DEFAULT_ACCOUNT,
-        message,
-        with_hash=True,
-        navigate=navigate,
-        status_code=status_code)
-
-    app.quit()
+    with status_code.expected():
+        tezos_navigator.sign(
+            account,
+            message,
+            with_hash=True,
+            navigate=navigate
+        )
 
 
 ### Too long operation ###
@@ -156,31 +162,38 @@ BASIC_OPERATION = OperationGroup([
     )
 ])
 
-def test_sign_basic_too_long_operation(app: TezosAppScreen, snapshot_dir: Path):
+def test_sign_basic_too_long_operation(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
     """Check sign too long operation"""
-    _sign_decodable_too_long(app, BASIC_OPERATION, snapshot_dir)
+    _sign_decodable_too_long(tezos_navigator, account, BASIC_OPERATION, snapshot_dir)
 
-def test_reject_basic_too_long_operation_at_warning(app: TezosAppScreen, snapshot_dir: Path):
+def test_reject_basic_too_long_operation_at_warning(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
     """Check reject too long operation at warning"""
 
     def navigate() -> None:
-        app.navigate_until_text(ScreenText.SIGN_REJECT, snapshot_dir / "clear_n_too_long_warning")
+        tezos_navigator.navigate_sign_reject(
+            snap_path=snapshot_dir / "clear_n_too_long_warning"
+        )
 
-    _reject_too_long(app, BASIC_OPERATION, StatusCode.REJECT, navigate)
+    _reject_too_long(tezos_navigator, account, BASIC_OPERATION, StatusCode.REJECT, navigate)
 
-def test_reject_basic_too_long_operation_at_summary(app: TezosAppScreen, snapshot_dir: Path):
+def test_reject_basic_too_long_operation_at_summary(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
     """Check reject too long operation at summary"""
 
     def navigate() -> None:
-        app.navigate_until_text(ScreenText.ACCEPT_RISK, snapshot_dir / "clear_n_too_long_warning")
-        app.navigate_until_text(ScreenText.SIGN_REJECT, snapshot_dir / "summary")
+        tezos_navigator.navigate_review(
+            text=ScreenText.ACCEPT_RISK,
+            snap_path=snapshot_dir / "clear_n_too_long_warning"
+        )
+        tezos_navigator.navigate_sign_reject(
+            snap_path=snapshot_dir / "summary"
+        )
 
-    _reject_too_long(app, BASIC_OPERATION, StatusCode.REJECT, navigate)
+    _reject_too_long(tezos_navigator, account, BASIC_OPERATION, StatusCode.REJECT, navigate)
 
 
 ### Different kind of too long operation ###
 
-def test_sign_too_long_operation_with_only_transactions(app: TezosAppScreen, snapshot_dir: Path):
+def test_sign_too_long_operation_with_only_transactions(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
     """Check sign too long operation that contains only transaction"""
     message = OperationGroup([
         Transaction(
@@ -238,9 +251,9 @@ def test_sign_too_long_operation_with_only_transactions(app: TezosAppScreen, sna
             amount = 5000000
         )
     ])
-    _sign_decodable_too_long(app, message, snapshot_dir)
+    _sign_decodable_too_long(tezos_navigator, account, message, snapshot_dir)
 
-def test_sign_too_long_operation_without_fee_or_amount(app: TezosAppScreen, snapshot_dir: Path):
+def test_sign_too_long_operation_without_fee_or_amount(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
     """Check sign too long operation that doesn't have fees or amount"""
     message = Proposals(
         source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
@@ -268,7 +281,7 @@ def test_sign_too_long_operation_without_fee_or_amount(app: TezosAppScreen, snap
         ],
         period = 32
     )
-    _sign_decodable_too_long(app, message, snapshot_dir)
+    _sign_decodable_too_long(tezos_navigator, account, message, snapshot_dir)
 
 
 ### Too long operation containing a too large number ###
@@ -323,147 +336,154 @@ OPERATION_WITH_TOO_LARGE = OperationGroup([
     )
 ])
 
-def test_sign_too_long_operation_with_too_large(app: TezosAppScreen, snapshot_dir: Path):
+def test_sign_too_long_operation_with_too_large(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
     """Check sign too long operation that will also fail the parsing"""
 
     def navigate() -> None:
-        app.navigate_until_text(ScreenText.ACCEPT_RISK, snapshot_dir / "clear_n_too_large_warning")
-        app.navigate_until_text(ScreenText.SIGN_ACCEPT, snapshot_dir / "blindsigning")
+        tezos_navigator.navigate_review(
+            text=ScreenText.ACCEPT_RISK,
+            snap_path=snapshot_dir / "clear_n_too_large_warning"
+        )
+        tezos_navigator.navigate_sign_accept(
+            snap_path=snapshot_dir / "blindsigning"
+        )
 
-    _sign_too_long(app, OPERATION_WITH_TOO_LARGE, navigate)
+    _sign_too_long(tezos_navigator, account, OPERATION_WITH_TOO_LARGE, navigate)
 
-def test_reject_too_long_operation_with_too_large_at_too_large_warning(app: TezosAppScreen, snapshot_dir: Path):
+def test_reject_too_long_operation_with_too_large_at_too_large_warning(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
     """Check reject too long operation that will also fail the parsing at too large warning"""
 
     def navigate() -> None:
-        app.navigate_until_text(ScreenText.SIGN_REJECT, snapshot_dir / "clear_n_too_large_warning")
+        tezos_navigator.navigate_sign_reject(
+            snap_path=snapshot_dir / "clear_n_too_large_warning"
+        )
 
-    _reject_too_long(app, OPERATION_WITH_TOO_LARGE, StatusCode.PARSE_ERROR, navigate)
+    _reject_too_long(tezos_navigator, account, OPERATION_WITH_TOO_LARGE, StatusCode.PARSE_ERROR, navigate)
 
-def test_reject_too_long_operation_with_too_large_at_blindsigning(app: TezosAppScreen, snapshot_dir: Path):
+def test_reject_too_long_operation_with_too_large_at_blindsigning(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
     """Check reject too long operation that will also fail the parsing at blindsigning"""
 
     def navigate() -> None:
-        app.navigate_until_text(ScreenText.ACCEPT_RISK, snapshot_dir / "clear_n_too_large_warning")
-        app.navigate_until_text(ScreenText.SIGN_REJECT, snapshot_dir / "blindsigning")
+        tezos_navigator.navigate_review(
+            text=ScreenText.ACCEPT_RISK,
+            snap_path=snapshot_dir / "clear_n_too_large_warning"
+        )
+        tezos_navigator.navigate_sign_reject(
+            snap_path=snapshot_dir / "blindsigning"
+        )
 
-    _reject_too_long(app, OPERATION_WITH_TOO_LARGE, StatusCode.REJECT, navigate)
+    _reject_too_long(tezos_navigator, account, OPERATION_WITH_TOO_LARGE, StatusCode.REJECT, navigate)
 
-def test_blindsign_too_deep(app: TezosAppScreen, snapshot_dir: Path):
+def test_blindsign_too_deep(
+        backend: TezosBackend,
+        firmware: Firmware,
+        tezos_navigator: TezosNavigator,
+        account: Account,
+        snapshot_dir: Path):
     """Check blindsigning on too deep expression"""
-
-    app.assert_screen(Screen.HOME)
 
     expression = MichelineExpr([[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[{'int':42}]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]])
 
-    if app.backend.firmware.device == "nanos":
-        def send(result_queue: Queue) -> None:
-            res = app.backend.sign(DEFAULT_ACCOUNT, expression, with_hash=True)
-            result_queue.put(res)
-        def assert_screen_i(i):
-            app.assert_screen(f"{str(i).zfill(5)}", snapshot_dir / "clear")
+    def navigate() -> None:
+        if firmware == Firmware.NANOS:
+            ### Simulate `navigate_review` up to `ACCEPT_RISK` because the nanos screen can look like it hasn't changed.
 
-        result_queue: Queue = Queue()
-        send_process = Process(target=send, args=(result_queue,))
-        send_process.start()
+            instructions: List[Union[NavIns, NavInsID]] = [
+                # 'Review operation'
+                NavInsID.RIGHT_CLICK,  # 'Expression {{{...{{{'
+                NavInsID.RIGHT_CLICK,  # 'Expression {{{...{{{'
+                NavInsID.RIGHT_CLICK,  # 'The transaction cannot be trusted.'
+                NavInsID.RIGHT_CLICK,  # 'Parsing error ERR_TOO_DEEP'
+                NavInsID.RIGHT_CLICK,  # 'Learn More: bit.ly/ledger-tez'
+                NavInsID.RIGHT_CLICK,  # 'Accept risk'
+                NavInsID.BOTH_CLICK,
+            ]
 
-        app.backend.wait_for_text_not_on_screen(ScreenText.HOME)
+            tezos_navigator.unsafe_navigate(
+                instructions=instructions,
+                screen_change_before_first_instruction=True,
+                screen_change_after_last_instruction=False,
+                snap_path=snapshot_dir / "clear",
+            )
+        else:
+            tezos_navigator.navigate_review(
+                text=ScreenText.ACCEPT_RISK,
+                snap_path=snapshot_dir / "clear"
+            )
 
-        for i in range(6):
-            # 'Review operation'
-            # 'Expression {{{...{{{'
-            # 'Expression {{{...{{{'
-            # 'The transaction cannot be trusted.'
-            # 'Parsing error ERR_TOO_DEEP'
-            # 'Learn More: bit.ly/ledger-tez'
-            assert_screen_i(i)
-            app.backend.right_click()
+        tezos_navigator.navigate_sign_accept(
+            snap_path=snapshot_dir / "blind"
+        )
 
-        # 'Accept risk' screen
-        assert_screen_i(i+1)
+    data = tezos_navigator.sign(
+        account,
+        expression,
+        with_hash=True,
+        navigate=navigate
+    )
 
-        def blind_navigate() -> None:
-            app.navigate_until_text(ScreenText.SIGN_ACCEPT, snapshot_dir / "blind")
-        navigate_process = Process(target=blind_navigate)
-        navigate_process.start()
-
-        app.backend.both_click()
-
-        navigate_process.join()
-        assert navigate_process.exitcode == 0, "Should have terminate successfully"
-
-        send_process.join()
-        assert send_process.exitcode == 0, "Should have terminate successfully"
-
-        data = result_queue.get()
-    else:
-        data = app.blind_sign(DEFAULT_ACCOUNT,
-                              expression,
-                              with_hash=True,
-                              path=snapshot_dir)
-
-    app.checker.check_signature(
-        account=DEFAULT_ACCOUNT,
+    account.check_signature(
         message=expression,
         with_hash=True,
         data=data)
 
-    app.quit()
-
-def test_blindsign_too_large(app: TezosAppScreen, snapshot_dir: Path):
+def test_blindsign_too_large(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
     """Check blindsigning on too large expression"""
-
-    app.assert_screen(Screen.HOME)
 
     message = MichelineExpr({'int':12345678901234567890123456789012345678901234567890123456789012345678901234567890})
 
-    data = app.blind_sign(DEFAULT_ACCOUNT,
-                          message=message,
-                          with_hash=True,
-                          path=snapshot_dir)
+    def navigate() -> None:
+        tezos_navigator.navigate_review(
+            text=ScreenText.ACCEPT_RISK,
+            snap_path=snapshot_dir / "clear"
+        )
+        tezos_navigator.navigate_sign_accept(
+            snap_path=snapshot_dir / "blind"
+        )
 
-    app.checker.check_signature(
-        account=DEFAULT_ACCOUNT,
+    data = tezos_navigator.sign(
+        account,
+        message,
+        with_hash=True,
+        navigate=navigate
+    )
+
+    account.check_signature(
         message=message,
         with_hash=True,
         data=data)
 
-    app.quit()
-
-def test_blindsign_reject_from_clear(app: TezosAppScreen, snapshot_dir: Path):
+def test_blindsign_reject_from_clear(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
     """Check blindsigning rejection"""
 
     expression = MichelineExpr({'int':12345678901234567890123456789012345678901234567890123456789012345678901234567890})
 
-    app.parsing_error_signing(DEFAULT_ACCOUNT,
-                              expression,
-                              with_hash=False,
-                              path=snapshot_dir)
+    with StatusCode.PARSE_ERROR.expected():
+        tezos_navigator.reject_signing(
+            account,
+            expression,
+            with_hash=False,
+            snap_path=snapshot_dir
+        )
 
-    app.quit()
-
-def test_blindsign_reject_from_blind(app: TezosAppScreen, snapshot_dir: Path):
+def test_blindsign_reject_from_blind(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
     """Check blindsigning rejection"""
 
     expression = MichelineExpr({'int':12345678901234567890123456789012345678901234567890123456789012345678901234567890})
-
-    def expected_failure_send() -> bytes:
-        with app.expect_apdu_failure(StatusCode.REJECT):
-            app.backend.sign(DEFAULT_ACCOUNT, expression, with_hash=False)
-        return b''
 
     def navigate() -> None:
-        app.navigate_until_text(
-            ScreenText.ACCEPT_RISK,
-            snapshot_dir / "clear"
+        tezos_navigator.navigate_review(
+            text=ScreenText.ACCEPT_RISK,
+            snap_path=snapshot_dir / "clear"
         )
-        app.navigate_until_text(
-            ScreenText.SIGN_REJECT,
-            snapshot_dir / "blind"
+        tezos_navigator.navigate_sign_reject(
+            snap_path=snapshot_dir / "blind"
         )
 
-    send_and_navigate(
-        send=expected_failure_send,
-        navigate=navigate)
-
-    app.quit()
+    with StatusCode.REJECT.expected():
+        tezos_navigator.sign(
+            account,
+            expression,
+            with_hash=False,
+            navigate=navigate
+        )

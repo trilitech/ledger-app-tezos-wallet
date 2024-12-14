@@ -18,13 +18,13 @@
 
 from pathlib import Path
 
-from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
+from utils.account import Account
 from utils.message import IncreasePaidStorage
+from utils.navigator import TezosNavigator
 
-def test_sign_increase_paid_storage(app: TezosAppScreen, snapshot_dir: Path):
+
+def test_sign_increase_paid_storage(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
     """Check signing increase paid storage"""
-
-    app.assert_screen(Screen.HOME)
 
     message = IncreasePaidStorage(
         source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
@@ -36,15 +36,14 @@ def test_sign_increase_paid_storage(app: TezosAppScreen, snapshot_dir: Path):
         destination = "KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT"
     )
 
-    data = app.sign(DEFAULT_ACCOUNT,
-                    message,
-                    with_hash=True,
-                    path=snapshot_dir)
+    data = tezos_navigator.sign(
+        account,
+        message,
+        with_hash=True,
+        snap_path=snapshot_dir
+    )
 
-    app.checker.check_signature(
-        account=DEFAULT_ACCOUNT,
+    account.check_signature(
         message=message,
         with_hash=True,
         data=data)
-
-    app.quit()
