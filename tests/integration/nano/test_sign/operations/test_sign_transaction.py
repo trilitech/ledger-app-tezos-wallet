@@ -16,293 +16,85 @@
 
 """Gathering of tests related to Transaction operations."""
 
-from pathlib import Path
-
-from utils.account import Account
-from utils.backend import StatusCode
 from utils.message import Transaction
-from utils.navigator import ScreenText, TezosNavigator
+from .helper import Flow, Field, TestOperation, pytest_generate_tests
 
 
-def test_sign_transaction(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
-    """Check signing transaction"""
+class TestTransaction(TestOperation):
+    """Commun tests."""
 
-    tezos_navigator.toggle_expert_mode()
+    @property
+    def op_class(self):
+        return Transaction
 
-    message = Transaction(
-        source = 'tz2JPgTWZZpxZZLqHMfS69UAy1UHm4Aw5iHu',
-        fee = 50000,
-        counter = 8,
-        gas_limit = 54,
-        storage_limit = 45,
-        destination = 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT',
-        amount = 240000,
-        entrypoint = 'do',
-        parameter = {'prim': 'CAR'}
-    )
+    flows = [
+        Flow('basic', amount=5),
+        Flow(
+            'contract_call',
+            destination='KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT',
+            entrypoint="transfer",
+            parameter=[
+                {'prim': 'Pair', 'args': [
+                    {'string': 'KT1QWdbASvaTXW8GWfhfNh3JMjgXvnZAATJW'},
+                    [{'prim': 'Pair', 'args': [
+                        {'string': 'sr1MyCwR83hZphCSqaYSQApPxPMeyksJWWnh'},
+                        [{'prim': 'Pair', 'args': [
+                            {'int': 0},
+                            {'int': 5432900665191893635}
+                        ]}]
+                    ]}]
+                ]}
+            ]
+        ),
+        Flow('stake', amount=1000000000, entrypoint='stake'),
+        Flow('unstake', amount=500000000, entrypoint='unstake'),
+        Flow('finalize_unstake', entrypoint='finalize_unstake'),
+        Flow(
+            'delegate_parameters',
+            entrypoint='delegate_parameters',
+            parameter={'prim': 'Pair', 'args': [
+                {'int': 4000000},
+                {'prim': 'Pair', 'args': [
+                    {'int': 20000000},
+                    {'prim': 'Unit'}
+                ]}
+            ]}
+        ),
+    ]
 
-    data = tezos_navigator.sign(
-        account,
-        message,
-        with_hash=True,
-        snap_path=snapshot_dir
-    )
-
-    account.check_signature(
-        message=message,
-        with_hash=True,
-        data=data)
-
-def test_reject_transaction(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
-    """Check reject transaction"""
-
-    tezos_navigator.toggle_expert_mode()
-
-    message = Transaction(
-        source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
-        fee = 10000,
-        counter = 2,
-        gas_limit = 3,
-        storage_limit = 4,
-        destination = 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT',
-        amount = 0,
-        entrypoint = 'root',
-        parameter = [{'prim':'pair','args':[{'string':"["},{'prim':'pair','args':[{'string':"Z"},{'prim':'pair','args':[{'string':"Y"},{'prim':'pair','args':[{'string':"X"},{'prim':'pair','args':[{'string':"W"},{'prim':'pair','args':[{'string':"V"},{'prim':'pair','args':[{'string':"U"},{'prim':'pair','args':[{'string':"T"},{'prim':'pair','args':[{'string':"S"},{'prim':'pair','args':[{'string':"R"},{'prim':'pair','args':[{'string':"Q"},{'prim':'pair','args':[{'string':"P"},{'prim':'pair','args':[{'string':"O"},{'prim':'pair','args':[{'string':"N"},{'prim':'pair','args':[{'string':"M"},{'prim':'pair','args':[{'string':"L"},{'prim':'pair','args':[{'string':"K"},{'prim':'pair','args':[{'string':"J"},{'prim':'pair','args':[{'string':"I"},{'prim':'pair','args':[{'string':"H"},{'prim':'pair','args':[{'string':"G"},{'prim':'pair','args':[{'string':"F"},{'prim':'pair','args':[{'string':"E"},{'prim':'pair','args':[{'string':"D"},{'prim':'pair','args':[{'string':"C"},{'prim':'pair','args':[{'string':"B"},[]]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]},{'prim':'pair','args':[{'int':10},{'prim':'pair','args':[{'int':9},{'prim':'pair','args':[{'int':8},{'prim':'pair','args':[{'int':7},{'prim':'pair','args':[{'int':6},{'prim':'pair','args':[{'int':5},{'prim':'pair','args':[{'int':4},{'prim':'pair','args':[{'int':3},{'prim':'pair','args':[{'int':2},{'prim':'pair','args':[{'int':1},[]]}]}]}]}]}]}]}]}]}]}]
-    )
-
-    with StatusCode.REJECT.expected():
-        tezos_navigator.reject_signing(
-            account,
-            message,
-            with_hash=True,
-            snap_path=snapshot_dir
-        )
-
-def test_sign_simple_transaction(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
-    """Check sign not complex transaction"""
-
-    tezos_navigator.toggle_expert_mode()
-
-    message = Transaction(
-        source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
-        fee = 500000,
-        counter = 2,
-        gas_limit = 3,
-        storage_limit = 4,
-        destination = 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT',
-        amount = 10000
-    )
-
-    data = tezos_navigator.sign(
-        account,
-        message,
-        with_hash=True,
-        snap_path=snapshot_dir
-    )
-
-    account.check_signature(
-        message=message,
-        with_hash=True,
-        data=data)
-
-def test_too_complex_transaction(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
-    """Check sign complex transaction"""
-
-    message = Transaction(
-        source = 'tz2JPgTWZZpxZZLqHMfS69UAy1UHm4Aw5iHu',
-        fee = 50000,
-        counter = 8,
-        gas_limit = 54,
-        storage_limit = 45,
-        destination = 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT',
-        amount = 240000,
-        entrypoint = 'do',
-        parameter = {'prim': 'CAR'}
-    )
-
-    with StatusCode.REJECT.expected():
-        tezos_navigator.sign(
-            account,
-            message,
-            with_hash=True,
-            navigate=lambda: tezos_navigator.navigate_review(text=ScreenText.BACK_HOME, snap_path=snapshot_dir)
-        )
-
-def test_sign_stake_transaction(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
-    """Check sign stake"""
-
-    tezos_navigator.toggle_expert_mode()
-
-    message = Transaction(
-        source = 'tz2WmivuMG8MMRKMEmzKRMMxMApxZQWYNS4W',
-        fee = 40000,
-        counter = 0,
-        gas_limit = 49,
-        storage_limit = 2,
-        destination = 'tz2CJBeWWLsUDjVUDqGZL6od3DeBCNzYXrXk',
-        amount = 1000000000,
-        entrypoint = 'stake',
-    )
-
-    data = tezos_navigator.sign(
-        account,
-        message,
-        with_hash=True,
-        snap_path=snapshot_dir
-    )
-
-    account.check_signature(
-        message=message,
-        with_hash=True,
-        data=data)
-
-def test_sign_unstake_transaction(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
-    """Check sign unstake"""
-
-    tezos_navigator.toggle_expert_mode()
-
-    message = Transaction(
-        source = 'tz2WmivuMG8MMRKMEmzKRMMxMApxZQWYNS4W',
-        fee = 40000,
-        counter = 0,
-        gas_limit = 49,
-        storage_limit = 2,
-        destination = 'tz2CJBeWWLsUDjVUDqGZL6od3DeBCNzYXrXk',
-        amount = 500000000,
-        entrypoint = 'unstake'
-    )
-
-    data = tezos_navigator.sign(
-        account,
-        message,
-        with_hash=True,
-        snap_path=snapshot_dir
-    )
-
-    account.check_signature(
-        message=message,
-        with_hash=True,
-        data=data)
-
-def test_sign_finalize_unstake_transaction(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
-    """Check sign finalize_unstake"""
-
-    tezos_navigator.toggle_expert_mode()
-
-    message = Transaction(
-        source = 'tz2WmivuMG8MMRKMEmzKRMMxMApxZQWYNS4W',
-        fee = 40000,
-        counter = 0,
-        gas_limit = 49,
-        storage_limit = 2,
-        destination = 'tz2CJBeWWLsUDjVUDqGZL6od3DeBCNzYXrXk',
-        amount = 0,
-        entrypoint = 'finalize_unstake'
-    )
-
-    data = tezos_navigator.sign(
-        account,
-        message,
-        with_hash=True,
-        snap_path=snapshot_dir
-    )
-
-    account.check_signature(
-        message=message,
-        with_hash=True,
-        data=data)
-
-def test_sign_set_delegate_parameters_transaction(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
-    """Check sign set delegate parameters"""
-
-    tezos_navigator.toggle_expert_mode()
-
-    message = Transaction(
-        source = 'tz2WmivuMG8MMRKMEmzKRMMxMApxZQWYNS4W',
-        fee = 40000,
-        counter = 0,
-        gas_limit = 49,
-        storage_limit = 2,
-        destination = 'tz2CJBeWWLsUDjVUDqGZL6od3DeBCNzYXrXk',
-        amount = 0,
-        entrypoint = 'delegate_parameters',
-        parameter = {'prim': 'Pair',
-                     'args': [
-                         {'int': 4000000},
-                         {'prim': 'Pair',
-                          'args': [
-                              {'int': 20000000},
-                              {'prim': 'Unit'}
-                          ]}
-                     ]}
-    )
-
-    data = tezos_navigator.sign(
-        account,
-        message,
-        with_hash=True,
-        snap_path=snapshot_dir
-    )
-
-    account.check_signature(
-        message=message,
-        with_hash=True,
-        data=data)
-
-def test_sign_with_long_hash(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
-    """Check signing transaction with a long destination hash"""
-
-    tezos_navigator.toggle_expert_mode()
-
-    message = Transaction(
-        source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
-        fee = 10000,
-        counter = 2,
-        gas_limit = 3,
-        storage_limit = 4,
-        destination = 'KT1GW4QHn66m7WWWMWCMNaWmGYpCRbg5ahwU',
-        amount = 0,
-        entrypoint = 'root',
-        parameter = {'int': 0}
-    )
-
-    data = tezos_navigator.sign(
-        account,
-        message,
-        with_hash=True,
-        snap_path=snapshot_dir
-    )
-
-    account.check_signature(
-        message=message,
-        with_hash=True,
-        data=data)
-
-def test_ensure_always_clearsign(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
-    """Check clear signing never blindsign"""
-
-    tezos_navigator.toggle_expert_mode()
-
-    message = Transaction(
-        source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
-        fee = 10000,
-        counter = 2,
-        gas_limit = 3,
-        storage_limit = 4,
-        destination = 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT',
-        amount = 0,
-        entrypoint = 'root',
-        parameter = [{'prim':'pair','args':[{'string':"["},{'prim':'pair','args':[{'string':"Z"},{'prim':'pair','args':[{'string':"Y"},{'prim':'pair','args':[{'string':"X"},{'prim':'pair','args':[{'string':"W"},{'prim':'pair','args':[{'string':"V"},{'prim':'pair','args':[{'string':"U"},{'prim':'pair','args':[{'string':"T"},{'prim':'pair','args':[{'string':"S"},{'prim':'pair','args':[{'string':"R"},{'prim':'pair','args':[{'string':"Q"},{'prim':'pair','args':[{'string':"P"},{'prim':'pair','args':[{'string':"O"},{'prim':'pair','args':[{'string':"N"},{'prim':'pair','args':[{'string':"M"},{'prim':'pair','args':[{'string':"L"},{'prim':'pair','args':[{'string':"K"},{'prim':'pair','args':[{'string':"J"},{'prim':'pair','args':[{'string':"I"},{'prim':'pair','args':[{'string':"H"},{'prim':'pair','args':[{'string':"G"},{'prim':'pair','args':[{'string':"F"},{'prim':'pair','args':[{'string':"E"},{'prim':'pair','args':[{'string':"D"},{'prim':'pair','args':[{'string':"C"},{'prim':'pair','args':[{'string':"B"},[]]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]},{'prim':'pair','args':[{'int':10},{'prim':'pair','args':[{'int':9},{'prim':'pair','args':[{'int':8},{'prim':'pair','args':[{'int':7},{'prim':'pair','args':[{'int':6},{'prim':'pair','args':[{'int':5},{'prim':'pair','args':[{'int':4},{'prim':'pair','args':[{'int':3},{'prim':'pair','args':[{'int':2},{'prim':'pair','args':[{'int':1},[]]}]}]}]}]}]}]}]}]}]}]
-    )
-
-    data = tezos_navigator.sign(
-        account,
-        message,
-        with_hash=True,
-        snap_path=snapshot_dir
-    )
-
-    account.check_signature(
-        message=message,
-        with_hash=True,
-        data=data)
+    fields = [
+        Field("amount", "Amount", [
+            Field.Case(0, "0"),
+            Field.Case(1000, "1000"),
+            Field.Case(1000000, "1000000"),
+            Field.Case(1000000000, "1000000000"),
+            Field.Case(0xFFFFFFFFFFFFFFFF, "max"),  # max uint64
+        ]),
+        Field("destination", "Destination", [
+            Field.Case('tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa', "tz1"),
+            Field.Case('tz2CJBeWWLsUDjVUDqGZL6od3DeBCNzYXrXk', "tz2"),
+            Field.Case('tz3fLwHKthqhTPK6Lar6CTXN1WbDETw1YpGB', "tz3"),
+            Field.Case('KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT', "kt1"),
+            Field.Case('tz1Kp8NCAN5WWwvkWkMmQQXMRe68iURmoQ8w', "long-hash"),
+        ]),
+        Field("entrypoint", "Entrypoint", [
+            # `parameter` is set to make sure `entrypoint` is displayed with `default`
+            Field.Case('default', "default", parameter={'prim': 'None'}),
+            Field.Case('root', "root"),
+            Field.Case('do', "do"),
+            Field.Case('set_delegate', "set_delegate"),
+            Field.Case('remove_delegate', "remove_delegate"),
+            Field.Case('deposit', "deposit"),
+            Field.Case('stake', "stake"),
+            Field.Case('unstake', "unstake"),
+            Field.Case('finalize_unstake', "finalize_unstake"),
+            Field.Case('set_delegate_parameters', "set_delegate_parameters"),
+            Field.Case('custom_entrypoint', "custom_entrypoint"),
+        ]),
+        Field("parameter", "Parameter", [
+            # `entrypoint` is set to make sure `parameter` is displayed with `unit`
+            Field.Case({'prim': 'Unit'}, "unit", entrypoint='entrypoint'),
+            Field.Case({'prim': 'Pair', 'args': [{'string': 'a'}, {'int': 1}]}, "basic"),
+            # More test about Micheline in micheline tests
+        ]),
+    ]

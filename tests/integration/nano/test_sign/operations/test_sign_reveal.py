@@ -16,33 +16,24 @@
 
 """Gathering of tests related to Reveal operations."""
 
-from pathlib import Path
-
-from utils.account import Account
 from utils.message import Reveal
-from utils.navigator import TezosNavigator
+from .helper import Flow, Field, TestOperation, pytest_generate_tests
 
 
-def test_sign_reveal(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
-    """Check signing reveal"""
+class TestReveal(TestOperation):
+    """Commun tests."""
 
-    message = Reveal(
-        source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
-        fee = 10000,
-        counter = 2,
-        gas_limit = 3,
-        storage_limit = 4,
-        public_key = 'edpkuXX2VdkdXzkN11oLCb8Aurdo1BTAtQiK8ZY9UPj2YMt3AHEpcY'
-    )
+    @property
+    def op_class(self):
+        return Reveal
 
-    data = tezos_navigator.sign(
-        account,
-        message,
-        with_hash=True,
-        snap_path=snapshot_dir
-    )
+    flows = [Flow('basic')]
 
-    account.check_signature(
-        message=message,
-        with_hash=True,
-        data=data)
+    fields = [
+        Field("public_key", "Public key", [
+            Field.Case('edpkvMUjmJu9CYyKBAjUV3jtU8Y89TemDAcD29bSNh393Bc8z8BH3t', "tz1"),
+            Field.Case('sppk7ZT8R42AGSy672NHz9ps6Q4idqWYejAgMwqTWnyYAeq9XZEqWvZ', "tz2"),
+            Field.Case('p2pk665znpiyPRWEwpu8tZ7JdNPipkfYpGUhYALjaS4Tm7F7wcx1iRs', "tz3"),
+            Field.Case('edpkuWUfaAWqaxJoG9QKgQRQUHMWfsN1EmoMMXWMwYoE8kjWMWUGDk', "long-hash"),
+        ]),
+    ]

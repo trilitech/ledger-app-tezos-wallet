@@ -16,26 +16,23 @@
 
 """Gathering of tests related to Failing-noop operations."""
 
-from pathlib import Path
-
-from utils.account import Account
 from utils.message import FailingNoop
-from utils.navigator import TezosNavigator
+from .helper import Flow, Field, TestOperation, pytest_generate_tests
 
 
-def test_sign_failing_noop(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
-    """Check signing failing noop"""
+class TestFailingNoop(TestOperation):
+    """Commun tests."""
 
-    message = FailingNoop("9f09f2952d34528c733f94615cfc39bc555619fc550dd4a67ba2208ce8e867aa3d13a6ef99dfbe32c6974aa9a2150d21eca29c3349e59c13b9081f1c11b440ac4d3455dedbe4ee0de15a8af620d4c86247d9d132de1bb6da23d5ff9d8dffda22ba9a84")
+    @property
+    def op_class(self):
+        return FailingNoop
 
-    data = tezos_navigator.sign(
-        account,
-        message,
-        with_hash=True,
-        snap_path=snapshot_dir
-    )
+    flows = [Flow('basic', message="message")]
 
-    account.check_signature(
-        message=message,
-        with_hash=True,
-        data=data)
+    fields = [
+        Field("message", "Message", [
+            Field.Case('', "empty"),
+            Field.Case('message', "message"),
+            Field.Case('Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.', "long-message"),
+        ]),
+    ]

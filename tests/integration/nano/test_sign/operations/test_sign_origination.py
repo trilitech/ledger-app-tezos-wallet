@@ -16,37 +16,42 @@
 
 """Gathering of tests related to Origination operations."""
 
-from pathlib import Path
-
-from utils.account import Account
-from utils.message import Origination
-from utils.navigator import TezosNavigator
+from utils.message import Default, Origination
+from .helper import Flow, Field, TestOperation, pytest_generate_tests
 
 
-def test_sign_origination(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
-    """Check signing origination"""
+class TestOrigination(TestOperation):
+    """Commun tests."""
 
-    tezos_navigator.toggle_expert_mode()
+    @property
+    def op_class(self):
+        return Origination
 
-    message = Origination(
-        source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
-        fee = 10000,
-        counter = 2,
-        gas_limit = 3,
-        storage_limit = 4,
-        code = {'prim': 'UNPAIR'},
-        storage = {'prim': 'pair', 'args': [{'string': '1'}, {'int': 2}]},
-        balance = 500000
-    )
+    flows = [Flow('basic', delegate=Default.ED25519_PUBLIC_KEY_HASH)]
 
-    data = tezos_navigator.sign(
-        account,
-        message,
-        with_hash=True,
-        snap_path=snapshot_dir
-    )
-
-    account.check_signature(
-        message=message,
-        with_hash=True,
-        data=data)
+    fields = [
+        Field("balance", "Balance", [
+            Field.Case(0, "0"),
+            Field.Case(1000, "1000"),
+            Field.Case(1000000, "1000000"),
+            Field.Case(1000000000, "1000000000"),
+            Field.Case(0xFFFFFFFFFFFFFFFF, "max"),  # max uint64
+        ]),
+        Field("delegate", "Delegate", [
+            Field.Case(None, "none"),
+            Field.Case('tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa', "tz1"),
+            Field.Case('tz2CJBeWWLsUDjVUDqGZL6od3DeBCNzYXrXk', "tz2"),
+            Field.Case('tz3fLwHKthqhTPK6Lar6CTXN1WbDETw1YpGB', "tz3"),
+            Field.Case('tz1Kp8NCAN5WWwvkWkMmQQXMRe68iURmoQ8w', "long-hash"),
+        ]),
+        Field("code", "Code", [
+            Field.Case([], "empty"),
+            Field.Case([{'prim': 'CDR'}, {'prim': 'NIL', 'args': [{'prim': 'operation'}]}, {'prim': 'PAIR'}], "small"),
+            # More test about Micheline in micheline tests
+        ]),
+        Field("storage", "Storage", [
+            Field.Case({'prim': 'unit'}, "unit"),
+            Field.Case({'prim': 'or', 'args': [{'prim': 'int'}, {'prim': 'string'}]}, "basic"),
+            # More test about Micheline in micheline tests
+        ]),
+    ]

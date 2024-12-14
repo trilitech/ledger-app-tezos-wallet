@@ -16,72 +16,62 @@
 
 """Gathering of tests related to Transfer-ticket operations."""
 
-from pathlib import Path
-
-from conftest import requires_device
-from utils.account import Account
 from utils.message import TransferTicket
-from utils.navigator import TezosNavigator
+from .helper import Flow, Field, TestOperation, pytest_generate_tests
 
 
-def test_sign_transfer_ticket(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
-    """Check signing transfer ticket"""
+class TestTransferTicket(TestOperation):
+    """Commun tests."""
 
-    tezos_navigator.toggle_expert_mode()
+    @property
+    def op_class(self):
+        return TransferTicket
 
-    message = TransferTicket(
-        source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
-        fee = 10000,
-        counter = 2,
-        gas_limit = 3,
-        storage_limit = 4,
-        ticket_contents = {'prim': 'UNPAIR'},
-        ticket_ty = {'prim': 'pair', 'args': [{'string': '1'}, {'int': 2}]},
-        ticket_ticketer = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
-        ticket_amount = 1,
-        destination = 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT'
-    )
+    flows = [Flow('basic', ticket_amount=5)]
 
-    data = tezos_navigator.sign(
-        account,
-        message,
-        with_hash=True,
-        snap_path=snapshot_dir
-    )
-
-    account.check_signature(
-        message=message,
-        with_hash=True,
-        data=data)
-
-@requires_device("nanosp")
-def test_nanosp_regression_potential_empty_screen(tezos_navigator: TezosNavigator, account: Account, snapshot_dir: Path):
-    """Check signing operation that display potentially empty screens"""
-
-    tezos_navigator.toggle_expert_mode()
-
-    message = TransferTicket(
-        source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
-        fee = 10000,
-        counter = 2,
-        gas_limit = 3,
-        storage_limit = 4,
-        ticket_contents = {'prim': 'UNPAIR'},
-        ticket_ty = {'prim': 'pair', 'args': [{'string': '1'}, {'int': 2}]},
-        ticket_ticketer = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
-        ticket_amount = 1,
-        destination = 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT',
-        entrypoint = 'S\n\nS\nS\nS'
-    )
-
-    data = tezos_navigator.sign(
-        account,
-        message,
-        with_hash=True,
-        snap_path=snapshot_dir
-    )
-
-    account.check_signature(
-        message=message,
-        with_hash=True,
-        data=data)
+    fields = [
+        Field("ticket_contents", "Contents", [
+            Field.Case({'prim': 'Unit'}, "unit"),
+            Field.Case({'prim': 'Pair', 'args': [{'string': 'a'}, {'int': 1}]}, "basic"),
+            # More test about Micheline in micheline tests
+        ]),
+        Field("ticket_ty", "Type", [
+            Field.Case({'prim': 'unit'}, "unit"),
+            Field.Case({'prim': 'or', 'args': [{'prim': 'int'}, {'prim': 'string'}]}, "basic"),
+            # More test about Micheline in micheline tests
+        ]),
+        Field("ticket_ticketer", "Ticketer", [
+            Field.Case('tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa', "tz1"),
+            Field.Case('tz2CJBeWWLsUDjVUDqGZL6od3DeBCNzYXrXk', "tz2"),
+            Field.Case('tz3fLwHKthqhTPK6Lar6CTXN1WbDETw1YpGB', "tz3"),
+            Field.Case('KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT', "kt1"),
+            Field.Case('tz1Kp8NCAN5WWwvkWkMmQQXMRe68iURmoQ8w', "long-hash"),
+        ]),
+        Field("ticket_amount", "Amount", [
+            Field.Case(0, "0"),
+            Field.Case(1000, "1000"),
+            Field.Case(1000000, "1000000"),
+            Field.Case(1000000000, "1000000000"),
+            Field.Case(0xFFFFFFFFFFFFFFFF, "max"),  # max uint64
+        ]),
+        Field("destination", "Destination", [
+            Field.Case('tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa', "tz1"),
+            Field.Case('tz2CJBeWWLsUDjVUDqGZL6od3DeBCNzYXrXk', "tz2"),
+            Field.Case('tz3fLwHKthqhTPK6Lar6CTXN1WbDETw1YpGB', "tz3"),
+            Field.Case('KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT', "kt1"),
+            Field.Case('tz1Kp8NCAN5WWwvkWkMmQQXMRe68iURmoQ8w', "long-hash"),
+        ]),
+        Field("entrypoint", "Entrypoint", [
+            Field.Case('default', "default"),
+            Field.Case('root', "root"),
+            Field.Case('do', "do"),
+            Field.Case('set_delegate', "set_delegate"),
+            Field.Case('remove_delegate', "remove_delegate"),
+            Field.Case('deposit', "deposit"),
+            Field.Case('stake', "stake"),
+            Field.Case('unstake', "unstake"),
+            Field.Case('finalize_unstake', "finalize_unstake"),
+            Field.Case('set_delegate_parameters', "set_delegate_parameters"),
+            Field.Case('custom_entrypoint', "custom_entrypoint"),
+        ]),
+    ]
