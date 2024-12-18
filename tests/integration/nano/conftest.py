@@ -1,11 +1,29 @@
-import pytest
+# Copyright 2024 Trilitech <contact@trili.tech>
+# Copyright 2024 Functori <contact@functori.com>
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+# http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""Conftest base on `ragger` conftest."""
+
 
 from pathlib import Path
+from typing import Dict, Generator, List, Union
+
+import pytest
 from ragger.firmware import Firmware
-from typing import Dict, Callable, Generator, List, Optional, Tuple, Union
 
 from utils.app import TezosAppScreen, SpeculosTezosBackend, DEFAULT_SEED
-from utils.backend import TezosBackend, APP_KIND
+from utils.backend import AppKind
 
 FIRMWARES: List[Firmware] = [
     Firmware.NANOS,
@@ -16,6 +34,7 @@ FIRMWARES: List[Firmware] = [
 DEVICES: List[str] = list(map(lambda fw: fw.device, FIRMWARES))
 
 def pytest_addoption(parser):
+    """Register argparse-style options for pytest."""
     parser.addoption("-D", "--device",
                      type=str,
                      choices=DEVICES,
@@ -49,6 +68,7 @@ def pytest_addoption(parser):
 global_log_dir: Union[Path, None] = None
 
 def pytest_configure(config):
+    """Configure pytest."""
     global global_log_dir
     log_dir = config.getoption("log_dir")
     if log_dir is not None:
@@ -57,21 +77,24 @@ def pytest_configure(config):
 logs : Dict[str, List[pytest.TestReport]] = {}
 
 @pytest.hookimpl(tryfirst=True)
-def pytest_runtest_logstart(nodeid, location):
+def pytest_runtest_logstart(location):
+    """Called at the start of running the runtest protocol for a single item."""
     logs[location[2]] = []
 
 @pytest.hookimpl(tryfirst=True)
 def pytest_runtest_logreport(report):
+    """Called at the end of running the runtest protocol for a single test."""
     logs[report.head_line].append(report)
 
 @pytest.hookimpl(tryfirst=True)
-def pytest_runtest_logfinish(nodeid, location):
+def pytest_runtest_logfinish(location):
+    """Called at the end of running the runtest protocol for a single item."""
     if global_log_dir is not None:
         log_dir = global_log_dir / Path(location[0]).stem
         log_dir.mkdir(parents=True, exist_ok=True)
         head_line = location[2]
         log_file = log_dir / f"{head_line.replace(' ', '_')}.log"
-        with open(log_file, 'w') as writer:
+        with open(log_file, 'w', encoding="utf-8") as writer:
             for report in logs[head_line]:
                 writer.write(f"============================== {report.when.capitalize()} {report.outcome} ==============================\n")
                 writer.write(f"{report.longreprtext}\n")
@@ -84,11 +107,13 @@ def pytest_runtest_logfinish(nodeid, location):
 
 @pytest.fixture(scope="session")
 def firmware(pytestconfig) -> Firmware :
+    """Get `firware` for pytest."""
     device = pytestconfig.getoption("device")
     return next(fw for fw in FIRMWARES if fw.device == device)
 
 @pytest.fixture(scope="session")
-def port(pytestconfig, request, worker_id) -> int :
+def port(pytestconfig, worker_id) -> int :
+    """Get `port` for pytest."""
     if worker_id == "master":
         return pytestconfig.getoption("port")
     # worker_id = gw0, gw1, ...
@@ -96,18 +121,22 @@ def port(pytestconfig, request, worker_id) -> int :
 
 @pytest.fixture(scope="session")
 def display(pytestconfig) -> bool :
+    """Get `display` for pytest."""
     return pytestconfig.getoption("display")
 
 @pytest.fixture(scope="session")
 def golden_run(pytestconfig) -> bool:
+    """Get `golden_run` for pytest."""
     return pytestconfig.getoption("golden_run")
 
 @pytest.fixture(scope="session")
 def app_path(pytestconfig) -> Path:
+    """Get `app_path` for pytest."""
     return Path(pytestconfig.getoption("app"))
 
 @pytest.fixture(scope="session")
 def speculos_args(pytestconfig) -> List[str]:
+    """Get `app_path` for pytest."""
     speculos_args = pytestconfig.getoption("speculos_args")
     if speculos_args is None:
         return []
@@ -115,6 +144,7 @@ def speculos_args(pytestconfig) -> List[str]:
 
 @pytest.fixture(scope="function")
 def seed(request) -> str:
+    """Get `seed` for pytest."""
     param = getattr(request, "param", None)
     return param.get("seed", DEFAULT_SEED) if param else DEFAULT_SEED
 
@@ -125,6 +155,7 @@ def backend(app_path: Path,
             display: bool,
             seed: str,
             speculos_args: List[str]) -> Generator[SpeculosTezosBackend, None, None]:
+    """Get `backend` for pytest."""
 
     if display:
         speculos_args += ["--display", "qt"]
@@ -143,10 +174,12 @@ def backend(app_path: Path,
         yield b
 
 @pytest.fixture(scope="function")
-def app(backend: SpeculosTezosBackend, golden_run: bool):
-    return TezosAppScreen(backend, APP_KIND.WALLET, golden_run)
+def app(backend: SpeculosTezosBackend, golden_run: bool) -> TezosAppScreen:
+    """Get `app` for pytest."""
+    return TezosAppScreen(backend, AppKind.WALLET, golden_run)
 
 def requires_device(device):
+    """Wrapper to run the pytest test only with the provided device."""
     return pytest.mark.skipif(
         f"config.getvalue('device') != '{ device }'",
         reason=f"Test requires device to be { device }."

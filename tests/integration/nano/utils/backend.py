@@ -12,18 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Tezos app backend."""
+
 from enum import IntEnum
-from ragger.backend.interface import BackendInterface, RAPDU
-from ragger.error import ExceptionRAPDU
 from typing import Union
 
-from .account import Account, SIGNATURE_TYPE
+from ragger.backend.interface import BackendInterface, RAPDU
+from ragger.error import ExceptionRAPDU
+
+from .account import Account, SigType
 from .message import Message
 
-class CLA(IntEnum):
+class Cla(IntEnum):
+    """Class representing APDU class."""
+
     DEFAULT = 0x80
 
-class INS(IntEnum):
+class Ins(IntEnum):
+    """Class representing instruction."""
+
     VERSION                   = 0x00
     AUTHORIZE_BAKING          = 0x01
     GET_PUBLIC_KEY            = 0x02
@@ -41,13 +48,17 @@ class INS(IntEnum):
     HMAC                      = 0x0e
     SIGN_WITH_HASH            = 0x0f
 
-class INDEX(IntEnum):
+class Index(IntEnum):
+    """Class representing packet index."""
+
     FIRST      = 0x00
     OTHER      = 0x01
     LAST       = 0x80
     OTHER_LAST = 0x81
 
 class StatusCode(IntEnum):
+    """Class representing the status code."""
+
     SECURITY                  = 0x6982
     HID_REQUIRED              = 0x6983
     REJECT                    = 0x6985
@@ -66,26 +77,30 @@ class StatusCode(IntEnum):
     MEMORY_ERROR              = 0x9200
     PARSE_ERROR               = 0x9405
 
-class APP_KIND(IntEnum):
+class AppKind(IntEnum):
+    """Class representing the kind of app."""
+
     WALLET = 0x00
     BAKING = 0x01
 
 MAX_APDU_SIZE: int = 235
 
 class TezosBackend(BackendInterface):
+    """Class representing the backen of the tezos app."""
 
     def _exchange(self,
-                  ins: INS,
-                  index: INDEX = INDEX.FIRST,
-                  sig_type: Union[SIGNATURE_TYPE, None] = None,
+                  ins: Union[Ins, int],
+                  index: Union[Index, int] = Index.FIRST,
+                  sig_type: Union[SigType, int, None] = None,
                   payload: bytes = b'') -> bytes:
+        """Override of `exchange` for the tezos app."""
 
-        assert len(payload) <= MAX_APDU_SIZE, f"Apdu too large"
+        assert len(payload) <= MAX_APDU_SIZE, f"Apdu too large {len(payload)}"
 
         # Set to a non-existent value to ensure that p2 is unused
         p2: int = sig_type if sig_type is not None else 0xff
 
-        rapdu: RAPDU = self.exchange(CLA.DEFAULT,
+        rapdu: RAPDU = self.exchange(Cla.DEFAULT,
                                      ins,
                                      p1=index,
                                      p2=p2,
@@ -97,28 +112,36 @@ class TezosBackend(BackendInterface):
         return rapdu.data
 
     def git(self) -> bytes:
-        return self._exchange(INS.GIT)
+        """Requests the app commit."""
+        return self._exchange(Ins.GIT)
 
     def version(self) -> bytes:
-        return self._exchange(INS.VERSION)
+        """Requests the app version."""
+        return self._exchange(Ins.VERSION)
 
     def get_public_key(self,
                        account: Account,
                        with_prompt: bool = False) -> bytes:
-
-        ins = INS.PROMPT_PUBLIC_KEY if with_prompt else INS.GET_PUBLIC_KEY
-
+        """Requests the public key according to the account.
+        Use `with_prompt` ask user confirmation
+        """
+        ins = Ins.PROMPT_PUBLIC_KEY if with_prompt else Ins.GET_PUBLIC_KEY
         return self._exchange(ins,
                               sig_type=account.sig_type,
                               payload=account.path)
 
-    def _ask_sign(self, ins: INS, account: Account) -> None:
+    def _ask_sign(self, ins: Ins, account: Account) -> None:
+        """Prepare to sign with the account."""
         data: bytes = self._exchange(ins, sig_type=account.sig_type, payload=account.path)
-        assert not data
+        assert not data, f"No data expected but got {data.hex()}"
 
-    def _continue_sign(self, ins: INS, payload: bytes, last: bool) -> bytes:
-        index: INDEX = INDEX.OTHER
-        if last: index = INDEX(index | INDEX.LAST)
+    def _continue_sign(self, ins: Ins, payload: bytes, last: bool) -> bytes:
+        """Sends payload to sign.
+        Use `last` when sending the last packet
+        """
+        index: Index = Index.OTHER
+        if last:
+            index = Index(index | Index.LAST)
         return self._exchange(ins, index, payload=payload)
 
     def sign(self,
@@ -126,21 +149,21 @@ class TezosBackend(BackendInterface):
              message: Message,
              with_hash: bool = False,
              apdu_size: int = MAX_APDU_SIZE) -> bytes:
-        msg = message.bytes
+        """Requests the signature of a message."""
+        msg = bytes(message)
         assert msg, "Do not sign empty message"
 
-        ins = INS.SIGN_WITH_HASH if with_hash else INS.SIGN
+        ins = Ins.SIGN_WITH_HASH if with_hash else Ins.SIGN
 
         self._ask_sign(ins, account)
 
-        while(msg):
+        while msg:
             payload = msg[:apdu_size]
             msg     = msg[apdu_size:]
             last    = not msg
             data    = self._continue_sign(ins, payload, last)
             if last:
                 return data
-            else:
-                assert not data
+            assert not data, f"No data expected but got {data.hex()}"
 
         assert False, "We should have already returned"

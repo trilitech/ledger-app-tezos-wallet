@@ -122,6 +122,7 @@ integration_tests_basic_%:	app_%.tgz   \
 		apk add gmp-dev curl jq libsodium-dev git xxd procps;     \
 		python3 -m venv tezos_test_env --system-site-package;     \
 		source ./tezos_test_env/bin/activate;                     \
+		python3 -m pip install --upgrade pip -q;                  \
 		python3 -m pip install -r tests/requirements.txt -q ;  \
 		python3 -m pytest -n 32 tests/integration/nano/ --tb=no   \
 			--device $* --app \$$TMP_DIR/app.elf                  \

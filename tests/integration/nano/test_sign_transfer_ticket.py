@@ -13,27 +13,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Check signing transfer ticket"""
+
 from pathlib import Path
 
-from utils.app import Screen, DEFAULT_ACCOUNT
-from utils.message import Message
+from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
+from utils.message import TransferTicket
 
-# Operation (0): Transfer ticket
-# Fee: 0.01 XTZ
-# Storage limit: 4
-# Contents: UNPAIR
-# Type: pair "1" 2
-# Ticketer: tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa
-# Amount: 1
-# Destination: KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT
-# Entrypoint: default
-
-def test_sign_transfer_ticket(app):
+def test_sign_transfer_ticket(app: TezosAppScreen):
+    """Check signing transfer ticket"""
     test_name = Path(__file__).stem
 
     app.setup_expert_mode()
 
-    message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000009e00ffdd6102321bc251e4a5190ad5b12b251069d9b4904e02030400000002037a0000000a076501000000013100020000ffdd6102321bc251e4a5190ad5b12b251069d9b401010000000000000000000000000000000000000000000000000764656661756c74")
+    message = TransferTicket(
+        source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
+        fee = 10000,
+        counter = 2,
+        gas_limit = 3,
+        storage_limit = 4,
+        ticket_contents = {'prim': 'UNPAIR'},
+        ticket_ty = {'prim': 'pair', 'args': [{'string': '1'}, {'int': 2}]},
+        ticket_ticketer = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
+        ticket_amount = 1,
+        destination = 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT'
+    )
 
     data = app.sign(DEFAULT_ACCOUNT,
                     message,

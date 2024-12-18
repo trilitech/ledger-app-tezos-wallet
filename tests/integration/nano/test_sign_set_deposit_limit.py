@@ -13,22 +13,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Check signing set deposit limit"""
+
 from pathlib import Path
 
-from utils.app import Screen, DEFAULT_ACCOUNT
-from utils.message import Message
+from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
+from utils.message import SetDepositLimit
 
-# Operation (0): Set deposit limit
-# Fee: 0.06 XTZ
-# Storage limit: 4
-# Staking limit: 0.02 XTZ
-
-def test_sign_set_deposit_limit(app):
+def test_sign_set_deposit_limit(app: TezosAppScreen):
+    """Check signing set deposit limit"""
     test_name = Path(__file__).stem
 
-    app.assert_screen(Screen.Home)
+    app.assert_screen(Screen.HOME)
 
-    message = Message.from_bytes("03000000000000000000000000000000000000000000000000000000000000000070027c252d3806e6519ed064026bdb98edf866117331e0d40304f80204ffa09c01")
+    message = SetDepositLimit(
+        source = 'tz3XeTwXXJeWNgVR3LqMcyBDdnxjbZ7TeEGH',
+        fee = 60000,
+        counter = 4,
+        gas_limit = 376,
+        storage_limit = 4,
+        limit = 20000
+    )
 
     data = app.sign(DEFAULT_ACCOUNT,
                     message,

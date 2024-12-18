@@ -151,7 +151,8 @@ run_tests() {
                --rm -v "$(realpath .):/app"                             \
                ledger-app-tezos-integration-tests -c                    \
                "cd /app &&                                              \
-                pip install -r test/python/requirements.txt -q &&    \
+                pip install --upgrade pip -q &&                         \
+                pip install -r test/python/requirements.txt -q &&       \
                 pip install protobuf==3.20.3 && pytest test/python $*"
     )
 }

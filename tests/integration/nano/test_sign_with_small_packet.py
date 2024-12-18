@@ -13,13 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Check signing using small packet instead of full size packets"""
+
 from pathlib import Path
 
 from utils.account import Account
-from utils.app import send_and_navigate, Screen, Screen_text, DEFAULT_ACCOUNT
-from utils.message import Message
+from utils.app import send_and_navigate, Screen, ScreenText, TezosAppScreen, DEFAULT_ACCOUNT
+from utils.message import Message, Transaction
 
-def test_sign_with_small_packet(app):
+def test_sign_with_small_packet(app: TezosAppScreen):
+    """Check signing using small packet instead of full size packets"""
     test_name = Path(__file__).stem
 
     app.setup_expert_mode()
@@ -29,11 +32,11 @@ def test_sign_with_small_packet(app):
             message: Message,
             path: str) -> None:
 
-        app.assert_screen(Screen.Home)
+        app.assert_screen(Screen.HOME)
 
         data = send_and_navigate(
-            send=(lambda: app.backend.sign(account, message, apdu_size=10)),
-            navigate=(lambda: app.navigate_until_text(Screen_text.Sign_accept, path)))
+            send=lambda: app.backend.sign(account, message, apdu_size=10),
+            navigate=lambda: app.navigate_until_text(ScreenText.SIGN_ACCEPT, path))
 
         app.checker.check_signature(
             account,
@@ -41,9 +44,21 @@ def test_sign_with_small_packet(app):
             with_hash=False,
             data=data)
 
+    message = Transaction(
+        source = 'tz2JPgTWZZpxZZLqHMfS69UAy1UHm4Aw5iHu',
+        fee = 50000,
+        counter = 8,
+        gas_limit = 54,
+        storage_limit = 45,
+        destination = 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT',
+        amount = 240000,
+        entrypoint = 'do',
+        parameter = {'prim': 'CAR'}
+    )
+
     check_sign_with_small_packet(
         account=DEFAULT_ACCOUNT,
-        message=Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316"),
+        message=message,
         path=test_name)
 
     app.quit()

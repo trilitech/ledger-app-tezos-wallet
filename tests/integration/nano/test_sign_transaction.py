@@ -13,28 +13,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Check signing transaction"""
+
 from pathlib import Path
 
-from utils.app import Screen, Screen_text, DEFAULT_ACCOUNT
+from utils.app import Screen, ScreenText, TezosAppScreen, DEFAULT_ACCOUNT
 from utils.backend import StatusCode
-from utils.message import Message
+from utils.message import Transaction
 
 test_path = Path(Path(__file__).stem)
 
-# Operation (0): Transaction
-# Source: tz2JPgTWZZpxZZLqHMfS69UAy1UHm4Aw5iHu
-# Fee: 0.05 XTZ
-# Storage limit: 45
-# Amount: 0.24 XTZ
-# Destination: KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT
-# Entrypoint: do
-# Parameter: CAR
-def test_sign_transaction(app):
+def test_sign_transaction(app: TezosAppScreen):
+    """Check signing transaction"""
     path = test_path / "basic"
 
     app.setup_expert_mode()
 
-    message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316")
+    message = Transaction(
+        source = 'tz2JPgTWZZpxZZLqHMfS69UAy1UHm4Aw5iHu',
+        fee = 50000,
+        counter = 8,
+        gas_limit = 54,
+        storage_limit = 45,
+        destination = 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT',
+        amount = 240000,
+        entrypoint = 'do',
+        parameter = {'prim': 'CAR'}
+    )
 
     data = app.sign(DEFAULT_ACCOUNT,
                     message,
@@ -49,20 +54,23 @@ def test_sign_transaction(app):
 
     app.quit()
 
-# Operation (0): Transaction
-# Source: tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa
-# Fee: 0.01 XTZ
-# Storage limit: 4
-# Amount: 0 XTZ
-# Destination: KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT
-# Entrypoint: root
-# Data: {pair "[" (pair "Z" (pair "Y" (pair "X" (pair "W" (pair "V" (pair "U" (pair "T" (pair "S" (pair "R" (pair "Q" (pair "P" (pair "O" (pair "N" (pair "M" (pair "L" (pair "K" (pair "J" (pair "I" (pair "H" (pair "G" (pair "F" (pair "E" (pair "D" (pair "C" (pair "B" {})))))))))))))))))))))))));pair 10 (pair 9 (pair 8 (pair 7 (pair 6 (pair 5 (pair 4 (pair 3 (pair 2 (pair 1 {})))))))))}
-def test_reject_transaction(app):
+def test_reject_transaction(app: TezosAppScreen):
+    """Check reject transaction"""
     path = test_path / "reject"
 
     app.setup_expert_mode()
 
-    message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000006c00ffdd6102321bc251e4a5190ad5b12b251069d9b4904e0203040001000000000000000000000000000000000000000000ff01000001070200000102076501000000015b076501000000015a0765010000000159076501000000015807650100000001570765010000000156076501000000015507650100000001540765010000000153076501000000015207650100000001510765010000000150076501000000014f076501000000014e076501000000014d076501000000014c076501000000014b076501000000014a0765010000000149076501000000014807650100000001470765010000000146076501000000014507650100000001440765010000000143076501000000014202000000000765000a0765000907650008076500070765000607650005076500040765000307650002076500010200000000")
+    message = Transaction(
+        source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
+        fee = 10000,
+        counter = 2,
+        gas_limit = 3,
+        storage_limit = 4,
+        destination = 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT',
+        amount = 0,
+        entrypoint = 'root',
+        parameter = [{'prim':'pair','args':[{'string':"["},{'prim':'pair','args':[{'string':"Z"},{'prim':'pair','args':[{'string':"Y"},{'prim':'pair','args':[{'string':"X"},{'prim':'pair','args':[{'string':"W"},{'prim':'pair','args':[{'string':"V"},{'prim':'pair','args':[{'string':"U"},{'prim':'pair','args':[{'string':"T"},{'prim':'pair','args':[{'string':"S"},{'prim':'pair','args':[{'string':"R"},{'prim':'pair','args':[{'string':"Q"},{'prim':'pair','args':[{'string':"P"},{'prim':'pair','args':[{'string':"O"},{'prim':'pair','args':[{'string':"N"},{'prim':'pair','args':[{'string':"M"},{'prim':'pair','args':[{'string':"L"},{'prim':'pair','args':[{'string':"K"},{'prim':'pair','args':[{'string':"J"},{'prim':'pair','args':[{'string':"I"},{'prim':'pair','args':[{'string':"H"},{'prim':'pair','args':[{'string':"G"},{'prim':'pair','args':[{'string':"F"},{'prim':'pair','args':[{'string':"E"},{'prim':'pair','args':[{'string':"D"},{'prim':'pair','args':[{'string':"C"},{'prim':'pair','args':[{'string':"B"},[]]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]},{'prim':'pair','args':[{'int':10},{'prim':'pair','args':[{'int':9},{'prim':'pair','args':[{'int':8},{'prim':'pair','args':[{'int':7},{'prim':'pair','args':[{'int':6},{'prim':'pair','args':[{'int':5},{'prim':'pair','args':[{'int':4},{'prim':'pair','args':[{'int':3},{'prim':'pair','args':[{'int':2},{'prim':'pair','args':[{'int':1},[]]}]}]}]}]}]}]}]}]}]}]
+    )
 
     app.reject_signing(DEFAULT_ACCOUNT,
                        message,
@@ -71,18 +79,21 @@ def test_reject_transaction(app):
 
     app.quit()
 
-# Operation (0): Transaction
-# Source: tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa
-# Fee: 0.5 XTZ
-# Storage limit: 4
-# Amount: 0.01 XTZ
-# Destination: KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT
-def test_sign_simple_transaction(app):
+def test_sign_simple_transaction(app: TezosAppScreen):
+    """Check sign not complex transaction"""
     path = test_path / "simple"
 
     app.setup_expert_mode()
 
-    message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000006c00ffdd6102321bc251e4a5190ad5b12b251069d9b4a0c21e020304904e0100000000000000000000000000000000000000000000")
+    message = Transaction(
+        source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
+        fee = 500000,
+        counter = 2,
+        gas_limit = 3,
+        storage_limit = 4,
+        destination = 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT',
+        amount = 10000
+    )
 
     data = app.sign(DEFAULT_ACCOUNT,
                     message,
@@ -97,44 +108,49 @@ def test_sign_simple_transaction(app):
 
     app.quit()
 
-# Operation (0): Transaction
-# Source: tz2JPgTWZZpxZZLqHMfS69UAy1UHm4Aw5iHu
-# Fee: 0.05 XTZ
-# Storage limit: 45
-# Amount: 0.24 XTZ
-# Destination: KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT
-# Entrypoint: do
-# Parameter: CAR
-def test_too_complex_transaction(app):
+def test_too_complex_transaction(app: TezosAppScreen):
+    """Check sign complex transaction"""
     path = test_path / "complex"
-    app.assert_screen(Screen.Home)
+    app.assert_screen(Screen.HOME)
 
-    message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000006c016e8874874d31c3fbd636e924d5a036a43ec8faa7d0860308362d80d30e01000000000000000000000000000000000000000000ff02000000020316")
+    message = Transaction(
+        source = 'tz2JPgTWZZpxZZLqHMfS69UAy1UHm4Aw5iHu',
+        fee = 50000,
+        counter = 8,
+        gas_limit = 54,
+        storage_limit = 45,
+        destination = 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT',
+        amount = 240000,
+        entrypoint = 'do',
+        parameter = {'prim': 'CAR'}
+    )
 
     app._failing_signing(DEFAULT_ACCOUNT,
                          message,
                          with_hash=True,
                          navigate=(lambda: app.navigate_until_text(
-                             Screen_text.Back_home,
+                             ScreenText.BACK_HOME,
                              path)),
                          status_code=StatusCode.REJECT)
 
     app.quit()
 
-# Operation (0): Transaction
-# Source: tz2WmivuMG8MMRKMEmzKRMMxMApxZQWYNS4W
-# Fee: 0.04 XTZ
-# Storage limit: 2
-# Amount: 1000 XTZ
-# Destination: tz2CJBeWWLsUDjVUDqGZL6od3DeBCNzYXrXk
-# Entrypoint: stake
-# Parameter: Unit
-def test_sign_stake_transaction(app):
+def test_sign_stake_transaction(app: TezosAppScreen):
+    """Check sign stake"""
     path = test_path / "stake"
 
     app.setup_expert_mode()
 
-    message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000006c01f6552df4f5ff51c3d13347cab045cfdb8b9bd803c0b8020031028094ebdc0300012bad922d045c068660fabe19576f8506a1fa8fa3ff0600000002030b")
+    message = Transaction(
+        source = 'tz2WmivuMG8MMRKMEmzKRMMxMApxZQWYNS4W',
+        fee = 40000,
+        counter = 0,
+        gas_limit = 49,
+        storage_limit = 2,
+        destination = 'tz2CJBeWWLsUDjVUDqGZL6od3DeBCNzYXrXk',
+        amount = 1000000000,
+        entrypoint = 'stake',
+    )
 
     data = app.sign(DEFAULT_ACCOUNT,
                     message,
@@ -149,20 +165,22 @@ def test_sign_stake_transaction(app):
 
     app.quit()
 
-# Operation (0): Transaction
-# Source: tz2WmivuMG8MMRKMEmzKRMMxMApxZQWYNS4W
-# Fee: 0.04 XTZ
-# Storage limit: 2
-# Amount: 500 XTZ
-# Destination: tz2CJBeWWLsUDjVUDqGZL6od3DeBCNzYXrXk
-# Entrypoint: unstake
-# Parameter: Unit
-def test_sign_unstake_transaction(app):
+def test_sign_unstake_transaction(app: TezosAppScreen):
+    """Check sign unstake"""
     path = test_path / "unstake"
 
     app.setup_expert_mode()
 
-    message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000006c01f6552df4f5ff51c3d13347cab045cfdb8b9bd803c0b80200310280cab5ee0100012bad922d045c068660fabe19576f8506a1fa8fa3ff0700000002030b")
+    message = Transaction(
+        source = 'tz2WmivuMG8MMRKMEmzKRMMxMApxZQWYNS4W',
+        fee = 40000,
+        counter = 0,
+        gas_limit = 49,
+        storage_limit = 2,
+        destination = 'tz2CJBeWWLsUDjVUDqGZL6od3DeBCNzYXrXk',
+        amount = 500000000,
+        entrypoint = 'unstake'
+    )
 
     data = app.sign(DEFAULT_ACCOUNT,
                     message,
@@ -177,20 +195,22 @@ def test_sign_unstake_transaction(app):
 
     app.quit()
 
-# Operation (0): Transaction
-# Source: tz2WmivuMG8MMRKMEmzKRMMxMApxZQWYNS4W
-# Fee: 0.04 XTZ
-# Storage limit: 2
-# Amount: 0 XTZ
-# Destination: tz2CJBeWWLsUDjVUDqGZL6od3DeBCNzYXrXk
-# Entrypoint: finalize_unstake
-# Parameter: Unit
-def test_sign_finalize_unstake_transaction(app):
+def test_sign_finalize_unstake_transaction(app: TezosAppScreen):
+    """Check sign finalize_unstake"""
     path = test_path / "finalize_unstake"
 
     app.setup_expert_mode()
 
-    message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000006c01f6552df4f5ff51c3d13347cab045cfdb8b9bd803c0b8020031020000012bad922d045c068660fabe19576f8506a1fa8fa3ff0800000002030b")
+    message = Transaction(
+        source = 'tz2WmivuMG8MMRKMEmzKRMMxMApxZQWYNS4W',
+        fee = 40000,
+        counter = 0,
+        gas_limit = 49,
+        storage_limit = 2,
+        destination = 'tz2CJBeWWLsUDjVUDqGZL6od3DeBCNzYXrXk',
+        amount = 0,
+        entrypoint = 'finalize_unstake'
+    )
 
     data = app.sign(DEFAULT_ACCOUNT,
                     message,
@@ -205,20 +225,31 @@ def test_sign_finalize_unstake_transaction(app):
 
     app.quit()
 
-# Operation (0): Transaction
-# Source: tz2WmivuMG8MMRKMEmzKRMMxMApxZQWYNS4W
-# Fee: 0.04 XTZ
-# Storage limit: 2
-# Amount: 0 XTZ
-# Destination: tz2CJBeWWLsUDjVUDqGZL6od3DeBCNzYXrXk
-# Entrypoint: set_delegate_parameters
-# Parameter: Pair 4000000 (Pair 20000000 Unit)
-def test_sign_set_delegate_parameters_transaction(app):
+def test_sign_set_delegate_parameters_transaction(app: TezosAppScreen):
+    """Check sign set delegate parameters"""
     path = test_path / "delegate_parameters"
 
     app.setup_expert_mode()
 
-    message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000006c01f6552df4f5ff51c3d13347cab045cfdb8b9bd803c0b8020031020000012bad922d045c068660fabe19576f8506a1fa8fa3ff090000001007070080a4e80307070080b48913030b")
+    message = Transaction(
+        source = 'tz2WmivuMG8MMRKMEmzKRMMxMApxZQWYNS4W',
+        fee = 40000,
+        counter = 0,
+        gas_limit = 49,
+        storage_limit = 2,
+        destination = 'tz2CJBeWWLsUDjVUDqGZL6od3DeBCNzYXrXk',
+        amount = 0,
+        entrypoint = 'delegate_parameters',
+        parameter = {'prim': 'Pair',
+                     'args': [
+                         {'int': 4000000},
+                         {'prim': 'Pair',
+                          'args': [
+                              {'int': 20000000},
+                              {'prim': 'Unit'}
+                          ]}
+                     ]}
+    )
 
     data = app.sign(DEFAULT_ACCOUNT,
                     message,

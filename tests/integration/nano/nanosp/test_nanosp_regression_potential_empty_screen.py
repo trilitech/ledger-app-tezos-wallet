@@ -13,42 +13,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import sys
-
-file_path=os.path.abspath(__file__)
-dir_path=os.path.dirname(file_path)
-root_path=os.path.dirname(dir_path)
-sys.path.append(root_path)
-
-from conftest import requires_device
+"""Check signing operation that display potentially empty screens"""
 
 from pathlib import Path
 
-from utils.app import Screen, DEFAULT_ACCOUNT
-from utils.message import Message
+from conftest import requires_device
 
-# Operation (0): Transfer ticket
-# Fee: 0.01 XTZ
-# Storage limit: 4
-# Contents: UNPAIR
-# Type: pair "1" 2
-# Ticketer: tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa
-# Amount: 1
-# Destination: KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT
-# Entrypoint: S
-#
-# S
-# S
-# S
+from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
+from utils.message import TransferTicket
 
 @requires_device("nanosp")
-def test_nanosp_regression_potential_empty_screen(app):
+def test_nanosp_regression_potential_empty_screen(app: TezosAppScreen):
+    """Check signing operation that display potentially empty screens"""
     test_name = Path(__file__).stem
 
     app.setup_expert_mode()
 
-    message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000009e00ffdd6102321bc251e4a5190ad5b12b251069d9b4904e02030400000002037a0000000a076501000000013100020000ffdd6102321bc251e4a5190ad5b12b251069d9b4010100000000000000000000000000000000000000000000000008530a0a530a530a53")
+    message = TransferTicket(
+        source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
+        fee = 10000,
+        counter = 2,
+        gas_limit = 3,
+        storage_limit = 4,
+        ticket_contents = {'prim': 'UNPAIR'},
+        ticket_ty = {'prim': 'pair', 'args': [{'string': '1'}, {'int': 2}]},
+        ticket_ticketer = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
+        ticket_amount = 1,
+        destination = 'KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT',
+        entrypoint = 'S\n\nS\nS\nS'
+    )
 
     data = app.sign(DEFAULT_ACCOUNT,
                     message,

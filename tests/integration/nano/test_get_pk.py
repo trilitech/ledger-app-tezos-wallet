@@ -13,29 +13,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from utils.account import Account, SIGNATURE_TYPE
-from utils.app import Screen
+"""Module to test get-public-key instruction."""
 
-def test_get_pk(app):
+from utils.account import Account, SigType
+from utils.app import Screen, TezosAppScreen
 
+def test_get_pk(app: TezosAppScreen):
+    """Test that public keys get from the app are correct."""
     accounts = [
         Account("m/44'/1729'/0'/0'",
-                SIGNATURE_TYPE.ED25519,
+                SigType.ED25519,
                 "edpkuXX2VdkdXzkN11oLCb8Aurdo1BTAtQiK8ZY9UPj2YMt3AHEpcY"),
         Account("m/44'/1729'/0'/0'",
-                SIGNATURE_TYPE.SECP256K1,
+                SigType.SECP256K1,
                 "sppk7bVy617DmGvXsMqcwsiLtnedTN2trUi5ugXcNig7en4rHJyunK1"),
         Account("m/44'/1729'/0'/0'",
-                SIGNATURE_TYPE.SECP256R1,
+                SigType.SECP256R1,
                 "p2pk67fq5pzuMMABZ9RDrooYbLrgmnQbLt8z7PTGM9mskf7LXS5tdBG"),
         Account("m/44'/1729'/0'/0'",
-                SIGNATURE_TYPE.BIP32_ED25519,
+                SigType.BIP32_ED25519,
                 "edpkumJgSsSxkpiB5hmTq6eZcrmc6BsJtLAhYceFTiziFqje4mongz")
     ]
 
     for account in accounts:
 
-        app.assert_screen(Screen.Home)
+        app.assert_screen(Screen.HOME)
 
         data = app.backend.get_public_key(account, with_prompt=False)
 

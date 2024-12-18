@@ -13,25 +13,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from utils.app import Screen
-from utils.backend import INS, StatusCode
+"""Check unimplemented commands"""
 
-def test_unimplemented_commands(app):
+from utils.app import Screen, TezosAppScreen
+from utils.backend import Ins, StatusCode
 
+def test_unimplemented_commands(app: TezosAppScreen):
+    """Check unimplemented commands"""
     for ins in \
-        [INS.AUTHORIZE_BAKING, \
-         INS.SIGN_UNSAFE, \
-         INS.RESET, \
-         INS.QUERY_AUTH_KEY, \
-         INS.QUERY_MAIN_HWM, \
-         INS.SETUP, \
-         INS.QUERY_ALL_HWM, \
-         INS.DEAUTHORIZE, \
-         INS.QUERY_AUTH_KEY_WITH_CURVE, \
-         INS.HMAC, \
+        [Ins.AUTHORIZE_BAKING, \
+         Ins.SIGN_UNSAFE, \
+         Ins.RESET, \
+         Ins.QUERY_AUTH_KEY, \
+         Ins.QUERY_MAIN_HWM, \
+         Ins.SETUP, \
+         Ins.QUERY_ALL_HWM, \
+         Ins.DEAUTHORIZE, \
+         Ins.QUERY_AUTH_KEY_WITH_CURVE, \
+         Ins.HMAC, \
          0xff]:
 
-        app.assert_screen(Screen.Home)
+        app.assert_screen(Screen.HOME)
 
         with app.expect_apdu_failure(StatusCode.INVALID_INS):
             app.backend._exchange(ins)

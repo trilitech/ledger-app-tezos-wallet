@@ -13,23 +13,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Check signing increase paid storage"""
+
 from pathlib import Path
 
-from utils.app import Screen, DEFAULT_ACCOUNT
-from utils.message import Message
+from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
+from utils.message import IncreasePaidStorage
 
-# Operation (0): Increase paid storage
-# Fee: 0.01 XTZ
-# Storage limit: 4
-# Amount: 5
-# Destination: KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT
-
-def test_sign_increase_paid_storage(app):
+def test_sign_increase_paid_storage(app: TezosAppScreen):
+    """Check signing increase paid storage"""
     test_name = Path(__file__).stem
 
-    app.assert_screen(Screen.Home)
+    app.assert_screen(Screen.HOME)
 
-    message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000007100ffdd6102321bc251e4a5190ad5b12b251069d9b4904e0203040501000000000000000000000000000000000000000000")
+    message = IncreasePaidStorage(
+        source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
+        fee = 10000,
+        counter = 2,
+        gas_limit = 3,
+        storage_limit = 4,
+        amount = 5,
+        destination = "KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT"
+    )
 
     data = app.sign(DEFAULT_ACCOUNT,
                     message,

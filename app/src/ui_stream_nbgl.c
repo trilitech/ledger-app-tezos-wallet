@@ -321,7 +321,7 @@ tz_ui_nav_cb(void)
     tz_parser_state        *st = &global.keys.apdu.sign.u.clear.parser_state;
 
     // Continue receiving data from the apdu until s->full is true.
-    while (((s->total < 0) || ((s->current == s->total) && !s->full))
+    while (((s->total < 0) || (s->current == s->total)) && !s->full
            && (st->errno < TZ_ERR_INVALID_TAG)) {
         PRINTF("tz_ui_nav_cb: Looping...\n");
         tz_ui_continue();

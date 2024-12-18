@@ -13,25 +13,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Check signing transaction with a long destination hash"""
+
 from pathlib import Path
 
-from utils.app import Screen, DEFAULT_ACCOUNT
-from utils.message import Message
+from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
+from utils.message import Transaction
 
-# Operation (0): Transaction
-# Fee: 0.01 XTZ
-# Storage limit: 4
-# Amount: 0 XTZ
-# Destination: KT1GW4QHn66m7WWWMWCMNaWmGYpCRbg5ahwU
-# Entrypoint: root
-# Parameter: 0
-
-def test_sign_with_long_hash(app):
+def test_sign_with_long_hash(app: TezosAppScreen):
+    """Check signing transaction with a long destination hash"""
     test_name = Path(__file__).stem
 
     app.setup_expert_mode()
 
-    message = Message.from_bytes("0300000000000000000000000000000000000000000000000000000000000000006c00ffdd6102321bc251e4a5190ad5b12b251069d9b4904e020304000156dcfb211fa76c525fd7c4566c09a5e3e4d5b81000ff01000000020000")
+    message = Transaction(
+        source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
+        fee = 10000,
+        counter = 2,
+        gas_limit = 3,
+        storage_limit = 4,
+        destination = 'KT1GW4QHn66m7WWWMWCMNaWmGYpCRbg5ahwU',
+        amount = 0,
+        entrypoint = 'root',
+        parameter = {'int': 0}
+    )
 
     data = app.sign(DEFAULT_ACCOUNT,
                     message,

@@ -13,19 +13,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Check blindsigning on too large expression"""
+
 from pathlib import Path
 
-from utils.app import Screen, DEFAULT_ACCOUNT
-from utils.message import Message
+from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
+from utils.message import MichelineExpr
 
-# Expression: 12345678901234567890123456789012345678901234567890123456789012345678901234567890
-
-def test_blindsign_too_large(app):
+def test_blindsign_too_large(app: TezosAppScreen):
+    """Check blindsigning on too large expression"""
     test_name = Path(__file__).stem
 
-    app.assert_screen(Screen.Home)
+    app.assert_screen(Screen.HOME)
 
-    message = Message.from_bytes("050092abf8e3d9e5f8cfd9ae8a9fe5f28ea1d5b5abf1af82dae8a4b68df3d1889eb6f988f5e8d31a")
+    message = MichelineExpr({'int':12345678901234567890123456789012345678901234567890123456789012345678901234567890})
 
     data = app.blind_sign(DEFAULT_ACCOUNT,
                           message=message,
