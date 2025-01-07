@@ -19,13 +19,12 @@ from enum import Enum
 from io import BytesIO
 from pathlib import Path
 import time
-from typing import Callable, List, Optional, Union
+from typing import List, Optional, Union
 
 import requests
 from ragger.backend import SpeculosBackend
-from ragger.navigator import NavInsID, NanoNavigator
+from ragger.navigator import NavIns, NavInsID, NanoNavigator
 
-from .message import Message
 from .account import Account, SigType
 from .backend import TezosBackend
 
@@ -112,7 +111,7 @@ class TezosAppScreen():
     """Class representing Tezos app management."""
 
     backend: SpeculosTezosBackend
-    path: Path
+    _root_dir: Path
     snapshots_dir: Path
     tmp_snapshots_dir: Path
     snapshotted: List[str]
@@ -123,9 +122,9 @@ class TezosAppScreen():
                  backend: SpeculosTezosBackend,
                  golden_run: bool):
         self.backend = backend
-        self.path = Path(__file__).resolve().parent.parent
-        self.snapshots_dir = self.path / "snapshots" / backend.firmware.name
-        self.tmp_snapshots_dir = self.path / "snapshots-tmp" / backend.firmware.name
+        self._root_dir = Path(__file__).resolve().parent.parent
+        self.snapshots_dir = self._root_dir / "snapshots" / backend.firmware.name
+        self.tmp_snapshots_dir = self._root_dir / "snapshots-tmp" / backend.firmware.name
         if not self.snapshots_dir.is_dir() and golden_run:
             self.snapshots_dir.mkdir(parents=True)
         if not self.tmp_snapshots_dir.is_dir():
@@ -226,86 +225,108 @@ class TezosAppScreen():
         self.backend.right_click()
         self._quit()
 
-    def navigate_until_text(self, text: ScreenText, path: Union[str, Path]) -> None:
-        """Click right until the expected text is displayed, then both click."""
-        if isinstance(path, str):
-            path = Path(path)
-        self.navigator.\
-            navigate_until_text_and_compare(NavInsID.RIGHT_CLICK,
-                                            [NavInsID.BOTH_CLICK],
-                                            text,
-                                            path=self.path,
-                                            test_case_name=path,
-                                            screen_change_after_last_instruction=False)
+    def navigate(self,
+                 snap_path: Optional[Path] = None,
+                 screen_change_before_first_instruction: bool = False,
+                 **kwargs) -> None:
+        """Wrapper of `navigator.navigate_and_compare`"""
+        self.navigator.navigate_and_compare(
+            path=self._root_dir,
+            test_case_name=snap_path,
+            screen_change_before_first_instruction=screen_change_before_first_instruction,
+            **kwargs
+        )
 
-    def provide_public_key(self,
-                           account: Account,
-                           path: Union[str, Path]) -> bytes:
-        """Get the account's public key from the app after approving it."""
-        with self.backend.prompt_public_key(account) as result:
-            self.navigate_until_text(ScreenText.PUBLIC_KEY_APPROVE, path)
-        return result.value
+    def navigate_until_text(self,
+                            snap_path: Optional[Path] = None,
+                            screen_change_before_first_instruction: bool = False,
+                            validation_instructions: List[Union[NavIns, NavInsID]] = [],
+                            **kwargs) -> None:
+        """Wrapper of `navigator.navigate_until_text_and_compare`"""
+        self.navigator.navigate_until_text_and_compare(
+            path=self._root_dir,
+            test_case_name=snap_path,
+            screen_change_before_first_instruction=screen_change_before_first_instruction,
+            validation_instructions=validation_instructions,
+            **kwargs
+        )
 
-    def reject_public_key(self,
-                          account: Account,
-                          path: Union[str, Path]) -> bytes:
-        """Reject the account's public key."""
-        with self.backend.prompt_public_key(account) as result:
-            self.navigate_until_text(ScreenText.PUBLIC_KEY_REJECT, path)
-        return result.value
+    def navigate_forward(self, **kwargs) -> None:
+        """Navigate forward until the text is found."""
+        self.navigate_until_text(
+            navigate_instruction=NavInsID.RIGHT_CLICK,
+            **kwargs
+        )
 
-    def _sign(self,
-              account: Account,
-              message: Message,
-              with_hash: bool,
-              navigate: Callable[[], None]) -> bytes:
-        """Requests to sign the message with account and navigates."""
-        with self.backend.sign(account, message, with_hash) as result:
-            navigate()
-        return result.value
+    def _navigate_review(
+            self,
+            screen_change_before_first_instruction=True,
+            screen_change_after_last_instruction=False,
+            **kwargs
+    ) -> None:
+        """Helper to navigate forward in a new flow."""
+        self.navigate_forward(
+            screen_change_before_first_instruction=screen_change_before_first_instruction,
+            screen_change_after_last_instruction=screen_change_after_last_instruction,
+            **kwargs
+        )
 
-    def sign(self,
-             account: Account,
-             message: Message,
-             with_hash: bool,
-             path: Union[str, Path]) -> bytes:
-        """Sign the message with account."""
-        return self._sign(
-            account,
-            message,
-            with_hash,
-            navigate=lambda: self.navigate_until_text(ScreenText.SIGN_ACCEPT, path))
+    def accept_public_key(self, **kwargs) -> None:
+        """Navigate through public key flow and accept public key"""
+        self._navigate_review(
+            text=ScreenText.PUBLIC_KEY_APPROVE,
+            validation_instructions=[NavInsID.BOTH_CLICK],
+            **kwargs
+        )
 
-    def blind_sign(self,
-                   account: Account,
-                   message: Message,
-                   with_hash: bool,
-                   path: Union[str, Path]) -> bytes:
-        """Blindsign the message with account."""
-        if isinstance(path, str):
-            path = Path(path)
+    def reject_public_key(self, **kwargs) -> None:
+        """Navigate through public key flow and reject"""
+        self._navigate_review(
+            text=ScreenText.PUBLIC_KEY_REJECT,
+            validation_instructions=[NavInsID.BOTH_CLICK],
+            **kwargs
+        )
 
-        def navigate() -> None:
-            self.navigate_until_text(ScreenText.ACCEPT_RISK, path / "clear")
-            self.navigate_until_text(ScreenText.SIGN_ACCEPT, path / "blind")
+    def accept_sign(self, **kwargs) -> None:
+        """Navigate through signing flow and accept to sign"""
+        self._navigate_review(
+            text=ScreenText.SIGN_ACCEPT,
+            validation_instructions=[NavInsID.BOTH_CLICK],
+            **kwargs
+        )
 
-        return self._sign(
-            account,
-            message,
-            with_hash,
-            navigate=navigate)
+    def reject_sign(self, **kwargs) -> None:
+        """Navigate through signing flow and reject."""
+        self._navigate_review(
+            text=ScreenText.SIGN_REJECT,
+            validation_instructions=[NavInsID.BOTH_CLICK],
+            **kwargs
+        )
 
-    def reject_signing(self,
-                       account: Account,
-                       message: Message,
-                       with_hash: bool,
-                       path: Union[str, Path]) -> bytes:
-        """Request and reject signing the message."""
-        return self._sign(
-            account,
-            message,
-            with_hash,
-            navigate=lambda: self.navigate_until_text(ScreenText.SIGN_REJECT, path))
+    def hard_reject_sign(self, **kwargs) -> None:
+        """Navigate through signing flow and until a hard reject send
+        back to home."""
+        self._navigate_review(
+            text=ScreenText.HOME,
+            validation_instructions=[],
+            **kwargs
+        )
+
+    def expert_reject_sign(self, **kwargs) -> None:
+        """Navigate through the signing expert requirement flow and reject."""
+        self._navigate_review(
+            text=ScreenText.BACK_HOME,
+            validation_instructions=[NavInsID.BOTH_CLICK],
+            **kwargs
+        )
+
+    def accept_sign_risk(self, **kwargs) -> None:
+        """Navigate through signing risk warning flow and accept risk."""
+        self._navigate_review(
+            text=ScreenText.ACCEPT_RISK,
+            validation_instructions=[NavInsID.BOTH_CLICK],
+            **kwargs
+        )
 
 DEFAULT_SEED = 'zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra zebra'
 

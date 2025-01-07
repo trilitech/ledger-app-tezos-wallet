@@ -20,7 +20,7 @@ from pathlib import Path
 
 from conftest import requires_device
 from utils.account import Account
-from utils.app import Screen, ScreenText, TezosAppScreen, DEFAULT_ACCOUNT
+from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
 from utils.message import Message, MichelineExpr, Transaction
 
 def test_sign_micheline_without_hash(app: TezosAppScreen, snapshot_dir: Path):
@@ -30,15 +30,14 @@ def test_sign_micheline_without_hash(app: TezosAppScreen, snapshot_dir: Path):
 
     message = MichelineExpr([{'string': 'CACA'}, {'string': 'POPO'}, {'string': 'BOUDIN'}])
 
-    data = app.sign(DEFAULT_ACCOUNT,
-                    message,
-                    with_hash=False,
-                    path=snapshot_dir)
+    with app.backend.sign(DEFAULT_ACCOUNT, message, with_hash=False) as result:
+        app.accept_sign(snap_path=snapshot_dir)
 
     DEFAULT_ACCOUNT.check_signature(
         message=message,
         with_hash=False,
-        data=data)
+        data=result.value
+    )
 
     app.quit()
 
@@ -55,7 +54,7 @@ def test_sign_with_small_packet(app: TezosAppScreen, snapshot_dir: Path):
         app.assert_screen(Screen.HOME)
 
         with app.backend.sign(account, message, apdu_size=10) as result:
-            app.navigate_until_text(ScreenText.SIGN_ACCEPT, path)
+            app.accept_sign(snap_path=path)
 
         account.check_signature(
             message=message,
@@ -90,14 +89,13 @@ def test_nanosp_regression_press_right_works_across_apdu_recieves(app: TezosAppS
 
     message = MichelineExpr([{'prim':'IF_NONE','args':[[[{'prim':'SWAP'},{'prim':'IF','args':[[{'prim':'DIP','args':[[[{'prim':'DROP','args':[{'int':1}]},{'prim':'PUSH','args':[{'prim':'unit'},{'prim':'Unit'}]},{'prim':'PUSH','args':[{'prim':'bool'},{'prim':'True'}]},{'prim':'PUSH','args':[{'prim':'string'},{'string':';L\\S?p$-Fq)VDg\n]te\no4v0_8)\"'}]}]]]}],[[{'prim':'DROP','args':[{'int':2}]},{'prim':'PUSH','args':[{'prim':'unit'},{'prim':'Unit'}]},{'prim':'PUSH','args':[{'prim':'bool'},{'prim':'False'}]},{'prim':'PUSH','args':[{'prim':'string'},{'string':'Li-%*edF6~?E[5Kmu?dyviwJ^2\"\\d$FyQ>>!>D$g(Qg'}]},{'prim':'PUSH','args':[{'prim':'string'},{'string':'*Tx<E`SiG6Yf*A^kZ\\=7?H[mOlQ\n]Ehs'}]}]]]}]],[{'prim':'IF_NONE','args':[[{'prim':'DUP'}],[[{'prim':'DROP','args':[{'int':4}]},{'prim':'PUSH','args':[{'prim':'unit'},{'prim':'Unit'}]},{'prim':'PUSH','args':[{'prim':'bool'},{'prim':'True'}]},{'prim':'PUSH','args':[{'prim':'string'},{'string':'\"\\6_4\n$k%'}]},{'prim':'PUSH','args':[{'prim':'string'},{'string':'c^1\"\\?Ey_1!EVb~9;EX;YU\n#Kj2ZT8h`U!X '}]}]]]}]]},{'prim':'SIZE'}])
 
-    data = app.sign(DEFAULT_ACCOUNT,
-                    message,
-                    with_hash=True,
-                    path=snapshot_dir)
+    with app.backend.sign(DEFAULT_ACCOUNT, message, with_hash=True) as result:
+        app.accept_sign(snap_path=snapshot_dir)
 
     DEFAULT_ACCOUNT.check_signature(
         message=message,
         with_hash=True,
-        data=data)
+        data=result.value
+    )
 
     app.quit()

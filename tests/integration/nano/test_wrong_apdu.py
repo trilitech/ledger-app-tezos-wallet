@@ -32,7 +32,8 @@ def test_regression_continue_after_reject(app: TezosAppScreen, snapshot_dir: Pat
     app.setup_expert_mode()
 
     with StatusCode.REJECT.expected():
-        app.reject_public_key(DEFAULT_ACCOUNT, snapshot_dir / "reject_public_key")
+        with app.backend.prompt_public_key(DEFAULT_ACCOUNT):
+            app.reject_public_key(snap_path=snapshot_dir / "reject_public_key")
 
     app.assert_screen(Screen.HOME)
 
@@ -49,10 +50,8 @@ def test_regression_continue_after_reject(app: TezosAppScreen, snapshot_dir: Pat
     )
 
     with StatusCode.REJECT.expected():
-        app.reject_signing(DEFAULT_ACCOUNT,
-                           message,
-                           with_hash=True,
-                           path=snapshot_dir / "reject_signing")
+        with app.backend.sign(DEFAULT_ACCOUNT, message, with_hash=True):
+            app.reject_sign(snap_path=snapshot_dir / "reject_signing")
 
     app.backend.get_public_key(DEFAULT_ACCOUNT)
 

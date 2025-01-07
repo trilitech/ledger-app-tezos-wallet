@@ -35,14 +35,13 @@ def test_sign_register_global_constant(app: TezosAppScreen, snapshot_dir: Path):
         value = {'prim': 'Pair', 'args': [{'string': '1'}, {'int': 2}]}
     )
 
-    data = app.sign(DEFAULT_ACCOUNT,
-                    message,
-                    with_hash=True,
-                    path=snapshot_dir)
+    with app.backend.sign(DEFAULT_ACCOUNT, message, with_hash=True) as result:
+        app.accept_sign(snap_path=snapshot_dir)
 
     DEFAULT_ACCOUNT.check_signature(
         message=message,
         with_hash=True,
-        data=data)
+        data=result.value
+    )
 
     app.quit()
