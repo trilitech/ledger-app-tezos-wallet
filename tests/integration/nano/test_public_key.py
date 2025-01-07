@@ -45,7 +45,7 @@ def test_get_pk(app: TezosAppScreen, account: Account):
 
     expected_public_key = account.key.public_key()
 
-    data = app.backend.get_public_key(account, with_prompt=False)
+    data = app.backend.get_public_key(account)
 
     public_key = PublicKey.from_bytes(data, account.sig_type)
 
