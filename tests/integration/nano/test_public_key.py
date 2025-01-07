@@ -59,9 +59,10 @@ def test_provide_pk(app: TezosAppScreen, account: Account, snapshot_dir: Path):
 
     expected_public_key = account.key.public_key()
 
-    data = app.provide_public_key(account, snapshot_dir)
+    with app.backend.prompt_public_key(account) as result:
+        app.accept_public_key(snap_path=snapshot_dir)
 
-    public_key = PublicKey.from_bytes(data, account.sig_type)
+    public_key = PublicKey.from_bytes(result.value, account.sig_type)
 
     assert public_key == expected_public_key.encode(), \
         f"Expected public key {expected_public_key} but got {public_key}"
@@ -73,6 +74,7 @@ def test_reject_pk(app: TezosAppScreen, snapshot_dir: Path):
     app.assert_screen(Screen.HOME)
 
     with StatusCode.REJECT.expected():
-        app.reject_public_key(DEFAULT_ACCOUNT, snapshot_dir)
+        with app.backend.prompt_public_key(DEFAULT_ACCOUNT):
+            app.reject_public_key(snap_path=snapshot_dir)
 
     app.quit()

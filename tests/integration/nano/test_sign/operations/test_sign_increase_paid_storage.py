@@ -36,14 +36,13 @@ def test_sign_increase_paid_storage(app: TezosAppScreen, snapshot_dir: Path):
         destination = "KT18amZmM5W7qDWVt2pH6uj7sCEd3kbzLrHT"
     )
 
-    data = app.sign(DEFAULT_ACCOUNT,
-                    message,
-                    with_hash=True,
-                    path=snapshot_dir)
+    with app.backend.sign(DEFAULT_ACCOUNT, message, with_hash=True) as result:
+        app.accept_sign(snap_path=snapshot_dir)
 
     DEFAULT_ACCOUNT.check_signature(
         message=message,
         with_hash=True,
-        data=data)
+        data=result.value
+    )
 
     app.quit()

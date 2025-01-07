@@ -48,15 +48,14 @@ def test_sign_micheline_basic(app: TezosAppScreen, account: Account, snapshot_di
 
     message = MichelineExpr([{'string': 'CACA'}, {'string': 'POPO'}, {'string': 'BOUDIN'}])
 
-    data = app.sign(account,
-                    message,
-                    with_hash=True,
-                    path=snapshot_dir)
+    with app.backend.sign(account, message, with_hash=True) as result:
+        app.accept_sign(snap_path=snapshot_dir)
 
     account.check_signature(
         message=message,
         with_hash=True,
-        data=data)
+        data=result.value
+    )
 
     app.quit()
 
@@ -88,14 +87,13 @@ def test_sign_with_another_seed(app: TezosAppScreen, snapshot_dir: Path):
         parameter = {'prim': 'CAR'}
     )
 
-    data = app.sign(account,
-                    message,
-                    with_hash=True,
-                    path=snapshot_dir)
+    with app.backend.sign(account, message, with_hash=True) as result:
+        app.accept_sign(snap_path=snapshot_dir)
 
     account.check_signature(
         message=message,
         with_hash=True,
-        data=data)
+        data=result.value
+    )
 
     app.quit()

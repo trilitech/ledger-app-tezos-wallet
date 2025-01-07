@@ -35,14 +35,13 @@ def test_sign_reveal(app: TezosAppScreen, snapshot_dir: Path):
         public_key = 'edpkuXX2VdkdXzkN11oLCb8Aurdo1BTAtQiK8ZY9UPj2YMt3AHEpcY'
     )
 
-    data = app.sign(DEFAULT_ACCOUNT,
-                    message,
-                    with_hash=True,
-                    path=snapshot_dir)
+    with app.backend.sign(DEFAULT_ACCOUNT, message, with_hash=True) as result:
+        app.accept_sign(snap_path=snapshot_dir)
 
     DEFAULT_ACCOUNT.check_signature(
         message=message,
         with_hash=True,
-        data=data)
+        data=result.value
+    )
 
     app.quit()
