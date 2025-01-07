@@ -54,7 +54,7 @@ def test_regression_continue_after_reject(app: TezosAppScreen, snapshot_dir: Pat
                            with_hash=True,
                            path=snapshot_dir / "reject_signing")
 
-    app.backend.get_public_key(DEFAULT_ACCOUNT, with_prompt=False)
+    app.backend.get_public_key(DEFAULT_ACCOUNT)
 
 
 def test_change_sign_instruction(app: TezosAppScreen):
@@ -118,13 +118,14 @@ def test_mixing_command(app: TezosAppScreen):
 
     app.backend._ask_sign(Ins.SIGN, DEFAULT_ACCOUNT)
     with StatusCode.UNEXPECTED_STATE.expected():
-        app.backend.get_public_key(DEFAULT_ACCOUNT, with_prompt=True)
+        with app.backend.prompt_public_key(DEFAULT_ACCOUNT):
+            pass
 
     app.assert_screen(Screen.HOME)
 
     app.backend._ask_sign(Ins.SIGN, DEFAULT_ACCOUNT)
     with StatusCode.UNEXPECTED_STATE.expected():
-        app.backend.get_public_key(DEFAULT_ACCOUNT, with_prompt=False)
+        app.backend.get_public_key(DEFAULT_ACCOUNT)
 
     app.assert_screen(Screen.HOME)
 
@@ -153,8 +154,8 @@ def test_wrong_index(app: TezosAppScreen, ins: Ins, index: Index):
 @pytest.mark.parametrize(
     "sender",
     [
-        lambda app, account: app.backend.get_public_key(account, with_prompt=False),
-        lambda app, account: app.backend.get_public_key(account, with_prompt=True),
+        lambda app, account: app.backend._provide_public_key(account, with_prompt=False),
+        lambda app, account: app.backend._provide_public_key(account, with_prompt=True),
         lambda app, account: app.backend._ask_sign(Ins.SIGN, account),
         lambda app, account: app.backend._ask_sign(Ins.SIGN_WITH_HASH, account)
     ],
@@ -180,8 +181,8 @@ def test_wrong_derivation_type(app: TezosAppScreen, sender: Callable[[TezosAppSc
 @pytest.mark.parametrize(
     "sender",
     [
-        lambda app, account: app.backend.get_public_key(account, with_prompt=False),
-        lambda app, account: app.backend.get_public_key(account, with_prompt=True),
+        lambda app, account: app.backend._provide_public_key(account, with_prompt=False),
+        lambda app, account: app.backend._provide_public_key(account, with_prompt=True),
         lambda app, account: app.backend._ask_sign(Ins.SIGN, account),
         lambda app, account: app.backend._ask_sign(Ins.SIGN_WITH_HASH, account)
     ],

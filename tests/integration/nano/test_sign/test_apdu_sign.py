@@ -20,7 +20,7 @@ from pathlib import Path
 
 from conftest import requires_device
 from utils.account import Account
-from utils.app import send_and_navigate, Screen, ScreenText, TezosAppScreen, DEFAULT_ACCOUNT
+from utils.app import Screen, ScreenText, TezosAppScreen, DEFAULT_ACCOUNT
 from utils.message import Message, MichelineExpr, Transaction
 
 def test_sign_micheline_without_hash(app: TezosAppScreen, snapshot_dir: Path):
@@ -54,14 +54,14 @@ def test_sign_with_small_packet(app: TezosAppScreen, snapshot_dir: Path):
 
         app.assert_screen(Screen.HOME)
 
-        data = send_and_navigate(
-            send=lambda: app.backend.sign(account, message, apdu_size=10),
-            navigate=lambda: app.navigate_until_text(ScreenText.SIGN_ACCEPT, path))
+        with app.backend.sign(account, message, apdu_size=10) as result:
+            app.navigate_until_text(ScreenText.SIGN_ACCEPT, path)
 
         account.check_signature(
             message=message,
             with_hash=False,
-            data=data)
+            data=result.value
+        )
 
     message = Transaction(
         source = 'tz2JPgTWZZpxZZLqHMfS69UAy1UHm4Aw5iHu',

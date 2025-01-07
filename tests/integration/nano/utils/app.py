@@ -17,10 +17,9 @@
 
 from enum import Enum
 from io import BytesIO
-from multiprocessing.pool import ThreadPool
 from pathlib import Path
 import time
-from typing import Callable, List, Optional, TypeVar, Union
+from typing import Callable, List, Optional, Union
 
 import requests
 from ragger.backend import SpeculosBackend
@@ -45,37 +44,6 @@ def with_retry(f, attempts=MAX_ATTEMPTS):
         attempts -= 1
         # Give plenty of time for speculos to update - can take a long time on CI machines
         time.sleep(0.5)
-
-RESPONSE = TypeVar('RESPONSE')
-
-def send_and_navigate(
-        send: Callable[[], RESPONSE],
-        navigate: Callable[[], None],
-        timeout: float = 300.0
-) -> RESPONSE:
-    """Sends a request and navigates before receiving a response."""
-
-    with ThreadPool(processes=2) as pool:
-
-        t = 0.0
-        send_res = pool.apply_async(send)
-        navigate_res = pool.apply_async(navigate)
-
-        while True:
-            if send_res.ready():
-                result = send_res.get()
-                navigate_res.get()
-                break
-            if navigate_res.ready():
-                navigate_res.get()
-                result = send_res.get()
-                break
-            time.sleep(0.1)
-            t += 0.1
-            if timeout is not None and timeout < t:
-                raise TimeoutError("Timeout waiting for Send and Navigate")
-
-        return result
 
 class SpeculosTezosBackend(TezosBackend, SpeculosBackend):
     """Class representing Tezos app running on Speculos."""
@@ -274,17 +242,17 @@ class TezosAppScreen():
                            account: Account,
                            path: Union[str, Path]) -> bytes:
         """Get the account's public key from the app after approving it."""
-        return send_and_navigate(
-            send=lambda: self.backend.get_public_key(account, with_prompt=True),
-            navigate=lambda: self.navigate_until_text(ScreenText.PUBLIC_KEY_APPROVE, path))
+        with self.backend.prompt_public_key(account) as result:
+            self.navigate_until_text(ScreenText.PUBLIC_KEY_APPROVE, path)
+        return result.value
 
     def reject_public_key(self,
                           account: Account,
                           path: Union[str, Path]) -> bytes:
         """Reject the account's public key."""
-        return send_and_navigate(
-            send=lambda: self.backend.get_public_key(account, with_prompt=True),
-            navigate=lambda: self.navigate_until_text(ScreenText.PUBLIC_KEY_REJECT, path))
+        with self.backend.prompt_public_key(account) as result:
+            self.navigate_until_text(ScreenText.PUBLIC_KEY_REJECT, path)
+        return result.value
 
     def _sign(self,
               account: Account,
@@ -292,9 +260,9 @@ class TezosAppScreen():
               with_hash: bool,
               navigate: Callable[[], None]) -> bytes:
         """Requests to sign the message with account and navigates."""
-        return send_and_navigate(
-            send=(lambda: self.backend.sign(account, message, with_hash)),
-            navigate=navigate)
+        with self.backend.sign(account, message, with_hash) as result:
+            navigate()
+        return result.value
 
     def sign(self,
              account: Account,

@@ -16,8 +16,11 @@
 
 from contextlib import contextmanager
 from enum import IntEnum
+from multiprocessing.pool import ThreadPool
 from struct import unpack
-from typing import Generator, Union
+from typing import Callable, Generator, TypeVar, Union
+
+from types import SimpleNamespace
 
 from ragger.backend.interface import BackendInterface, RAPDU
 from ragger.error import ExceptionRAPDU
@@ -154,6 +157,29 @@ class StatusCode(IntEnum):
                 f"Expect fail with {self} but fail with {status}"
 
 
+RESPONSE = TypeVar('RESPONSE')
+
+
+def async_thread(function: Callable[..., RESPONSE]):
+    """Decorator that runs asynchronously the function and provides a
+    context manager to access the result in a `value` field"""
+    @contextmanager
+    def wrapper(*args, **kwargs) -> Generator[SimpleNamespace, None, None]:
+        thread_result = SimpleNamespace(value=None)
+        thread_pool = ThreadPool(processes=1)
+        try:
+            thread_async_result = thread_pool.apply_async(
+                function,
+                args=args,
+                kwds=kwargs
+            )
+            yield thread_result
+            thread_result.value = thread_async_result.get()
+        finally:
+            thread_pool.terminate()
+    return wrapper
+
+
 MAX_APDU_SIZE: int = 235
 
 class TezosBackend(BackendInterface):
@@ -190,9 +216,9 @@ class TezosBackend(BackendInterface):
         """Requests the app version."""
         return self._exchange(Ins.VERSION)
 
-    def get_public_key(self,
-                       account: Account,
-                       with_prompt: bool = False) -> bytes:
+    def _provide_public_key(self,
+                            account: Account,
+                            with_prompt: bool = False) -> bytes:
         """Requests the public key according to the account.
         Use `with_prompt` ask user confirmation
         """
@@ -200,6 +226,16 @@ class TezosBackend(BackendInterface):
         return self._exchange(ins,
                               sig_type=account.sig_type,
                               payload=account.path)
+
+    def get_public_key(self, account: Account) -> bytes:
+        """Requests the public key according to the account."""
+        return self._provide_public_key(account, with_prompt=False)
+
+    @async_thread
+    def prompt_public_key(self, account: Account) -> bytes:
+        """Requests the public key according to the account.  Ask for
+        a user confirmation"""
+        return self._provide_public_key(account, with_prompt=True)
 
     def _ask_sign(self, ins: Ins, account: Account) -> None:
         """Prepare to sign with the account."""
@@ -215,6 +251,7 @@ class TezosBackend(BackendInterface):
             index = Index(index | Index.LAST)
         return self._exchange(ins, index, payload=payload)
 
+    @async_thread
     def sign(self,
              account: Account,
              message: Message,
