@@ -20,8 +20,25 @@ from pathlib import Path
 import time
 from typing import List, Optional, Union
 
+from ragger.backend import BackendInterface, SpeculosBackend
 from ragger.firmware import Firmware
-from ragger.backend import SpeculosBackend
+from ragger.firmware.touch.layouts import ChoiceList, RightHeader
+from ragger.firmware.touch.positions import (
+    Position,
+    STAX_BUTTON_LOWER_LEFT,
+    STAX_BUTTON_ABOVE_LOWER_MIDDLE,
+    FLEX_BUTTON_LOWER_LEFT,
+    FLEX_BUTTON_ABOVE_LOWER_MIDDLE
+)
+from ragger.firmware.touch.screen import MetaScreen
+from ragger.firmware.touch.use_cases import (
+    UseCaseHome,
+    UseCaseSettings as OriginalUseCaseSettings,
+    UseCaseAddressConfirmation as OriginalUseCaseAddressConfirmation,
+    UseCaseReview as OriginalUseCaseReview,
+    UseCaseChoice,
+    UseCaseViewDetails
+)
 from ragger.navigator import NavIns, NavInsID, Navigator
 
 from .backend import TezosBackend
@@ -49,19 +66,117 @@ class ScreenText(str, Enum):
         return cls.BLINDSIGN
 
 
-class TezosNavigator():
+class UseCaseSettings(OriginalUseCaseSettings, metaclass=MetaScreen):
+    """Custom UseCaseSettings."""
+
+    layout__toggle_list = ChoiceList
+
+    _toggle_list: ChoiceList
+
+    def __init__(self, client: BackendInterface, firmware: Firmware):
+        # `MetaScreen` require an explicit __init__ function
+        super().__init__(client, firmware)
+
+    def toggle_expert_mode(self):
+        """Toggle the expert_mode switch."""
+        self._toggle_list.choose(1)
+
+    def toggle_blindsigning(self):
+        """Toggle the blindsigning switch."""
+        self._toggle_list.choose(2)
+
+    def exit(self) -> None:
+        """Exit settings."""
+        self.multi_page_exit()
+
+
+class UseCaseAddressConfirmation(OriginalUseCaseAddressConfirmation):
+    """Custom UseCaseAddressConfirmation."""
+
+    # *_BUTTON_ABOVE_LOWER_LEFT
+    QR_POSITIONS = {
+        Firmware.STAX: Position(
+            STAX_BUTTON_LOWER_LEFT.x,
+            STAX_BUTTON_ABOVE_LOWER_MIDDLE.y
+        ),
+        Firmware.FLEX: Position(
+            FLEX_BUTTON_LOWER_LEFT.x,
+            FLEX_BUTTON_ABOVE_LOWER_MIDDLE.y
+        )
+    }
+
+    def show_qr(self) -> None:
+        """Tap to show qr code."""
+        self.client.finger_touch(*self.QR_POSITIONS[self.firmware])
+
+
+class UseCaseReview(OriginalUseCaseReview, metaclass=MetaScreen):
+    """Custom UseCaseReview."""
+
+    use_case_reject_choice = UseCaseChoice
+    use_case_enable_expert_choice = UseCaseChoice
+    use_case_enable_blindsign_choice = UseCaseChoice
+    use_case_skip_choice = UseCaseChoice
+    use_case_back_to_safety = UseCaseChoice
+    use_case_details = UseCaseViewDetails
+    layout__skip_header = RightHeader
+
+    reject_choice:           UseCaseChoice
+    enable_expert_choice:    UseCaseChoice
+    enable_blindsign_choice: UseCaseChoice
+    skip_choice:             UseCaseChoice
+    back_to_safety:          UseCaseChoice
+    details:                 UseCaseViewDetails
+    _skip_header:            RightHeader
+
+    # The ‘more’ button is positioned just below the very long
+    # data displayed.  As the size of the data is not fixed, the
+    # position of the button cannot be defined statically. The
+    # static positions below are defined for the test data.
+    MORE_POSITIONS = {
+        Firmware.STAX: Position(200, 390),
+        Firmware.FLEX: Position(240, 350)
+    }
+
+    def __init__(self, client: BackendInterface, firmware: Firmware):
+        # `MetaScreen` require an explicit __init__ function
+        super().__init__(client, firmware)
+
+    def show_more(self) -> None:
+        """Tap to show more."""
+        self.client.finger_touch(*self.MORE_POSITIONS[self.firmware])
+
+    def skip(self) -> None:
+        """Press the skip button."""
+        self._skip_header.tap()
+
+
+class TezosNavigator(metaclass=MetaScreen):
     """Class representing Tezos app navigation."""
 
+    use_case_home = UseCaseHome
+    use_case_settings = UseCaseSettings
+    use_case_review_pk = UseCaseAddressConfirmation
+    use_case_review_tx = UseCaseReview
+
+    home:      UseCaseHome
+    settings:  UseCaseSettings
+    review_pk: UseCaseAddressConfirmation
+    review_tx: UseCaseReview
+
     _backend: TezosBackend
-    _root_dir: Path
+    _firmware: Firmware
     _navigator: Navigator
+    _root_dir: Path
 
     def __init__(self,
                  backend: TezosBackend,
+                 firmware: Firmware,
                  navigator: Navigator):
         self._backend = backend
-        self._root_dir = Path(__file__).resolve().parent.parent
+        self._firmware = firmware
         self._navigator = navigator
+        self._root_dir = Path(__file__).resolve().parent.parent
 
     def navigate(self,
                  snap_path: Optional[Path] = None,

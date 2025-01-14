@@ -197,7 +197,7 @@ def tezos_navigator(
         navigator: Navigator = NanoNavigator(backend, firmware, golden_run)
     else:
         navigator = TouchNavigator(backend, firmware, golden_run)
-    return TezosNavigator(backend, navigator)
+    return TezosNavigator(backend, firmware, navigator)
 
 @pytest.fixture(scope="function")
 def snapshot_dir(request) -> Path :
