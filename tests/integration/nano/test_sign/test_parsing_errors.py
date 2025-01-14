@@ -23,7 +23,7 @@ import pytest
 from utils.account import Account
 from utils.backend import StatusCode, TezosBackend
 from utils.message import RawMessage
-from utils.navigator import ScreenText, TezosNavigator
+from utils.navigator import TezosNavigator
 
 
 # Operation (0): Transaction

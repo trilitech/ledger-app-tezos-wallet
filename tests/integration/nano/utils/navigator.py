@@ -15,7 +15,7 @@
 
 """Tezos app backend."""
 
-from enum import auto, Enum
+from enum import auto
 from pathlib import Path
 import time
 from typing import Any, Callable, Dict, List, Optional, Union
@@ -42,28 +42,6 @@ from ragger.firmware.touch.use_cases import (
 from ragger.navigator import BaseNavInsID, NavIns, NavInsID, Navigator
 
 from .backend import TezosBackend
-
-
-class ScreenText(str, Enum):
-    """Class representing common, known app screen's text."""
-
-    HOME = "Application"
-    PUBLIC_KEY_APPROVE = "Approve"
-    PUBLIC_KEY_REJECT = "Reject"
-    SIGN_ACCEPT = "Accept"
-    SIGN_REJECT = "Reject"
-    ACCEPT_RISK = "Accept risk"
-    BACK_HOME = "Home"
-    BLINDSIGN = "blindsign"
-    BLINDSIGN_NANOS = "Blindsign"
-
-    @classmethod
-    def blindsign(cls, backend: TezosBackend) -> "ScreenText":
-        """Get blindsign text depending on device."""
-        if backend.firmware == Firmware.NANOS:
-            return cls.BLINDSIGN_NANOS
-
-        return cls.BLINDSIGN
 
 
 class UseCaseSettings(OriginalUseCaseSettings, metaclass=MetaScreen):
@@ -237,7 +215,7 @@ class TezosNavigator(metaclass=MetaScreen):
     def navigate_until_text(self,
                             snap_path: Optional[Path] = None,
                             screen_change_before_first_instruction: bool = False,
-                            validation_instructions: List[Union[NavIns, NavInsID]] = [],
+                            validation_instructions: List[Union[NavIns, BaseNavInsID]] = [],
                             **kwargs) -> None:
         """Wrapper of `navigator.navigate_until_text_and_compare`"""
         self._navigator.navigate_until_text_and_compare(
@@ -250,9 +228,9 @@ class TezosNavigator(metaclass=MetaScreen):
 
     def navigate_while_text_and_compare(
             self,
-            navigate_instruction: Union[NavIns, NavInsID],
+            navigate_instruction: Union[NavIns, BaseNavInsID],
             text: str,
-            validation_instructions: List[Union[NavIns, NavInsID]] = [],
+            validation_instructions: List[Union[NavIns, BaseNavInsID]] = [],
             snap_path: Optional[Path] = None,
             timeout: int = 300,
             screen_change_before_first_instruction: bool = False,
@@ -325,7 +303,7 @@ class TezosNavigator(metaclass=MetaScreen):
 
     def unsafe_navigate(
             self,
-            instructions: List[Union[NavIns, NavInsID]],
+            instructions: List[Union[NavIns, BaseNavInsID]],
             snap_path: Optional[Path] = None,
             timeout: float = 10.0,
             screen_change_before_first_instruction: bool = False,
@@ -368,12 +346,16 @@ class TezosNavigator(metaclass=MetaScreen):
 
     def navigate_to_settings(self, **kwargs) -> int:
         """Navigate from Home screen to settings."""
-        instructions: List[Union[NavIns, NavInsID]] = [
-            # Home
-            NavInsID.RIGHT_CLICK,  # Version
-            NavInsID.RIGHT_CLICK,  # Settings
-            NavInsID.BOTH_CLICK,
-        ]
+        instructions: List[Union[NavIns, BaseNavInsID]] = []
+        if self._firmware.is_nano:
+            instructions = [
+                # Home
+                NavInsID.RIGHT_CLICK,  # Version
+                NavInsID.RIGHT_CLICK,  # Settings
+                NavInsID.BOTH_CLICK,
+            ]
+        else:
+            instructions = [NavInsID.USE_CASE_HOME_SETTINGS]
         self.navigate(instructions=instructions, **kwargs)
         snap_start_idx = kwargs['snap_start_idx'] if 'snap_start_idx' in kwargs else 0
         return snap_start_idx + len(instructions)
@@ -384,13 +366,20 @@ class TezosNavigator(metaclass=MetaScreen):
         go_to_settings_kwargs['screen_change_after_last_instruction'] = True
         snap_idx = self.navigate_to_settings(**go_to_settings_kwargs)
 
-        instructions: List[Union[NavIns, NavInsID]] = [
-            # Expert Mode
-            NavInsID.BOTH_CLICK,
-            NavInsID.RIGHT_CLICK,  # Blind Sign
-            NavInsID.RIGHT_CLICK,  # Back
-            NavInsID.BOTH_CLICK,  # Home
-        ]
+        instructions: List[Union[NavIns, BaseNavInsID]] = []
+        if self._firmware.is_nano:
+            instructions = [
+                # Expert Mode
+                NavInsID.BOTH_CLICK,
+                NavInsID.RIGHT_CLICK,  # Blind Sign
+                NavInsID.RIGHT_CLICK,  # Back
+                NavInsID.BOTH_CLICK,  # Home
+            ]
+        else:
+            instructions = [
+                TezosNavInsID.SETTINGS_TOGGLE_EXPERT_MODE,
+                TezosNavInsID.SETTINGS_EXIT,
+            ]
         kwargs['snap_start_idx'] = snap_idx
         kwargs['screen_change_before_first_instruction'] = False
         self.navigate(instructions=instructions, **kwargs)
@@ -403,13 +392,20 @@ class TezosNavigator(metaclass=MetaScreen):
         go_to_settings_kwargs['screen_change_after_last_instruction'] = True
         snap_idx = self.navigate_to_settings(**go_to_settings_kwargs)
 
-        instructions: List[Union[NavIns, NavInsID]] = [
-            # Expert Mode
-            NavInsID.RIGHT_CLICK,  # Blind Sign
-            NavInsID.BOTH_CLICK,
-            NavInsID.RIGHT_CLICK,  # Back
-            NavInsID.BOTH_CLICK,  # Home
-        ]
+        instructions: List[Union[NavIns, BaseNavInsID]] = []
+        if self._firmware.is_nano:
+            instructions = [
+                # Expert Mode
+                NavInsID.RIGHT_CLICK,  # Blind Sign
+                NavInsID.BOTH_CLICK,
+                NavInsID.RIGHT_CLICK,  # Back
+                NavInsID.BOTH_CLICK,  # Home
+            ]
+        else:
+            instructions = [
+                TezosNavInsID.SETTINGS_TOGGLE_BLINDSIGNING,
+                TezosNavInsID.SETTINGS_EXIT,
+            ]
         kwargs['snap_start_idx'] = snap_idx
         kwargs['screen_change_before_first_instruction'] = False
         self.navigate(instructions=instructions, **kwargs)
@@ -418,8 +414,12 @@ class TezosNavigator(metaclass=MetaScreen):
 
     def navigate_forward(self, **kwargs) -> None:
         """Navigate forward until the text is found."""
+        if self._firmware.is_nano:
+            navigate_instruction = NavInsID.RIGHT_CLICK
+        else:
+            navigate_instruction = NavInsID.SWIPE_CENTER_TO_LEFT
         self.navigate_until_text(
-            navigate_instruction=NavInsID.RIGHT_CLICK,
+            navigate_instruction=navigate_instruction,
             **kwargs
         )
 
@@ -438,57 +438,122 @@ class TezosNavigator(metaclass=MetaScreen):
 
     def accept_public_key(self, **kwargs) -> None:
         """Navigate through public key flow and accept public key"""
+        validation_instructions: List[Union[NavIns, BaseNavInsID]] = []
+        if self._firmware.is_nano:
+            text = "^Approve$"
+            validation_instructions = [NavInsID.BOTH_CLICK]
+        else:
+            text = "^Confirm$"
+            validation_instructions = [
+                NavInsID.USE_CASE_ADDRESS_CONFIRMATION_CONFIRM,
+                NavInsID.USE_CASE_STATUS_DISMISS,
+            ]
         self._navigate_review(
-            text=ScreenText.PUBLIC_KEY_APPROVE,
-            validation_instructions=[NavInsID.BOTH_CLICK],
+            text=text,
+            validation_instructions=validation_instructions,
             **kwargs
         )
 
     def reject_public_key(self, **kwargs) -> None:
         """Navigate through public key flow and reject"""
+        validation_instructions: List[Union[NavIns, BaseNavInsID]] = []
+        if self._firmware.is_nano:
+            text = "^Reject$"
+            validation_instructions = [NavInsID.BOTH_CLICK]
+        else:
+            text = "^Confirm$"
+            validation_instructions = [
+                NavInsID.USE_CASE_ADDRESS_CONFIRMATION_CANCEL,
+                NavInsID.USE_CASE_STATUS_DISMISS,
+            ]
         self._navigate_review(
-            text=ScreenText.PUBLIC_KEY_REJECT,
-            validation_instructions=[NavInsID.BOTH_CLICK],
+            text=text,
+            validation_instructions=validation_instructions,
             **kwargs
         )
 
     def accept_sign(self, **kwargs) -> None:
         """Navigate through signing flow and accept to sign"""
+        validation_instructions: List[Union[NavIns, BaseNavInsID]] = []
+        if self._firmware.is_nano:
+            text = "^Accept$"
+            if self._firmware == Firmware.NANOS:
+                text = "^Accept and send$"
+            validation_instructions = [NavInsID.BOTH_CLICK]
+        else:
+            text = "^Hold to sign$"
+            validation_instructions = [
+                NavInsID.USE_CASE_REVIEW_CONFIRM,
+                NavInsID.USE_CASE_STATUS_DISMISS,
+            ]
         self._navigate_review(
-            text=ScreenText.SIGN_ACCEPT,
-            validation_instructions=[NavInsID.BOTH_CLICK],
+            text=text,
+            validation_instructions=validation_instructions,
             **kwargs
         )
 
     def reject_sign(self, **kwargs) -> None:
         """Navigate through signing flow and reject."""
+        validation_instructions: List[Union[NavIns, BaseNavInsID]] = []
+        if self._firmware.is_nano:
+            text = "^Reject$"
+            validation_instructions = [NavInsID.BOTH_CLICK]
+        else:
+            text = "^Hold to sign$"
+            validation_instructions = [
+                NavInsID.USE_CASE_REVIEW_REJECT,
+                TezosNavInsID.REJECT_CHOICE_CONFIRM,
+                NavInsID.USE_CASE_STATUS_DISMISS,
+            ]
         self._navigate_review(
-            text=ScreenText.SIGN_REJECT,
-            validation_instructions=[NavInsID.BOTH_CLICK],
+            text=text,
+            validation_instructions=validation_instructions,
             **kwargs
         )
 
     def hard_reject_sign(self, **kwargs) -> None:
         """Navigate through signing flow and until a hard reject send
         back to home."""
+        if self._firmware.is_nano:
+            text = "^Application$"
+        else:
+            text = "^Tezos Wallet$"
         self._navigate_review(
-            text=ScreenText.HOME,
+            text=text,
             validation_instructions=[],
             **kwargs
         )
 
     def expert_reject_sign(self, **kwargs) -> None:
         """Navigate through the signing expert requirement flow and reject."""
+        validation_instructions: List[Union[NavIns, BaseNavInsID]] = []
+        if self._firmware.is_nano:
+            text = "^Home$"
+            validation_instructions = [NavInsID.BOTH_CLICK]
+        else:
+            text = "^Enable expert mode$"
+            validation_instructions = [
+                TezosNavInsID.EXPERT_CHOICE_REJECT,
+                TezosNavInsID.REJECT_CHOICE_CONFIRM,
+                NavInsID.USE_CASE_STATUS_DISMISS,
+            ]
         self._navigate_review(
-            text=ScreenText.BACK_HOME,
-            validation_instructions=[NavInsID.BOTH_CLICK],
+            text=text,
+            validation_instructions=validation_instructions,
             **kwargs
         )
 
     def accept_sign_risk(self, **kwargs) -> None:
         """Navigate through signing risk warning flow and accept risk."""
+        validation_instructions: List[Union[NavIns, BaseNavInsID]] = []
+        if self._firmware.is_nano:
+            text = "^Accept risk$"
+            validation_instructions = [NavInsID.BOTH_CLICK]
+        else:
+            text = "^Proceed to Blindsign$"
+            validation_instructions = [TezosNavInsID.WARNING_CHOICE_BLINDSIGN]
         self._navigate_review(
-            text=ScreenText.ACCEPT_RISK,
-            validation_instructions=[NavInsID.BOTH_CLICK],
+            text=text,
+            validation_instructions=validation_instructions,
             **kwargs
         )
