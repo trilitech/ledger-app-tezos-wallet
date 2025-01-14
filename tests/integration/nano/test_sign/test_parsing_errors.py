@@ -72,7 +72,7 @@ def test_parsing_error(
                 RawMessage(raw_msg),
                 with_hash=True
         ):
-            tezos_navigator.reject_sign(snap_path=snapshot_dir)
+            tezos_navigator.refuse_sign_error_risk(snap_path=snapshot_dir)
 
 @pytest.mark.parametrize(
     "raw_msg", [

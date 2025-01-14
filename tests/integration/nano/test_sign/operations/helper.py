@@ -18,11 +18,12 @@
 
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Type, TypeVar
+from typing import Any, Dict, List, Optional, Type, TypeVar, Union
 
 import pytest
 
-from ragger.navigator import NavInsID
+from ragger.firmware import Firmware
+from ragger.navigator import NavIns, NavInsID, BaseNavInsID
 
 from utils.account import Account
 from utils.backend import TezosBackend
@@ -214,6 +215,7 @@ class TestOperation(ABC):
     def test_operation_field(
             self,
             backend: TezosBackend,
+            firmware: Firmware,
             tezos_navigator: TezosNavigator,
             account: Account,
             field: Field,
@@ -234,10 +236,13 @@ class TestOperation(ABC):
         tezos_navigator.toggle_expert_mode()
 
         with backend.sign(account, operation):
+            validation_instructions: List[Union[NavIns, BaseNavInsID]] = []
+            if firmware.is_nano:
+                validation_instructions = [NavInsID.RIGHT_CLICK]
             # Navigates until fields
             tezos_navigator.navigate_forward(
                 text="Operation",
-                validation_instructions=[NavInsID.RIGHT_CLICK],
+                validation_instructions=validation_instructions,
                 screen_change_before_first_instruction=True,
             )
 
@@ -249,9 +254,13 @@ class TestOperation(ABC):
                 screen_change_after_last_instruction=False
             )
 
+            if firmware.is_nano:
+                navigate_instruction = NavInsID.RIGHT_CLICK
+            else:
+                navigate_instruction = NavInsID.SWIPE_CENTER_TO_LEFT
             # Compare all field's screens
             tezos_navigator.navigate_while_text_and_compare(
-                navigate_instruction=NavInsID.RIGHT_CLICK,
+                navigate_instruction=navigate_instruction,
                 text=field.text,
                 snap_path=snapshot_dir,
             )
