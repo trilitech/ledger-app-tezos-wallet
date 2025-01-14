@@ -15,10 +15,10 @@
 
 """Tezos app backend."""
 
-from enum import Enum
+from enum import auto, Enum
 from pathlib import Path
 import time
-from typing import List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from ragger.backend import BackendInterface, SpeculosBackend
 from ragger.firmware import Firmware
@@ -39,7 +39,7 @@ from ragger.firmware.touch.use_cases import (
     UseCaseChoice,
     UseCaseViewDetails
 )
-from ragger.navigator import NavIns, NavInsID, Navigator
+from ragger.navigator import BaseNavInsID, NavIns, NavInsID, Navigator
 
 from .backend import TezosBackend
 
@@ -151,6 +151,30 @@ class UseCaseReview(OriginalUseCaseReview, metaclass=MetaScreen):
         self._skip_header.tap()
 
 
+class TezosNavInsID(BaseNavInsID):
+    """Custom NavInsID."""
+
+    # UseCaseSettings
+    SETTINGS_TOGGLE_EXPERT_MODE = auto()
+    SETTINGS_TOGGLE_BLINDSIGNING = auto()
+    SETTINGS_EXIT = auto()
+    # UseCaseAddressConfirmation
+    REVIEW_PK_SHOW_QR = auto()
+    # UseCaseReview
+    REVIEW_TX_SHOW_MORE = auto()
+    REVIEW_TX_SKIP = auto()
+    REJECT_CHOICE_CONFIRM = auto()
+    REJECT_CHOICE_RETURN = auto()
+    EXPERT_CHOICE_ENABLE = auto()
+    EXPERT_CHOICE_REJECT = auto()
+    BLINDSIGN_CHOICE_ENABLE = auto()
+    BLINDSIGN_CHOICE_REJECT = auto()
+    SKIP_CHOICE_CONFIRM = auto()
+    SKIP_CHOICE_REJECT = auto()
+    WARNING_CHOICE_SAFETY = auto()
+    WARNING_CHOICE_BLINDSIGN = auto()
+
+
 class TezosNavigator(metaclass=MetaScreen):
     """Class representing Tezos app navigation."""
 
@@ -176,6 +200,26 @@ class TezosNavigator(metaclass=MetaScreen):
         self._backend = backend
         self._firmware = firmware
         self._navigator = navigator
+        if not self._firmware.is_nano:
+            tezos_callbacks: Dict[BaseNavInsID, Callable[..., Any]] = {
+                TezosNavInsID.SETTINGS_TOGGLE_EXPERT_MODE: self.settings.toggle_expert_mode,
+                TezosNavInsID.SETTINGS_TOGGLE_BLINDSIGNING: self.settings.toggle_blindsigning,
+                TezosNavInsID.SETTINGS_EXIT: self.settings.exit,
+                TezosNavInsID.REVIEW_PK_SHOW_QR: self.review_pk.show_qr,
+                TezosNavInsID.REVIEW_TX_SHOW_MORE: self.review_tx.show_more,
+                TezosNavInsID.REVIEW_TX_SKIP: self.review_tx.skip,
+                TezosNavInsID.REJECT_CHOICE_CONFIRM: self.review_tx.reject_choice.confirm,
+                TezosNavInsID.REJECT_CHOICE_RETURN: self.review_tx.reject_choice.reject,
+                TezosNavInsID.EXPERT_CHOICE_ENABLE: self.review_tx.enable_expert_choice.confirm,
+                TezosNavInsID.EXPERT_CHOICE_REJECT: self.review_tx.enable_expert_choice.reject,
+                TezosNavInsID.BLINDSIGN_CHOICE_ENABLE: self.review_tx.enable_blindsign_choice.confirm,
+                TezosNavInsID.BLINDSIGN_CHOICE_REJECT: self.review_tx.enable_blindsign_choice.reject,
+                TezosNavInsID.SKIP_CHOICE_CONFIRM: self.review_tx.skip_choice.confirm,
+                TezosNavInsID.SKIP_CHOICE_REJECT: self.review_tx.skip_choice.reject,
+                TezosNavInsID.WARNING_CHOICE_SAFETY: self.review_tx.back_to_safety.confirm,
+                TezosNavInsID.WARNING_CHOICE_BLINDSIGN: self.review_tx.back_to_safety.reject,
+            }
+            self._navigator._callbacks.update(tezos_callbacks)
         self._root_dir = Path(__file__).resolve().parent.parent
 
     def navigate(self,
