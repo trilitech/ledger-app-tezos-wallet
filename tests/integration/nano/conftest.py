@@ -21,7 +21,7 @@ from typing import Dict, Generator, List, Union
 
 import pytest
 from ragger.firmware import Firmware
-from ragger.navigator import NanoNavigator
+from ragger.navigator import Navigator, NanoNavigator, TouchNavigator
 
 from utils.account import Account, DEFAULT_ACCOUNT, DEFAULT_SEED
 from utils.backend import TezosBackend, SpeculosTezosBackend
@@ -30,7 +30,9 @@ from utils.navigator import TezosNavigator
 FIRMWARES: List[Firmware] = [
     Firmware.NANOS,
     Firmware.NANOSP,
-    Firmware.NANOX
+    Firmware.NANOX,
+    Firmware.STAX,
+    Firmware.FLEX
 ]
 
 DEVICES: List[str] = list(map(lambda fw: fw.device, FIRMWARES))
@@ -40,7 +42,7 @@ def pytest_addoption(parser):
     parser.addoption("-D", "--device",
                      type=str,
                      choices=DEVICES,
-                     help="Device type: nanos | nanosp | nanox",
+                     help="Device type: nanos | nanosp | nanox | stax | flex",
                      required=True)
     parser.addoption("-P", "--port",
                      type=int,
@@ -185,9 +187,16 @@ def backend(app_path: Path,
         yield b
 
 @pytest.fixture(scope="function")
-def tezos_navigator(backend: TezosBackend, golden_run: bool) -> TezosNavigator:
+def tezos_navigator(
+        backend: TezosBackend,
+        firmware: Firmware,
+        golden_run: bool
+) -> TezosNavigator:
     """Get `navigator` for pytest."""
-    navigator = NanoNavigator(backend, backend.firmware, golden_run)
+    if firmware.is_nano:
+        navigator: Navigator = NanoNavigator(backend, firmware, golden_run)
+    else:
+        navigator = TouchNavigator(backend, firmware, golden_run)
     return TezosNavigator(backend, navigator)
 
 @pytest.fixture(scope="function")
