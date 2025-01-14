@@ -543,7 +543,7 @@ class TezosNavigator(metaclass=MetaScreen):
             **kwargs
         )
 
-    def accept_sign_risk(self, **kwargs) -> None:
+    def accept_sign_error_risk(self, **kwargs) -> None:
         """Navigate through signing risk warning flow and accept risk."""
         validation_instructions: List[Union[NavIns, BaseNavInsID]] = []
         if self._firmware.is_nano:
@@ -555,5 +555,74 @@ class TezosNavigator(metaclass=MetaScreen):
         self._navigate_review(
             text=text,
             validation_instructions=validation_instructions,
+            **kwargs
+        )
+
+    def refuse_sign_error_risk(self, **kwargs) -> None:
+        """Navigate through signing risk warning flow and accept risk."""
+        validation_instructions: List[Union[NavIns, BaseNavInsID]] = []
+        if self._firmware.is_nano:
+            text = "^Reject$"
+            validation_instructions = [NavInsID.BOTH_CLICK]
+        else:
+            text = "^Proceed to Blindsign$"
+            validation_instructions = [
+                TezosNavInsID.WARNING_CHOICE_SAFETY,
+                TezosNavInsID.REJECT_CHOICE_CONFIRM,
+                NavInsID.USE_CASE_STATUS_DISMISS,
+            ]
+        self._navigate_review(
+            text=text,
+            validation_instructions=validation_instructions,
+            **kwargs
+        )
+
+    def accept_sign_blindsign_risk(self, **kwargs) -> None:
+        """Navigate through signing risk warning flow and accept risk."""
+        if self._firmware.is_nano:
+            self._navigate_review(
+                text="^Accept risk$",
+                validation_instructions=[NavInsID.BOTH_CLICK],
+                **kwargs
+            )
+        else:
+            self.navigate(
+                instructions=[TezosNavInsID.WARNING_CHOICE_BLINDSIGN],
+                screen_change_before_first_instruction=True,
+                screen_change_after_last_instruction=False,
+                **kwargs
+            )
+
+    def refuse_sign_blindsign_risk(self, **kwargs) -> None:
+        """Navigate through signing risk warning flow and accept risk."""
+        if self._firmware.is_nano:
+            self._navigate_review(
+                text="^Reject$",
+                validation_instructions=[NavInsID.BOTH_CLICK],
+                **kwargs
+            )
+        else:
+            self.navigate(
+                instructions=[
+                    TezosNavInsID.WARNING_CHOICE_SAFETY,
+                    TezosNavInsID.REJECT_CHOICE_CONFIRM,
+                    NavInsID.USE_CASE_STATUS_DISMISS,
+                ],
+                screen_change_before_first_instruction=True,
+                screen_change_after_last_instruction=False,
+                **kwargs
+            )
+
+    def skip_sign(self, **kwargs) -> None:
+        """Tap on the Skip button and accept to skip.
+        Only available for Touch devices, fail otherwise.
+        """
+        assert not self._firmware.is_nano, "Skip available only on Touch devices"
+        self._navigate_review(
+            text="Skip",
+            validation_instructions=[
+                TezosNavInsID.REVIEW_TX_SKIP,
+                TezosNavInsID.SKIP_CHOICE_CONFIRM,
+            ],
             **kwargs
         )
