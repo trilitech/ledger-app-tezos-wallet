@@ -17,7 +17,7 @@
 """Gathering of tests related to Blindsign."""
 
 from pathlib import Path
-from typing import Callable, List, Union
+from typing import List, Union
 
 from ragger.firmware import Firmware
 from ragger.navigator import NavIns, NavInsID
@@ -25,7 +25,6 @@ from ragger.navigator import NavIns, NavInsID
 from utils.account import Account
 from utils.backend import TezosBackend, StatusCode
 from utils.message import (
-    Message,
     MichelineExpr,
     Proposals,
     OperationGroup,
@@ -37,58 +36,6 @@ from utils.message import (
     ScRollupAddMessage
 )
 from utils.navigator import TezosNavigator
-
-
-def _sign_too_long(
-        backend: TezosBackend,
-        tezos_navigator: TezosNavigator,
-        account: Account,
-        message: Message,
-        navigate: Callable[[], None]
-):
-    tezos_navigator.toggle_expert_mode()
-    tezos_navigator.toggle_blindsign()
-
-    with backend.sign(account, message, with_hash=True) as result:
-        navigate()
-
-    account.check_signature(
-        message=message,
-        with_hash=True,
-        data=result.value
-    )
-
-def _sign_decodable_too_long(
-        backend: TezosBackend,
-        tezos_navigator: TezosNavigator,
-        account: Account,
-        message: Message,
-        path: Path
-):
-    """Sign a decodable too long message"""
-
-    def navigate() -> None:
-        tezos_navigator.accept_sign_risk(snap_path=path / "clear_n_too_long_warning")
-        tezos_navigator.accept_sign(snap_path=path / "summary")
-
-    _sign_too_long(backend, tezos_navigator, account, message, navigate)
-
-def _reject_too_long(
-        backend: TezosBackend,
-        tezos_navigator: TezosNavigator,
-        account: Account,
-        message: Message,
-        status_code: StatusCode,
-        navigate: Callable[[], None]
-):
-    """Reject a too long message"""
-
-    tezos_navigator.toggle_expert_mode()
-    tezos_navigator.toggle_blindsign()
-
-    with status_code.expected():
-        with backend.sign(account, message, with_hash=True):
-            navigate()
 
 
 ### Too long operation ###
@@ -167,7 +114,21 @@ def test_sign_basic_too_long_operation(
         snapshot_dir: Path
 ):
     """Check sign too long operation"""
-    _sign_decodable_too_long(backend, tezos_navigator, account, BASIC_OPERATION, snapshot_dir)
+
+    message = BASIC_OPERATION
+
+    tezos_navigator.toggle_expert_mode()
+    tezos_navigator.toggle_blindsign()
+
+    with backend.sign(account, message, with_hash=True) as result:
+        tezos_navigator.accept_sign_risk(snap_path=snapshot_dir / "clear_n_too_long_warning")
+        tezos_navigator.accept_sign(snap_path=snapshot_dir / "summary")
+
+    account.check_signature(
+        message=message,
+        with_hash=True,
+        data=result.value
+    )
 
 def test_reject_basic_too_long_operation_at_warning(
         backend: TezosBackend,
@@ -177,10 +138,12 @@ def test_reject_basic_too_long_operation_at_warning(
 ):
     """Check reject too long operation at warning"""
 
-    def navigate() -> None:
-        tezos_navigator.reject_sign(snap_path=snapshot_dir / "clear_n_too_long_warning")
+    tezos_navigator.toggle_expert_mode()
+    tezos_navigator.toggle_blindsign()
 
-    _reject_too_long(backend, tezos_navigator, account, BASIC_OPERATION, StatusCode.REJECT, navigate)
+    with StatusCode.REJECT.expected():
+        with backend.sign(account, BASIC_OPERATION):
+            tezos_navigator.reject_sign(snap_path=snapshot_dir / "clear_n_too_long_warning")
 
 def test_reject_basic_too_long_operation_at_summary(
         backend: TezosBackend,
@@ -190,11 +153,13 @@ def test_reject_basic_too_long_operation_at_summary(
 ):
     """Check reject too long operation at summary"""
 
-    def navigate() -> None:
-        tezos_navigator.accept_sign_risk(snap_path=snapshot_dir / "clear_n_too_long_warning")
-        tezos_navigator.reject_sign(snap_path=snapshot_dir / "summary")
+    tezos_navigator.toggle_expert_mode()
+    tezos_navigator.toggle_blindsign()
 
-    _reject_too_long(backend, tezos_navigator, account, BASIC_OPERATION, StatusCode.REJECT, navigate)
+    with StatusCode.REJECT.expected():
+        with backend.sign(account, BASIC_OPERATION):
+            tezos_navigator.accept_sign_risk(snap_path=snapshot_dir / "clear_n_too_long_warning")
+            tezos_navigator.reject_sign(snap_path=snapshot_dir / "summary")
 
 
 ### Different kind of too long operation ###
@@ -262,7 +227,19 @@ def test_sign_too_long_operation_with_only_transactions(
             amount = 5000000
         )
     ])
-    _sign_decodable_too_long(backend, tezos_navigator, account, message, snapshot_dir)
+
+    tezos_navigator.toggle_expert_mode()
+    tezos_navigator.toggle_blindsign()
+
+    with backend.sign(account, message, with_hash=True) as result:
+        tezos_navigator.accept_sign_risk(snap_path=snapshot_dir / "clear_n_too_long_warning")
+        tezos_navigator.accept_sign(snap_path=snapshot_dir / "summary")
+
+    account.check_signature(
+        message=message,
+        with_hash=True,
+        data=result.value
+    )
 
 def test_sign_too_long_operation_without_fee_or_amount(
         backend: TezosBackend,
@@ -297,7 +274,19 @@ def test_sign_too_long_operation_without_fee_or_amount(
         ],
         period = 32
     )
-    _sign_decodable_too_long(backend, tezos_navigator, account, message, snapshot_dir)
+
+    tezos_navigator.toggle_expert_mode()
+    tezos_navigator.toggle_blindsign()
+
+    with backend.sign(account, message, with_hash=True) as result:
+        tezos_navigator.accept_sign_risk(snap_path=snapshot_dir / "clear_n_too_long_warning")
+        tezos_navigator.accept_sign(snap_path=snapshot_dir / "summary")
+
+    account.check_signature(
+        message=message,
+        with_hash=True,
+        data=result.value
+    )
 
 
 ### Too long operation containing a too large number ###
@@ -360,11 +349,20 @@ def test_sign_too_long_operation_with_too_large(
 ):
     """Check sign too long operation that will also fail the parsing"""
 
-    def navigate() -> None:
+    message = OPERATION_WITH_TOO_LARGE
+
+    tezos_navigator.toggle_expert_mode()
+    tezos_navigator.toggle_blindsign()
+
+    with backend.sign(account, message, with_hash=True) as result:
         tezos_navigator.accept_sign_risk(snap_path=snapshot_dir / "clear_n_too_large_warning")
         tezos_navigator.accept_sign(snap_path=snapshot_dir / "blindsigning")
 
-    _sign_too_long(backend, tezos_navigator, account, OPERATION_WITH_TOO_LARGE, navigate)
+    account.check_signature(
+        message=message,
+        with_hash=True,
+        data=result.value
+    )
 
 def test_reject_too_long_operation_with_too_large_at_too_large_warning(
         backend: TezosBackend,
@@ -374,10 +372,12 @@ def test_reject_too_long_operation_with_too_large_at_too_large_warning(
 ):
     """Check reject too long operation that will also fail the parsing at too large warning"""
 
-    def navigate() -> None:
-        tezos_navigator.reject_sign(snap_path=snapshot_dir / "clear_n_too_large_warning")
+    tezos_navigator.toggle_expert_mode()
+    tezos_navigator.toggle_blindsign()
 
-    _reject_too_long(backend, tezos_navigator, account, OPERATION_WITH_TOO_LARGE, StatusCode.PARSE_ERROR, navigate)
+    with StatusCode.PARSE_ERROR.expected():
+        with backend.sign(account, OPERATION_WITH_TOO_LARGE):
+            tezos_navigator.reject_sign(snap_path=snapshot_dir / "clear_n_too_large_warning")
 
 def test_reject_too_long_operation_with_too_large_at_blindsigning(
         backend: TezosBackend,
@@ -387,11 +387,13 @@ def test_reject_too_long_operation_with_too_large_at_blindsigning(
 ):
     """Check reject too long operation that will also fail the parsing at blindsigning"""
 
-    def navigate() -> None:
-        tezos_navigator.accept_sign_risk(snap_path=snapshot_dir / "clear_n_too_large_warning")
-        tezos_navigator.reject_sign(snap_path=snapshot_dir / "blindsigning")
+    tezos_navigator.toggle_expert_mode()
+    tezos_navigator.toggle_blindsign()
 
-    _reject_too_long(backend, tezos_navigator, account, OPERATION_WITH_TOO_LARGE, StatusCode.REJECT, navigate)
+    with StatusCode.REJECT.expected():
+        with backend.sign(account, OPERATION_WITH_TOO_LARGE):
+            tezos_navigator.accept_sign_risk(snap_path=snapshot_dir / "clear_n_too_large_warning")
+            tezos_navigator.reject_sign(snap_path=snapshot_dir / "blindsigning")
 
 def test_blindsign_too_deep(
         backend: TezosBackend,
