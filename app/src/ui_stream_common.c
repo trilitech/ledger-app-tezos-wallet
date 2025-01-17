@@ -64,11 +64,6 @@ push_str(const char *text, size_t len, char **out)
 
     TZ_PREAMBLE(("%s", text));
 
-    if (len == 0) {
-        *out = NULL;
-        TZ_SUCCEED();
-    }
-
     TZ_CHECK(ui_strings_can_fit(len, &can_fit));
     while (!can_fit) {
         TZ_CHECK(drop_last_screen());
