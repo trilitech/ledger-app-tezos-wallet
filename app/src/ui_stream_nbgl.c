@@ -442,7 +442,16 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
          || (cb_type == TZ_UI_STREAM_CB_EXPERT_MODE_FIELD))
         && (idx > 0)) {
         PRINTF("[DEBUG] PUSH_TO_NEXT: %x\n", cb_type);
-        push_to_next = true;
+        s->total++;
+        if ((s->total % TZ_UI_STREAM_HISTORY_SCREENS)
+            == (s->last % TZ_UI_STREAM_HISTORY_SCREENS)) {
+            drop_last_screen();
+        }
+        offset = tz_ui_stream_pushl(cb_type, title, value, max, layout_type,
+                                    icon);
+        push_to_next = false;
+        // Will be update later
+        s->screens[bucket].nb_pairs--;
     } else {
         /* Are we continuing to construct or starting from scratch? */
         if (idx == NB_MAX_DISPLAYED_PAIRS_IN_REVIEW) {
