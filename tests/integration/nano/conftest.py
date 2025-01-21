@@ -69,49 +69,6 @@ def pytest_addoption(parser):
                      help="App",
                      required=True)
 
-global_log_dir: Union[Path, None] = None
-
-def pytest_configure(config):
-    """Configure pytest."""
-    global global_log_dir
-    log_dir = config.getoption("log_dir")
-    if log_dir is not None:
-        global_log_dir = Path(log_dir)
-
-logs : Dict[str, List[pytest.TestReport]] = {}
-
-@pytest.hookimpl(tryfirst=True)
-def pytest_runtest_logstart(location):
-    """Called at the start of running the runtest protocol for a single item."""
-    logs[location[2]] = []
-
-@pytest.hookimpl(tryfirst=True)
-def pytest_runtest_logreport(report):
-    """Called at the end of running the runtest protocol for a single test."""
-    logs[report.head_line].append(report)
-
-@pytest.hookimpl(tryfirst=True)
-def pytest_runtest_logfinish(nodeid, location):
-    """Called at the end of running the runtest protocol for a single item."""
-    if global_log_dir is not None:
-        log_dir = Path(nodeid.split(".py")[0])
-        # Remove `tests/integration/nano/`
-        log_dir = Path(*log_dir.parts[3:])
-        log_dir = global_log_dir / log_dir
-        log_dir.mkdir(parents=True, exist_ok=True)
-        head_line = location[2]
-        log_file = log_dir / f"{head_line}.log"
-        with open(log_file, 'w', encoding="utf-8") as writer:
-            for report in logs[head_line]:
-                writer.write(f"============================== {report.when.capitalize()} {report.outcome} ==============================\n")
-                writer.write(f"{report.longreprtext}\n")
-                for section in report.sections:
-                    if section[0].endswith(report.when):
-                        writer.write(f"------------------------------ {section[0]} ------------------------------\n")
-                        writer.write(f"{section[1]}\n")
-                        writer.write("\n")
-                writer.write("\n")
-
 @pytest.fixture(scope="session")
 def firmware(pytestconfig) -> Firmware :
     """Get `firware` for pytest."""
@@ -215,3 +172,79 @@ def requires_device(device):
         f"config.getvalue('device') != '{ device }'",
         reason=f"Test requires device to be { device }."
     )
+
+@pytest.fixture(autouse=True)
+def use_only_on_device(request, firmware: Firmware):
+    """Fixture to add tests on specific devices."""
+
+    def get_devices(device: str) -> List[str]:
+        if device == "nano":
+            return ["nanos", "nanosp", "nanox"]
+        if device == "touch":
+            return ["stax", "flex"]
+        return [device]
+
+    marker = request.node.get_closest_marker('use_on_device')
+    if marker:
+        current_device = firmware.device
+        requested_devices = marker.args[0]
+        devices: List[str] = []
+        if isinstance(requested_devices, str):
+            devices = get_devices(requested_devices)
+        else:
+            assert isinstance(requested_devices, list)
+            for device in requested_devices:
+                devices += get_devices(device)
+        if current_device not in devices:
+            pytest.skip(f'skipped on this device: "{current_device}"')
+
+
+global_log_dir: Union[Path, None] = None
+
+def pytest_configure(config):
+    """Configure pytest."""
+    # Add marker
+    config.addinivalue_line(
+        "markers",
+        "use_on_device(devices): skip test if not on one of the specified devices",
+    )
+
+    # Setup log directory
+    global global_log_dir
+    log_dir = config.getoption("log_dir")
+    if log_dir is not None:
+        global_log_dir = Path(log_dir)
+
+logs : Dict[str, List[pytest.TestReport]] = {}
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_runtest_logstart(location):
+    """Called at the start of running the runtest protocol for a single item."""
+    logs[location[2]] = []
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_runtest_logreport(report):
+    """Called at the end of running the runtest protocol for a single test."""
+    logs[report.head_line].append(report)
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_runtest_logfinish(nodeid, location):
+    """Called at the end of running the runtest protocol for a single item."""
+    if global_log_dir is not None:
+        log_dir = Path(nodeid.split(".py")[0])
+        # Remove `tests/integration/nano/`
+        log_dir = Path(*log_dir.parts[3:])
+        log_dir = global_log_dir / log_dir
+        log_dir.mkdir(parents=True, exist_ok=True)
+        head_line = location[2]
+        log_file = log_dir / f"{head_line}.log"
+        with open(log_file, 'w', encoding="utf-8") as writer:
+            for report in logs[head_line]:
+                writer.write(f"============================== {report.when.capitalize()} {report.outcome} ==============================\n")
+                writer.write(f"{report.longreprtext}\n")
+                for section in report.sections:
+                    if section[0].endswith(report.when):
+                        writer.write(f"------------------------------ {section[0]} ------------------------------\n")
+                        writer.write(f"{section[1]}\n")
+                        writer.write("\n")
+                writer.write("\n")
