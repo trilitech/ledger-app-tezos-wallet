@@ -24,57 +24,62 @@ from ragger.navigator import NavInsID
 
 from utils.account import Account
 from utils.backend import StatusCode, TezosBackend
-from utils.message import Transaction
+from utils.message import Default, RegisterGlobalConstant
 from utils.navigator import TezosNavigator, TezosNavInsID
 
 
-@pytest.mark.parametrize("with_hash", [True, False])
-def test_sign(
+EXPERT_OPERATION = RegisterGlobalConstant(
+    {"prim": "constant", 'args': [{"string": Default.SCRIPT_EXPR_HASH}]}
+)
+
+
+def test_reject_expert_mode(
         backend: TezosBackend,
         tezos_navigator: TezosNavigator,
         account: Account,
-        with_hash: bool
+        snapshot_dir: Path
 ):
-    """Check signing with or wihout getting hash"""
+    """Check expert mode reject."""
 
-    message = Transaction()
+    with StatusCode.REJECT.expected():
+        with backend.sign(account, EXPERT_OPERATION):
+            tezos_navigator.expert_reject_sign(snap_path=snapshot_dir)
 
-    with backend.sign(account, message, with_hash=with_hash) as result:
-        tezos_navigator.accept_sign()
 
-    account.check_signature(
-        message=message,
-        with_hash=with_hash,
-        data=result.value
+@pytest.mark.use_on_device("touch")
+def test_enable_expert_mode_in_review(
+        backend: TezosBackend,
+        tezos_navigator: TezosNavigator,
+        account: Account,
+        snapshot_dir: Path
+):
+    """Check that expert mode can be activated from review on touch devices."""
+
+    with backend.sign(account, EXPERT_OPERATION):
+        tezos_navigator.expert_accept_sign(snap_path=snapshot_dir / "review_expert")
+        tezos_navigator.accept_sign(snap_path=snapshot_dir / "review")
+
+    # To ensure that expert mode is ON
+    tezos_navigator.navigate_to_settings(
+        screen_change_before_first_instruction=True,
+        snap_path=snapshot_dir / "check"
     )
 
-def test_reject_operation(
-        backend: TezosBackend,
-        tezos_navigator: TezosNavigator,
-        account: Account,
-        snapshot_dir: Path
-):
-    """Check reject transaction"""
-
-    message = Transaction()
-
-    with StatusCode.REJECT.expected():
-        with backend.sign(account, message, with_hash=True):
-            tezos_navigator.reject_sign(snap_path=snapshot_dir)
 
 @pytest.mark.use_on_device("touch")
-def test_reject_operation_at_start(
+def test_reject_sign_at_expert_mode_after_enabling(
         backend: TezosBackend,
         tezos_navigator: TezosNavigator,
         account: Account,
         snapshot_dir: Path
 ):
-    """Check reject at first screen."""
-
-    message = Transaction()
+    """Check reject at expert splash screen after enabling expert mode"""
 
     with StatusCode.REJECT.expected():
-        with backend.sign(account, message):
+        with backend.sign(account, EXPERT_OPERATION):
+            tezos_navigator.expert_accept_sign(
+                screen_change_after_last_instruction=False
+            )
             tezos_navigator.navigate(
                 instructions=[
                     NavInsID.USE_CASE_REVIEW_REJECT,
@@ -82,51 +87,28 @@ def test_reject_operation_at_start(
                     NavInsID.USE_CASE_STATUS_DISMISS,
                 ],
                 screen_change_before_first_instruction=True,
-                screen_change_after_last_instruction=False,
                 snap_path=snapshot_dir
             )
 
+
 @pytest.mark.use_on_device("touch")
-def test_reject_operation_at_fields(
+def test_reject_sign_at_expert_mode_when_enabled(
         backend: TezosBackend,
         tezos_navigator: TezosNavigator,
         account: Account,
         snapshot_dir: Path
 ):
-    """Check reject at fields."""
-
-    message = Transaction()
-
-    with StatusCode.REJECT.expected():
-        with backend.sign(account, message):
-            tezos_navigator.navigate(
-                instructions=[
-                    NavInsID.USE_CASE_REVIEW_TAP,
-                    NavInsID.USE_CASE_REVIEW_REJECT,
-                    TezosNavInsID.REJECT_CHOICE_CONFIRM,
-                    NavInsID.USE_CASE_STATUS_DISMISS,
-                ],
-                screen_change_before_first_instruction=True,
-                screen_change_after_last_instruction=False,
-                snap_path=snapshot_dir
-            )
-
-def test_sign_with_small_packet(
-        backend: TezosBackend,
-        tezos_navigator: TezosNavigator,
-        account: Account
-):
-    """Check signing using small packet instead of full size packets"""
+    """Check reject at expert splash screen if expert mode already enabled"""
 
     tezos_navigator.toggle_expert_mode()
 
-    message = Transaction()
-
-    with backend.sign(account, message, apdu_size=10) as result:
-        tezos_navigator.accept_sign()
-
-    account.check_signature(
-        message=message,
-        with_hash=False,
-        data=result.value
-    )
+    with StatusCode.REJECT.expected():
+        with backend.sign(account, EXPERT_OPERATION):
+            tezos_navigator.expert_splash_navigate(
+                validation_instructions=[
+                    NavInsID.USE_CASE_REVIEW_REJECT,
+                    TezosNavInsID.REJECT_CHOICE_CONFIRM,
+                    NavInsID.USE_CASE_STATUS_DISMISS,
+                ],
+                snap_path=snapshot_dir
+            )

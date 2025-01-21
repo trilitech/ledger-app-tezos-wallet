@@ -73,6 +73,19 @@ def test_provide_pk(
         f"Expected public key {expected_public_key} but got {public_key}"
 
 
+@pytest.mark.use_on_device("touch")
+def test_show_qr(
+        backend: TezosBackend,
+        tezos_navigator: TezosNavigator,
+        account: Account,
+        snapshot_dir: Path
+):
+    """Test QR code flow."""
+
+    with backend.prompt_public_key(account):
+        tezos_navigator.accept_public_key(show_qr=True, snap_path=snapshot_dir)
+
+
 def test_reject_pk(
         backend: TezosBackend,
         tezos_navigator: TezosNavigator,
