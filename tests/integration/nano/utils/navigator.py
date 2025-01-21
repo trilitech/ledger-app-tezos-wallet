@@ -436,7 +436,7 @@ class TezosNavigator(metaclass=MetaScreen):
             **kwargs
         )
 
-    def accept_public_key(self, **kwargs) -> None:
+    def accept_public_key(self, show_qr: bool = False, **kwargs) -> None:
         """Navigate through public key flow and accept public key"""
         validation_instructions: List[Union[NavIns, BaseNavInsID]] = []
         if self._firmware.is_nano:
@@ -444,7 +444,12 @@ class TezosNavigator(metaclass=MetaScreen):
             validation_instructions = [NavInsID.BOTH_CLICK]
         else:
             text = "^Confirm$"
-            validation_instructions = [
+            if show_qr:
+                validation_instructions += [
+                    TezosNavInsID.REVIEW_PK_SHOW_QR,
+                    NavInsID.USE_CASE_ADDRESS_CONFIRMATION_EXIT_QR,
+                ]
+            validation_instructions += [
                 NavInsID.USE_CASE_ADDRESS_CONFIRMATION_CONFIRM,
                 NavInsID.USE_CASE_STATUS_DISMISS,
             ]
@@ -524,6 +529,20 @@ class TezosNavigator(metaclass=MetaScreen):
             **kwargs
         )
 
+    def expert_accept_sign(self, **kwargs) -> None:
+        """Navigate through the signing expert requirement flow and accept.
+        Only available for Touch devices, fail otherwise.
+        """
+        assert not self._firmware.is_nano, "Skip available only on Touch devices"
+        self._navigate_review(
+            text="^Enable expert mode$",
+            validation_instructions=[
+                TezosNavInsID.EXPERT_CHOICE_ENABLE,
+                NavInsID.USE_CASE_STATUS_DISMISS,
+            ],
+            **kwargs
+        )
+
     def expert_reject_sign(self, **kwargs) -> None:
         """Navigate through the signing expert requirement flow and reject."""
         validation_instructions: List[Union[NavIns, BaseNavInsID]] = []
@@ -542,6 +561,14 @@ class TezosNavigator(metaclass=MetaScreen):
             validation_instructions=validation_instructions,
             **kwargs
         )
+
+    def expert_splash_navigate(self, **kwargs) -> None:
+        """Navigate until the expert mode splash screen."""
+        if self._firmware.is_nano:
+            text = "^Next field requires$"
+        else:
+            text = "^Expert mode$"
+        self._navigate_review(text=text, **kwargs)
 
     def accept_sign_error_risk(self, **kwargs) -> None:
         """Navigate through signing risk warning flow and accept risk."""
@@ -623,6 +650,20 @@ class TezosNavigator(metaclass=MetaScreen):
             validation_instructions=[
                 TezosNavInsID.REVIEW_TX_SKIP,
                 TezosNavInsID.SKIP_CHOICE_CONFIRM,
+            ],
+            **kwargs
+        )
+
+    def skip_reject(self, **kwargs) -> None:
+        """Tap on the Skip button and reject to skip.
+        Only available for Touch devices, fail otherwise.
+        """
+        assert not self._firmware.is_nano, "Skip available only on Touch devices"
+        self._navigate_review(
+            text="Skip",
+            validation_instructions=[
+                TezosNavInsID.REVIEW_TX_SKIP,
+                TezosNavInsID.SKIP_CHOICE_REJECT,
             ],
             **kwargs
         )

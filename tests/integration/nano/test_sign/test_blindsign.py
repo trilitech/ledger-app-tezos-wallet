@@ -19,6 +19,8 @@
 from pathlib import Path
 from typing import List, Union
 
+import pytest
+
 from ragger.firmware import Firmware
 from ragger.navigator import NavIns, NavInsID
 
@@ -175,6 +177,28 @@ def test_reject_basic_too_long_operation_at_summary(
                 tezos_navigator.skip_sign(snap_path=snapshot_dir / "skip")
                 tezos_navigator.accept_sign_blindsign_risk(snap_path=snapshot_dir / "blindsign_warning")
             tezos_navigator.reject_sign(snap_path=snapshot_dir / "summary")
+
+@pytest.mark.use_on_device("touch")
+def test_reject_at_skip(
+        backend: TezosBackend,
+        tezos_navigator: TezosNavigator,
+        account: Account,
+        snapshot_dir: Path
+):
+    """Check reject at skip."""
+
+    tezos_navigator.toggle_expert_mode()
+    tezos_navigator.toggle_blindsign()
+
+    with backend.sign(account, BASIC_OPERATION):
+        tezos_navigator.skip_reject(
+            snap_path=snapshot_dir,
+            screen_change_after_last_instruction=True,
+        )
+        # Just to end the flow
+        tezos_navigator.accept_sign(
+            screen_change_before_first_instruction=False,
+        )
 
 
 ### Different kind of too long operation ###
@@ -441,6 +465,24 @@ def test_reject_too_long_operation_with_too_large_at_blindsigning(
                 tezos_navigator.accept_sign_error_risk(snap_path=snapshot_dir / "too_large_warning")
                 tezos_navigator.accept_sign_blindsign_risk(snap_path=snapshot_dir / "blindsigning_warning")
             tezos_navigator.reject_sign(snap_path=snapshot_dir / "blindsigning")
+
+@pytest.mark.use_on_device("touch")
+def test_reject_too_long_operation_with_too_large_at_blindsigning_warning(
+        backend: TezosBackend,
+        tezos_navigator: TezosNavigator,
+        account: Account,
+        snapshot_dir: Path
+):
+    """Check reject too long operation that will also fail the parsing at blindsigning"""
+
+    tezos_navigator.toggle_expert_mode()
+    tezos_navigator.toggle_blindsign()
+
+    with StatusCode.PARSE_ERROR.expected():
+        with backend.sign(account, OPERATION_WITH_TOO_LARGE):
+            tezos_navigator.skip_sign(snap_path=snapshot_dir / "skip")
+            tezos_navigator.accept_sign_error_risk(snap_path=snapshot_dir / "too_large_warning")
+            tezos_navigator.refuse_sign_blindsign_risk(snap_path=snapshot_dir / "blindsigning_warning")
 
 def test_blindsign_too_deep(
         backend: TezosBackend,
