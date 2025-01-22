@@ -93,7 +93,7 @@ jobs:
             python3 -m pip install -r ./tests/requirements.txt -q
             TMP_DIR=$(mktemp -d /tmp/foo-XXXXXX)
             tar xfz app_${{ matrix.device }}_dbg.tgz -C $TMP_DIR
-            python3 -m pytest -n 32 tests/integration/nano/ --tb=no                \
+            python3 -m pytest -n 32 tests/integration/python/ --tb=no   \
                    --device ${{ matrix.device }} --app $TMP_DIR/app.elf \
                    --log-dir integration_tests_log
           fi

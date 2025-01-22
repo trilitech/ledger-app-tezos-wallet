@@ -39,4 +39,4 @@ jobs:
         run: pip install pylint -r tests/requirements.txt
 
       - name: Run pylint with .pylintrc
-        run: pylint --errors-only --rcfile=tests/integration/.pylintrc tests/integration/nano/
+        run: pylint --errors-only --rcfile=tests/integration/.pylintrc tests/integration/python/
