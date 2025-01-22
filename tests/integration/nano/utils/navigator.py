@@ -22,6 +22,7 @@ from typing import Any, Callable, Dict, List, Optional, Union
 
 from ragger.backend import BackendInterface, SpeculosBackend
 from ragger.firmware import Firmware
+from ragger.firmware.touch.element import Center
 from ragger.firmware.touch.layouts import ChoiceList, RightHeader
 from ragger.firmware.touch.positions import (
     Position,
@@ -139,6 +140,7 @@ class TezosNavInsID(BaseNavInsID):
     # UseCaseAddressConfirmation
     REVIEW_PK_SHOW_QR = auto()
     # UseCaseReview
+    REVIEW_TX_NEXT = auto()
     REVIEW_TX_SHOW_MORE = auto()
     REVIEW_TX_SKIP = auto()
     REJECT_CHOICE_CONFIRM = auto()
@@ -160,11 +162,13 @@ class TezosNavigator(metaclass=MetaScreen):
     use_case_settings = UseCaseSettings
     use_case_review_pk = UseCaseAddressConfirmation
     use_case_review_tx = UseCaseReview
+    element_center = Center
 
     home:      UseCaseHome
     settings:  UseCaseSettings
     review_pk: UseCaseAddressConfirmation
     review_tx: UseCaseReview
+    center:    Center
 
     _backend: TezosBackend
     _firmware: Firmware
@@ -178,12 +182,16 @@ class TezosNavigator(metaclass=MetaScreen):
         self._backend = backend
         self._firmware = firmware
         self._navigator = navigator
-        if not self._firmware.is_nano:
+
+        if self._firmware.is_nano:
+            self._navigator.add_callback(TezosNavInsID.REVIEW_TX_NEXT, self._backend.right_click)
+        else:
             tezos_callbacks: Dict[BaseNavInsID, Callable[..., Any]] = {
                 TezosNavInsID.SETTINGS_TOGGLE_EXPERT_MODE: self.settings.toggle_expert_mode,
                 TezosNavInsID.SETTINGS_TOGGLE_BLINDSIGNING: self.settings.toggle_blindsigning,
                 TezosNavInsID.SETTINGS_EXIT: self.settings.exit,
                 TezosNavInsID.REVIEW_PK_SHOW_QR: self.review_pk.show_qr,
+                TezosNavInsID.REVIEW_TX_NEXT: self._ignore_processing(self.center.swipe_left),
                 TezosNavInsID.REVIEW_TX_SHOW_MORE: self.review_tx.show_more,
                 TezosNavInsID.REVIEW_TX_SKIP: self.review_tx.skip,
                 TezosNavInsID.REJECT_CHOICE_CONFIRM: self.review_tx.reject_choice.confirm,
@@ -192,13 +200,29 @@ class TezosNavigator(metaclass=MetaScreen):
                 TezosNavInsID.EXPERT_CHOICE_REJECT: self.review_tx.enable_expert_choice.reject,
                 TezosNavInsID.BLINDSIGN_CHOICE_ENABLE: self.review_tx.enable_blindsign_choice.confirm,
                 TezosNavInsID.BLINDSIGN_CHOICE_REJECT: self.review_tx.enable_blindsign_choice.reject,
-                TezosNavInsID.SKIP_CHOICE_CONFIRM: self.review_tx.skip_choice.confirm,
+                TezosNavInsID.SKIP_CHOICE_CONFIRM: self._ignore_processing(self.review_tx.skip_choice.confirm),
                 TezosNavInsID.SKIP_CHOICE_REJECT: self.review_tx.skip_choice.reject,
                 TezosNavInsID.WARNING_CHOICE_SAFETY: self.review_tx.back_to_safety.confirm,
                 TezosNavInsID.WARNING_CHOICE_BLINDSIGN: self.review_tx.back_to_safety.reject,
             }
             self._navigator._callbacks.update(tezos_callbacks)
         self._root_dir = Path(__file__).resolve().parent.parent
+
+    def _ignore_processing(self, callback: Callable):
+        """Wrapper to ignore the `Proccessing` screen"""
+        def wrapper(*args, **kwargs):
+            if not isinstance(self._backend, SpeculosBackend):
+                callback(*args, **kwargs)
+            else:
+                last_screenshot = self._backend._last_screenshot
+                callback(*args, **kwargs)
+                self._backend.wait_for_screen_change()
+                if self._backend.compare_screen_with_text("^(Processing|Loading operation)$"):
+                    self._backend.send_tick()
+                    # Wait a text that is not "Processing"
+                    self._backend.wait_for_text_on_screen("^(?!Processing$|Loading operation$).*")
+                self._backend._last_screenshot = last_screenshot
+        return wrapper
 
     def navigate(self,
                  snap_path: Optional[Path] = None,
@@ -414,12 +438,8 @@ class TezosNavigator(metaclass=MetaScreen):
 
     def navigate_forward(self, **kwargs) -> None:
         """Navigate forward until the text is found."""
-        if self._firmware.is_nano:
-            navigate_instruction = NavInsID.RIGHT_CLICK
-        else:
-            navigate_instruction = NavInsID.SWIPE_CENTER_TO_LEFT
         self.navigate_until_text(
-            navigate_instruction=navigate_instruction,
+            navigate_instruction=TezosNavInsID.REVIEW_TX_NEXT,
             **kwargs
         )
 

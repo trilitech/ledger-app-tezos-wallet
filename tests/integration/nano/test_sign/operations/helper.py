@@ -28,7 +28,7 @@ from ragger.navigator import NavIns, NavInsID, BaseNavInsID
 from utils.account import Account
 from utils.backend import TezosBackend
 from utils.message import Operation
-from utils.navigator import TezosNavigator
+from utils.navigator import TezosNavigator, TezosNavInsID
 
 
 Op = TypeVar('Op', bound=Operation)
@@ -254,13 +254,9 @@ class TestOperation(ABC):
                 screen_change_after_last_instruction=False
             )
 
-            if firmware.is_nano:
-                navigate_instruction = NavInsID.RIGHT_CLICK
-            else:
-                navigate_instruction = NavInsID.SWIPE_CENTER_TO_LEFT
             # Compare all field's screens
             tezos_navigator.navigate_while_text_and_compare(
-                navigate_instruction=navigate_instruction,
+                navigate_instruction=TezosNavInsID.REVIEW_TX_NEXT,
                 text=field.text,
                 snap_path=snapshot_dir,
             )
