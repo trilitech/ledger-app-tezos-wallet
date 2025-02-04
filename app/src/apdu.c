@@ -19,7 +19,6 @@
    See the License for the specific language governing permissions and
    limitations under the License. */
 
-#include <parser.h>
 #include <io.h>
 
 #include "apdu.h"
@@ -29,32 +28,26 @@ const uint8_t version[4]
     = {0 /* wallet */, MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION};
 
 void
-handle_unimplemented(__attribute__((unused)) command_t *cmd)
+handle_apdu_version(void)
 {
-    TZ_PREAMBLE(("cmd=0x%p", cmd));
-
-    PRINTF("[ERROR] Unimplemented instruction 0x%02x\n", cmd->ins);
-    TZ_FAIL(EXC_INVALID_INS);
-    TZ_POSTAMBLE;
-}
-
-void
-handle_apdu_version(__attribute__((unused)) command_t *cmd)
-{
-    TZ_PREAMBLE(("cmd=0x%p", cmd));
+    TZ_PREAMBLE(("void"));
 
     TZ_ASSERT(EXC_UNEXPECTED_STATE, global.step == ST_IDLE);
+
     io_send_response_pointer((void *)&version, sizeof(version), SW_OK);
+
     TZ_POSTAMBLE;
 }
 
 void
-handle_apdu_git(__attribute__((unused)) command_t *cmd)
+handle_apdu_git(void)
 {
-    static const char commit[] = COMMIT;
-    TZ_PREAMBLE(("cmd=0x%p", cmd));
+    TZ_PREAMBLE(("void"));
 
     TZ_ASSERT(EXC_UNEXPECTED_STATE, global.step == ST_IDLE);
+
+    static const char commit[] = COMMIT;
     io_send_response_pointer((void *)commit, sizeof(commit), SW_OK);
+
     TZ_POSTAMBLE;
 }

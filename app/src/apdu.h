@@ -80,25 +80,32 @@
  *
  */
 
-typedef void(tz_handler)(command_t *cmd);
-typedef tz_handler *tz_handler_t;
+/**
+ * @brief Function to handle apdu request for getting version
+ */
+void handle_apdu_version(void);
 
-tz_handler handle_unimplemented;  /// handler for unknown commands
-tz_handler handle_apdu_version;   /// handle version enquiry apdu
-tz_handler handle_apdu_git;       /// handle git commit enquiry apdu
+/**
+ * @brief Function to handle apdu request for getting git commit
+ */
+void handle_apdu_git(void);
+
 /**
  * @brief Function to handle apdu request for public key. The public key is
  * derived only once and stored in the RAM, in order to avoid repeated
  * derivation calculations. This function can be called with or without
  * prompt.
  *
+ * @param cmd: apdu received
  */
-tz_handler handle_apdu_get_public_key;
+void handle_apdu_get_public_key(command_t *cmd);
+
 /**
  * @brief Parse the received command and prompt user for appropriate action.
  * Triggers blindsigning and/or expert mode workflows based on transaction
  * involved. Stream based parser helps decode arbitararily large transaction,
  * screen by screen.
  *
+ * @param cmd: apdu received
  */
-tz_handler handle_apdu_sign;
+void handle_apdu_sign(command_t *cmd);
