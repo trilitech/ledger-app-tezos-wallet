@@ -51,18 +51,17 @@ derivation_type_to_cx_curve(derivation_type_t derivation_type)
 }
 
 tz_exc
-read_bip32_path(bip32_path_t *out, const uint8_t *in, size_t in_size)
+read_bip32_path(bip32_path_t *out, buffer_t *in)
 {
-    buffer_t cdata = {in, in_size, 0};
-    TZ_PREAMBLE(("out=%p, in=%p, in_size=%u", out, in, in_size));
+    TZ_PREAMBLE(("out=%p, in=%p", out, in));
 
     TZ_ASSERT(EXC_WRONG_LENGTH_FOR_INS,
-              buffer_read_u8(&cdata, &out->length)
-                  && buffer_read_bip32_path(
-                      &cdata, (uint32_t *)&out->components, out->length)
+              buffer_read_u8(in, &out->length)
+                  && buffer_read_bip32_path(in, (uint32_t *)&out->components,
+                                            out->length)
                   // Assert entire bip32_path consumed
                   && (sizeof(uint8_t) + sizeof(uint32_t) * out->length
-                      == cdata.offset));
+                      == in->offset));
     TZ_LIB_POSTAMBLE;
 }
 

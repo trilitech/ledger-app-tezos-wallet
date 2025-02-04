@@ -24,10 +24,10 @@
 #include <string.h>
 #include <stdbool.h>
 
+#include <buffer.h>
 #include <cx.h>
 #include <io.h>
 #include <os.h>
-#include <parser.h>
 #include <ux.h>
 
 #ifdef HAVE_SWAP
@@ -748,11 +748,12 @@ handle_first_apdu(command_t *cmd)
 {
     TZ_PREAMBLE(("cmd=%p", cmd));
 
+    buffer_t cdata = {.ptr = cmd->data, .size = cmd->lc, .offset = 0u};
+
     TZ_ASSERT_NOTNULL(cmd);
     APDU_SIGN_ASSERT_STEP(SIGN_ST_IDLE);
 
-    TZ_LIB_CHECK(read_bip32_path(&global.path_with_curve.bip32_path,
-                                 cmd->data, cmd->lc));
+    TZ_LIB_CHECK(read_bip32_path(&global.path_with_curve.bip32_path, &cdata));
     global.path_with_curve.derivation_type = cmd->p2;
     TZ_ASSERT(EXC_WRONG_PARAM,
               check_derivation_type(global.path_with_curve.derivation_type));

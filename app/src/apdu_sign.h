@@ -24,8 +24,6 @@
 #include <unistd.h>
 #include <stdbool.h>
 
-#include <parser.h>
-
 #include "keys.h"
 #include "parser/parser_state.h"
 

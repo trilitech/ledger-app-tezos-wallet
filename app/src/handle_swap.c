@@ -22,6 +22,7 @@
 
 #ifdef HAVE_SWAP
 
+#include <buffer.h>
 #include <format.h>
 #include <io.h>
 #include <string.h>
@@ -64,9 +65,11 @@ swap_handle_check_address(check_address_parameters_t *params)
     // Always tz1
     derivation_type_t derivation_type = DERIVATION_TYPE_ED25519;
     bip32_path_t      bip32_path;
+    buffer_t          cdata = {.ptr    = params->address_parameters,
+                               .size   = params->address_parameters_length,
+                               .offset = 0u};
 
-    TZ_LIB_CHECK(read_bip32_path(&bip32_path, params->address_parameters,
-                                 params->address_parameters_length));
+    TZ_LIB_CHECK(read_bip32_path(&bip32_path, &cdata));
     cx_ecfp_public_key_t pubkey;
     TZ_LIB_CHECK(derive_pk(&pubkey, derivation_type, &bip32_path));
     TZ_LIB_CHECK(
