@@ -20,11 +20,13 @@
 
 #pragma once
 
+#include <stdbool.h>
 #include <string.h>
 
-#include <parser.h>
+#include <buffer.h>
 
 #include "exception.h"
+#include "keys.h"
 
 // Instruction codes
 #define INS_VERSION                   0x00
@@ -81,31 +83,56 @@
  */
 
 /**
- * @brief Function to handle apdu request for getting version
+ * @brief Handle version request.
+ * Send APDU response containing the version.
  */
-void handle_apdu_version(void);
+void handle_version(void);
 
 /**
- * @brief Function to handle apdu request for getting git commit
+ * @brief Handle git commit request.
+ * Send APDU response containing the git commit.
  */
-void handle_apdu_git(void);
+void handle_git(void);
 
 /**
- * @brief Function to handle apdu request for public key. The public key is
- * derived only once and stored in the RAM, in order to avoid repeated
- * derivation calculations. This function can be called with or without
- * prompt.
+ * @brief Handle public key request.
+ * If successfully parse BIP32 path, send APDU response containing the public
+ * key.
  *
- * @param cmd: apdu received
+ * The public key is derived only once and stored in the RAM, in order to
+ * avoid repeated derivation calculations.
+ *
+ * @param cdata: buffer containing the BIP32 path of the key
+ * @param derivation_type: derivation_type of the key
+ * @param prompt: whether to display address on screen or not
  */
-void handle_apdu_get_public_key(command_t *cmd);
+void handle_get_public_key(buffer_t *cdata, derivation_type_t derivation_type,
+                           bool prompt);
 
 /**
- * @brief Parse the received command and prompt user for appropriate action.
- * Triggers blindsigning and/or expert mode workflows based on transaction
- * involved. Stream based parser helps decode arbitararily large transaction,
- * screen by screen.
+ * @brief Handle signing key setup request.
+ * If successfully parse BIP32 path, set up the key as the signing key,
+ * initialize the signing state and send validation APDU response.
  *
- * @param cmd: apdu received
+ * @param cdata: data containing the BIP32 path of the key
+ * @param derivation_type: derivation_type of the key
+ * @param return_hash: whether the hash of the message is requested or not
  */
-void handle_apdu_sign(command_t *cmd);
+void handle_signing_key_setup(buffer_t         *cdata,
+                              derivation_type_t derivation_type,
+                              bool              return_hash);
+
+/**
+ * @brief Handle operation/micheline expression signature request.
+ *
+ * Parse the received command and prompt user for appropriate
+ * action. Triggers blindsigning and/or expert mode workflows based on
+ * transaction involved. Stream based parser helps decode arbitararily
+ * large transaction, screen by screen. After user validation, sign the hashed
+ * message and send an ADPU response containing the signature.
+ *
+ * @param cdata: data containing the message to sign
+ * @param last: whether the part of the message is the last one or not
+ * @param with_hash: whether the hash of the message is requested or not
+ */
+void handle_sign(buffer_t *cdata, bool last, bool return_hash);

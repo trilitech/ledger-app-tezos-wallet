@@ -46,6 +46,9 @@ typedef enum {
     DERIVATION_TYPE_MAX           = 4
 } derivation_type_t;
 
+#define DERIVATION_TYPE_IS_SET(type) \
+    ((DERIVATION_TYPE_ED25519 <= type) && (type < DERIVATION_TYPE_MAX))
+
 typedef struct {
     uint8_t  length;
     uint32_t components[MAX_BIP32_LEN];
@@ -89,16 +92,3 @@ tz_exc derive_pkh(cx_ecfp_public_key_t *pubkey,
                   size_t len);
 void   sign(derivation_type_t derivation_type, const bip32_path_t *path,
             const uint8_t *hash, size_t hashlen, uint8_t *sig, size_t *siglen);
-
-/**
- * @brief Check if derivation type is valid enum
- *
- * @param code Derivation type to check.
- * @return validity result
- */
-static inline bool
-check_derivation_type(derivation_type_t code)
-{
-    return ((code >= DERIVATION_TYPE_ED25519)
-            && (code < DERIVATION_TYPE_MAX));
-}

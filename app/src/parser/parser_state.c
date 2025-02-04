@@ -90,7 +90,7 @@ tz_parser_flush_up_to(tz_parser_state *st, char *obuf, size_t olen,
 }
 
 void
-tz_parser_refill(tz_parser_state *st, uint8_t *ibuf, size_t ilen)
+tz_parser_refill(tz_parser_state *st, const uint8_t *ibuf, size_t ilen)
 {
     tz_parser_regs *regs = &st->regs;
 

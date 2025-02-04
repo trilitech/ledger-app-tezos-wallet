@@ -22,32 +22,28 @@
 #include <io.h>
 
 #include "apdu.h"
-#include "globals.h"
+#include "utils.h"
 
 const uint8_t version[4]
     = {0 /* wallet */, MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION};
 
 void
-handle_apdu_version(void)
+handle_version(void)
 {
-    TZ_PREAMBLE(("void"));
-
-    TZ_ASSERT(EXC_UNEXPECTED_STATE, global.step == ST_IDLE);
+    FUNC_ENTER(("void"));
 
     io_send_response_pointer((void *)&version, sizeof(version), SW_OK);
 
-    TZ_POSTAMBLE;
+    FUNC_LEAVE();
 }
 
 void
-handle_apdu_git(void)
+handle_git(void)
 {
-    TZ_PREAMBLE(("void"));
-
-    TZ_ASSERT(EXC_UNEXPECTED_STATE, global.step == ST_IDLE);
+    FUNC_ENTER(("void"));
 
     static const char commit[] = COMMIT;
     io_send_response_pointer((void *)commit, sizeof(commit), SW_OK);
 
-    TZ_POSTAMBLE;
+    FUNC_LEAVE();
 }

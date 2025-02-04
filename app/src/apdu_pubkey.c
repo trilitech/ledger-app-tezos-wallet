@@ -28,6 +28,7 @@
 #include <ux.h>
 
 #include "apdu.h"
+
 #include "compat.h"
 #include "globals.h"
 #include "keys.h"
@@ -64,32 +65,20 @@ send_pubkey_response(bool confirm)
 }
 
 void
-handle_apdu_get_public_key(command_t *cmd)
+handle_get_public_key(buffer_t *cdata, derivation_type_t derivation_type,
+                      bool prompt)
 {
-    bool prompt = cmd->ins == INS_PROMPT_PUBLIC_KEY;
-    TZ_PREAMBLE(("cmd=%p", cmd));
+    TZ_PREAMBLE(("cdata=%p, derivation_type=%d, prompt=%d", cdata,
+                 derivation_type, prompt));
 
-    buffer_t cdata = {.ptr = cmd->data, .size = cmd->lc, .offset = 0u};
-
-    TZ_ASSERT(EXC_UNEXPECTED_STATE,
-              (global.step == ST_IDLE) || (global.step == ST_SWAP_SIGN));
-    TZ_ASSERT(EXC_WRONG_PARAM, cmd->p1 == 0);
-
-    // do not expose pks without prompt through U2F (permissionless legacy
-    // comm in browser)
-    TZ_ASSERT(EXC_HID_REQUIRED,
-              prompt || (G_io_apdu_media != IO_APDU_MEDIA_U2F));
-
-    global.path_with_curve.derivation_type = cmd->p2;
-    TZ_ASSERT(EXC_WRONG_PARAM,
-              check_derivation_type(global.path_with_curve.derivation_type));
-    TZ_LIB_CHECK(read_bip32_path(&global.path_with_curve.bip32_path, &cdata));
+    global.path_with_curve.derivation_type = derivation_type;
+    TZ_LIB_CHECK(read_bip32_path(&global.path_with_curve.bip32_path, cdata));
 
     // Derive public key and store it on global.keys.pubkey
-
     TZ_LIB_CHECK(derive_pk(&global.keys.pubkey,
                            global.path_with_curve.derivation_type,
                            &global.path_with_curve.bip32_path));
+
     if (prompt) {
         ui_pubkey_review(&global.keys.pubkey,
                          global.path_with_curve.derivation_type,
