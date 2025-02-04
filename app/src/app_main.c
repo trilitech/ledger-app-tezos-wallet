@@ -27,11 +27,12 @@
 #ifdef HAVE_SWAP
 #include <swap.h>
 #endif
-#include "apdu.h"
-#include "app_main.h"
-#include "globals.h"
 
-#define CLA 0x80
+#include "app_main.h"
+
+#include "apdu.h"
+#include "globals.h"
+#include "keys.h"
 
 void
 app_exit(void)
@@ -70,8 +71,87 @@ print_memory_layout(void)
     PRINTF("[SIZEOF] G_io_app: %d\n", sizeof(G_io_app));
 }
 
+#define CLA 0x80  /// The only APDU class that will be used
+
+/// Packet indexes
+#define P1_FIRST       0x00u  /// First packet
+#define P1_NEXT        0x01u  /// Other packet
+#define P1_LAST_MARKER 0x80u  /// Last packet
+
+/// Parameters parser helpers
+#define ASSERT_GLOBAL_STEP(_step) \
+    TZ_ASSERT(EXC_UNEXPECTED_STATE, global.step == (_step))
+#define ASSERT_NO_P1(_cmd) TZ_ASSERT(EXC_WRONG_PARAM, _cmd->p1 == 0u)
+#define ASSERT_NO_P2(_cmd) TZ_ASSERT(EXC_WRONG_PARAM, _cmd->p2 == 0u)
+#define READ_P2_DERIVATION_TYPE(_cmd, _derivation_type)               \
+    derivation_type_t _derivation_type = (derivation_type_t)_cmd->p2; \
+    TZ_ASSERT(EXC_WRONG_PARAM, DERIVATION_TYPE_IS_SET(_derivation_type))
+#define ASSERT_NO_DATA(_cmd) TZ_ASSERT(EXC_WRONG_VALUES, _cmd->data == NULL)
+#define READ_DATA(_cmd, _buf) \
+    buffer_t _buf = {         \
+        .ptr    = _cmd->data, \
+        .size   = _cmd->lc,   \
+        .offset = 0u,         \
+    }
+
+/**
+ * @brief Read the APDU of the signing command and choose the next action to
+ * take.
+ *
+ * Same as dispatch but focus on signing instructions.
+ *
+ * @param cmd: command containg APDU received
+ */
 static void
-dispatch(command_t *cmd)
+dispatch_sign_instruction(const command_t *cmd)
+{
+    TZ_PREAMBLE(("cmd=0x%p"));
+
+    TZ_ASSERT(EXC_UNEXPECTED_STATE,
+              (cmd->ins == INS_SIGN_WITH_HASH) || (cmd->ins == INS_SIGN));
+
+    bool return_hash = cmd->ins == INS_SIGN_WITH_HASH;
+
+    if ((cmd->p1 & ~P1_LAST_MARKER) == P1_FIRST) {
+        TZ_ASSERT(EXC_UNEXPECTED_STATE,
+                  (global.step == ST_IDLE) || (global.step == ST_SWAP_SIGN));
+
+        READ_P2_DERIVATION_TYPE(cmd, derivation_type);
+        READ_DATA(cmd, buf);
+
+        TZ_CHECK(
+            handle_signing_key_setup(&buf, derivation_type, return_hash));
+    } else {
+        TZ_ASSERT(EXC_UNEXPECTED_STATE,
+                  (global.step == ST_BLIND_SIGN)
+                      || (global.step == ST_CLEAR_SIGN)
+                      || (global.step == ST_SUMMARY_SIGN)
+                      || (global.step == ST_SWAP_SIGN));
+
+        bool last = (cmd->p1 & P1_LAST_MARKER) != 0;
+
+        READ_DATA(cmd, buf);
+
+        TZ_CHECK(handle_sign(&buf, last, return_hash));
+    }
+
+    TZ_POSTAMBLE;
+}
+
+/**
+ * @brief Read the APDU of the command and choose the next action to take.
+ *
+ * The APDU structure is defined by [ISO/IEC
+ * 7816-4](https://en.wikipedia.org/wiki/Smart_card_application_protocol_data_unit).
+ * This function ensures that the command complies with the [APDU
+ * specification for our application](app/docs/apdu.md) and, depending on the
+ * code instruction, parse the instruction parameters in order to supply them,
+ * in addition to the potential command data, to the corresponding process.
+ *
+ * @param cmd: command containg APDU received
+ */
+static void
+dispatch(const command_t *cmd)
 {
     TZ_PREAMBLE(("cmd=0x%p"));
 
@@ -81,19 +161,44 @@ dispatch(command_t *cmd)
 
     switch (cmd->ins) {
     case INS_VERSION:
-        TZ_CHECK(handle_apdu_version());
+
+        ASSERT_GLOBAL_STEP(ST_IDLE);
+
+        handle_version();
+
         break;
     case INS_GIT:
-        TZ_CHECK(handle_apdu_git());
+
+        ASSERT_GLOBAL_STEP(ST_IDLE);
+
+        handle_git();
+
         break;
     case INS_GET_PUBLIC_KEY:
-    case INS_PROMPT_PUBLIC_KEY:
-        TZ_CHECK(handle_apdu_get_public_key(cmd));
+    case INS_PROMPT_PUBLIC_KEY: {
+        TZ_ASSERT(EXC_UNEXPECTED_STATE,
+                  (global.step == ST_IDLE) || (global.step == ST_SWAP_SIGN));
+
+        ASSERT_NO_P1(cmd);
+        READ_P2_DERIVATION_TYPE(cmd, derivation_type);
+        READ_DATA(cmd, buf);
+
+        bool prompt = cmd->ins == INS_PROMPT_PUBLIC_KEY;
+
+        // do not expose pks without prompt through U2F (permissionless legacy
+        // comm in browser)
+        TZ_ASSERT(EXC_HID_REQUIRED,
+                  prompt || (G_io_apdu_media != IO_APDU_MEDIA_U2F));
+
+        TZ_CHECK(handle_get_public_key(&buf, derivation_type, prompt));
+
         break;
+    }
     case INS_SIGN:
-    case INS_SIGN_WITH_HASH:
-        TZ_CHECK(handle_apdu_sign(cmd));
+    case INS_SIGN_WITH_HASH: {
+        TZ_CHECK(dispatch_sign_instruction(cmd));
         break;
+    }
     default:
         PRINTF("[ERROR] invalid instruction 0x%02x\n", cmd->ins);
         TZ_FAIL(EXC_INVALID_INS);

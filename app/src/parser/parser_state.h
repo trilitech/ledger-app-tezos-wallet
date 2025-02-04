@@ -33,9 +33,9 @@ typedef struct {
     /// update `ibuf`, `iofs` and `ilen` at once with `parser_regs_refill`
     /// invariant between two refills:
     ///   `iofs + ilen` = (constant) number of readable bytes in `ibuf`
-    uint8_t *ibuf;  /// input buffer
-    size_t   iofs;  /// current offset
-    size_t   ilen;  /// remaining bytes readable in input
+    const uint8_t *ibuf;  /// input buffer
+    size_t         iofs;  /// current offset
+    size_t         ilen;  /// remaining bytes readable in input
     /// update `obuf`, `oofs` and `olen` at once with `parser_regs_flush`
     /// invariant between two refills:
     ///   `oofs + olen` = (constant) number of readable bytes in `obuf`
@@ -144,7 +144,8 @@ void tz_parser_flush_up_to(tz_parser_state *state, char *obuf, size_t olen,
  * @param ibuf: input buffer
  * @param ilen: length of the input buffer
  */
-void tz_parser_refill(tz_parser_state *state, uint8_t *ibuf, size_t ilen);
+void tz_parser_refill(tz_parser_state *state, const uint8_t *ibuf,
+                      size_t ilen);
 
 /**
  * @brief Skip to next byte
