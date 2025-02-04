@@ -71,37 +71,31 @@ print_memory_layout(void)
 static void
 dispatch(command_t *cmd)
 {
-    tz_handler_t f;
-    TZ_PREAMBLE(("cmd=0x%p {cla=0x02x ins=%u ...}", cmd, cmd->cla, cmd->ins));
+    TZ_PREAMBLE(("cmd=0x%p"));
 
     if (cmd->cla != CLA) {
         TZ_FAIL(EXC_CLASS);
     }
 
-    // clang-format off
     switch (cmd->ins) {
-    case INS_VERSION:                   f = handle_apdu_version;        break;
-    case INS_SIGN:                      f = handle_apdu_sign;           break;
-    case INS_SIGN_WITH_HASH:            f = handle_apdu_sign;           break;
-    case INS_PROMPT_PUBLIC_KEY:         f = handle_apdu_get_public_key; break;
-    case INS_GET_PUBLIC_KEY:            f = handle_apdu_get_public_key; break;
-    case INS_GIT:                       f = handle_apdu_git;            break;
-    case INS_AUTHORIZE_BAKING:          f = handle_unimplemented;       break;
-    case INS_RESET:                     f = handle_unimplemented;       break;
-    case INS_QUERY_AUTH_KEY:            f = handle_unimplemented;       break;
-    case INS_QUERY_MAIN_HWM:            f = handle_unimplemented;       break;
-    case INS_SETUP:                     f = handle_unimplemented;       break;
-    case INS_QUERY_ALL_HWM:             f = handle_unimplemented;       break;
-    case INS_QUERY_AUTH_KEY_WITH_CURVE: f = handle_unimplemented;       break;
-    case INS_HMAC:                      f = handle_unimplemented;       break;
-    case INS_SIGN_UNSAFE:               f = handle_unimplemented;       break;
+    case INS_VERSION:
+        TZ_CHECK(handle_apdu_version());
+        break;
+    case INS_GIT:
+        TZ_CHECK(handle_apdu_git());
+        break;
+    case INS_GET_PUBLIC_KEY:
+    case INS_PROMPT_PUBLIC_KEY:
+        TZ_CHECK(handle_apdu_get_public_key(cmd));
+        break;
+    case INS_SIGN:
+    case INS_SIGN_WITH_HASH:
+        TZ_CHECK(handle_apdu_sign(cmd));
+        break;
     default:
         PRINTF("[ERROR] invalid instruction 0x%02x\n", cmd->ins);
         TZ_FAIL(EXC_INVALID_INS);
     }
-    // clang-format on
-
-    TZ_CHECK(f(cmd));
 
     TZ_POSTAMBLE;
 }
@@ -110,7 +104,7 @@ void
 app_main(void)
 {
     command_t cmd;
-    int       rx;
+    int       input_len = 0;
 
     app_stack_canary = 0xDEADBEEFu;
     FUNC_ENTER(("void"));
@@ -136,14 +130,23 @@ app_main(void)
         }
 
         PRINTF("Ready to receive a command packet.\n");
-        rx = io_recv_command();
+        input_len = io_recv_command();
+        if (input_len < 0) {
+            PRINTF("=> io_recv_command failure\n");
+            return;
+        }
 
-        if (!apdu_parser(&cmd, G_io_apdu_buffer, rx)) {
-            PRINTF("[ERROR] Bad length: %d\n", rx);
+        if (!apdu_parser(&cmd, G_io_apdu_buffer, input_len)) {
+            PRINTF("[ERROR] Bad length: %d\n", input_len);
             TZ_FAIL(EXC_WRONG_LENGTH_FOR_INS);
         }
 
-        dispatch(&cmd);
+        PRINTF(
+            "=> CLA=%02X | INS=%02X | P1=%02X | P2=%02X | Lc=%02X | "
+            "CData=%.*H\n",
+            cmd.cla, cmd.ins, cmd.p1, cmd.p2, cmd.lc, cmd.lc, cmd.data);
+
+        TZ_CHECK(dispatch(&cmd));
 
         TZ_POSTAMBLE;
     }
