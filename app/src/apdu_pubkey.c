@@ -21,6 +21,7 @@
 
 #include <string.h>
 
+#include <buffer.h>
 #include <cx.h>
 #include <io.h>
 #include <os.h>
@@ -68,6 +69,8 @@ handle_apdu_get_public_key(command_t *cmd)
     bool prompt = cmd->ins == INS_PROMPT_PUBLIC_KEY;
     TZ_PREAMBLE(("cmd=%p", cmd));
 
+    buffer_t cdata = {.ptr = cmd->data, .size = cmd->lc, .offset = 0u};
+
     TZ_ASSERT(EXC_UNEXPECTED_STATE,
               (global.step == ST_IDLE) || (global.step == ST_SWAP_SIGN));
     TZ_ASSERT(EXC_WRONG_PARAM, cmd->p1 == 0);
@@ -80,8 +83,7 @@ handle_apdu_get_public_key(command_t *cmd)
     global.path_with_curve.derivation_type = cmd->p2;
     TZ_ASSERT(EXC_WRONG_PARAM,
               check_derivation_type(global.path_with_curve.derivation_type));
-    TZ_LIB_CHECK(read_bip32_path(&global.path_with_curve.bip32_path,
-                                 cmd->data, cmd->lc));
+    TZ_LIB_CHECK(read_bip32_path(&global.path_with_curve.bip32_path, &cdata));
 
     // Derive public key and store it on global.keys.pubkey
 

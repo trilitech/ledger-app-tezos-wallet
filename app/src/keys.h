@@ -26,6 +26,7 @@
 #include <stdint.h>
 
 #include <cx.h>
+#include <buffer.h>
 
 #include "exception.h"
 
@@ -55,7 +56,14 @@ typedef struct {
     derivation_type_t derivation_type;
 } bip32_path_with_curve_t;
 
-tz_exc read_bip32_path(bip32_path_t *out, const uint8_t *in, size_t in_size);
+/**
+ * @brief Read a BIP32 path from a buffer.
+ *
+ * @param out: BIP32 path output.
+ * @param in: buffer input
+ * @return tz_exc return success/failure using error code
+ */
+tz_exc read_bip32_path(bip32_path_t *out, buffer_t *in);
 
 /**
  * @brief Derive public key for given derivation type address.
