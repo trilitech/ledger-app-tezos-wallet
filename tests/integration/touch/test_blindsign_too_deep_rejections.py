@@ -46,8 +46,7 @@ if __name__ == "__main__":
     app.assert_screen("tbtdr_review_0")
     app.review.next()
     app.assert_screen("unsafe_operation_warning_1")
-    with app.fading_screen("loading_operation"):
-        app.review.reject()
+    app.review.reject()
     app.send_apdu("800f82001211020000000c02000000070200000002002a")
     app.assert_screen("unsafe_operation_warning_2")
     with app.fading_screen("rejected"):
@@ -61,7 +60,7 @@ if __name__ == "__main__":
     app.review.next()
     app.assert_screen("tbtdr_review_0")
     app.review.next()
-    app.process_blindsign_warnings( "800f82001211020000000c02000000070200000002002a")
+    app.process_blindsign_warnings("800f82001211020000000c02000000070200000002002a", loading_operation=False)
     verify_err_reject_response(app, "tbtdr_start_review_blindsign")
 
     # Rejecting at blindsign review screen
@@ -70,7 +69,7 @@ if __name__ == "__main__":
     app.review.next()
     app.assert_screen("tbtdr_review_0")
     app.review.next()
-    app.process_blindsign_warnings( "800f82001211020000000c02000000070200000002002a")
+    app.process_blindsign_warnings("800f82001211020000000c02000000070200000002002a", loading_operation=False)
     app.assert_screen("tbtdr_start_review_blindsign")
     app.review.next()
     verify_err_reject_response(app,"tbtd_review_1")
@@ -82,7 +81,7 @@ if __name__ == "__main__":
     app.review.next()
     app.assert_screen("tbtdr_review_0")
     app.review.next()
-    app.process_blindsign_warnings( "800f82001211020000000c02000000070200000002002a")
+    app.process_blindsign_warnings("800f82001211020000000c02000000070200000002002a", loading_operation=False)
     app.assert_screen("tbtdr_start_review_blindsign")
     app.review.next()
     app.assert_screen("tbtd_review_1")
