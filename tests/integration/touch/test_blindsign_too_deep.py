@@ -30,7 +30,7 @@ if __name__ == "__main__":
     app.assert_screen("tbtd_review_0")
     app.review.next()
 
-    app.process_blindsign_warnings("800f82001211020000000c02000000070200000002002a")
+    app.process_blindsign_warnings("800f82001211020000000c02000000070200000002002a", loading_operation=False)
 
     app.assert_screen("tbtd_start_review_blindsign")
     app.review.next()
