@@ -34,12 +34,11 @@
 #include <swap.h>
 #endif
 
-#include "apdu.h"
-#include "apdu_sign.h"
-#include "format.h"
+#include "../format.h"
 #include "globals.h"
 #include "handle_swap.h"
 #include "keys.h"
+#include "sign.h"
 #include "ui_stream.h"
 
 #include "parser/parser_state.h"
