@@ -16,61 +16,64 @@
 
 """Gathering of tests related to Smart-rollup Originate operations."""
 
-from pathlib import Path
-from typing import List, Optional
-
-import pytest
-
-from utils.account import Account
-from utils.backend import TezosBackend
 from utils.message import ScRollupOriginate
-from utils.navigator import TezosNavigator
+from .helper import Flow, Field, TestOperation, pytest_generate_tests
 
 
-@pytest.mark.parametrize(
-    "whitelist", [
-        None,
-        [],
-        [
-            'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
-            'tz2WmivuMG8MMRKMEmzKRMMxMApxZQWYNS4W',
-            'tz3XMQscBFM9vPmpbYMavMmwxRMUWvWGZMQQ',
-        ],
-    ],
-    ids=[
-            "no_whitelist",
-            "empty_whitelist",
-            "with_whitelist",
-        ],
-)
-def test_sign_sc_rollup_originate(
-        backend: TezosBackend,
-        tezos_navigator: TezosNavigator,
-        account: Account,
-        whitelist: Optional[List[str]],
-        snapshot_dir: Path
-):
-    """Check signing smart rollup originate"""
+class TestScRollupOriginate(TestOperation):
+    """Commun tests."""
 
-    tezos_navigator.toggle_expert_mode()
+    @property
+    def op_class(self):
+        return ScRollupOriginate
 
-    message = ScRollupOriginate(
-        source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
-        fee = 10000,
-        counter = 2,
-        gas_limit = 3,
-        storage_limit = 4,
-        pvm_kind = "arith",
-        kernel = '396630396632393532643334353238633733336639343631356366633339626335353536313966633535306464346136376261323230386365386538363761613364313361366566393964666265333263363937346161396132313530643231656361323963333334396535396331336239303831663163313162343430616334643334353564656462653465653064653135613861663632306434633836323437643964313332646531626236646132336435666639643864666664613232626139613834',
-        parameters_ty = {'prim': 'Pair', 'args': [{'string': '1'}, {'int': 2}]},
-        whitelist = whitelist
-    )
+    flows = [
+        Flow(
+            'basic',
+            kernel='0123456789ABCDEF',
+            whitelist=['tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa']
+        ),
+        Flow('no-whitelist', whitelist=None),
+        Flow('empty-whitelist', whitelist=[])
+    ]
 
-    with backend.sign(account, message, with_hash=True) as result:
-        tezos_navigator.accept_sign(snap_path=snapshot_dir)
-
-    account.check_signature(
-        message=message,
-        with_hash=True,
-        data=result.value
-    )
+    fields = [
+        Field("pvm_kind", "Kind", [
+            Field.Case('arith', "arith"),
+            Field.Case('wasm_2_0_0', "wasm_2_0_0"),
+            Field.Case('riscv', "riscv"),
+        ]),
+        Field("kernel", "Kernel", [
+            Field.Case('', 'empty'),
+            Field.Case('0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF', 'long'),
+        ]),
+        Field("parameters_ty", "Parameters", [
+            Field.Case({'prim': 'unit'}, "unit"),
+            Field.Case({'prim': 'or', 'args': [{'prim': 'int'}, {'prim': 'string'}]}, "basic"),
+            # More test about Micheline in micheline tests
+        ]),
+        Field("whitelist", "Whitelist", [
+            Field.Case([
+                'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
+                'tz2W3Tvcm64GjcV2bipUynnEsctLFz5Z6yRa',
+                'tz3XeTwXXJeWNgVR3LqMcyBDdnxjbZ7TeEGH',
+                'tz1er74kx433vTtpYddGsf3dDt5piBZeeHyQ',
+                'tz2JPgTWZZpxZZLqHMfS69UAy1UHm4Aw5iHu',
+                'tz3fLwHKthqhTPK6Lar6CTXN1WbDETw1YpGB',
+                'tz1McCh72NRhYmJBcWr3zDrLJAxnfR9swcFh',
+                'tz2CJBeWWLsUDjVUDqGZL6od3DeBCNzYXrXk',
+                'tz3eydffbLkjdVb8zx42BvxpGV87zaRnqL3r',
+                'tz1TmFPVZsGQ8MnrBJtnECJgkFUwLa6EWYDm',
+                'tz2KC42yW9FXFMJpkUooae2NFYQsM5do3E8H',
+                'tz3hCsUiQDfneTgD7CSZDaUro8SA5aEhwCp2',
+                'tz1e8fEumaLvXXe5jV52gejCSt3mGodoKut9',
+                'tz2PPZ2WN4j92Rdx4NM7oW3HAp3x825HUyac',
+                'tz3Wazpbs4CFj78qv2KBJ8Z7HEyqk6ZPxwWZ',
+            ], "many"),  # Max 4096
+            Field.Case([
+                'tz1Kp8NCAN5WWwvkWkMmQQXMRe68iURmoQ8w',
+                'tz2WmivuMG8MMRKMEmzKRMMxMApxZQWYNS4W',
+                'tz3XMQscBFM9vPmpbYMavMmwxRMUWvWGZMQQ',
+            ], "long-hash"),
+        ]),
+    ]

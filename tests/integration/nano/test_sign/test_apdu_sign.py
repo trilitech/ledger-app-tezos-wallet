@@ -16,29 +16,49 @@
 
 """Gathering of tests related to Sign instructions."""
 
+from pathlib import Path
+
+import pytest
+
 from utils.account import Account
-from utils.backend import TezosBackend
-from utils.message import MichelineExpr, Transaction
+from utils.backend import StatusCode, TezosBackend
+from utils.message import Transaction
 from utils.navigator import TezosNavigator
 
 
-def test_sign_micheline_without_hash(
+@pytest.mark.parametrize("with_hash", [True, False])
+def test_sign(
         backend: TezosBackend,
         tezos_navigator: TezosNavigator,
-        account: Account
+        account: Account,
+        with_hash: bool
 ):
-    """Check signing micheline wihout getting hash"""
+    """Check signing with or wihout getting hash"""
 
-    message = MichelineExpr([{'string': 'CACA'}, {'string': 'POPO'}, {'string': 'BOUDIN'}])
+    message = Transaction()
 
-    with backend.sign(account, message, with_hash=False) as result:
+    with backend.sign(account, message, with_hash=with_hash) as result:
         tezos_navigator.accept_sign()
 
     account.check_signature(
         message=message,
-        with_hash=False,
+        with_hash=with_hash,
         data=result.value
     )
+
+def test_reject_operation(
+        backend: TezosBackend,
+        tezos_navigator: TezosNavigator,
+        account: Account,
+        snapshot_dir: Path
+):
+    """Check reject transaction"""
+
+    message = Transaction()
+
+    with StatusCode.REJECT.expected():
+        with backend.sign(account, message, with_hash=True):
+            tezos_navigator.reject_sign(snap_path=snapshot_dir)
 
 def test_sign_with_small_packet(
         backend: TezosBackend,

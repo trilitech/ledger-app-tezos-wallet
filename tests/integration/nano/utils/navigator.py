@@ -17,9 +17,11 @@
 
 from enum import Enum
 from pathlib import Path
+import time
 from typing import List, Optional, Union
 
 from ragger.firmware import Firmware
+from ragger.backend import SpeculosBackend
 from ragger.navigator import NavIns, NavInsID, Navigator
 
 from .backend import TezosBackend
@@ -86,6 +88,81 @@ class TezosNavigator():
             validation_instructions=validation_instructions,
             **kwargs
         )
+
+    def navigate_while_text_and_compare(
+            self,
+            navigate_instruction: Union[NavIns, NavInsID],
+            text: str,
+            validation_instructions: List[Union[NavIns, NavInsID]] = [],
+            snap_path: Optional[Path] = None,
+            timeout: int = 300,
+            screen_change_before_first_instruction: bool = False,
+            screen_change_after_last_instruction: bool = True) -> None:
+        """Navigate while some text is found on the screen content displayed.
+
+        Function based on
+        `ragger.navigator.navigate_until_text_and_compare`
+
+        """
+        path = self._root_dir
+        test_case_name = snap_path
+
+        idx = 0
+        start = time.time()
+        if not isinstance(self._backend, SpeculosBackend):
+            if timeout == 30:
+                timeout = 200
+
+        self._backend.pause_ticker()
+
+        # Wait for screen to change if needed
+        self._navigator._run_instruction(
+            NavIns(NavInsID.WAIT, (0, )),
+            timeout,
+            wait_for_screen_change=screen_change_before_first_instruction
+        )
+
+        while self._backend.compare_screen_with_text(text):
+            remaining = timeout - (time.time() - start)
+            if remaining < 0:
+                raise TimeoutError(f"Timeout waiting for text {text}")
+
+            # Compare screen, screen already waited
+            self._navigator._run_instruction(
+                NavIns(NavInsID.WAIT, (0, )),
+                remaining,
+                wait_for_screen_change=False,
+                path=path,
+                test_case_name=test_case_name,
+                snap_idx=idx
+            )
+
+            remaining = timeout - (time.time() - start)
+            if remaining < 0:
+                raise TimeoutError(f"Timeout waiting for text {text}")
+
+            # Go to the next screen.
+            # Don't compare because the text may not be on the screen.
+            self._navigator._run_instruction(
+                navigate_instruction,
+                remaining,
+                wait_for_screen_change=True
+            )
+            idx += 1
+
+        if validation_instructions:
+            remaining = timeout - (time.time() - start)
+            self._navigator.navigate_and_compare(
+                path,
+                test_case_name,
+                validation_instructions,
+                timeout=remaining,
+                screen_change_before_first_instruction=True,
+                screen_change_after_last_instruction=screen_change_after_last_instruction,
+                snap_start_idx=idx
+            )
+
+        self._backend.resume_ticker()
 
     def unsafe_navigate(
             self,

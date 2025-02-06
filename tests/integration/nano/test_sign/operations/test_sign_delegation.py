@@ -16,36 +16,25 @@
 
 """Gathering of tests related to Delegation operations."""
 
-from pathlib import Path
-
-from utils.account import Account
-from utils.backend import TezosBackend
-from utils.message import Delegation
-from utils.navigator import TezosNavigator
+from utils.message import Default, Delegation
+from .helper import Flow, Field, TestOperation, pytest_generate_tests
 
 
-def test_sign_delegation(
-        backend: TezosBackend,
-        tezos_navigator: TezosNavigator,
-        account: Account,
-        snapshot_dir: Path
-):
-    """Check signing delegation"""
+class TestDelegation(TestOperation):
+    """Commun tests."""
 
-    message = Delegation(
-        source = 'tz2KC42yW9FXFMJpkUooae2NFYQsM5do3E8H',
-        fee = 200000,
-        counter = 756,
-        gas_limit = 9,
-        storage_limit = 889,
-        delegate = 'tz1TmFPVZsGQ8MnrBJtnECJgkFUwLa6EWYDm'
-    )
+    @property
+    def op_class(self):
+        return Delegation
 
-    with backend.sign(account, message, with_hash=True) as result:
-        tezos_navigator.accept_sign(snap_path=snapshot_dir)
+    flows = [Flow('basic', delegate=Default.ED25519_PUBLIC_KEY_HASH)]
 
-    account.check_signature(
-        message=message,
-        with_hash=True,
-        data=result.value
-    )
+    fields = [
+        Field("delegate", "Delegate", [
+            Field.Case(None, "none"),
+            Field.Case('tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa', "tz1"),
+            Field.Case('tz2CJBeWWLsUDjVUDqGZL6od3DeBCNzYXrXk', "tz2"),
+            Field.Case('tz3fLwHKthqhTPK6Lar6CTXN1WbDETw1YpGB', "tz3"),
+            Field.Case('tz1Kp8NCAN5WWwvkWkMmQQXMRe68iURmoQ8w', "long-hash"),
+        ]),
+    ]
