@@ -156,19 +156,22 @@ typedef struct {
                                                   /// screen, Max 4 pairs can
                                                   /// be displayed on one
                                                   /// screen in stax.
-    uint8_t nb_pairs;                             /// Number of pairs to be displayed on the stax screen.
+    uint8_t nb_pairs;  /// Number of pairs to be displayed on the stax screen.
 #endif
 } tz_ui_stream_screen_t;
 
-#ifdef HAVE_NBGL
 /**
- * @brief Holds list of title-value pairs for the current screen on stax.
- *
+ * @brief Holds values for the current screen.
  */
 typedef struct {
+#ifdef HAVE_BAGL
+    /// Holds the elements for the current screen
+    bagl_element_t bagls[4 + TZ_SCREEN_LINES_11PX];
+#else
+    /// Holds list of title-value pairs for the current screen
     nbgl_layoutTagValueList_t list;
+#endif
 } tz_ui_stream_display_t;
-#endif  // HAVE_NBGL
 
 /**
  * @brief Holds data for current and all the history screens.
@@ -186,11 +189,8 @@ typedef struct {
     int16_t last;             // index of last screen.
     bool    full;             // true if history is full.
     bool    pressed_right;    // true if right button was pressed.
+    tz_ui_stream_display_t current_screen;  // current screen's values.
 #ifdef HAVE_NBGL
-    tz_ui_stream_display_t
-         current_screen;  // current screen's title-value pairs.
-    char verify_address[TZ_BASE58CHECK_BUFFER_SIZE(
-        20, 3)];  //  Holds the public key..
     nbgl_callback_t
         stream_cb;  // callback to be called when new screen is needed.
 #endif              // HAVE_NBGL

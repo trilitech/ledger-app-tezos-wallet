@@ -23,7 +23,7 @@
 
 /* Allow future unit tests to override */
 #ifndef UI_STRINGS
-#define UI_STRINGS &global.stream.strings
+#define UI_STRINGS &global.ui.stream.strings
 #endif
 
 #define BUFF_START ((char *)(s->buffer))
