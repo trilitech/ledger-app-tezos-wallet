@@ -27,7 +27,7 @@
 #include <os.h>
 #include <ux.h>
 
-#include "apdu.h"
+#include "get_pubkey.h"
 
 #include "compat.h"
 #include "globals.h"

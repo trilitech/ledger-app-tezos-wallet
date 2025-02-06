@@ -1,7 +1,7 @@
-/* Tezos Ledger application - Some common primitives and some command handlers
+/* Tezos Ledger application - Instruction dispatcher
 
+   Copyright 2025 Functori <contact@functori.com>
    Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
-   Copyright 2023 Trilitech <contact@trili.tech>
 
    With code excerpts from:
     - Legacy Tezos app, Copyright 2019 Obsidian Systems
@@ -19,31 +19,20 @@
    See the License for the specific language governing permissions and
    limitations under the License. */
 
-#include <io.h>
+#pragma once
 
-#include "apdu.h"
-#include "utils.h"
+#include <parser.h>
 
-const uint8_t version[4]
-    = {0 /* wallet */, MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION};
-
-void
-handle_version(void)
-{
-    FUNC_ENTER(("void"));
-
-    io_send_response_pointer((void *)&version, sizeof(version), SW_OK);
-
-    FUNC_LEAVE();
-}
-
-void
-handle_git(void)
-{
-    FUNC_ENTER(("void"));
-
-    static const char commit[] = COMMIT;
-    io_send_response_pointer((void *)commit, sizeof(commit), SW_OK);
-
-    FUNC_LEAVE();
-}
+/**
+ * @brief Read the APDU for the order and choose the next action to take.
+ *
+ * The APDU structure is defined by [ISO/IEC
+ * 7816-4](https://en.wikipedia.org/wiki/Smart_card_application_protocol_data_unit).
+ * This function ensures that the command complies with the [APDU
+ * specification for our application](app/docs/apdu.md) and, depending on the
+ * code instruction, parse the instruction parameters in order to supply them,
+ * in addition to the potential command data, to the corresponding process.
+ *
+ * @param cmd: command containg APDU received
+ */
+void dispatch(const command_t *cmd);

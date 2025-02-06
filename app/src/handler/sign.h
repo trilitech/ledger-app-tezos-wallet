@@ -24,6 +24,8 @@
 #include <unistd.h>
 #include <stdbool.h>
 
+#include <buffer.h>
+
 #include "keys.h"
 #include "parser/parser_state.h"
 
@@ -103,3 +105,31 @@ typedef struct {
         } summary;
     } u;
 } apdu_sign_state_t;
+
+/**
+ * @brief Handle signing key setup request.
+ * If successfully parse BIP32 path, set up the key as the signing key,
+ * initialize the signing state and send validation APDU response.
+ *
+ * @param cdata: data containing the BIP32 path of the key
+ * @param derivation_type: derivation_type of the key
+ * @param return_hash: whether the hash of the message is requested or not
+ */
+void handle_signing_key_setup(buffer_t         *cdata,
+                              derivation_type_t derivation_type,
+                              bool              return_hash);
+
+/**
+ * @brief Handle operation/micheline expression signature request.
+ *
+ * Parse the received command and prompt user for appropriate
+ * action. Triggers blindsigning and/or expert mode workflows based on
+ * transaction involved. Stream based parser helps decode arbitararily
+ * large transaction, screen by screen. After user validation, sign the hashed
+ * message and send an ADPU response containing the signature.
+ *
+ * @param cdata: data containing the message to sign
+ * @param last: whether the part of the message is the last one or not
+ * @param with_hash: whether the hash of the message is requested or not
+ */
+void handle_sign(buffer_t *cdata, bool last, bool return_hash);
