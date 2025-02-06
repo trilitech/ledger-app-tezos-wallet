@@ -26,7 +26,6 @@
 #include <crypto_helpers.h>
 #include <io.h>
 
-#include "apdu.h"
 #include "exception.h"
 #include "keys.h"
 #include "globals.h"
