@@ -32,8 +32,7 @@
 #define TZ_SCREEN_LINES_11PX 5
 #endif
 
-#include "apdu.h"
-#include "apdu_sign.h"
+#include "sign.h"
 #include "exception.h"
 #include "keys.h"
 #include "ui_commons.h"

@@ -370,6 +370,7 @@ class TezosAppScreen(metaclass=MetaScreen):
         else:
             self.review.back_to_safety.reject()
         if apdu:
+            self.expect_apdu_return("9000")
             self.send_apdu(apdu)
         self.assert_screen("unsafe_operation_warning_2")
         self.review.back_to_safety.reject()
