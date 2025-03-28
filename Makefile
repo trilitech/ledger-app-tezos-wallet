@@ -101,11 +101,11 @@ integration_tests_basic_%:	app_%.tgz   \
 				app_%_dbg.tgz			\
 				$(shell find tests/integration/python -type f)
 	docker run --rm -i -v "$(realpath .):/app" \
-	--entrypoint=/bin/sh ledger-app-tezos-integration-tests -c "  \
+	--entrypoint=/bin/bash ledger-app-tezos-integration-tests -c "  \
 		TMP_DIR=\$$(mktemp -d /tmp/foo-XXXXXX);                   \
 		cd /app;                                                  \
 		tar xfz app_$*_dbg.tgz -C \$$TMP_DIR;                     \
-		apk add gmp-dev curl jq libsodium-dev git xxd procps;     \
+		apt install -y libsodium-dev;     \
 		python3 -m venv tezos_test_env --system-site-package;     \
 		source ./tezos_test_env/bin/activate;                     \
 		python3 -m pip install --upgrade pip -q;                  \
