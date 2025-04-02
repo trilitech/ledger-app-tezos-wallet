@@ -296,7 +296,7 @@ check_tlv_signature() {
         exit 1
     fi
     result="$(jq -r .data < $APDU)"
-    $(dirname $0)/nano/utils/check_tlv_signature.py $@ $result
+    $(dirname $0)/check_tlv_signature.py $@ $result
     res=$?
     set -e
     if [ "$res" != 0 ] ; then

@@ -108,7 +108,7 @@ via the Makefile:
 
 ```
 :; ./tests/integration/run_test_docker.sh nanos app_nanos_dbg.tgz \
-                                                tests/integration/nanos
+                                                tests/integration/python
 ```
 
 There is also `run_test_local.sh` which should perform in a similar
@@ -126,13 +126,11 @@ Both of these commands take the following arguments:
 -x
 : executes the tests with shell tracing (-x)
 
-Basic tests rely on gold-images, rather than OCR. They are stored under [nano/snapshots](./tests/integration/nano/snapshots) and [touch/snapshots](./tests/integration/touch/snapshots).
+Basic tests rely on gold-images, rather than OCR. They are stored under [snapshots](./tests/integration/python/snapshots).
 
 To generate/reset the snapshots, you can do so for individual tests.
 
-### Nano
-
-#### Preparation
+### Preparation
 
 First, start a container for running individual tests:
 
@@ -151,12 +149,12 @@ Before running the test, build the nano app you want to test, for example the na
 make app_nanox_dbg.tgz
 ```
 
-#### Running
+### Running
 
 You can run an individual test from the test container. You should see the app progress on the vnc viewer.
 
 ```sh
-pytest tests/integration/nano/<test_name>.py \
+pytest tests/integration/python/<test_name>.py \
    --device $DEVICE \
    --port $PORT \
    --speculos-args="--vnc-port 41000" \
@@ -165,55 +163,7 @@ pytest tests/integration/nano/<test_name>.py \
 
 #### Setting goldimages
 
-You can reset/set goldimages using the `--golden-run` option:
-
-You will be requested to press enter to take snapshots in term.
-**NB** make sure that the screen has updated to the screen you want to snapshot each time. It's also a good idea to
-re-run the test normally afterwards, to ensure the snapshots have been set correctly.
-
-### STAX/FLEX
-
-#### Preparation
-
-First start the app in a terminal using following command:
-
-```sh
-make app_stax_dbg.tgz
-TARGET=stax ./scripts/run_app.sh
-```
-You should be able to see the stax display on your screen.
-
-Open a new terminal for running tests, run following commands to setup test environment
-
-```sh
-$ docker exec -it ledger-app-tezos-integration-tests bash;
-<docker>$ export PORT=5000
-<docker>$ . tests/integration/app_vars.sh
-```
-
-#### Running
-
-You can run an individual test from the test container. You should see the app progress on the display.
-
-```sh
-./tests/integration/touch/<test_name>.py
-```
-
-#### Setting goldimages
-
-You can reset/set goldimages using the following:
-
-```sh
-GOLDEN=1 ./tests/integration/touch/<test_name>.py
-```
-
-If you are resetting goldimages for multiple tests, you can also use `export NOQUIT=1` to keep the app
-open at the end of a test.
-
-
-You will be requested to press enter to take each snapshot in term.
-**NB** make sure that the screen has updated to the screen you want to snapshot each time. It's also a good idea to
-re-run the test normally afterwards, to ensure the snapshots have been set correctly.
+You can reset/set goldimages using the `--golden-run` option
 
 ## Swap test
 
@@ -263,5 +213,5 @@ The version of the app must be updated after every change. Following files need 
 with a new version
 1. app/Makefile
 2. tests/integration/app_vars.sh
-3. tests/integration/nano/utils/app.py
+3. tests/integration/python/version.py
 4. the snapshots (nano and touch)

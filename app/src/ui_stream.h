@@ -289,6 +289,12 @@ void tz_reject(void);
  *
  */
 void tz_reject_ui(void);
+
+/**
+ * @brief Display a warning error screen that leads to blindsigning.
+ *
+ */
+void switch_to_blindsigning_on_error(void);
 #endif
 
 void drop_last_screen(void);

@@ -378,7 +378,7 @@ refill_error(void)
     global.blindsign_reason = REASON_PARSING_ERROR;
     strncpy(global.error_code, tz_parser_result_name(st->errno), ERROR_CODE_SIZE);
     if(global.step == ST_SUMMARY_SIGN) {
-        pass_from_summary_to_blind();
+        switch_to_blindsigning_on_error();
         TZ_SUCCEED();
     }
     else if(global.step == ST_CLEAR_SIGN){
@@ -524,8 +524,18 @@ stream_cb(tz_ui_cb_type_t cb_type)
     case TZ_UI_STREAM_CB_REJECT:           send_reject(EXC_REJECT);                break;
     case TZ_UI_STREAM_CB_BLINDSIGN_REJECT: send_reject(EXC_PARSE_ERROR);           break;
     case TZ_UI_STREAM_CB_CANCEL:           TZ_CHECK(send_cancel());                break;
+#ifdef HAVE_BAGL
     case TZ_UI_STREAM_CB_BLINDSIGN:        TZ_CHECK(pass_from_clear_to_blind());   break;
-#ifdef HAVE_NBGL
+#else  // HAVE_NBGL
+    case TZ_UI_STREAM_CB_BLINDSIGN:
+        if (global.step == ST_CLEAR_SIGN) {
+            TZ_CHECK(pass_from_clear_to_blind());
+        } else if (global.step == ST_SUMMARY_SIGN) {
+            TZ_CHECK(pass_from_summary_to_blind());
+        } else {
+            TZ_FAIL(EXC_UNEXPECTED_STATE);
+        }
+        break;
     case TZ_UI_STREAM_CB_SUMMARY:          TZ_CHECK(pass_from_clear_to_summary()); break;
 #endif
     default: TZ_FAIL(EXC_UNKNOWN);                                                 break;
@@ -929,7 +939,7 @@ pass_from_summary_to_blind(void)
 {
     TZ_PREAMBLE(("void"));
 
-    TZ_ASSERT(global.step == ST_SUMMARY_SIGN, EXC_UNEXPECTED_STATE);
+    TZ_ASSERT(EXC_UNEXPECTED_STATE, global.step == ST_SUMMARY_SIGN);
 
     global.step                        = ST_BLIND_SIGN;
     global.keys.apdu.sign.step         = SIGN_ST_WAIT_DATA;
@@ -1088,6 +1098,10 @@ static void
 handle_data_apdu_blind(void)
 {
     TZ_PREAMBLE(("void"));
+
+    if (global.keys.apdu.sign.u.clear.received_msg) {
+        global.keys.apdu.sign.u.clear.received_msg = false;
+    }
 
     if (!global.keys.apdu.sign.received_last_msg) {
         io_send_sw(SW_OK);

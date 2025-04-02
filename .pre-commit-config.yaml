@@ -26,5 +26,5 @@ repos:
         entry: pylint
         language: system
         pass_filenames: false
-        args: ["--errors-only", "--rcfile=tests/integration/.pylintrc", "tests/integration/nano/"]
+        args: ["--errors-only", "--rcfile=tests/integration/.pylintrc", "tests/integration/python/"]
         types: [python]
