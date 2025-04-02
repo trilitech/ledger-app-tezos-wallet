@@ -47,6 +47,9 @@ class Message(ABC):
     def __bytes__(self) -> bytes:
         raise NotImplementedError
 
+    def __str__(self) -> str:
+        return bytes(self).hex()
+
 class RawMessage(Message):
     """Class representing a raw message."""
 

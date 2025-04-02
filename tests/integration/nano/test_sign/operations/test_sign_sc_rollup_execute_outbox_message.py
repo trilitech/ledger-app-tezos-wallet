@@ -18,13 +18,21 @@
 
 from pathlib import Path
 
-from utils.app import TezosAppScreen, DEFAULT_ACCOUNT
+from utils.account import Account
+from utils.backend import TezosBackend
 from utils.message import ScRollupExecuteOutboxMessage
+from utils.navigator import TezosNavigator
 
-def test_sign_sc_rollup_execute_outbox_message(app: TezosAppScreen, snapshot_dir: Path):
+
+def test_sign_sc_rollup_execute_outbox_message(
+        backend: TezosBackend,
+        tezos_navigator: TezosNavigator,
+        account: Account,
+        snapshot_dir: Path
+):
     """Check signing smart rollup execute outbox message"""
 
-    app.setup_expert_mode()
+    tezos_navigator.toggle_expert_mode()
 
     message = ScRollupExecuteOutboxMessage(
         source = 'tz1ixvCiPJYyMjsp2nKBVaq54f6AdbV8hCKa',
@@ -37,15 +45,11 @@ def test_sign_sc_rollup_execute_outbox_message(app: TezosAppScreen, snapshot_dir
         output_proof = b'9f09f2952d34528c733f94615cfc39bc555619fc550dd4a67ba2208ce8e867aa3d13a6ef99dfbe32c6974aa9a2150d21eca29c3349e59c13b9081f1c11b440ac4d3455dedbe4ee0de15a8af620d4c86247d9d132de1bb6da23d5ff9d8dffda22ba9a84'
     )
 
-    data = app.sign(DEFAULT_ACCOUNT,
-                    message,
-                    with_hash=True,
-                    path=snapshot_dir)
+    with backend.sign(account, message, with_hash=True) as result:
+        tezos_navigator.accept_sign(snap_path=snapshot_dir)
 
-    app.checker.check_signature(
-        account=DEFAULT_ACCOUNT,
+    account.check_signature(
         message=message,
         with_hash=True,
-        data=data)
-
-    app.quit()
+        data=result.value
+    )

@@ -20,19 +20,27 @@ from pathlib import Path
 
 from conftest import requires_device
 
-from utils.app import Screen, TezosAppScreen, DEFAULT_ACCOUNT
+from utils.account import Account
+from utils.backend import TezosBackend
 from utils.message import (
     OperationGroup,
     Origination,
     Transaction,
     TransferTicket
 )
+from utils.navigator import TezosNavigator
+
 
 @requires_device("nanos")
-def test_nanos_regression_batched_ops(app: TezosAppScreen, snapshot_dir: Path):
+def test_nanos_regression_batched_ops(
+        backend: TezosBackend,
+        tezos_navigator: TezosNavigator,
+        account: Account,
+        snapshot_dir: Path
+):
     """Check signing batch operation"""
 
-    app.setup_expert_mode()
+    tezos_navigator.toggle_expert_mode()
 
     message = OperationGroup([
         Transaction(
@@ -57,24 +65,25 @@ def test_nanos_regression_batched_ops(app: TezosAppScreen, snapshot_dir: Path):
         )
     ])
 
-    data = app.sign(DEFAULT_ACCOUNT,
-                    message,
-                    with_hash=True,
-                    path=snapshot_dir)
+    with backend.sign(account, message, with_hash=True) as result:
+        tezos_navigator.accept_sign(snap_path=snapshot_dir)
 
-    app.checker.check_signature(
-        account=DEFAULT_ACCOUNT,
+    account.check_signature(
         message=message,
         with_hash=True,
-        data=data)
-
-    app.quit()
+        data=result.value
+    )
 
 @requires_device("nanox")
-def test_nanox_regression_batched_ops(app: TezosAppScreen, snapshot_dir: Path):
+def test_nanox_regression_batched_ops(
+        backend: TezosBackend,
+        tezos_navigator: TezosNavigator,
+        account: Account,
+        snapshot_dir: Path
+):
     """Check signing batch operation"""
 
-    app.setup_expert_mode()
+    tezos_navigator.toggle_expert_mode()
 
     message = OperationGroup([
         Transaction(
@@ -99,24 +108,24 @@ def test_nanox_regression_batched_ops(app: TezosAppScreen, snapshot_dir: Path):
         )
     ])
 
-    data = app.sign(DEFAULT_ACCOUNT,
-                    message,
-                    with_hash=True,
-                    path=snapshot_dir)
+    with backend.sign(account, message, with_hash=True) as result:
+        tezos_navigator.accept_sign(snap_path=snapshot_dir)
 
-    app.checker.check_signature(
-        account=DEFAULT_ACCOUNT,
+    account.check_signature(
         message=message,
         with_hash=True,
-        data=data)
+        data=result.value
+    )
 
-    app.quit()
-
-def test_sign_complex_operation(app: TezosAppScreen, snapshot_dir: Path):
+def test_sign_complex_operation(
+        backend: TezosBackend,
+        tezos_navigator: TezosNavigator,
+        account: Account,
+        snapshot_dir: Path
+):
     """Check signing complex operation"""
 
-    app.assert_screen(Screen.HOME)
-    app.setup_expert_mode()
+    tezos_navigator.toggle_expert_mode()
 
     message = OperationGroup([
         Origination(
@@ -143,15 +152,11 @@ def test_sign_complex_operation(app: TezosAppScreen, snapshot_dir: Path):
         )
     ])
 
-    data = app.sign(DEFAULT_ACCOUNT,
-                    message,
-                    with_hash=True,
-                    path=snapshot_dir)
+    with backend.sign(account, message, with_hash=True) as result:
+        tezos_navigator.accept_sign(snap_path=snapshot_dir)
 
-    app.checker.check_signature(
-        account=DEFAULT_ACCOUNT,
+    account.check_signature(
         message=message,
         with_hash=True,
-        data=data)
-
-    app.quit()
+        data=result.value
+    )
