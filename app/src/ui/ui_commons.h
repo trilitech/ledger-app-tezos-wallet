@@ -21,21 +21,32 @@
 
 #pragma once
 
-#ifdef HAVE_BAGL
 #include <os.h>
 #include <os_io_seproxyhal.h>
 #include <ux.h>
+
+/**
+ * @brief Callback for flow confirmation/rejection.
+ *
+ * @param confirm: whether the user accept or reject
+ */
+typedef void (*action_validate_cb)(bool confirm);
+
+#ifdef HAVE_BAGL
+
 /**
  * @brief Macro to display navigation icons and set associated callback.
  *
  */
-#define DISPLAY(elts, cb, len)                                              \
-    memcpy(global.ux.bagls, elts, len * sizeof(bagl_element_t));            \
-    G_ux.stack[0].element_arrays[0].element_array        = global.ux.bagls; \
-    G_ux.stack[0].element_arrays[0].element_array_count  = len;             \
-    G_ux.stack[0].button_push_callback                   = cb;              \
-    G_ux.stack[0].screen_before_element_display_callback = NULL;            \
-    UX_WAKE_UP();                                                           \
+#define DISPLAY(elts, cb, len)                                   \
+    memcpy(global.ui.stream.current_screen.bagls, elts,          \
+           len * sizeof(bagl_element_t));                        \
+    G_ux.stack[0].element_arrays[0].element_array                \
+        = global.ui.stream.current_screen.bagls;                 \
+    G_ux.stack[0].element_arrays[0].element_array_count  = len;  \
+    G_ux.stack[0].button_push_callback                   = cb;   \
+    G_ux.stack[0].screen_before_element_display_callback = NULL; \
+    UX_WAKE_UP();                                                \
     UX_REDISPLAY();
 
 #define REGULAR BAGL_FONT_OPEN_SANS_REGULAR_11px | BAGL_FONT_ALIGNMENT_CENTER

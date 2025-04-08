@@ -1,5 +1,6 @@
-/* Tezos Ledger application - Some common primitives and some command handlers
+/* Tezos Ledger application - Handler for getting git commit
 
+   Copyright 2025 Functori <contact@functori.com>
    Copyright 2023 Nomadic Labs <contact@nomadic-labs.com>
    Copyright 2023 Trilitech <contact@trili.tech>
 
@@ -19,42 +20,20 @@
    See the License for the specific language governing permissions and
    limitations under the License. */
 
-#include <parser.h>
 #include <io.h>
 
-#include "apdu.h"
-#include "globals.h"
+#include "get_git_commit.h"
 
-const uint8_t version[4]
-    = {0 /* wallet */, MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION};
-
-void
-handle_unimplemented(__attribute__((unused)) command_t *cmd)
-{
-    TZ_PREAMBLE(("cmd=0x%p", cmd));
-
-    PRINTF("[ERROR] Unimplemented instruction 0x%02x\n", cmd->ins);
-    TZ_FAIL(EXC_INVALID_INS);
-    TZ_POSTAMBLE;
-}
+#include "exception.h"
+#include "utils.h"
 
 void
-handle_apdu_version(__attribute__((unused)) command_t *cmd)
+handle_get_git_commit(void)
 {
-    TZ_PREAMBLE(("cmd=0x%p", cmd));
+    FUNC_ENTER(("void"));
 
-    TZ_ASSERT(EXC_UNEXPECTED_STATE, global.step == ST_IDLE);
-    io_send_response_pointer((void *)&version, sizeof(version), SW_OK);
-    TZ_POSTAMBLE;
-}
-
-void
-handle_apdu_git(__attribute__((unused)) command_t *cmd)
-{
     static const char commit[] = COMMIT;
-    TZ_PREAMBLE(("cmd=0x%p", cmd));
-
-    TZ_ASSERT(EXC_UNEXPECTED_STATE, global.step == ST_IDLE);
     io_send_response_pointer((void *)commit, sizeof(commit), SW_OK);
-    TZ_POSTAMBLE;
+
+    FUNC_LEAVE();
 }

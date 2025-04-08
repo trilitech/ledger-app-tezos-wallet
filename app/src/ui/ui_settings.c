@@ -22,6 +22,8 @@
 #ifdef HAVE_BAGL
 #include "globals.h"
 
+#define G_settings global.ui.settings
+
 static void
 expert_mode_toggle()
 {
@@ -41,9 +43,9 @@ blindsign_toggle()
 }
 
 UX_STEP_CB(ux_expert_mode_step, bn, expert_mode_toggle(),
-           {"Expert mode", global.expert_mode_state});
+           {"Expert mode", G_settings.expert_mode_state});
 UX_STEP_CB(ux_blindsign_step, bn, blindsign_toggle(),
-           {"Allow Blindsigning", global.blindsign_state_desc});
+           {"Allow Blindsigning", G_settings.blindsign_state_desc});
 UX_STEP_CB(ux_back_step, pb, ui_home_init(), {&C_icon_back, "Back"});
 
 UX_FLOW(ux_expert_mode_flow, &ux_expert_mode_step, &ux_blindsign_step,
@@ -56,19 +58,19 @@ ui_settings_init(int16_t page)
                 N_settings.expert_mode, N_settings.blindsigning));
 
     if (N_settings.expert_mode) {
-        strncpy(global.expert_mode_state, "ENABLED",
-                sizeof(global.expert_mode_state));
+        strncpy(G_settings.expert_mode_state, "ENABLED",
+                sizeof(G_settings.expert_mode_state));
     } else {
-        strncpy(global.expert_mode_state, "DISABLED",
-                sizeof(global.expert_mode_state));
+        strncpy(G_settings.expert_mode_state, "DISABLED",
+                sizeof(G_settings.expert_mode_state));
     }
 
     if (N_settings.blindsigning) {
-        strncpy(global.blindsign_state_desc, "ON",
-                sizeof(global.blindsign_state_desc));
+        strncpy(G_settings.blindsign_state_desc, "ON",
+                sizeof(G_settings.blindsign_state_desc));
     } else {
-        strncpy(global.blindsign_state_desc, "OFF",
-                sizeof(global.blindsign_state_desc));
+        strncpy(G_settings.blindsign_state_desc, "OFF",
+                sizeof(G_settings.blindsign_state_desc));
     }
 
     if (page == SETTINGS_HOME_PAGE) {
