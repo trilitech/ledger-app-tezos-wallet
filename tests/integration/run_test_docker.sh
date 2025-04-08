@@ -29,8 +29,8 @@ docker run --rm -it -v "$(realpath .):/app"              	\
        -e APPVERSION_P=$APPVERSION_P                    \
        -e APPVERSION=$APPVERSION                        \
        -e VERSION_BYTES=$VERSION_BYTES                  \
-    --entrypoint=/bin/sh ledger-app-tezos-integration-tests	   \
-    -c " apk add gmp-dev curl jq libsodium-dev git xxd procps; \
+    --entrypoint=/bin/bash ledger-app-tezos-integration-tests	   \
+    -c " apt install -y libsodium-dev; \
 		python3 -m venv tezos_test_env --system-site-package;      \
 		source ./tezos_test_env/bin/activate;                      \
 		python3 -m pip install --upgrade pip -q;    \
