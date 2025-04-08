@@ -86,14 +86,14 @@ jobs:
             ./tests/integration/run_test_local.sh -F -m ${{ matrix.device }} \
               ./tests/integration/touch
           else
-            apk add gmp-dev curl jq libsodium-dev git xxd procps
+            apt install -y libsodium-dev
             python3 -m venv tezos_test_env --system-site-package
-            source ./tezos_test_env/bin/activate
+            . ./tezos_test_env/bin/activate
             python3 -m pip install --upgrade pip -q
             python3 -m pip install -r ./tests/requirements.txt -q
             TMP_DIR=$(mktemp -d /tmp/foo-XXXXXX)
             tar xfz app_${{ matrix.device }}_dbg.tgz -C $TMP_DIR
-            python3 -m pytest -n 32 tests/integration/nano/ --tb=no                \
+            python3 -m pytest -n 32 tests/integration/python/ --tb=no   \
                    --device ${{ matrix.device }} --app $TMP_DIR/app.elf \
                    --log-dir integration_tests_log
           fi
@@ -190,9 +190,9 @@ jobs:
 
       - name: Test
         run: |
-            apk add gmp-dev curl jq libsodium-dev git xxd procps
+            apt install -y libsodium-dev
             python3 -m venv tezos_test_env --system-site-package
-            source ./tezos_test_env/bin/activate
+            . ./tezos_test_env/bin/activate
             python3 -m pip install --upgrade pip -q
             python3 -m pip install -r ./tests/requirements.txt -q
             ./tests/integration/run_test_local.sh -T100 -F -m ${{ matrix.device }} tests

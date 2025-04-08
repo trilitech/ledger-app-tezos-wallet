@@ -103,7 +103,8 @@ void
 switch_to_blindsigning_on_error(void)
 {
     TZ_PREAMBLE(("void"));
-    TZ_ASSERT(EXC_UNEXPECTED_STATE, global.step == ST_CLEAR_SIGN);
+    TZ_ASSERT(EXC_UNEXPECTED_STATE, (global.step == ST_CLEAR_SIGN)
+                                        || (global.step == ST_SUMMARY_SIGN));
     global.keys.apdu.sign.step = SIGN_ST_WAIT_USER_INPUT;
 
     // copy error code
@@ -350,34 +351,34 @@ tz_ui_nav_cb(void)
     } else if (s->total >= 0) {
         if (s->current < s->total) {
             s->current++;
-        }
 
-        size_t bucket = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
+            size_t bucket = s->current % TZ_UI_STREAM_HISTORY_SCREENS;
 
-        switch (tz_ui_stream_get_cb_type()) {
-        case TZ_UI_STREAM_CB_CANCEL:
-            switch_to_blindsigning_on_error();
-            result = false;
-            break;
-        case TZ_UI_STREAM_CB_EXPERT_MODE_ENABLE:
-            tz_enable_expert_mode_ui();
-            result = false;
-            break;
-        case TZ_UI_STREAM_CB_EXPERT_MODE_FIELD:
-            expert_mode_splash();
-            s->current--;
-            s->screens[bucket].cb_type = TZ_UI_STREAM_CB_NOCB;
-            result                     = false;
-            break;
-        default:
-            c->list.pairs             = s->screens[bucket].pairs;
-            c->list.callback          = NULL;
-            c->list.startIndex        = 0;
-            c->list.nbPairs           = s->screens[bucket].nb_pairs;
-            c->list.smallCaseForValue = false;
-            c->list.wrapping          = true;
-            result                    = true;
-            break;
+            switch (tz_ui_stream_get_cb_type()) {
+            case TZ_UI_STREAM_CB_CANCEL:
+                switch_to_blindsigning_on_error();
+                result = false;
+                break;
+            case TZ_UI_STREAM_CB_EXPERT_MODE_ENABLE:
+                tz_enable_expert_mode_ui();
+                result = false;
+                break;
+            case TZ_UI_STREAM_CB_EXPERT_MODE_FIELD:
+                expert_mode_splash();
+                s->current--;
+                s->screens[bucket].cb_type = TZ_UI_STREAM_CB_NOCB;
+                result                     = false;
+                break;
+            default:
+                c->list.pairs             = s->screens[bucket].pairs;
+                c->list.callback          = NULL;
+                c->list.startIndex        = 0;
+                c->list.nbPairs           = s->screens[bucket].nb_pairs;
+                c->list.smallCaseForValue = false;
+                c->list.wrapping          = true;
+                result                    = true;
+                break;
+            }
         }
     }
 
@@ -441,7 +442,16 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
          || (cb_type == TZ_UI_STREAM_CB_EXPERT_MODE_FIELD))
         && (idx > 0)) {
         PRINTF("[DEBUG] PUSH_TO_NEXT: %x\n", cb_type);
-        push_to_next = true;
+        s->total++;
+        if ((s->total % TZ_UI_STREAM_HISTORY_SCREENS)
+            == (s->last % TZ_UI_STREAM_HISTORY_SCREENS)) {
+            drop_last_screen();
+        }
+        offset = tz_ui_stream_pushl(cb_type, title, value, max, layout_type,
+                                    icon);
+        push_to_next = false;
+        // Will be update later
+        s->screens[bucket].nb_pairs--;
     } else {
         /* Are we continuing to construct or starting from scratch? */
         if (idx == NB_MAX_DISPLAYED_PAIRS_IN_REVIEW) {
@@ -472,6 +482,12 @@ tz_ui_stream_pushl(tz_ui_cb_type_t cb_type, const char *title,
             bool can_fit = false;
             ui_strings_can_fit(length, &can_fit);
             if (!can_fit) {
+                // The lasts item belong to the current screen: We can not
+                // drop, we need to push to the next screen
+                if (s->last == s->total + 1) {
+                    s->total++;
+                    return 0;
+                }
                 drop_last_screen();
             }
 

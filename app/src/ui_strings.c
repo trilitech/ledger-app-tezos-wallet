@@ -62,8 +62,8 @@ ui_strings_init(void)
 /* @param len: we want to a string s of strlen(s) == len
    @param write_start: this is where we'll start writing this string in the
    buffer
-   @return out_len: this is the length of the string we can fit. out_len <=
-   len
+   @return out_len: this is the length of the string we can fit
+   including the NUL terminating char. out_len <= len
 */
 size_t
 ui_strings_fit_up_to(size_t len, char **write_start)
@@ -75,7 +75,6 @@ ui_strings_fit_up_to(size_t len, char **write_start)
 
     /* Preconditions */
     TZ_ASSERT(EXC_MEMORY_ERROR, (*write_start == NULL));
-    TZ_ASSERT(EXC_MEMORY_ERROR, (len > 0));
     /* Internal checks */
     TZ_ASSERT(EXC_MEMORY_ERROR, (s->end <= s->internal_end));
 
@@ -83,7 +82,7 @@ ui_strings_fit_up_to(size_t len, char **write_start)
         TZ_ASSERT(EXC_MEMORY_ERROR, (len < BUFF_LEN));
 
         *write_start = s->start;
-        out_len      = len;
+        out_len      = len + 1;
 
         TZ_SUCCEED();
     }
@@ -92,20 +91,12 @@ ui_strings_fit_up_to(size_t len, char **write_start)
 
     if (s->start > s->end) {
         *write_start = s->end;
-        out_len      = MIN((size_t)(s->start - 1 - s->end), len);
+        out_len      = MIN((size_t)(s->start - s->end), len + 1);
     } else if (s->start < s->end) {
         /* start < end */
         size_t chars_at_start = MIN((size_t)(s->start - BUFF_START), len + 1);
-        if (chars_at_start > 0) {
-            chars_at_start--;
-        }
-
-        size_t chars_at_end = MIN((size_t)(BUFF_END - s->end), len + 1);
-        if (chars_at_end > 0) {
-            chars_at_end--;
-        }
-
-        if ((chars_at_end == len) || (chars_at_end >= chars_at_start)) {
+        size_t chars_at_end   = MIN((size_t)(BUFF_END - s->end), len + 1);
+        if ((chars_at_end == len + 1) || (chars_at_end >= chars_at_start)) {
             *write_start = s->end;
             out_len      = chars_at_end;
         } else {
@@ -129,7 +120,7 @@ ui_strings_can_fit(size_t len, bool *can_fit)
 
     TZ_CHECK(out_len = ui_strings_fit_up_to(len, &ws));
 
-    *can_fit = (out_len == len);
+    *can_fit = (out_len == len + 1);
 
     TZ_POSTAMBLE;
 }
@@ -146,7 +137,6 @@ ui_strings_push(const char *in, size_t len, char **out)
     PRINTF("[DEBUG] in = %p, out = %p\n", in, *out);
     TZ_ASSERT(EXC_MEMORY_ERROR, (*out == NULL));
     TZ_ASSERT_NOTNULL(in);
-    TZ_ASSERT(EXC_MEMORY_ERROR, (len > 0));
     /* Internal checks */
     TZ_ASSERT(EXC_MEMORY_ERROR, (s->end <= s->internal_end));
 
@@ -154,9 +144,10 @@ ui_strings_push(const char *in, size_t len, char **out)
     size_t out_len;
     TZ_CHECK(out_len = ui_strings_fit_up_to(len, &ws));
     PRINTF("[DEBUG] Found space from %p to %p (for %d chars)\n", ws,
-           ws + out_len, out_len);
+           ws + out_len - 1, out_len - 1);
 
-    TZ_ASSERT(EXC_MEMORY_ERROR, (out_len == len));
+    TZ_ASSERT(EXC_MEMORY_ERROR, (out_len - 1 == len));
+    TZ_ASSERT(EXC_MEMORY_ERROR, ws != NULL);
 
     strlcpy(ws, in, len + 1);
     s->count++;
@@ -189,7 +180,6 @@ ui_strings_drop(char **in)
     TZ_ASSERT(EXC_MEMORY_ERROR, (s->end <= s->internal_end));
 
     size_t len = strlen(*in);
-    TZ_ASSERT(EXC_MEMORY_ERROR, (len > 0));
 
     char *new = *in + len + 1;
     TZ_ASSERT(EXC_MEMORY_ERROR, (new <= s->internal_end));
@@ -200,7 +190,6 @@ ui_strings_drop(char **in)
     s->count--;
 
     if (new < s->internal_end) {
-        TZ_ASSERT(EXC_MEMORY_ERROR, (*new != '\0'));
         s->start = new;
         TZ_SUCCEED();
     }
@@ -232,7 +221,6 @@ ui_strings_drop_last(char **in)
     TZ_ASSERT_NOTNULL(*in);
 
     size_t len = strlen(*in);
-    TZ_ASSERT(EXC_MEMORY_ERROR, (len > 0));
     TZ_ASSERT(EXC_MEMORY_ERROR, (!ui_strings_is_empty()));
     TZ_ASSERT(EXC_MEMORY_ERROR, ((*in + len) == (s->end - 1)));
     /* Internal checks */
