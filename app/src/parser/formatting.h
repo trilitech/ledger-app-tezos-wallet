@@ -357,3 +357,17 @@ int tz_format_address(const uint8_t *ibuf, size_t ilen, char *obuf,
  * @return int: 0 on success
  */
 int tz_format_pk(const uint8_t *ibuf, size_t ilen, char *obuf, size_t olen);
+
+/**
+ * @brief Get the signature format
+ *
+ *        size 64: sig(96)
+ *        size 96: BLsig(142)
+ *
+ * @param ibuf: input buffer
+ * @param ilen: length of the input buffer
+ * @param obuf: output buffer
+ * @param olen: length of the output buffer
+ * @return int: 0 on success
+ */
+int tz_format_sig(const uint8_t *ibuf, size_t ilen, char *obuf, size_t olen);
