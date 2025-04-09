@@ -144,7 +144,7 @@ let sign ppf ~signer:Apdu.Signer.({ sk; pk; _ } as signer) ~watermark bin =
   in
   send_async_apdus ppf async_apdus
 
-open Tezos_protocol_018_Proxford
+open Tezos_protocol_022_PsRiotum
 open Tezos_micheline
 
 let rec pp_node ~wrap ppf (node : Protocol.Script_repr.node) =
@@ -228,7 +228,7 @@ let operation_to_screens
         [
           make_screen ~title:operation_index "%s" kind;
           make_screen ~title:"Source" "%a"
-            Tezos_crypto.Signature.Public_key_hash.pp source;
+            Environment.Signature.Public_key_hash.pp source;
           make_screen ~title:"Fee" "%a" pp_tz fee;
           make_screen ~title:"Storage limit" "%s" (Z.to_string storage_limit);
         ]
@@ -240,7 +240,7 @@ let operation_to_screens
         aux ~kind:"Delegation"
           [
             make_screen ~title:"Delegate" "%a"
-              (pp_opt_field Tezos_crypto.Signature.Public_key_hash.pp)
+              (pp_opt_field Environment.Signature.Public_key_hash.pp)
               public_key_hash_opt;
           ]
     | Increase_paid_storage { amount_in_bytes; destination } ->
@@ -255,7 +255,7 @@ let operation_to_screens
         @@ [
              make_screen ~title:"Balance" "%a" pp_tz credit;
              make_screen ~title:"Delegate" "%a"
-               (pp_opt_field Tezos_crypto.Signature.Public_key_hash.pp)
+               (pp_opt_field Environment.Signature.Public_key_hash.pp)
                delegate;
            ]
         @ first_expert_mode_screen "Code"
@@ -271,7 +271,7 @@ let operation_to_screens
         aux ~kind:"Reveal"
           [
             make_screen ~title:"Public key" "%a"
-              Tezos_crypto.Signature.Public_key.pp public_key;
+              Environment.Signature.Public_key.pp public_key;
           ]
     | Set_deposits_limit tez_opt ->
         aux ~kind:"Set deposit limit"
@@ -308,11 +308,11 @@ let operation_to_screens
             make_screen ~title:"Destination" "%a" Contract.pp destination;
             make_screen ~title:"Entrypoint" "%a" Entrypoint.pp entrypoint;
           ]
-    | Update_consensus_key public_key ->
+    | Update_consensus_key { public_key; _ } ->
         aux ~kind:"Set consensus key"
           [
             make_screen ~title:"Public key" "%a"
-              Tezos_crypto.Signature.Public_key.pp public_key;
+              Environment.Signature.Public_key.pp public_key;
           ]
     | Sc_rollup_add_messages { messages } ->
         aux ~kind:"SR: send messages"
@@ -335,7 +335,7 @@ let operation_to_screens
           | None | Some [] -> []
           | Some whitelist ->
               make_screens ~title:"Whitelist"
-                Tezos_crypto.Signature.Public_key_hash.pp whitelist
+                Environment.Signature.Public_key_hash.pp whitelist
         in
         aux ~kind:"SR: originate"
         @@ [ make_screen ~title:"Kind" "%a" Sc_rollup.Kind.pp kind ]
@@ -359,7 +359,7 @@ let operation_to_screens
         aux ~kind:"Proposals"
           ([
              make_screen ~title:"Source" "%a"
-               Tezos_crypto.Signature.Public_key_hash.pp source;
+               Environment.Signature.Public_key_hash.pp source;
              make_screen ~title:"Period" "%ld" period;
            ]
           @ make_screens ~title:"Proposal" Tezos_crypto.Hashed.Protocol_hash.pp
@@ -368,7 +368,7 @@ let operation_to_screens
         aux ~kind:"Ballot"
           [
             make_screen ~title:"Source" "%a"
-              Tezos_crypto.Signature.Public_key_hash.pp source;
+              Environment.Signature.Public_key_hash.pp source;
             make_screen ~title:"Period" "%ld" period;
             make_screen ~title:"Proposal" "%a"
               Tezos_crypto.Hashed.Protocol_hash.pp proposal;
@@ -378,12 +378,12 @@ let operation_to_screens
   in
   let rec screen_of_operations : type t. int -> t contents_list -> screen list =
    fun n -> function
-    | Single (Manager_operation _ as m) -> screen_of_manager n m
-    | Cons ((Manager_operation _ as m), rest) ->
-        let screen_of_manager = screen_of_manager n m in
-        let screen_of_operations = screen_of_operations (succ n) rest in
-        screen_of_manager @ screen_of_operations
-    | Single op -> screen_of_operation op
+     | Single (Manager_operation _ as m) -> screen_of_manager n m
+     | Cons ((Manager_operation _ as m), rest) ->
+         let screen_of_manager = screen_of_manager n m in
+         let screen_of_operations = screen_of_operations (succ n) rest in
+         screen_of_manager @ screen_of_operations
+     | Single op -> screen_of_operation op
   in
   screen_of_operations 0 contents
 

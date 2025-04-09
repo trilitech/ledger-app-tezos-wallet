@@ -1,4 +1,4 @@
 (executable
         (name generate)
-        (libraries "octez-protocol-018-Proxford-libs.client"
-                   "tezos-benchmarks-proto-018-Proxford"))
+        (libraries "octez-protocol-022-PsRiotum-libs.client"
+                   "tezos-benchmarks-proto-022-PsRiotum"))
