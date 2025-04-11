@@ -1,22 +1,47 @@
-FROM   ocaml/opam:alpine-3.18-ocaml-4.14
+FROM   ocaml/opam:alpine-3.18-ocaml-5.2
 
 RUN    sudo cp /usr/bin/opam-2.1 /usr/bin/opam;                                         \
        opam remote add opam https://opam.ocaml.org;                                     \
-       RUSTUP_TOOLCHAIN=1.71.1;                                                         \
-       OCTEZ_VERSION=19.1;                                                              \
+       RUSTUP_TOOLCHAIN=1.77.2;                                                         \
+       OCTEZ_VERSION=22.0;                                                              \
        OCTEZ_REPO=https://gitlab.com/tezos/tezos.git;                                   \
-       OCTEZ_COMMIT=`git ls-remote $OCTEZ_REPO v$OCTEZ_VERSION | cut -f 1`;             \
+       OCTEZ_COMMIT=`git ls-remote $OCTEZ_REPO octez-v$OCTEZ_VERSION | cut -f 1`;       \
        OCTEZ_URL=$OCTEZ_REPO#$OCTEZ_COMMIT;                                             \
        wget https://sh.rustup.rs/rustup-init.sh;                                        \
        chmod +x rustup-init.sh;                                                         \
        ./rustup-init.sh --profile minimal --default-toolchain $RUSTUP_TOOLCHAIN -y;     \
        source "$HOME/.cargo/env";                                                       \
-       opam install                                                                     \
-           octez-protocol-018-Proxford-libs.$OCTEZ_VERSION                              \
-           terminal_size;                                                               \
+       opam install terminal_size opentelemetry.0.10;                                                      \
+       opam pin bls12-381.$OCTEZ_VERSION                                    $OCTEZ_URL; \
+       opam pin octez-alcotezt.$OCTEZ_VERSION                               $OCTEZ_URL; \
+       opam pin octez-distributed-internal.$OCTEZ_VERSION                   $OCTEZ_URL; \
+       opam pin octez-distributed-lwt-internal.$OCTEZ_VERSION               $OCTEZ_URL; \
+       opam pin octez-internal-libs.$OCTEZ_VERSION                          $OCTEZ_URL; \
+       opam pin octez-libs.$OCTEZ_VERSION                                   $OCTEZ_URL; \
+       opam pin octez-proto-libs.$OCTEZ_VERSION                             $OCTEZ_URL; \
+       opam pin octez-protocol-compiler-compat.$OCTEZ_VERSION               $OCTEZ_URL; \
+       opam pin octez-version.$OCTEZ_VERSION                                $OCTEZ_URL; \
+       opam pin octez-protocol-compiler.$OCTEZ_VERSION                      $OCTEZ_URL; \
+       opam pin tezos-benchmark.$OCTEZ_VERSION                              $OCTEZ_URL; \
+       opam pin octez-shell-libs.$OCTEZ_VERSION                             $OCTEZ_URL; \
+       opam pin octez-rustzcash-deps.$OCTEZ_VERSION                         $OCTEZ_URL; \
+       opam pin tezos-protocol-022-PsRiotum.$OCTEZ_VERSION                  $OCTEZ_URL; \
+       opam pin tezt-tezos.$OCTEZ_VERSION                                   $OCTEZ_URL; \
+       opam pin octez-node-config.$OCTEZ_VERSION                            $OCTEZ_URL; \
+       opam pin tezos-dal-node-services.$OCTEZ_VERSION                      $OCTEZ_URL; \
+       opam pin dal_node_migrations.$OCTEZ_VERSION                          $OCTEZ_URL; \
+       opam pin octez-riscv-api.$OCTEZ_VERSION                              $OCTEZ_URL; \
+       opam pin octez-riscv-pvm.$OCTEZ_VERSION                              $OCTEZ_URL; \
+       opam pin octez-performance-metrics.$OCTEZ_VERSION                    $OCTEZ_URL; \
+       opam pin octez-rust-deps.$OCTEZ_VERSION                              $OCTEZ_URL; \
+       opam pin octez-l2-libs.$OCTEZ_VERSION                                $OCTEZ_URL; \
+       opam pin tezos-dal-node-lib.$OCTEZ_VERSION                           $OCTEZ_URL; \
+       opam pin octez-crawler.$OCTEZ_VERSION                                $OCTEZ_URL; \
+       opam pin octez-injector.$OCTEZ_VERSION                               $OCTEZ_URL; \
+       opam pin octez-protocol-022-PsRiotum-libs.$OCTEZ_VERSION             $OCTEZ_URL; \
        opam pin tezos-micheline-rewriting.$OCTEZ_VERSION                    $OCTEZ_URL; \
-       opam pin tezos-benchmark-type-inference-018-Proxford.$OCTEZ_VERSION  $OCTEZ_URL; \
-       opam pin tezos-benchmark-018-Proxford.$OCTEZ_VERSION                 $OCTEZ_URL; \
-       opam pin tezos-benchmarks-proto-018-Proxford.$OCTEZ_VERSION          $OCTEZ_URL; \
+       opam pin tezos-benchmark-type-inference-022-PsRiotum.$OCTEZ_VERSION  $OCTEZ_URL; \
+       opam pin tezos-benchmark-022-PsRiotum.$OCTEZ_VERSION                 $OCTEZ_URL; \
+       opam pin tezos-benchmarks-proto-022-PsRiotum.$OCTEZ_VERSION          $OCTEZ_URL; \
        rm -rf opam-repository .opam/download-cache .opam/repo \
-              .opam/4.14/.opam-switch/build .opam/4.14/.opam-switch/sources;
+              .opam/5.2/.opam-switch/build .opam/5.2/.opam-switch/sources;
