@@ -193,7 +193,7 @@ TZ_OPERATION_FIELDS(update_ck_fields,
     TZ_OPERATION_MANAGER_OPERATION_FIELDS,
     TZ_OPERATION_FIELD("Public key", TZ_OPERATION_FIELD_PK),
     TZ_OPERATION_OPTION_FIELD("Proof",
-        TZ_OPERATION_FIELD("Proof", TZ_OPERATION_FIELD_SIG),
+        TZ_OPERATION_FIELD("Proof", TZ_OPERATION_FIELD_BLS_SIG),
         .display_none=false)
 );
 
@@ -767,7 +767,7 @@ tz_step_read_bytes(tz_parser_state *state)
                 tz_raise(INVALID_TAG);
             }
             break;
-        case TZ_OPERATION_FIELD_SIG:
+        case TZ_OPERATION_FIELD_BLS_SIG:
             if (tz_format_sig(CAPTURE, op->frame->step_read_bytes.len,
                               (char *)CAPTURE, sizeof(CAPTURE))) {
                 tz_raise(INVALID_TAG);
@@ -1039,8 +1039,8 @@ tz_step_field(tz_parser_state *state)
         op->frame->step_read_bytes.skip = field->skip;
         break;
     }
-    case TZ_OPERATION_FIELD_SIG: {
-        op->frame->step                 = TZ_OPERATION_STEP_READ_SIG;
+    case TZ_OPERATION_FIELD_BLS_SIG: {
+        op->frame->step                 = TZ_OPERATION_STEP_READ_BLS_SIG;
         op->frame->step_read_bytes.skip = field->skip;
         tz_must(push_frame(state, TZ_OPERATION_STEP_SIZE));
         op->frame->step_size.size     = 0;
@@ -1219,15 +1219,18 @@ tz_step_read_pk(tz_parser_state *state)
  * @return tz_parser_result: parser result
  */
 static tz_parser_result
-tz_step_read_sig(tz_parser_state *state)
+tz_step_read_bls_sig(tz_parser_state *state)
 {
-    ASSERT_STEP(state, READ_SIG);
+    ASSERT_STEP(state, READ_BLS_SIG);
     tz_operation_state *op          = &state->operation;
     op->frame->step                 = TZ_OPERATION_STEP_READ_BYTES;
-    op->frame->step_read_bytes.kind = TZ_OPERATION_FIELD_SIG;
+    op->frame->step_read_bytes.kind = TZ_OPERATION_FIELD_BLS_SIG;
     op->frame->step_read_bytes.ofs  = 0;
     // size previously computed by `tz_step_size`
     op->frame->step_read_bytes.len = op->frame->stop - state->ofs;
+    if (op->frame->step_read_bytes.len != 96) {  // Must be a BLS signature
+        tz_raise(INVALID_DATA);
+    }
     tz_continue;
 }
 
@@ -1502,8 +1505,8 @@ tz_operation_parser_step(tz_parser_state *state)
     case TZ_OPERATION_STEP_READ_PK:
         tz_must(tz_step_read_pk(state));
         break;
-    case TZ_OPERATION_STEP_READ_SIG:
-        tz_must(tz_step_read_sig(state));
+    case TZ_OPERATION_STEP_READ_BLS_SIG:
+        tz_must(tz_step_read_bls_sig(state));
         break;
     case TZ_OPERATION_STEP_READ_SORU_MESSAGES:
         tz_must(tz_step_read_soru_messages(state));
