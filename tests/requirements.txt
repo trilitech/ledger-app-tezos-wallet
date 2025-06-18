@@ -6,4 +6,4 @@ base58
 pytezos==3.14.0
 GitPython
 pytest-xdist
-ragger[tests,speculos,ledgerwallet]
+ragger[tests,speculos,ledgerwallet]==1.24.0
