@@ -1,4 +1,4 @@
-FROM ocaml/opam:ubuntu-24.04-ocaml-4.14
+FROM ocaml/opam:ubuntu-24.04-ocaml-5.2
 
 # Setup a tezos environement
 COPY --chown=opam:opam tezos /opt/tezos
@@ -7,7 +7,7 @@ WORKDIR /opt/tezos
 
 # Install Rust
 RUN sudo apt-get -y install wget
-RUN RUSTUP_TOOLCHAIN=1.71.1 &&                                                   \
+RUN RUSTUP_TOOLCHAIN=1.77.2 &&                                                   \
     wget https://sh.rustup.rs/rustup-init.sh &&                                  \
     chmod +x rustup-init.sh &&                                                   \
     ./rustup-init.sh --profile minimal --default-toolchain $RUSTUP_TOOLCHAIN -y
@@ -18,8 +18,8 @@ RUN rm -rf _opam/ && \
     make build-deps && \
     eval $(opam env) && \
     make install && \
-    dune install tezos-protocol-018-Proxford && \
-    dune install tezos-benchmarks-proto-018-Proxford
+    dune install tezos-protocol-022-PsRiotum && \
+    dune install tezos-benchmarks-proto-022-PsRiotum
 ENV OPAMSWITCH=/opt/tezos
 
 # Get the default opam remote

@@ -5,7 +5,11 @@
   test_micheline_c_parser
   test_operations_c_parser
   test_c_parser)
- (libraries tezos-protocol-018-Proxford.protocol terminal_size)
+ (libraries
+  octez-rust-deps
+  bls12-381.archive
+  tezos-protocol-022-PsRiotum.protocol
+  terminal_size)
  (foreign_stubs
   (language c)
   (names
