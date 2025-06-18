@@ -456,7 +456,7 @@ CTEST2(operation_parser, check_set_consensus_key_complexity)
     char str[]
         = "030000000000000000000000000000000000000000000000000000000000000000"
           "7200c921d4487c90b4472da6cc566a58d79f0d991dbf904e02030400747884d9ab"
-          "df16b3ab745158925f567e222f71225501826fa83347f6cbe9c393";
+          "df16b3ab745158925f567e222f71225501826fa83347f6cbe9c39300";
     const tz_fields_check fields_check[] = {
         {"Source",        false, 1},
         {"Fee",           false, 2},

@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License. *)
 
-open Tezos_protocol_018_Proxford
+open Tezos_protocol_022_PsRiotum
 
 let gen_lazy_expr =
   let open QCheck2.Gen in
@@ -98,7 +98,7 @@ let some_public_key =
 let gen_public_key =
   let open QCheck2.Gen in
   let+ pk = oneofl some_public_key in
-  Tezos_crypto.Signature.Public_key.of_b58check_exn pk
+  Environment.Signature.Public_key.of_b58check_exn pk
 
 let some_public_key_hash =
   [
@@ -132,7 +132,7 @@ let gen_public_key_hash =
   let open QCheck2.Gen in
   let pick =
     let+ pkh = oneofl some_public_key_hash in
-    Tezos_crypto.Signature.Public_key_hash.of_b58check_exn pkh
+    Environment.Signature.Public_key_hash.of_b58check_exn pkh
   in
   let gen =
     let ed25519_tag = Bytes.of_string "\000" in
@@ -141,7 +141,7 @@ let gen_public_key_hash =
     let public_key_hash_size = 20 in
     let* tag = oneofl [ ed25519_tag; secp256k1_tag; p256_tag ] in
     gen_from_blake ~tag ~size:public_key_hash_size
-      Tezos_crypto.Signature.Public_key_hash.encoding
+      Environment.Signature.Public_key_hash.encoding
   in
   oneof [ pick; gen ]
 
@@ -369,7 +369,7 @@ let gen_update_consensus_key =
   let open Protocol.Alpha_context in
   let open QCheck2.Gen in
   let* public_key = gen_public_key in
-  return (Update_consensus_key public_key)
+  return (Update_consensus_key { public_key; proof = None })
 
 let gen_sc_rollup_add_messages =
   let open Protocol.Alpha_context in

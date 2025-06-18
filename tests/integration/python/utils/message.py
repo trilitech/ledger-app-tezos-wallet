@@ -166,23 +166,27 @@ class OperationBuilder(ContentMixin):
     def update_consensus_key(
             self,
             pk: str = '',
+            proof: Optional[str] = None,
             source: str = '',
             counter: int = 0,
             fee: int = 0,
             gas_limit: int = 0,
             storage_limit: int = 0):
         """Build a Tezos update-consensus-key."""
-        return self.operation(
-            {
-                'kind': 'update_consensus_key',
-                'source': source,
-                'fee': format_mutez(fee),
-                'counter': str(counter),
-                'gas_limit': str(gas_limit),
-                'storage_limit': str(storage_limit),
-                'pk': pk,
-            }
-        )
+        content = {
+            'kind': 'update_consensus_key',
+            'source': source,
+            'fee': format_mutez(fee),
+            'counter': str(counter),
+            'gas_limit': str(gas_limit),
+            'storage_limit': str(storage_limit),
+            'pk': pk,
+        }
+
+        if proof is not None:
+            content['proof'] = proof
+
+        return self.operation(content)
 
     def smart_rollup_originate(
             self,
@@ -300,6 +304,13 @@ class OperationForge:
         res += forge_nat(int(content['gas_limit']))
         res += forge_nat(int(content['storage_limit']))
         res += forge_public_key(content['pk'])
+
+        if content.get('proof'):
+            res += forge_bool(True)
+            res += forge_array(forge_base58(content['proof']))
+        else:
+            res += forge_bool(False)
+
         return res
 
     PVM_KIND_TAG = { 'arith': 0, 'wasm_2_0_0': 1, 'riscv': 2 }
@@ -648,17 +659,21 @@ class UpdateConsensusKey(ManagerOperation):
     """Class representing a tezos update consensus key."""
 
     pk: str
+    proof: Optional[str]
 
     def __init__(self,
                  pk: str = Default.ED25519_PUBLIC_KEY,
+                 proof: Optional[str] = None,
                  **kwargs):
         self.pk = pk
+        self.proof = proof
         ManagerOperation.__init__(self, **kwargs)
 
     def forge(self) -> bytes:
         return OperationForge.update_consensus_key(
             self.update_consensus_key(
                 self.pk,
+                self.proof,
                 self.source,
                 self.counter,
                 self.fee,
