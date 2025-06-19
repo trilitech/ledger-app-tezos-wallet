@@ -214,6 +214,31 @@ class OperationBuilder(ContentMixin):
 
         return self.operation(content)
 
+    def update_companion_key(
+            self,
+            pk: str = '',
+            proof: Optional[str] = None,
+            source: str = '',
+            counter: int = 0,
+            fee: int = 0,
+            gas_limit: int = 0,
+            storage_limit: int = 0):
+        """Build a Tezos update-companion-key."""
+        content = {
+            'kind': 'update_companion_key',
+            'source': source,
+            'fee': format_mutez(fee),
+            'counter': str(counter),
+            'gas_limit': str(gas_limit),
+            'storage_limit': str(storage_limit),
+            'pk': pk,
+        }
+
+        if proof is not None:
+            content['proof'] = proof
+
+        return self.operation(content)
+
     def smart_rollup_originate(
             self,
             pvm_kind: str = '',
@@ -256,6 +281,7 @@ class OperationForge:
     operation_tags['set_deposit_limit'] = 112
     operation_tags['increase_paid_storage'] = 113
     operation_tags['update_consensus_key'] = 114
+    operation_tags['update_companion_key'] = 115
     operation_tags['smart_rollup_originate'] = 200
 
     failing_noop = forge_operation.forge_failing_noop
@@ -336,6 +362,25 @@ class OperationForge:
     @staticmethod
     def update_consensus_key(content: Dict[str, Any]) -> bytes:
         """Forge a Tezos update-consensus-key."""
+        res = forge_tag(operation_tags[content['kind']])
+        res += forge_address(content['source'], tz_only=True)
+        res += forge_nat(int(content['fee']))
+        res += forge_nat(int(content['counter']))
+        res += forge_nat(int(content['gas_limit']))
+        res += forge_nat(int(content['storage_limit']))
+        res += forge_public_key(content['pk'])
+
+        if content.get('proof'):
+            res += forge_bool(True)
+            res += forge_array(forge_base58(content['proof']))
+        else:
+            res += forge_bool(False)
+
+        return res
+
+    @staticmethod
+    def update_companion_key(content: Dict[str, Any]) -> bytes:
+        """Forge a Tezos update-companion-key."""
         res = forge_tag(operation_tags[content['kind']])
         res += forge_address(content['source'], tz_only=True)
         res += forge_nat(int(content['fee']))
@@ -715,6 +760,33 @@ class UpdateConsensusKey(ManagerOperation):
     def forge(self) -> bytes:
         return OperationForge.update_consensus_key(
             self.update_consensus_key(
+                self.pk,
+                self.proof,
+                self.source,
+                self.counter,
+                self.fee,
+                self.gas_limit,
+                self.storage_limit
+            )
+        )
+
+class UpdateCompanionKey(ManagerOperation):
+    """Class representing a tezos update companion key."""
+
+    pk: str
+    proof: Optional[str]
+
+    def __init__(self,
+                 pk: str = Default.ED25519_PUBLIC_KEY,
+                 proof: Optional[str] = None,
+                 **kwargs):
+        self.pk = pk
+        self.proof = proof
+        ManagerOperation.__init__(self, **kwargs)
+
+    def forge(self) -> bytes:
+        return OperationForge.update_companion_key(
+            self.update_companion_key(
                 self.pk,
                 self.proof,
                 self.source,
