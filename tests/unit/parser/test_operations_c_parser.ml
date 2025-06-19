@@ -138,6 +138,18 @@ let to_string
              Format.asprintf "%a" Environment.Signature.Public_key.pp public_key;
            ]
           @ proof)
+    | Update_consensus_key
+        { public_key; proof; kind = Protocol.Operation_repr.Companion } ->
+        let proof =
+          match proof with
+          | None -> []
+          | Some proof -> [ Format.asprintf "%a" Environment.Bls.pp proof ]
+        in
+        aux ~kind:"Set companion key"
+          ([
+             Format.asprintf "%a" Environment.Signature.Public_key.pp public_key;
+           ]
+          @ proof)
     | Sc_rollup_add_messages { messages } ->
         let message_to_string message =
           Format.asprintf "%a" pp_string_binary message

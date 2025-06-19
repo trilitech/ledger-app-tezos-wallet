@@ -329,6 +329,20 @@ let operation_to_screens
               Environment.Signature.Public_key.pp public_key;
           ]
         @ proof_screens
+    | Update_consensus_key
+        { public_key; proof; kind = Protocol.Operation_repr.Companion } ->
+        let proof_screens =
+          match proof with
+          | None -> []
+          | Some proof ->
+              [ make_screen ~title:"Proof" "%a" Environment.Bls.pp proof ]
+        in
+        aux ~kind:"Set companion key"
+          [
+            make_screen ~title:"Public key" "%a"
+              Environment.Signature.Public_key.pp public_key;
+          ]
+        @ proof_screens
     | Sc_rollup_add_messages { messages } ->
         aux ~kind:"SR: send messages"
         @@ make_screens ~title:"Message" pp_string_binary messages
