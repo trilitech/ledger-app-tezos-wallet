@@ -192,7 +192,15 @@ TZ_OPERATION_FIELDS(inc_paid_stg_fields,
     TZ_OPERATION_FIELD("Destination", TZ_OPERATION_FIELD_DESTINATION)
 );
 
-TZ_OPERATION_FIELDS(update_ck_fields,
+TZ_OPERATION_FIELDS(set_cons_key_fields,
+    TZ_OPERATION_MANAGER_OPERATION_FIELDS,
+    TZ_OPERATION_FIELD("Public key", TZ_OPERATION_FIELD_PK),
+    TZ_OPERATION_OPTION_FIELD("Proof",
+        TZ_OPERATION_FIELD("Proof", TZ_OPERATION_FIELD_BLS_SIG),
+        .display_none=false)
+);
+
+TZ_OPERATION_FIELDS(set_comp_key_fields,
     TZ_OPERATION_MANAGER_OPERATION_FIELDS,
     TZ_OPERATION_FIELD("Public key", TZ_OPERATION_FIELD_PK),
     TZ_OPERATION_OPTION_FIELD("Proof",
@@ -256,7 +264,8 @@ const tz_operation_descriptor tz_operation_descriptors[] = {
     {TZ_OPERATION_TAG_REG_GLB_CST,  "Register global constant",   reg_glb_cst_fields },
     {TZ_OPERATION_TAG_SET_DEPOSIT,  "Set deposit limit",          set_deposit_fields },
     {TZ_OPERATION_TAG_INC_PAID_STG, "Increase paid storage",      inc_paid_stg_fields},
-    {TZ_OPERATION_TAG_UPDATE_CK,    "Set consensus key",          update_ck_fields   },
+    {TZ_OPERATION_TAG_SET_CONS_KEY, "Set consensus key",          set_cons_key_fields},
+    {TZ_OPERATION_TAG_SET_COMP_KEY, "Set companion key",          set_comp_key_fields},
     {TZ_OPERATION_TAG_TRANSFER_TCK, "Transfer ticket",            transfer_tck_fields},
     {TZ_OPERATION_TAG_SORU_ADD_MSG, "SR: send messages",          soru_add_msg_fields},
     {TZ_OPERATION_TAG_SORU_EXE_MSG, "SR: execute outbox message", soru_exe_msg_fields},
