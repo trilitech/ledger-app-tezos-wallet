@@ -214,12 +214,17 @@ CTEST2(operation_parser, check_reveal_complexity)
     char str[]
         = "030000000000000000000000000000000000000000000000000000000000000000"
           "6b00ffdd6102321bc251e4a5190ad5b12b251069d9b4904e02030400747884d9ab"
-          "df16b3ab745158925f567e222f71225501826fa83347f6cbe9c39300";
+          "df16b3ab745158925f567e222f71225501826fa83347f6cbe9c393ff0000006097"
+          "df7f48a17994a2dd1e4cb3c15104a36f3b9298ec5210f40b5ff23f4cbb78c543b2"
+          "4b4e7e60cfa13f01568da45018ff156118c15592609d6f2c38972c336cd104cd26"
+          "ece288c06a3b3ab4ba5b5542625bee94a4960f45a2c50425e88d271c58";
     const tz_fields_check fields_check[] = {
         {"Source",        false, 1},
         {"Fee",           false, 2},
         {"Storage limit", false, 3},
         {"Public key",    false, 4},
+ //     {"Option",        _,     5},
+        {"Proof",         false, 6},
     };
     check_field_complexity(data, str, fields_check, sizeof(fields_check));
 }

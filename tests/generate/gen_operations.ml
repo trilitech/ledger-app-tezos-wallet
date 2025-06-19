@@ -348,7 +348,8 @@ let gen_reveal =
   let open Protocol.Alpha_context in
   let open QCheck2.Gen in
   let* public_key = gen_public_key in
-  return (Reveal { public_key; proof = None })
+  let* proof = option gen_bls_signature in
+  return (Reveal { public_key; proof })
 
 let gen_set_deposits_limit =
   let open Protocol.Alpha_context in
