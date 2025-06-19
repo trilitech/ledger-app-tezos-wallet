@@ -82,11 +82,17 @@ let to_string
     | Register_global_constant { value } ->
         aux ~kind:"Register global constant"
           [ Format.asprintf "%a" pp_lazy_expr value ]
-    | Reveal { public_key; _ } ->
+    | Reveal { public_key; proof } ->
+        let proof =
+          match proof with
+          | None -> []
+          | Some proof -> [ Format.asprintf "%a" Environment.Bls.pp proof ]
+        in
         aux ~kind:"Reveal"
-          [
-            Format.asprintf "%a" Environment.Signature.Public_key.pp public_key;
-          ]
+          ([
+             Format.asprintf "%a" Environment.Signature.Public_key.pp public_key;
+           ]
+          @ proof)
     | Set_deposits_limit tez_opt ->
         aux ~kind:"Set deposit limit"
           [ Format.asprintf "%a" (pp_opt_field pp_tz) tez_opt ]

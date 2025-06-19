@@ -267,12 +267,19 @@ let operation_to_screens
         aux ~kind:"Register global constant"
         @@ first_expert_mode_screen "Value"
         @ [ make_screen ~title:"Value" "%a" pp_lazy_expr value ]
-    | Reveal { public_key; _ } ->
+    | Reveal { public_key; proof } ->
+        let proof_screens =
+          match proof with
+          | None -> []
+          | Some proof ->
+              [ make_screen ~title:"Proof" "%a" Environment.Bls.pp proof ]
+        in
         aux ~kind:"Reveal"
           [
             make_screen ~title:"Public key" "%a"
               Environment.Signature.Public_key.pp public_key;
           ]
+        @ proof_screens
     | Set_deposits_limit tez_opt ->
         aux ~kind:"Set deposit limit"
           [
