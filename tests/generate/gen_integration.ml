@@ -144,7 +144,7 @@ let sign ppf ~signer:Apdu.Signer.({ sk; pk; _ } as signer) ~watermark bin =
   in
   send_async_apdus ppf async_apdus
 
-open Tezos_protocol_022_PsRiotum
+open Tezos_protocol_023_PtSeouLo
 open Tezos_micheline
 
 let rec pp_node ~wrap ppf (node : Protocol.Script_repr.node) =
@@ -267,7 +267,7 @@ let operation_to_screens
         aux ~kind:"Register global constant"
         @@ first_expert_mode_screen "Value"
         @ [ make_screen ~title:"Value" "%a" pp_lazy_expr value ]
-    | Reveal public_key ->
+    | Reveal { public_key; _ } ->
         aux ~kind:"Reveal"
           [
             make_screen ~title:"Public key" "%a"
@@ -308,12 +308,13 @@ let operation_to_screens
             make_screen ~title:"Destination" "%a" Contract.pp destination;
             make_screen ~title:"Entrypoint" "%a" Entrypoint.pp entrypoint;
           ]
-    | Update_consensus_key { public_key; proof } ->
+    | Update_consensus_key
+        { public_key; proof; kind = Protocol.Operation_repr.Consensus } ->
         let proof_screens =
           match proof with
           | None -> []
           | Some proof ->
-              [ make_screen ~title:"Proof" "%a" Environment.Signature.pp proof ]
+              [ make_screen ~title:"Proof" "%a" Environment.Bls.pp proof ]
         in
         aux ~kind:"Set consensus key"
           [

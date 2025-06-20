@@ -109,6 +109,32 @@ class MichelineExpr(Message):
 class OperationBuilder(ContentMixin):
     """Class representing to extends and fix pytezos.ContentMixin."""
 
+    def reveal(
+            self,
+            public_key: str = '',
+            proof: Optional[str] = None,
+            source: str = '',
+            counter: int = 0,
+            fee: int = 0,
+            gas_limit: int = 0,
+            storage_limit: int = 0):
+        """Build a Tezos reveal."""
+        # Same as Pytezos but with a proof field
+        content = {
+            'kind': 'reveal',
+            'source': source,
+            'fee': format_mutez(fee),
+            'counter': str(counter),
+            'gas_limit': str(gas_limit),
+            'storage_limit': str(storage_limit),
+            'public_key': public_key,
+        }
+
+        if proof is not None:
+            content['proof'] = proof
+
+        return self.operation(content)
+
     def delegation(self, delegate, *args, **kwargs):
         delegation = super().delegation(delegate, *args, **kwargs)
 
@@ -233,7 +259,6 @@ class OperationForge:
     operation_tags['smart_rollup_originate'] = 200
 
     failing_noop = forge_operation.forge_failing_noop
-    reveal = forge_operation.forge_reveal
     transaction = forge_operation.forge_transaction
     origination = forge_operation.forge_origination
     delegation = forge_operation.forge_delegation
@@ -241,6 +266,20 @@ class OperationForge:
     transfer_ticket = forge_operation.forge_transfer_ticket
     smart_rollup_add_messages = forge_operation.forge_smart_rollup_add_messages
     smart_rollup_execute_outbox_message = forge_operation.forge_smart_rollup_execute_outbox_message
+
+    @staticmethod
+    def reveal(content: Dict[str, Any]) -> bytes:
+        """Forge a Tezos reveal."""
+        res = forge_operation.forge_reveal(content)
+
+        # Fix Pytezos reveal forging by adding the new proof field
+        if content.get('proof'):
+            res += forge_bool(True)
+            res += forge_array(forge_base58(content['proof']))
+        else:
+            res += forge_bool(False)
+
+        return res
 
     @staticmethod
     def proposals(content: Dict[str, Any]) -> bytes:
@@ -470,17 +509,21 @@ class Reveal(ManagerOperation):
     """Class representing a tezos reveal."""
 
     public_key: str
+    proof: Optional[str]
 
     def __init__(self,
                  public_key: str = Default.ED25519_PUBLIC_KEY,
+                 proof: Optional[str] = None,
                  **kwargs):
         self.public_key = public_key
+        self.proof = proof
         ManagerOperation.__init__(self, **kwargs)
 
     def forge(self) -> bytes:
         return OperationForge.reveal(
             self.reveal(
                 self.public_key,
+                self.proof,
                 self.source,
                 self.counter,
                 self.fee,
