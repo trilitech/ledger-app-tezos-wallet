@@ -214,7 +214,7 @@ CTEST2(operation_parser, check_reveal_complexity)
     char str[]
         = "030000000000000000000000000000000000000000000000000000000000000000"
           "6b00ffdd6102321bc251e4a5190ad5b12b251069d9b4904e02030400747884d9ab"
-          "df16b3ab745158925f567e222f71225501826fa83347f6cbe9c393";
+          "df16b3ab745158925f567e222f71225501826fa83347f6cbe9c39300";
     const tz_fields_check fields_check[] = {
         {"Source",        false, 1},
         {"Fee",           false, 2},

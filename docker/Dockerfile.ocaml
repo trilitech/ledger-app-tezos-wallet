@@ -7,7 +7,7 @@ WORKDIR /opt/tezos
 
 # Install Rust
 RUN sudo apt-get -y install wget
-RUN RUSTUP_TOOLCHAIN=1.77.2 &&                                                   \
+RUN RUSTUP_TOOLCHAIN=1.86.0 &&                                                   \
     wget https://sh.rustup.rs/rustup-init.sh &&                                  \
     chmod +x rustup-init.sh &&                                                   \
     ./rustup-init.sh --profile minimal --default-toolchain $RUSTUP_TOOLCHAIN -y
@@ -18,8 +18,8 @@ RUN rm -rf _opam/ && \
     make build-deps && \
     eval $(opam env) && \
     make install && \
-    dune install tezos-protocol-022-PsRiotum && \
-    dune install tezos-benchmarks-proto-022-PsRiotum
+    dune install tezos-protocol-023-PtSeouLo && \
+    dune install tezos-benchmarks-proto-023-PtSeouLo
 ENV OPAMSWITCH=/opt/tezos
 
 # Get the default opam remote
