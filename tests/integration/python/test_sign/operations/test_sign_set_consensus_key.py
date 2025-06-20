@@ -27,7 +27,14 @@ class TestUpdateConsensusKey(TestOperation):
     def op_class(self):
         return UpdateConsensusKey
 
-    flows = [Flow('basic')]
+    flows = [
+        Flow('basic'),
+        Flow(
+            'with_proof',
+            pk='BLpk1koaE6qJifAmUjjeukrgUdZaHCWWcHj6fBqrQLSWvVwHfqNcKKCSv5GxxVHhGirQbjHFsTTk',
+            proof='BLsigAQBhGrS8qP3rPEiRJdVMkwN8LgWXzXwty5RDYUaU4D8uLuFPKUj2cfWfznFwj8LG598MC71dDJpcrFk41uYne9MHGN3NecBtkWTKvZXAUkiXKvNssG7YiwD6q7D28gTXmE864dn3x'
+        ),
+    ]
 
     fields = [
         Field("pk", "Public key", [
@@ -36,5 +43,8 @@ class TestUpdateConsensusKey(TestOperation):
             Field.Case('p2pk665znpiyPRWEwpu8tZ7JdNPipkfYpGUhYALjaS4Tm7F7wcx1iRs', "tz3"),
             Field.Case('BLpk1koaE6qJifAmUjjeukrgUdZaHCWWcHj6fBqrQLSWvVwHfqNcKKCSv5GxxVHhGirQbjHFsTTk', "tz4"),
             Field.Case('edpkuWUfaAWqaxJoG9QKgQRQUHMWfsN1EmoMMXWMwYoE8kjWMWUGDk', "long-hash"),
+        ]),
+        Field("proof", "Proof", [
+            Field.Case('BLsigAQBhGrS8qP3rPEiRJdVMkwN8LgWXzXwty5RDYUaU4D8uLuFPKUj2cfWfznFwj8LG598MC71dDJpcrFk41uYne9MHGN3NecBtkWTKvZXAUkiXKvNssG7YiwD6q7D28gTXmE864dn3x', "bls"),
         ]),
     ]
