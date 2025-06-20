@@ -1,4 +1,5 @@
 (executable
-        (name generate)
-        (libraries "octez-protocol-018-Proxford-libs.client"
-                   "tezos-benchmarks-proto-018-Proxford"))
+ (name generate)
+ (libraries
+  tezos-protocol-018-Proxford.protocol
+  tezos-benchmarks-proto-018-Proxford))

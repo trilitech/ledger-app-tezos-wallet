@@ -80,7 +80,7 @@ clean:
 	rm -rf bin app_*.tgz
 	make -C tests/unit/ctest clean
 	$(DOCKER_RUN_APP_BUILDER) make -C app mrproper
-	$(DOCKER_RUN_APP_OCAML) bash -c "make -C /app/tests/generate clean && cd /app && rm -rf _build"
+	$(DOCKER_RUN_APP_OCAML) bash -c "make -C /app/tests/generate clean && cd /app && rm -rf **/_build"
 
 unit_tests:	test/samples/micheline/nano/samples.hex	\
 		test/samples/operations/nano/samples.hex	\

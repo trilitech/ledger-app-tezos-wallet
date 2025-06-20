@@ -1,10 +1,25 @@
 (executable
-        (name test_c_parser)
-        (modules test_c_parser_utils test_micheline_c_parser test_operations_c_parser test_c_parser)
-        (libraries "octez-protocol-018-Proxford-libs.client"
-                   "tezos-benchmarks-proto-018-Proxford"
-                   "terminal_size")
-        (foreign_stubs
-                (language c)
-                (names formatting parser_state num_parser micheline_parser operation_parser micheline_cparse_stubs)
-                (flags :standard -std=gnu99 -Werror=int-to-pointer-cast -Wall -Wextra -Werror -Wmissing-field-initializers)))
+ (name test_c_parser)
+ (modules
+  test_c_parser_utils
+  test_micheline_c_parser
+  test_operations_c_parser
+  test_c_parser)
+ (libraries tezos-protocol-018-Proxford.protocol terminal_size)
+ (foreign_stubs
+  (language c)
+  (names
+   formatting
+   parser_state
+   num_parser
+   micheline_parser
+   operation_parser
+   micheline_cparse_stubs)
+  (flags
+   :standard
+   -std=gnu99
+   -Werror=int-to-pointer-cast
+   -Wall
+   -Wextra
+   -Werror
+   -Wmissing-field-initializers)))
