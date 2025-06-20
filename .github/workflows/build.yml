@@ -51,6 +51,7 @@ jobs:
     with:
       dockerfile: docker/Dockerfile.ocaml
       image_name: tezos_ocaml
+      checkout_submodules: true
 
   integration_tests_basic:
     needs: [build_app]

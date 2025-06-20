@@ -11,6 +11,11 @@ on:
         description: 'Name to give to the built docker image'
         required: true
         type: string
+      checkout_submodules:
+        description: 'Whether to checkout submodules'
+        required: false
+        default: false
+        type: boolean
     outputs:
       image:
         value: ${{ jobs.build_docker.outputs.image }}
@@ -41,8 +46,15 @@ jobs:
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
           sudo df -h
 
-      - name: Checkout
+      - name: Checkout without submodules
+        if: ${{ !inputs.checkout_submodules }}
         uses: actions/checkout@v3
+
+      - name: Checkout with submodules
+        if: ${{ inputs.checkout_submodules }}
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
 
       - name: Branches ref
         id: branches
@@ -99,6 +111,7 @@ jobs:
         uses: docker/build-push-action@v4
         if: steps.dockerfile.outputs.changed == 'True' || steps.docker_prev_build.outputs.exists != 'True'
         with:
+          context: docker/
           push: true
           file: ${{ inputs.dockerfile }}
           tags: ${{ steps.container_tag.outputs.tag }}
