@@ -120,11 +120,18 @@ let to_string
             Format.asprintf "%a" Contract.pp destination;
             Format.asprintf "%a" Entrypoint.pp entrypoint;
           ]
-    | Update_consensus_key { public_key; _ } ->
+    | Update_consensus_key { public_key; proof } ->
+        let proof =
+          match proof with
+          | None -> []
+          | Some proof ->
+              [ Format.asprintf "%a" Environment.Signature.pp proof ]
+        in
         aux ~kind:"Set consensus key"
-          [
-            Format.asprintf "%a" Environment.Signature.Public_key.pp public_key;
-          ]
+          ([
+             Format.asprintf "%a" Environment.Signature.Public_key.pp public_key;
+           ]
+          @ proof)
     | Sc_rollup_add_messages { messages } ->
         let message_to_string message =
           Format.asprintf "%a" pp_string_binary message

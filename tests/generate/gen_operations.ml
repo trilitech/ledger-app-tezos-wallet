@@ -184,6 +184,30 @@ let gen_sc_rollup_commiment_hash =
   let+ sc_ch = oneofl some_sc_rollup_commiment_hash in
   Protocol.Alpha_context.Sc_rollup.Commitment.Hash.of_b58check_exn sc_ch
 
+let some_signature =
+  [
+    "edsigtmHfyvWU8Tdt4ZGuZ6niw7NGmRereTiHVEUBMD2b6Kn6vMjuEmef6VvypQzoBYTJxU8wZX6jxtnojnHPPfXvqH2w9Svpp6";
+    "edsigu1VK6VGQwos6CqEidY4M8K1VtSqjZHy5m6cdtrCoJAgxbVm4bwpNyMSCHHuzezHnp9ibpCkAUfs3aJQXZNZ1UdAmZK4XA1";
+    "edsigtpGM8DFmwQNXvxkDeGMKnnTXmwSWSZbRb9UAw48NNQkbaU6dDGK24tR2Md6wGftKMGsbQ4HhDWWd93NhbKeD362soA9e5B";
+    "spsig19FcUCRq39KQAWxW7CAooP3Xo2CpULyTXJ23FFKtdh8HV9SxpaZcdwj11TQTnk7J3953wHGohtbRT2aX2pRKpPLvRgn7Lb";
+    "spsig1UeriVCuY2s4oai7fWkbsCkfkzHuD5ouaQp92egm4hYxFWBKFiTi41dxLhgymJikhVYm6KejjHXibwHA4xWg9RAzRDPeXH";
+    "spsig1NNPk6euXnpWzmmLaGuWvAmX3sADKm3wPMbQRJg9wZPCMX94QnXHUvRXKp6GWA3977wGaMagWWcvUDgV3DeQ6ShV3eMWjU";
+    "p2sigN82jwSaUSapPt7g8ML7BtHPJ5KuhCtSFP6Qbvh8ZsDSd7Po3TVeA6s9zxtzSy9HcQpWwHeexdxUuh5sGGL2Sf4ytimLk3";
+    "p2sigc1eTvpvF5hKKrqQkWz8MN7qpwqWX7uPzfEYGPfrmmKdbmspRjUvsRQn7dWxKGCHUtHyt1GibbixhtcaaxwWTxD1K5fV1C";
+    "p2sigQ4gNRjNuBuFwVx8aAhnZ7JvRwCQUnUygXY6bKmu4416W4QWNQKKN8uD5GRm2vvwB1b6xYnbWGAvcnQWpmPH2kKMNwcG7w";
+    "BLsigAQBhGrS8qP3rPEiRJdVMkwN8LgWXzXwty5RDYUaU4D8uLuFPKUj2cfWfznFwj8LG598MC71dDJpcrFk41uYne9MHGN3NecBtkWTKvZXAUkiXKvNssG7YiwD6q7D28gTXmE864dn3x";
+    "BLsigAS88QcPyL4Uv8umbfxw4fiDLaE6Et4iwKxy4Mmp3P9prSz7eZeqcavaTwpvofnv3crzeALLgsXUtAEjoEebgPJUMLd83zZcjvD3WouPibrXpPFPjchS7QzBwTwcoWWxfydkMTdaoQ";
+    "BLsig9kAJnKqQsiryhwWPUM8MGwDgMyqPYeT61YmZr6BLbBP3feNN83NgbweihQ9cN26JAF9LbRCkAe7U1NWcAY8PwRHmTNLWWe6a6GKCoPHHu4WoeKCWcXHmwRwbT1QXDyQ6mJeGq9mmm";
+    "sigcV5dkJ6xoPN5KvsbuZhWPWZCTWgtubKPqoypavvZMLTabQggkaDQDXfEu5x6mcA1eXzxNX5uZewgbQJvTMqbGGRZeucG7";
+    "sigvF1sMhSeuL2biaDBuUZQzg1GXwgmEXny81RX6JXfKByZamkZaD28s6VEue9oD9sDHpLkMRZpLKR2FL7dKoEr6bZmsBmBW";
+    "sigQvX613A8A8Q4Dikv9EQxwuMDXWM1twWz6fpuH1W1RwPTNMMwyBtP8bXCaqsK8PmFyXMXhNmMUeWqJXyM9uWfm2CCXuSK5";
+  ]
+
+let gen_signature =
+  let open QCheck2.Gen in
+  let+ sig_h = oneofl some_signature in
+  Environment.Signature.of_b58check_exn sig_h
+
 let some_protocol_hash =
   [
     "ProtoDemoNoopsDemoNoopsDemoNoopsDemoNoopsDemo6XBoYp";
@@ -369,7 +393,8 @@ let gen_update_consensus_key =
   let open Protocol.Alpha_context in
   let open QCheck2.Gen in
   let* public_key = gen_public_key in
-  return (Update_consensus_key { public_key; proof = None })
+  let* proof = option gen_signature in
+  return (Update_consensus_key { public_key; proof })
 
 let gen_sc_rollup_add_messages =
   let open Protocol.Alpha_context in
