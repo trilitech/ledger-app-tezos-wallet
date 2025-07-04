@@ -161,7 +161,10 @@ TZ_OPERATION_FIELDS(transaction_fields,
 
 TZ_OPERATION_FIELDS(reveal_fields,
     TZ_OPERATION_MANAGER_OPERATION_FIELDS,
-    TZ_OPERATION_FIELD("Public key", TZ_OPERATION_FIELD_PK)
+    TZ_OPERATION_FIELD("Public key", TZ_OPERATION_FIELD_PK),
+    TZ_OPERATION_OPTION_FIELD("Proof",
+        TZ_OPERATION_FIELD("Proof", TZ_OPERATION_FIELD_BLS_SIG),
+        .display_none=false)
 );
 
 TZ_OPERATION_FIELDS(delegation_fields,
@@ -189,11 +192,19 @@ TZ_OPERATION_FIELDS(inc_paid_stg_fields,
     TZ_OPERATION_FIELD("Destination", TZ_OPERATION_FIELD_DESTINATION)
 );
 
-TZ_OPERATION_FIELDS(update_ck_fields,
+TZ_OPERATION_FIELDS(set_cons_key_fields,
     TZ_OPERATION_MANAGER_OPERATION_FIELDS,
     TZ_OPERATION_FIELD("Public key", TZ_OPERATION_FIELD_PK),
     TZ_OPERATION_OPTION_FIELD("Proof",
-        TZ_OPERATION_FIELD("Proof", TZ_OPERATION_FIELD_SIG),
+        TZ_OPERATION_FIELD("Proof", TZ_OPERATION_FIELD_BLS_SIG),
+        .display_none=false)
+);
+
+TZ_OPERATION_FIELDS(set_comp_key_fields,
+    TZ_OPERATION_MANAGER_OPERATION_FIELDS,
+    TZ_OPERATION_FIELD("Public key", TZ_OPERATION_FIELD_PK),
+    TZ_OPERATION_OPTION_FIELD("Proof",
+        TZ_OPERATION_FIELD("Proof", TZ_OPERATION_FIELD_BLS_SIG),
         .display_none=false)
 );
 
@@ -253,7 +264,8 @@ const tz_operation_descriptor tz_operation_descriptors[] = {
     {TZ_OPERATION_TAG_REG_GLB_CST,  "Register global constant",   reg_glb_cst_fields },
     {TZ_OPERATION_TAG_SET_DEPOSIT,  "Set deposit limit",          set_deposit_fields },
     {TZ_OPERATION_TAG_INC_PAID_STG, "Increase paid storage",      inc_paid_stg_fields},
-    {TZ_OPERATION_TAG_UPDATE_CK,    "Set consensus key",          update_ck_fields   },
+    {TZ_OPERATION_TAG_SET_CONS_KEY, "Set consensus key",          set_cons_key_fields},
+    {TZ_OPERATION_TAG_SET_COMP_KEY, "Set companion key",          set_comp_key_fields},
     {TZ_OPERATION_TAG_TRANSFER_TCK, "Transfer ticket",            transfer_tck_fields},
     {TZ_OPERATION_TAG_SORU_ADD_MSG, "SR: send messages",          soru_add_msg_fields},
     {TZ_OPERATION_TAG_SORU_EXE_MSG, "SR: execute outbox message", soru_exe_msg_fields},
@@ -767,7 +779,7 @@ tz_step_read_bytes(tz_parser_state *state)
                 tz_raise(INVALID_TAG);
             }
             break;
-        case TZ_OPERATION_FIELD_SIG:
+        case TZ_OPERATION_FIELD_BLS_SIG:
             if (tz_format_sig(CAPTURE, op->frame->step_read_bytes.len,
                               (char *)CAPTURE, sizeof(CAPTURE))) {
                 tz_raise(INVALID_TAG);
@@ -1039,8 +1051,8 @@ tz_step_field(tz_parser_state *state)
         op->frame->step_read_bytes.skip = field->skip;
         break;
     }
-    case TZ_OPERATION_FIELD_SIG: {
-        op->frame->step                 = TZ_OPERATION_STEP_READ_SIG;
+    case TZ_OPERATION_FIELD_BLS_SIG: {
+        op->frame->step                 = TZ_OPERATION_STEP_READ_BLS_SIG;
         op->frame->step_read_bytes.skip = field->skip;
         tz_must(push_frame(state, TZ_OPERATION_STEP_SIZE));
         op->frame->step_size.size     = 0;
@@ -1219,15 +1231,18 @@ tz_step_read_pk(tz_parser_state *state)
  * @return tz_parser_result: parser result
  */
 static tz_parser_result
-tz_step_read_sig(tz_parser_state *state)
+tz_step_read_bls_sig(tz_parser_state *state)
 {
-    ASSERT_STEP(state, READ_SIG);
+    ASSERT_STEP(state, READ_BLS_SIG);
     tz_operation_state *op          = &state->operation;
     op->frame->step                 = TZ_OPERATION_STEP_READ_BYTES;
-    op->frame->step_read_bytes.kind = TZ_OPERATION_FIELD_SIG;
+    op->frame->step_read_bytes.kind = TZ_OPERATION_FIELD_BLS_SIG;
     op->frame->step_read_bytes.ofs  = 0;
     // size previously computed by `tz_step_size`
     op->frame->step_read_bytes.len = op->frame->stop - state->ofs;
+    if (op->frame->step_read_bytes.len != 96) {  // Must be a BLS signature
+        tz_raise(INVALID_DATA);
+    }
     tz_continue;
 }
 
@@ -1502,8 +1517,8 @@ tz_operation_parser_step(tz_parser_state *state)
     case TZ_OPERATION_STEP_READ_PK:
         tz_must(tz_step_read_pk(state));
         break;
-    case TZ_OPERATION_STEP_READ_SIG:
-        tz_must(tz_step_read_sig(state));
+    case TZ_OPERATION_STEP_READ_BLS_SIG:
+        tz_must(tz_step_read_bls_sig(state));
         break;
     case TZ_OPERATION_STEP_READ_SORU_MESSAGES:
         tz_must(tz_step_read_soru_messages(state));

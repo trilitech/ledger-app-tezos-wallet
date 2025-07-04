@@ -13,9 +13,9 @@
    See the License for the specific language governing permissions and
    limitations under the License. *)
 
-open Tezos_protocol_022_PsRiotum
+open Tezos_protocol_023_PtSeouLo
 open Tezos_micheline
-open Tezos_benchmarks_proto_022_PsRiotum
+open Tezos_benchmarks_proto_023_PtSeouLo
 
 let config =
   {

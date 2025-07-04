@@ -12,7 +12,7 @@
    See the License for the specific language governing permissions and
    limitations under the License. *)
 
-open Tezos_protocol_022_PsRiotum
+open Tezos_protocol_023_PtSeouLo
 open Test_c_parser_utils
 
 let pp_opt_field pp ppf = function
@@ -82,11 +82,17 @@ let to_string
     | Register_global_constant { value } ->
         aux ~kind:"Register global constant"
           [ Format.asprintf "%a" pp_lazy_expr value ]
-    | Reveal public_key ->
+    | Reveal { public_key; proof } ->
+        let proof =
+          match proof with
+          | None -> []
+          | Some proof -> [ Format.asprintf "%a" Environment.Bls.pp proof ]
+        in
         aux ~kind:"Reveal"
-          [
-            Format.asprintf "%a" Environment.Signature.Public_key.pp public_key;
-          ]
+          ([
+             Format.asprintf "%a" Environment.Signature.Public_key.pp public_key;
+           ]
+          @ proof)
     | Set_deposits_limit tez_opt ->
         aux ~kind:"Set deposit limit"
           [ Format.asprintf "%a" (pp_opt_field pp_tz) tez_opt ]
@@ -120,14 +126,26 @@ let to_string
             Format.asprintf "%a" Contract.pp destination;
             Format.asprintf "%a" Entrypoint.pp entrypoint;
           ]
-    | Update_consensus_key { public_key; proof } ->
+    | Update_consensus_key
+        { public_key; proof; kind = Protocol.Operation_repr.Consensus } ->
         let proof =
           match proof with
           | None -> []
-          | Some proof ->
-              [ Format.asprintf "%a" Environment.Signature.pp proof ]
+          | Some proof -> [ Format.asprintf "%a" Environment.Bls.pp proof ]
         in
         aux ~kind:"Set consensus key"
+          ([
+             Format.asprintf "%a" Environment.Signature.Public_key.pp public_key;
+           ]
+          @ proof)
+    | Update_consensus_key
+        { public_key; proof; kind = Protocol.Operation_repr.Companion } ->
+        let proof =
+          match proof with
+          | None -> []
+          | Some proof -> [ Format.asprintf "%a" Environment.Bls.pp proof ]
+        in
+        aux ~kind:"Set companion key"
           ([
              Format.asprintf "%a" Environment.Signature.Public_key.pp public_key;
            ]

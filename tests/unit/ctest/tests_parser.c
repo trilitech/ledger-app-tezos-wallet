@@ -214,12 +214,17 @@ CTEST2(operation_parser, check_reveal_complexity)
     char str[]
         = "030000000000000000000000000000000000000000000000000000000000000000"
           "6b00ffdd6102321bc251e4a5190ad5b12b251069d9b4904e02030400747884d9ab"
-          "df16b3ab745158925f567e222f71225501826fa83347f6cbe9c393";
+          "df16b3ab745158925f567e222f71225501826fa83347f6cbe9c393ff0000006097"
+          "df7f48a17994a2dd1e4cb3c15104a36f3b9298ec5210f40b5ff23f4cbb78c543b2"
+          "4b4e7e60cfa13f01568da45018ff156118c15592609d6f2c38972c336cd104cd26"
+          "ece288c06a3b3ab4ba5b5542625bee94a4960f45a2c50425e88d271c58";
     const tz_fields_check fields_check[] = {
         {"Source",        false, 1},
         {"Fee",           false, 2},
         {"Storage limit", false, 3},
         {"Public key",    false, 4},
+ //     {"Option",        _,     5},
+        {"Proof",         false, 6},
     };
     check_field_complexity(data, str, fields_check, sizeof(fields_check));
 }
@@ -456,6 +461,26 @@ CTEST2(operation_parser, check_set_consensus_key_complexity)
     char str[]
         = "030000000000000000000000000000000000000000000000000000000000000000"
           "7200c921d4487c90b4472da6cc566a58d79f0d991dbf904e02030400747884d9ab"
+          "df16b3ab745158925f567e222f71225501826fa83347f6cbe9c393ff0000006086"
+          "24f9a019acb6ce38a73cc3f6f09972d873c28affe25e6f02af57650fad1f6017fa"
+          "0b5dad6b9b3a06a6f329bd44f84213c215157d2b5f71d0c1cacaf632ec42165f3a"
+          "bc6637c69d073fc6bb84893c06a5cb6691c8b0876f76430e26800c3192";
+    const tz_fields_check fields_check[] = {
+        {"Source",        false, 1},
+        {"Fee",           false, 2},
+        {"Storage limit", false, 3},
+        {"Public key",    false, 4},
+ //     {"Option",        _,     5},
+        {"Proof",         false, 6},
+    };
+    check_field_complexity(data, str, fields_check, sizeof(fields_check));
+}
+
+CTEST2(operation_parser, check_set_companion_key_complexity)
+{
+    char str[]
+        = "030000000000000000000000000000000000000000000000000000000000000000"
+          "7300c921d4487c90b4472da6cc566a58d79f0d991dbf904e02030400747884d9ab"
           "df16b3ab745158925f567e222f71225501826fa83347f6cbe9c393ff0000006086"
           "24f9a019acb6ce38a73cc3f6f09972d873c28affe25e6f02af57650fad1f6017fa"
           "0b5dad6b9b3a06a6f329bd44f84213c215157d2b5f71d0c1cacaf632ec42165f3a"
