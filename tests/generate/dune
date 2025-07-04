@@ -1,4 +1,10 @@
 (executable
-        (name generate)
-        (libraries "octez-protocol-018-Proxford-libs.client"
-                   "tezos-benchmarks-proto-018-Proxford"))
+ (name generate)
+ (libraries
+  octez-rust-deps
+  bls12-381.archive
+  tezos-protocol-022-PsRiotum.protocol
+  tezos-benchmarks-proto-022-PsRiotum
+  ; Only for `Tezos_client_base.Bip39`
+  octez-shell-libs.client-base
+  qcheck-core))

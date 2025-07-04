@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License. *)
 
-open Tezos_protocol_018_Proxford
+open Tezos_protocol_022_PsRiotum
 
 let gen_lazy_expr =
   let open QCheck2.Gen in
@@ -54,6 +54,12 @@ let some_private_key =
     "p2sk32wjLHQ1iyjnGnH3fPVCiY5MniQnBHBfDosiSeSjPzr7HFLEdM";
     "p2sk3RDMM4PkWDVjEcVTdLru2MifiboZLYrmxwCExUzTnLTuGSygrx";
     "p2sk4BUTMMWuWuWN5yZDYmwgRSDQiMDRT4a1amNwVFWQRWaREmwmxA";
+    "BLsk2Jod2qGgvm5QKGXPJgWatSbjpdyv3NWvyWTh6iJGdHJBJ3PxXY";
+    "BLsk3NCpsDtjRdJtMoSQWQanrpFKHyR1GrfJd7rBaQj2GiMc9C18of";
+    "BLsk1vs86BfotmMgYWccxZ9QUJGXDTiVLkwzhv5iD29e9HvSZcCwqy";
+    "BLsk2pUjJsC4qmMsiKp4W1rqLQSQDzXJEtSboGokEpff7genbT7jnu";
+    "BLsk2MWQGwa1E2ZMw4mmDWVwW2Z92mWf6bB38zsHsmqZWeyxVMktmA";
+    "BLsk2Wr26xMMQkymMNykWmUuAAHNnyUeWD65MQNKQwemQ3ZCxqZvmR";
   ]
 
 let gen_secret_key =
@@ -81,12 +87,18 @@ let some_public_key =
     "p2pk66Y3TrkdsL8fYZq6cXBpLqgEVcSZDErYDctJWJc5ZzWkgech8Uj";
     "p2pk68CE92CP8tAjbp6LgNagDcns8acLLv3fPfgkHcBpvyQB4ka81BQ";
     "p2pk66m3NQsd4n6LJWe9WMwx9WHeXwKmBaMwXX92WkMQCR99zmwk2PM";
+    "BLpk1koaE6qJifAmUjjeukrgUdZaHCWWcHj6fBqrQLSWvVwHfqNcKKCSv5GxxVHhGirQbjHFsTTk";
+    "BLpk1mERHU2DtVZKJVBXQ3TAzckmmZtSDTdkDrczpCdKvdiTH8XyYjeLVE12KENNbsftSAH6JB6L";
+    "BLpk1rWJQgXinzvSro28tTqj5zE7guM9i645BihBg1P83ZDuzXUiiJjC7EJHJNZXqiphxYWNPdwD";
+    "BLpk1pBonmU5U4Mc5oxi55P2pnZcmhbHQw94g9QQvPDtLt5QxWcBwBVoAXHoj3koDootKzr2Qv7u";
+    "BLpk1n1cKANwMWWR16ERCRLWmKvWy9WDAGTQsLbnmkXvQPQHNTQzMA4knqWNaYnnkPgMdcNQGvfm";
+    "BLpk1zF9MDHwW29DG7kMNmGWHe7HnUwYhXD4X1GfG2PwmYWyCokFRRxHKMwh5MpMWcWq41gn219N";
   ]
 
 let gen_public_key =
   let open QCheck2.Gen in
   let+ pk = oneofl some_public_key in
-  Tezos_crypto.Signature.Public_key.of_b58check_exn pk
+  Environment.Signature.Public_key.of_b58check_exn pk
 
 let some_public_key_hash =
   [
@@ -108,13 +120,19 @@ let some_public_key_hash =
     "tz3hCsUiQDfneTgD7CSZDaUro8SA5aEhwCp2";
     "tz3Wazpbs4CFj78qv2KBJ8Z7HEyqk6ZPxwWZ";
     "tz3XMQscBFM9vPmpbYMavMmwxRMUWvWGZMQQ";
+    "tz4AcerThk5nGtWNBiSqJfZFeWtz6ZqJ6mTY";
+    "tz4J1Kjhjc3QpMxTaLeQaJxWR7DVV8VK5gdq";
+    "tz4HQ7WgTRdgrxEdLWcGrgzYrHbz6a9ELZi3";
+    "tz4H6NGpYd76yxZ4aGbPNKtWMJEEfZFBch2W";
+    "tz4Mh4LFWMpACmKNWm1WNntMCPixsBWaMWMU";
+    "tz4DNQhMQaU9WMCVGwH6mQGGWqMNQHTjywDe";
   ]
 
 let gen_public_key_hash =
   let open QCheck2.Gen in
   let pick =
     let+ pkh = oneofl some_public_key_hash in
-    Tezos_crypto.Signature.Public_key_hash.of_b58check_exn pkh
+    Environment.Signature.Public_key_hash.of_b58check_exn pkh
   in
   let gen =
     let ed25519_tag = Bytes.of_string "\000" in
@@ -123,7 +141,7 @@ let gen_public_key_hash =
     let public_key_hash_size = 20 in
     let* tag = oneofl [ ed25519_tag; secp256k1_tag; p256_tag ] in
     gen_from_blake ~tag ~size:public_key_hash_size
-      Tezos_crypto.Signature.Public_key_hash.encoding
+      Environment.Signature.Public_key_hash.encoding
   in
   oneof [ pick; gen ]
 
@@ -165,6 +183,30 @@ let gen_sc_rollup_commiment_hash =
   let open QCheck2.Gen in
   let+ sc_ch = oneofl some_sc_rollup_commiment_hash in
   Protocol.Alpha_context.Sc_rollup.Commitment.Hash.of_b58check_exn sc_ch
+
+let some_signature =
+  [
+    "edsigtmHfyvWU8Tdt4ZGuZ6niw7NGmRereTiHVEUBMD2b6Kn6vMjuEmef6VvypQzoBYTJxU8wZX6jxtnojnHPPfXvqH2w9Svpp6";
+    "edsigu1VK6VGQwos6CqEidY4M8K1VtSqjZHy5m6cdtrCoJAgxbVm4bwpNyMSCHHuzezHnp9ibpCkAUfs3aJQXZNZ1UdAmZK4XA1";
+    "edsigtpGM8DFmwQNXvxkDeGMKnnTXmwSWSZbRb9UAw48NNQkbaU6dDGK24tR2Md6wGftKMGsbQ4HhDWWd93NhbKeD362soA9e5B";
+    "spsig19FcUCRq39KQAWxW7CAooP3Xo2CpULyTXJ23FFKtdh8HV9SxpaZcdwj11TQTnk7J3953wHGohtbRT2aX2pRKpPLvRgn7Lb";
+    "spsig1UeriVCuY2s4oai7fWkbsCkfkzHuD5ouaQp92egm4hYxFWBKFiTi41dxLhgymJikhVYm6KejjHXibwHA4xWg9RAzRDPeXH";
+    "spsig1NNPk6euXnpWzmmLaGuWvAmX3sADKm3wPMbQRJg9wZPCMX94QnXHUvRXKp6GWA3977wGaMagWWcvUDgV3DeQ6ShV3eMWjU";
+    "p2sigN82jwSaUSapPt7g8ML7BtHPJ5KuhCtSFP6Qbvh8ZsDSd7Po3TVeA6s9zxtzSy9HcQpWwHeexdxUuh5sGGL2Sf4ytimLk3";
+    "p2sigc1eTvpvF5hKKrqQkWz8MN7qpwqWX7uPzfEYGPfrmmKdbmspRjUvsRQn7dWxKGCHUtHyt1GibbixhtcaaxwWTxD1K5fV1C";
+    "p2sigQ4gNRjNuBuFwVx8aAhnZ7JvRwCQUnUygXY6bKmu4416W4QWNQKKN8uD5GRm2vvwB1b6xYnbWGAvcnQWpmPH2kKMNwcG7w";
+    "BLsigAQBhGrS8qP3rPEiRJdVMkwN8LgWXzXwty5RDYUaU4D8uLuFPKUj2cfWfznFwj8LG598MC71dDJpcrFk41uYne9MHGN3NecBtkWTKvZXAUkiXKvNssG7YiwD6q7D28gTXmE864dn3x";
+    "BLsigAS88QcPyL4Uv8umbfxw4fiDLaE6Et4iwKxy4Mmp3P9prSz7eZeqcavaTwpvofnv3crzeALLgsXUtAEjoEebgPJUMLd83zZcjvD3WouPibrXpPFPjchS7QzBwTwcoWWxfydkMTdaoQ";
+    "BLsig9kAJnKqQsiryhwWPUM8MGwDgMyqPYeT61YmZr6BLbBP3feNN83NgbweihQ9cN26JAF9LbRCkAe7U1NWcAY8PwRHmTNLWWe6a6GKCoPHHu4WoeKCWcXHmwRwbT1QXDyQ6mJeGq9mmm";
+    "sigcV5dkJ6xoPN5KvsbuZhWPWZCTWgtubKPqoypavvZMLTabQggkaDQDXfEu5x6mcA1eXzxNX5uZewgbQJvTMqbGGRZeucG7";
+    "sigvF1sMhSeuL2biaDBuUZQzg1GXwgmEXny81RX6JXfKByZamkZaD28s6VEue9oD9sDHpLkMRZpLKR2FL7dKoEr6bZmsBmBW";
+    "sigQvX613A8A8Q4Dikv9EQxwuMDXWM1twWz6fpuH1W1RwPTNMMwyBtP8bXCaqsK8PmFyXMXhNmMUeWqJXyM9uWfm2CCXuSK5";
+  ]
+
+let gen_signature =
+  let open QCheck2.Gen in
+  let+ sig_h = oneofl some_signature in
+  Environment.Signature.of_b58check_exn sig_h
 
 let some_protocol_hash =
   [
@@ -351,7 +393,8 @@ let gen_update_consensus_key =
   let open Protocol.Alpha_context in
   let open QCheck2.Gen in
   let* public_key = gen_public_key in
-  return (Update_consensus_key public_key)
+  let* proof = option gen_signature in
+  return (Update_consensus_key { public_key; proof })
 
 let gen_sc_rollup_add_messages =
   let open Protocol.Alpha_context in

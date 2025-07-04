@@ -1,22 +1,30 @@
-FROM   ocaml/opam:alpine-3.18-ocaml-4.14
+FROM ocaml/opam:ubuntu-24.04-ocaml-5.2
 
-RUN    sudo cp /usr/bin/opam-2.1 /usr/bin/opam;                                         \
-       opam remote add opam https://opam.ocaml.org;                                     \
-       RUSTUP_TOOLCHAIN=1.71.1;                                                         \
-       OCTEZ_VERSION=19.1;                                                              \
-       OCTEZ_REPO=https://gitlab.com/tezos/tezos.git;                                   \
-       OCTEZ_COMMIT=`git ls-remote $OCTEZ_REPO v$OCTEZ_VERSION | cut -f 1`;             \
-       OCTEZ_URL=$OCTEZ_REPO#$OCTEZ_COMMIT;                                             \
-       wget https://sh.rustup.rs/rustup-init.sh;                                        \
-       chmod +x rustup-init.sh;                                                         \
-       ./rustup-init.sh --profile minimal --default-toolchain $RUSTUP_TOOLCHAIN -y;     \
-       source "$HOME/.cargo/env";                                                       \
-       opam install                                                                     \
-           octez-protocol-018-Proxford-libs.$OCTEZ_VERSION                              \
-           terminal_size;                                                               \
-       opam pin tezos-micheline-rewriting.$OCTEZ_VERSION                    $OCTEZ_URL; \
-       opam pin tezos-benchmark-type-inference-018-Proxford.$OCTEZ_VERSION  $OCTEZ_URL; \
-       opam pin tezos-benchmark-018-Proxford.$OCTEZ_VERSION                 $OCTEZ_URL; \
-       opam pin tezos-benchmarks-proto-018-Proxford.$OCTEZ_VERSION          $OCTEZ_URL; \
-       rm -rf opam-repository .opam/download-cache .opam/repo \
-              .opam/4.14/.opam-switch/build .opam/4.14/.opam-switch/sources;
+# Setup a tezos environement
+COPY --chown=opam:opam tezos /opt/tezos
+USER opam
+WORKDIR /opt/tezos
+
+# Install Rust
+RUN sudo apt-get -y install wget
+RUN RUSTUP_TOOLCHAIN=1.77.2 &&                                                   \
+    wget https://sh.rustup.rs/rustup-init.sh &&                                  \
+    chmod +x rustup-init.sh &&                                                   \
+    ./rustup-init.sh --profile minimal --default-toolchain $RUSTUP_TOOLCHAIN -y
+ENV PATH=/home/opam/.cargo/bin:$PATH
+
+# Install Tezos deps
+RUN rm -rf _opam/ && \
+    make build-deps && \
+    eval $(opam env) && \
+    make install && \
+    dune install tezos-protocol-022-PsRiotum && \
+    dune install tezos-benchmarks-proto-022-PsRiotum
+ENV OPAMSWITCH=/opt/tezos
+
+# Get the default opam remote
+RUN opam remote add opam https://opam.ocaml.org && \
+    opam update
+
+# Install other deps
+RUN opam install terminal_size
