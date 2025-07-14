@@ -8,7 +8,7 @@
  (libraries
   octez-rust-deps
   bls12-381.archive
-  tezos-protocol-022-PsRiotum.protocol
+  tezos-protocol-023-PtSeouLo.protocol
   terminal_size)
  (foreign_stubs
   (language c)
