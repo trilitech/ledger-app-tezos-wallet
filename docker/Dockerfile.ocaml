@@ -28,3 +28,9 @@ RUN opam remote add opam https://opam.ocaml.org && \
 
 # Install other deps
 RUN opam install terminal_size
+
+# Clean
+RUN eval $(opam env) && make clean && \
+    rm -rf _opam/.opam-switch/build && \
+    rm -rf _opam/.opam-switch/sources && \
+    /bin/bash -O extglob -O dotglob -c 'rm -rf !(_opam)'
