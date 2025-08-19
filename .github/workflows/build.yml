@@ -134,7 +134,6 @@ jobs:
 
       - name: Generate
         run: |
-          export PATH=/home/opam/.opam/4.14/bin:$PATH
           cp ./app/src/parser/[!g]*.[ch] ./tests/unit/parser
 
           dune exec ./tests/generate/generate.exe micheline 50 \
@@ -144,8 +143,6 @@ jobs:
 
       - name: Unit tests
         run: |
-          export PATH=/home/opam/.opam/4.14/bin:$PATH
-
           make -C tests/unit
 
       - name: Upload results (nano, micheline)
