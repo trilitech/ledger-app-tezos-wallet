@@ -44,14 +44,27 @@ jobs:
           name: app_${{ matrix.device }}_dbg.tgz
 
 
-  build_docker_tezos_ocaml:
+  pull_docker_tezos_ocaml:
     if: github.repository == 'trilitech/ledger-app-tezos-wallet'
-    uses: ./.github/workflows/docker.yml
-    secrets: inherit
-    with:
-      dockerfile: docker/Dockerfile.ocaml
-      image_name: tezos_ocaml
-      checkout_submodules: true
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.container_tag.outputs.tag }}
+    steps:
+      - name: Login to registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ vars.DOCKER_REGISTRY }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Set image tag
+        id: container_tag
+        run: |
+          BASE=${{ vars.DOCKER_REGISTRY }}/${{ vars.DOCKER_REPOSITORY }}/tezos_ocaml
+          echo "tag=$BASE:latest" >> $GITHUB_OUTPUT
+
+      - name: Pull the image
+        run: docker pull ${{ steps.container_tag.outputs.tag }}
 
   integration_tests_basic:
     needs: [build_app]
@@ -102,10 +115,10 @@ jobs:
           path: ./integration_tests_log
 
   generate_samples_unit_tests:
-    needs: [build_docker_tezos_ocaml]
+    needs: [pull_docker_tezos_ocaml]
     runs-on: ubuntu-latest
     container:
-      image: ${{ needs.build_docker_tezos_ocaml.outputs.image }}
+      image: ${{ needs.pull_docker_tezos_ocaml.outputs.image }}
       credentials:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
@@ -121,18 +134,15 @@ jobs:
 
       - name: Generate
         run: |
-          export PATH=/home/opam/.opam/4.14/bin:$PATH
           cp ./app/src/parser/[!g]*.[ch] ./tests/unit/parser
 
-          dune exec ./tests/generate/generate.exe micheline 50 \
+          dune exec --root=tests/generate ./generate.exe micheline 50 \
               nano tests/samples/micheline
-          dune exec ./tests/generate/generate.exe operations 50 \
+          dune exec --root=tests/generate ./generate.exe operations 50 \
               nano tests/samples/operations
 
       - name: Unit tests
         run: |
-          export PATH=/home/opam/.opam/4.14/bin:$PATH
-
           make -C tests/unit
 
       - name: Upload results (nano, micheline)

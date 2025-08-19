@@ -6,25 +6,53 @@ USER opam
 WORKDIR /opt/tezos
 
 # Install Rust
-RUN sudo apt-get -y install wget
-RUN RUSTUP_TOOLCHAIN=1.86.0 &&                                                   \
+RUN sudo apt-get -y install wget &&                                              \
+    RUSTUP_TOOLCHAIN=1.86.0 &&                                                   \
     wget https://sh.rustup.rs/rustup-init.sh &&                                  \
     chmod +x rustup-init.sh &&                                                   \
     ./rustup-init.sh --profile minimal --default-toolchain $RUSTUP_TOOLCHAIN -y
 ENV PATH=/home/opam/.cargo/bin:$PATH
 
-# Install Tezos deps
-RUN rm -rf _opam/ && \
-    make build-deps && \
-    eval $(opam env) && \
-    make install && \
-    dune install tezos-protocol-023-PtSeouLo && \
-    dune install tezos-benchmarks-proto-023-PtSeouLo
+# Build dependencies and install Tezos libs
+RUN rm -rf _opam/ &&                                        \
+    make build-deps &&                                      \
+    eval $(opam env) && dune build @install &&              \
+    eval $(opam env) && dune install                        \
+        # required by `octez-libs`
+        octez-internal-libs                                 \
+        # required by `octez-proto-libs`
+        octez-libs                                          \
+        # required by `octez-riscv-pvm`
+        octez-riscv-api                                     \
+        # required by `octez-proto-libs`
+        octez-riscv-pvm                                     \
+        # required by `tezos-protocol-023-PtSeouLo`
+        octez-proto-libs                                    \
+        # required by `octez-protocol-023-PtSeouLo-libs`
+        tezt-tezos                                          \
+        # required by `tezos-benchmarks-proto-023-PtSeouLo`
+        octez-protocol-023-PtSeouLo-libs                    \
+        # required by `tezos-benchmarks-proto-023-PtSeouLo`
+        tezos-benchmark-type-inference-023-PtSeouLo         \
+        # required by `tezos-benchmark-023-PtSeouLo`
+        tezos-micheline-rewriting                           \
+        # required by `tezos-benchmarks-proto-023-PtSeouLo`
+        tezos-benchmark-023-PtSeouLo                        \
+        # required by `tezos-benchmarks-proto-023-PtSeouLo`
+        tezos-benchmark                                     \
+        # required by `octez-shell-libs`
+        octez-version                                       \
+        # required by `octez-protocol-compiler`
+        octez-protocol-compiler-compat                      \
+        # required by `octez-shell-libs`
+        octez-protocol-compiler                             \
+        octez-rust-deps                                     \
+        bls12-381                                           \
+        tezos-protocol-023-PtSeouLo                         \
+        tezos-benchmarks-proto-023-PtSeouLo                 \
+        octez-shell-libs &&                                 \
+    opam install terminal_size &&                           \
+    make clean &&                                           \
+    rm -rf _opam/.opam-switch/build _opam/.opam-switch/sources
 ENV OPAMSWITCH=/opt/tezos
-
-# Get the default opam remote
-RUN opam remote add opam https://opam.ocaml.org && \
-    opam update
-
-# Install other deps
-RUN opam install terminal_size
+ENV PATH=/opt/tezos/_opam/bin:$PATH
