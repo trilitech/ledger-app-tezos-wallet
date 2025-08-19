@@ -136,9 +136,9 @@ jobs:
         run: |
           cp ./app/src/parser/[!g]*.[ch] ./tests/unit/parser
 
-          dune exec ./tests/generate/generate.exe micheline 50 \
+          dune exec --root=tests/generate ./generate.exe micheline 50 \
               nano tests/samples/micheline
-          dune exec ./tests/generate/generate.exe operations 50 \
+          dune exec --root=tests/generate ./generate.exe operations 50 \
               nano tests/samples/operations
 
       - name: Unit tests
