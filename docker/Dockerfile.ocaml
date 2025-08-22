@@ -15,6 +15,7 @@ ENV PATH=/home/opam/.cargo/bin:$PATH
 
 # Build dependencies and install Tezos libs
 RUN rm -rf _opam/ &&                                        \
+    sudo apt-get update &&                                  \
     make build-deps &&                                      \
     eval $(opam env) && dune build @install &&              \
     eval $(opam env) && dune install                        \
