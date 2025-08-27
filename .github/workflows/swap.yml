@@ -12,7 +12,8 @@ jobs:
   job_functional_tests:
     uses: LedgerHQ/app-exchange/.github/workflows/reusable_swap_functional_tests.yml@develop
     with:
-      branch_for_exchange: 'develop'
+      repo_for_exchange: 'spalmer25/app-exchange'
+      branch_for_exchange: 'palmer@functori@bump-tezos-to-seoul-protocol'
       branch_for_tezos: ${{ github.ref }}
       repo_for_tezos: ${{ github.repository }}
       test_filter: '"tezos"'
