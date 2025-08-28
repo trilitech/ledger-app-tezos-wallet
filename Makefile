@@ -80,7 +80,7 @@ clean:
 	rm -rf bin app_*.tgz
 	make -C tests/unit/ctest clean
 	$(DOCKER_RUN_APP_BUILDER) make -C app mrproper
-	$(DOCKER_RUN_APP_OCAML) bash -c "make -C /app/tests/generate clean && cd /app && rm -rf _build"
+	$(DOCKER_RUN_APP_OCAML) bash -c "make -C /app/tests/generate clean && cd /app && rm -rf **/_build"
 
 unit_tests:	test/samples/micheline/nano/samples.hex	\
 		test/samples/operations/nano/samples.hex	\
@@ -97,35 +97,21 @@ unit_tests:	test/samples/micheline/nano/samples.hex	\
 
 RUN_TEST_DOCKER = ./tests/integration/run_test_docker.sh
 
-integration_tests_basic_stax:	app_stax.tgz		\
-				app_stax_dbg.tgz	\
-				tests/integration/*	\
-				tests/integration/touch/*
-	$(RUN_TEST_DOCKER) stax tests/integration/touch
-
-integration_tests_basic_flex:	app_flex.tgz		\
-				app_flex_dbg.tgz	\
-				tests/integration/*	\
-				tests/integration/touch/*
-	$(RUN_TEST_DOCKER) flex tests/integration/touch
-
 integration_tests_basic_%:	app_%.tgz   \
 				app_%_dbg.tgz			\
-				tests/integration/*		\
-				tests/integration/nano/*	\
-				tests/integration/nano/%/*
+				$(shell find tests/integration/python -type f)
 	docker run --rm -i -v "$(realpath .):/app" \
-	--entrypoint=/bin/sh ledger-app-tezos-integration-tests -c "  \
+	--entrypoint=/bin/bash ledger-app-tezos-integration-tests -c "  \
 		TMP_DIR=\$$(mktemp -d /tmp/foo-XXXXXX);                   \
 		cd /app;                                                  \
 		tar xfz app_$*_dbg.tgz -C \$$TMP_DIR;                     \
-		apk add gmp-dev curl jq libsodium-dev git xxd procps;     \
+		apt install -y libsodium-dev;     \
 		python3 -m venv tezos_test_env --system-site-package;     \
 		source ./tezos_test_env/bin/activate;                     \
 		python3 -m pip install --upgrade pip -q;                  \
-		python3 -m pip install -r tests/requirements.txt -q ;  \
-		python3 -m pytest -n 32 tests/integration/nano/ --tb=no   \
-			--device $* --app \$$TMP_DIR/app.elf                  \
+		python3 -m pip install -r tests/requirements.txt -q ;     \
+		python3 -m pytest -n 32 tests/integration/python/ --tb=no \
+			--device $* --app \$$TMP_DIR/app.elf              \
 			--log-dir integration_tests_log"
 
 integration_tests_basic:	integration_tests_basic_nanos	\

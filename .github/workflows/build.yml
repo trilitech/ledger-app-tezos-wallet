@@ -44,13 +44,27 @@ jobs:
           name: app_${{ matrix.device }}_dbg.tgz
 
 
-  build_docker_tezos_ocaml:
+  pull_docker_tezos_ocaml:
     if: github.repository == 'trilitech/ledger-app-tezos-wallet'
-    uses: ./.github/workflows/docker.yml
-    secrets: inherit
-    with:
-      dockerfile: docker/Dockerfile.ocaml
-      image_name: tezos_ocaml
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.container_tag.outputs.tag }}
+    steps:
+      - name: Login to registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ vars.DOCKER_REGISTRY }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Set image tag
+        id: container_tag
+        run: |
+          BASE=${{ vars.DOCKER_REGISTRY }}/${{ vars.DOCKER_REPOSITORY }}/tezos_ocaml
+          echo "tag=$BASE:latest" >> $GITHUB_OUTPUT
+
+      - name: Pull the image
+        run: docker pull ${{ steps.container_tag.outputs.tag }}
 
   integration_tests_basic:
     needs: [build_app]
@@ -82,41 +96,29 @@ jobs:
 
       - name: Run test
         run: |
-          if [ "${{ matrix.device }}" = "stax" ] || [ "${{ matrix.device }}" = "flex" ]; then
-            ./tests/integration/run_test_local.sh -F -m ${{ matrix.device }} \
-              ./tests/integration/touch
-          else
-            apk add gmp-dev curl jq libsodium-dev git xxd procps
-            python3 -m venv tezos_test_env --system-site-package
-            source ./tezos_test_env/bin/activate
-            python3 -m pip install --upgrade pip -q
-            python3 -m pip install -r ./tests/requirements.txt -q
-            TMP_DIR=$(mktemp -d /tmp/foo-XXXXXX)
-            tar xfz app_${{ matrix.device }}_dbg.tgz -C $TMP_DIR
-            python3 -m pytest -n 32 tests/integration/nano/ --tb=no                \
-                   --device ${{ matrix.device }} --app $TMP_DIR/app.elf \
-                   --log-dir integration_tests_log
-          fi
+          apt install -y libsodium-dev
+          python3 -m venv tezos_test_env --system-site-package
+          . ./tezos_test_env/bin/activate
+          python3 -m pip install --upgrade pip -q
+          python3 -m pip install -r ./tests/requirements.txt -q
+          TMP_DIR=$(mktemp -d /tmp/foo-XXXXXX)
+          tar xfz app_${{ matrix.device }}_dbg.tgz -C $TMP_DIR
+          python3 -m pytest -n 32 tests/integration/python/ --tb=no   \
+                 --device ${{ matrix.device }} --app $TMP_DIR/app.elf \
+                 --log-dir integration_tests_log
 
-      - name: Upload Stax results
+      - name: Upload results
         uses: actions/upload-artifact@v4
-        if: always() && (matrix.device == 'stax' || matrix.device == 'flex')
-        with:
-          name: integration_tests_${{ matrix.device }}.json
-          path: ./integration_tests.json
-
-      - name: Upload Nano results
-        uses: actions/upload-artifact@v4
-        if: always() && (matrix.device != 'stax' && matrix.device != 'flex')
+        if: always()
         with:
           name: integration_tests_log_${{ matrix.device }}
           path: ./integration_tests_log
 
   generate_samples_unit_tests:
-    needs: [build_docker_tezos_ocaml]
+    needs: [pull_docker_tezos_ocaml]
     runs-on: ubuntu-latest
     container:
-      image: ${{ needs.build_docker_tezos_ocaml.outputs.image }}
+      image: ${{ needs.pull_docker_tezos_ocaml.outputs.image }}
       credentials:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
@@ -132,18 +134,15 @@ jobs:
 
       - name: Generate
         run: |
-          export PATH=/home/opam/.opam/4.14/bin:$PATH
           cp ./app/src/parser/[!g]*.[ch] ./tests/unit/parser
 
-          dune exec ./tests/generate/generate.exe micheline 50 \
+          dune exec --root=tests/generate ./generate.exe micheline 50 \
               nano tests/samples/micheline
-          dune exec ./tests/generate/generate.exe operations 50 \
+          dune exec --root=tests/generate ./generate.exe operations 50 \
               nano tests/samples/operations
 
       - name: Unit tests
         run: |
-          export PATH=/home/opam/.opam/4.14/bin:$PATH
-
           make -C tests/unit
 
       - name: Upload results (nano, micheline)
@@ -190,9 +189,9 @@ jobs:
 
       - name: Test
         run: |
-            apk add gmp-dev curl jq libsodium-dev git xxd procps
+            apt install -y libsodium-dev
             python3 -m venv tezos_test_env --system-site-package
-            source ./tezos_test_env/bin/activate
+            . ./tezos_test_env/bin/activate
             python3 -m pip install --upgrade pip -q
             python3 -m pip install -r ./tests/requirements.txt -q
             ./tests/integration/run_test_local.sh -T100 -F -m ${{ matrix.device }} tests

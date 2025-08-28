@@ -419,6 +419,14 @@ find_prefix(const char *s, const uint8_t **p, size_t *pl, size_t dl)
     B58_PREFIX("p2pk", "\x03\xb2\x8b\x7f", 4, 33);
     B58_PREFIX("BLpk", "\x06\x95\x87\xcc", 4, 48);
 
+    /* Signatures */
+
+    B58_PREFIX("sig", "\x04\x82\x2b", 3, 64);
+    B58_PREFIX("edsig", "\x09\xf5\xcd\x86\x12", 5, 64);
+    B58_PREFIX("spsig1", "\x0d\x73\x65\x13\x3f", 5, 64);
+    B58_PREFIX("p2sig", "\x36\xf0\x2c\x34", 4, 64);
+    B58_PREFIX("BLsig", "\x28\xab\x40\xcf", 4, 96);
+
     /* For tz_format_address */
 
     B58_PREFIX("KT1",  "\x02\x5a\x79",     3, 20);
@@ -448,8 +456,8 @@ tz_format_base58check(const char *sprefix, const uint8_t *data, size_t size,
         return 1;
     }
 
-    /* In order to avoid vla, we have a maximum buffer size of 64 */
-    uint8_t prepared[64];
+    /* In order to avoid vla, we have a maximum buffer size of 128 */
+    uint8_t prepared[128];
     if ((prefix_len + size + 4) > sizeof(prepared)) {
         PRINTF(
             "[WARNING] tz_format_base58check() failed: fixed size "
@@ -507,6 +515,22 @@ tz_format_pk(const uint8_t *data, size_t size, char *obuf, size_t olen)
     // clang-format on
 
     return tz_format_base58check(prefix, data + 1, size - 1, obuf, olen);
+}
+
+int
+tz_format_sig(const uint8_t *data, size_t size, char *obuf, size_t olen)
+{
+    const char *prefix;
+
+    // clang-format off
+    switch (size) {
+    case 64:  prefix = "sig"; break;
+    case 96:  prefix = "BLsig"; break;
+    default: return 1;
+    }
+    // clang-format on
+
+    return tz_format_base58check(prefix, data, size, obuf, olen);
 }
 
 int

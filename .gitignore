@@ -1,5 +1,5 @@
 /build
-/_build
+**/_build
 /app/.target
 /app/bin
 /app/build
