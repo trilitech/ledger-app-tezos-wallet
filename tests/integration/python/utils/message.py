@@ -30,6 +30,7 @@ from pytezos.michelson.forge import (
     forge_nat,
     forge_public_key,
 )
+from pytezos.michelson.tags import prim_tags
 from pytezos.operation.content import ContentMixin, format_mutez
 import pytezos.operation.forge as forge_operation
 from pytezos.operation.forge import reserved_entrypoints, forge_tag
@@ -90,6 +91,9 @@ class Watermark(IntEnum):
     MANAGER_OPERATION    = 0x03
     MICHELINE_EXPRESSION = 0x05
 
+# pytezos is not up to date with the protocol Seoul
+# See `https://gitlab.com/tezos/tezos/-/blob/v23-release/src/proto_023_PtSeouLo/lib_protocol/michelson_v1_primitives.ml#L807`
+prim_tags.update({ 'IS_IMPLICIT_ACCOUNT': b'\x9e'})
 
 class MichelineExpr(Message):
     """Class representing a tezos micheline expression."""
