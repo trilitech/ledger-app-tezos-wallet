@@ -21,7 +21,7 @@ from typing import List, Union
 
 import requests
 
-from ragger.firmware import Firmware
+from ledgered.devices import Device, DeviceType
 from ragger.navigator import BaseNavInsID, NavIns, NavInsID
 
 from utils.backend import TezosBackend
@@ -31,7 +31,7 @@ from utils.navigator import TezosNavigator, TezosNavInsID
 def test_home_menu(tezos_navigator: TezosNavigator, snapshot_dir: Path):
     """Check home menu flow"""
     instructions: List[Union[NavIns, BaseNavInsID]] = []
-    if tezos_navigator._firmware.is_nano:
+    if tezos_navigator._device.is_nano:
         instructions = [
             # Home
             NavInsID.RIGHT_CLICK,  # Version
@@ -50,14 +50,14 @@ def test_settings_menu(tezos_navigator: TezosNavigator, snapshot_dir: Path):
     """Check settings menu flow"""
     tezos_navigator.navigate_to_settings()
     instructions: List[Union[NavIns, BaseNavInsID]] = []
-    if tezos_navigator._firmware.is_nano:
+    if tezos_navigator._device.is_nano:
         instructions = [
             # Expert Mode
             NavInsID.RIGHT_CLICK,  # Blind Sign
             NavInsID.RIGHT_CLICK,  # Back
             NavInsID.BOTH_CLICK,  # Home
         ]
-    elif tezos_navigator._firmware == Firmware.STAX:
+    elif tezos_navigator._device == DeviceType.STAX:
         instructions = [
             NavInsID.USE_CASE_SETTINGS_NEXT,
             TezosNavInsID.SETTINGS_EXIT,
@@ -89,7 +89,7 @@ def test_toggle_blindsign(tezos_navigator: TezosNavigator, snapshot_dir: Path):
 
 def test_quit(tezos_navigator: TezosNavigator, backend: TezosBackend):
     """Check quit app"""
-    if backend._firmware.is_nano:
+    if backend._device.is_nano:
         # Home
         backend.left_click()
         backend.wait_for_screen_change()  # Quit

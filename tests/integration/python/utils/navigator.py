@@ -21,7 +21,7 @@ import time
 from typing import Any, Callable, Dict, List, Optional, Union
 
 from ragger.backend import BackendInterface, SpeculosBackend
-from ragger.firmware import Firmware
+from ledgered.devices import Device, DeviceType
 from ragger.firmware.touch.element import Center
 from ragger.firmware.touch.layouts import ChoiceList, RightHeader
 from ragger.firmware.touch.positions import (
@@ -29,7 +29,7 @@ from ragger.firmware.touch.positions import (
     STAX_BUTTON_LOWER_LEFT,
     STAX_BUTTON_ABOVE_LOWER_MIDDLE,
     FLEX_BUTTON_LOWER_LEFT,
-    FLEX_BUTTON_ABOVE_LOWER_MIDDLE
+    FLEX_BUTTON_ABOVE_LOWER_MIDDLE,
 )
 from ragger.firmware.touch.screen import MetaScreen
 from ragger.firmware.touch.use_cases import (
@@ -52,9 +52,9 @@ class UseCaseSettings(OriginalUseCaseSettings, metaclass=MetaScreen):
 
     _toggle_list: ChoiceList
 
-    def __init__(self, client: BackendInterface, firmware: Firmware):
+    def __init__(self, client: BackendInterface, device: Device):
         # `MetaScreen` require an explicit __init__ function
-        super().__init__(client, firmware)
+        super().__init__(client, device)
 
     def toggle_expert_mode(self):
         """Toggle the expert_mode switch."""
@@ -74,11 +74,11 @@ class UseCaseAddressConfirmation(OriginalUseCaseAddressConfirmation):
 
     # *_BUTTON_ABOVE_LOWER_LEFT
     QR_POSITIONS = {
-        Firmware.STAX: Position(
+        DeviceType.STAX: Position(
             STAX_BUTTON_LOWER_LEFT.x,
             STAX_BUTTON_ABOVE_LOWER_MIDDLE.y
         ),
-        Firmware.FLEX: Position(
+        DeviceType.FLEX: Position(
             FLEX_BUTTON_LOWER_LEFT.x,
             FLEX_BUTTON_ABOVE_LOWER_MIDDLE.y
         )
@@ -86,7 +86,7 @@ class UseCaseAddressConfirmation(OriginalUseCaseAddressConfirmation):
 
     def show_qr(self) -> None:
         """Tap to show qr code."""
-        self.client.finger_touch(*self.QR_POSITIONS[self.firmware])
+        self.client.finger_touch(*self.QR_POSITIONS[self.device.type])
 
 
 class UseCaseReview(OriginalUseCaseReview, metaclass=MetaScreen):
@@ -113,17 +113,17 @@ class UseCaseReview(OriginalUseCaseReview, metaclass=MetaScreen):
     # position of the button cannot be defined statically. The
     # static positions below are defined for the test data.
     MORE_POSITIONS = {
-        Firmware.STAX: Position(200, 390),
-        Firmware.FLEX: Position(240, 350)
+        DeviceType.STAX: Position(200, 390),
+        DeviceType.FLEX: Position(240, 350)
     }
 
-    def __init__(self, client: BackendInterface, firmware: Firmware):
+    def __init__(self, client: BackendInterface, device: Device):
         # `MetaScreen` require an explicit __init__ function
-        super().__init__(client, firmware)
+        super().__init__(client, device)
 
     def show_more(self) -> None:
         """Tap to show more."""
-        self.client.finger_touch(*self.MORE_POSITIONS[self.firmware])
+        self.client.finger_touch(*self.MORE_POSITIONS[self.device.type])
 
     def skip(self) -> None:
         """Press the skip button."""
@@ -171,19 +171,19 @@ class TezosNavigator(metaclass=MetaScreen):
     center:    Center
 
     _backend: TezosBackend
-    _firmware: Firmware
+    _device: Device
     _navigator: Navigator
     _root_dir: Path
 
     def __init__(self,
                  backend: TezosBackend,
-                 firmware: Firmware,
+                 device: Device,
                  navigator: Navigator):
         self._backend = backend
-        self._firmware = firmware
+        self._device = device
         self._navigator = navigator
 
-        if self._firmware.is_nano:
+        if self._device.is_nano:
             self._navigator.add_callback(TezosNavInsID.REVIEW_TX_NEXT, self._backend.right_click)
         else:
             tezos_callbacks: Dict[BaseNavInsID, Callable[..., Any]] = {
@@ -371,7 +371,7 @@ class TezosNavigator(metaclass=MetaScreen):
     def navigate_to_settings(self, **kwargs) -> int:
         """Navigate from Home screen to settings."""
         instructions: List[Union[NavIns, BaseNavInsID]] = []
-        if self._firmware.is_nano:
+        if self._device.is_nano:
             instructions = [
                 # Home
                 NavInsID.RIGHT_CLICK,  # Version
@@ -391,7 +391,7 @@ class TezosNavigator(metaclass=MetaScreen):
         snap_idx = self.navigate_to_settings(**go_to_settings_kwargs)
 
         instructions: List[Union[NavIns, BaseNavInsID]] = []
-        if self._firmware.is_nano:
+        if self._device.is_nano:
             instructions = [
                 # Expert Mode
                 NavInsID.BOTH_CLICK,
@@ -417,7 +417,7 @@ class TezosNavigator(metaclass=MetaScreen):
         snap_idx = self.navigate_to_settings(**go_to_settings_kwargs)
 
         instructions: List[Union[NavIns, BaseNavInsID]] = []
-        if self._firmware.is_nano:
+        if self._device.is_nano:
             instructions = [
                 # Expert Mode
                 NavInsID.RIGHT_CLICK,  # Blind Sign
@@ -459,7 +459,7 @@ class TezosNavigator(metaclass=MetaScreen):
     def accept_public_key(self, show_qr: bool = False, **kwargs) -> None:
         """Navigate through public key flow and accept public key"""
         validation_instructions: List[Union[NavIns, BaseNavInsID]] = []
-        if self._firmware.is_nano:
+        if self._device.is_nano:
             text = "^Approve$"
             validation_instructions = [NavInsID.BOTH_CLICK]
         else:
@@ -482,7 +482,7 @@ class TezosNavigator(metaclass=MetaScreen):
     def reject_public_key(self, **kwargs) -> None:
         """Navigate through public key flow and reject"""
         validation_instructions: List[Union[NavIns, BaseNavInsID]] = []
-        if self._firmware.is_nano:
+        if self._device.is_nano:
             text = "^Reject$"
             validation_instructions = [NavInsID.BOTH_CLICK]
         else:
@@ -500,9 +500,9 @@ class TezosNavigator(metaclass=MetaScreen):
     def accept_sign(self, **kwargs) -> None:
         """Navigate through signing flow and accept to sign"""
         validation_instructions: List[Union[NavIns, BaseNavInsID]] = []
-        if self._firmware.is_nano:
+        if self._device.is_nano:
             text = "^Accept$"
-            if self._firmware == Firmware.NANOS:
+            if self._device == DeviceType.NANOS:
                 text = "^Accept and send$"
             validation_instructions = [NavInsID.BOTH_CLICK]
         else:
@@ -520,7 +520,7 @@ class TezosNavigator(metaclass=MetaScreen):
     def reject_sign(self, **kwargs) -> None:
         """Navigate through signing flow and reject."""
         validation_instructions: List[Union[NavIns, BaseNavInsID]] = []
-        if self._firmware.is_nano:
+        if self._device.is_nano:
             text = "^Reject$"
             validation_instructions = [NavInsID.BOTH_CLICK]
         else:
@@ -539,7 +539,7 @@ class TezosNavigator(metaclass=MetaScreen):
     def hard_reject_sign(self, **kwargs) -> None:
         """Navigate through signing flow and until a hard reject send
         back to home."""
-        if self._firmware.is_nano:
+        if self._device.is_nano:
             text = "^Application$"
         else:
             text = "^Tezos Wallet$"
@@ -553,7 +553,7 @@ class TezosNavigator(metaclass=MetaScreen):
         """Navigate through the signing expert requirement flow and accept.
         Only available for Touch devices, fail otherwise.
         """
-        assert not self._firmware.is_nano, "Skip available only on Touch devices"
+        assert not self._device.is_nano, "Skip available only on Touch devices"
         self._navigate_review(
             text="^Enable expert mode$",
             validation_instructions=[
@@ -566,7 +566,7 @@ class TezosNavigator(metaclass=MetaScreen):
     def expert_reject_sign(self, **kwargs) -> None:
         """Navigate through the signing expert requirement flow and reject."""
         validation_instructions: List[Union[NavIns, BaseNavInsID]] = []
-        if self._firmware.is_nano:
+        if self._device.is_nano:
             text = "^Home$"
             validation_instructions = [NavInsID.BOTH_CLICK]
         else:
@@ -584,7 +584,7 @@ class TezosNavigator(metaclass=MetaScreen):
 
     def expert_splash_navigate(self, **kwargs) -> None:
         """Navigate until the expert mode splash screen."""
-        if self._firmware.is_nano:
+        if self._device.is_nano:
             text = "^Next field requires$"
         else:
             text = "^Expert mode$"
@@ -593,7 +593,7 @@ class TezosNavigator(metaclass=MetaScreen):
     def accept_sign_error_risk(self, **kwargs) -> None:
         """Navigate through signing risk warning flow and accept risk."""
         validation_instructions: List[Union[NavIns, BaseNavInsID]] = []
-        if self._firmware.is_nano:
+        if self._device.is_nano:
             text = "^Accept risk$"
             validation_instructions = [NavInsID.BOTH_CLICK]
         else:
@@ -608,7 +608,7 @@ class TezosNavigator(metaclass=MetaScreen):
     def refuse_sign_error_risk(self, **kwargs) -> None:
         """Navigate through signing risk warning flow and accept risk."""
         validation_instructions: List[Union[NavIns, BaseNavInsID]] = []
-        if self._firmware.is_nano:
+        if self._device.is_nano:
             text = "^Reject$"
             validation_instructions = [NavInsID.BOTH_CLICK]
         else:
@@ -626,7 +626,7 @@ class TezosNavigator(metaclass=MetaScreen):
 
     def accept_sign_blindsign_risk(self, **kwargs) -> None:
         """Navigate through signing risk warning flow and accept risk."""
-        if self._firmware.is_nano:
+        if self._device.is_nano:
             self._navigate_review(
                 text="^Accept risk$",
                 validation_instructions=[NavInsID.BOTH_CLICK],
@@ -642,7 +642,7 @@ class TezosNavigator(metaclass=MetaScreen):
 
     def refuse_sign_blindsign_risk(self, **kwargs) -> None:
         """Navigate through signing risk warning flow and accept risk."""
-        if self._firmware.is_nano:
+        if self._device.is_nano:
             self._navigate_review(
                 text="^Reject$",
                 validation_instructions=[NavInsID.BOTH_CLICK],
@@ -664,7 +664,7 @@ class TezosNavigator(metaclass=MetaScreen):
         """Tap on the Skip button and accept to skip.
         Only available for Touch devices, fail otherwise.
         """
-        assert not self._firmware.is_nano, "Skip available only on Touch devices"
+        assert not self._device.is_nano, "Skip available only on Touch devices"
         self._navigate_review(
             text="Skip",
             validation_instructions=[
@@ -678,7 +678,7 @@ class TezosNavigator(metaclass=MetaScreen):
         """Tap on the Skip button and reject to skip.
         Only available for Touch devices, fail otherwise.
         """
-        assert not self._firmware.is_nano, "Skip available only on Touch devices"
+        assert not self._device.is_nano, "Skip available only on Touch devices"
         self._navigate_review(
             text="Skip",
             validation_instructions=[

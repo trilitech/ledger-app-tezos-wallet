@@ -20,22 +20,22 @@ from pathlib import Path
 from typing import Dict, Generator, List, Union
 
 import pytest
-from ragger.firmware import Firmware
+from ledgered.devices import Devices, Device, DeviceType
 from ragger.navigator import Navigator, NanoNavigator, TouchNavigator
 
 from utils.account import Account, DEFAULT_ACCOUNT, DEFAULT_SEED
 from utils.backend import TezosBackend, SpeculosTezosBackend
 from utils.navigator import TezosNavigator
 
-FIRMWARES: List[Firmware] = [
-    Firmware.NANOS,
-    Firmware.NANOSP,
-    Firmware.NANOX,
-    Firmware.STAX,
-    Firmware.FLEX
+DEVICES_LIST: List[Device] = [
+    DeviceType.NANOS,
+    DeviceType.NANOSP,
+    DeviceType.NANOX,
+    DeviceType.STAX,
+    DeviceType.FLEX
 ]
 
-DEVICES: List[str] = list(map(lambda fw: fw.device, FIRMWARES))
+DEVICES: List[str] = list(map(lambda dev: Devices.get_by_type(dev).name, DEVICES_LIST))
 
 def pytest_addoption(parser):
     """Register argparse-style options for pytest."""
@@ -70,10 +70,11 @@ def pytest_addoption(parser):
                      required=True)
 
 @pytest.fixture(scope="session")
-def firmware(pytestconfig) -> Firmware :
-    """Get `firware` for pytest."""
+def device(pytestconfig) -> Device :
+    """Get `device` for pytest."""
     device = pytestconfig.getoption("device")
-    return next(fw for fw in FIRMWARES if fw.device == device)
+    devtype = next(dev for dev in DEVICES_LIST if dev.name.lower() == device)
+    return Devices.get_by_type(devtype)
 
 @pytest.fixture(scope="session")
 def port(pytestconfig, worker_id) -> int :
@@ -120,7 +121,7 @@ def account(request) -> Account:
 
 @pytest.fixture(scope="function")
 def backend(app_path: Path,
-            firmware: Firmware,
+            device: Device,
             port: int,
             display: bool,
             seed: str,
@@ -137,7 +138,7 @@ def backend(app_path: Path,
     ]
 
     backend = SpeculosTezosBackend(app_path,
-                                   firmware,
+                                   device,
                                    args=speculos_args)
 
     with backend as b:
@@ -146,15 +147,15 @@ def backend(app_path: Path,
 @pytest.fixture(scope="function")
 def tezos_navigator(
         backend: TezosBackend,
-        firmware: Firmware,
+        device: Device,
         golden_run: bool
 ) -> TezosNavigator:
     """Get `navigator` for pytest."""
-    if firmware.is_nano:
-        navigator: Navigator = NanoNavigator(backend, firmware, golden_run)
+    if device.is_nano:
+        navigator: Navigator = NanoNavigator(backend, device, golden_run)
     else:
-        navigator = TouchNavigator(backend, firmware, golden_run)
-    return TezosNavigator(backend, firmware, navigator)
+        navigator = TouchNavigator(backend, device, golden_run)
+    return TezosNavigator(backend, device, navigator)
 
 @pytest.fixture(scope="function")
 def snapshot_dir(request) -> Path :
@@ -174,27 +175,27 @@ def requires_device(device):
     )
 
 @pytest.fixture(autouse=True)
-def use_only_on_device(request, firmware: Firmware):
+def use_only_on_device(request, device: Device):
     """Fixture to add tests on specific devices."""
 
-    def get_devices(device: str) -> List[str]:
-        if device == "nano":
+    def get_devices(dev: str) -> List[str]:
+        if dev == "nano":
             return ["nanos", "nanosp", "nanox"]
-        if device == "touch":
+        if dev == "touch":
             return ["stax", "flex"]
-        return [device]
+        return [dev]
 
     marker = request.node.get_closest_marker('use_on_device')
     if marker:
-        current_device = firmware.device
+        current_device = device.name.lower()
         requested_devices = marker.args[0]
         devices: List[str] = []
         if isinstance(requested_devices, str):
             devices = get_devices(requested_devices)
         else:
             assert isinstance(requested_devices, list)
-            for device in requested_devices:
-                devices += get_devices(device)
+            for dev in requested_devices:
+                devices += get_devices(dev)
         if current_device not in devices:
             pytest.skip(f'skipped on this device: "{current_device}"')
 
