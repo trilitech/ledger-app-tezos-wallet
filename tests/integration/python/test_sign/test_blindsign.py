@@ -21,7 +21,7 @@ from typing import List, Union
 
 import pytest
 
-from ragger.firmware import Firmware
+from ledgered.devices import Device, DeviceType
 from ragger.navigator import NavIns, NavInsID
 
 from utils.account import Account
@@ -111,7 +111,7 @@ BASIC_OPERATION = OperationGroup([
 
 def test_sign_basic_too_long_operation(
         backend: TezosBackend,
-        firmware: Firmware,
+        device: Device,
         tezos_navigator: TezosNavigator,
         account: Account,
         snapshot_dir: Path
@@ -124,7 +124,7 @@ def test_sign_basic_too_long_operation(
     tezos_navigator.toggle_blindsign()
 
     with backend.sign(account, message, with_hash=True) as result:
-        if firmware.is_nano:
+        if device.is_nano:
             tezos_navigator.accept_sign_blindsign_risk(snap_path=snapshot_dir / "clear_n_too_long_warning")
         else:
             tezos_navigator.skip_sign(snap_path=snapshot_dir / "skip")
@@ -139,7 +139,7 @@ def test_sign_basic_too_long_operation(
 
 def test_reject_basic_too_long_operation_at_warning(
         backend: TezosBackend,
-        firmware: Firmware,
+        device: Device,
         tezos_navigator: TezosNavigator,
         account: Account,
         snapshot_dir: Path
@@ -151,7 +151,7 @@ def test_reject_basic_too_long_operation_at_warning(
 
     with StatusCode.REJECT.expected():
         with backend.sign(account, BASIC_OPERATION):
-            if firmware.is_nano:
+            if device.is_nano:
                 tezos_navigator.refuse_sign_blindsign_risk(snap_path=snapshot_dir / "clear_n_too_long_warning")
             else:
                 tezos_navigator.skip_sign(snap_path=snapshot_dir / "skip")
@@ -159,7 +159,7 @@ def test_reject_basic_too_long_operation_at_warning(
 
 def test_reject_basic_too_long_operation_at_summary(
         backend: TezosBackend,
-        firmware: Firmware,
+        device: Device,
         tezos_navigator: TezosNavigator,
         account: Account,
         snapshot_dir: Path
@@ -171,7 +171,7 @@ def test_reject_basic_too_long_operation_at_summary(
 
     with StatusCode.REJECT.expected():
         with backend.sign(account, BASIC_OPERATION):
-            if firmware.is_nano:
+            if device.is_nano:
                 tezos_navigator.accept_sign_blindsign_risk(snap_path=snapshot_dir / "clear_n_too_long_warning")
             else:
                 tezos_navigator.skip_sign(snap_path=snapshot_dir / "skip")
@@ -205,7 +205,7 @@ def test_reject_at_skip(
 
 def test_sign_too_long_operation_with_only_transactions(
         backend: TezosBackend,
-        firmware: Firmware,
+        device: Device,
         tezos_navigator: TezosNavigator,
         account: Account,
         snapshot_dir: Path
@@ -272,7 +272,7 @@ def test_sign_too_long_operation_with_only_transactions(
     tezos_navigator.toggle_blindsign()
 
     with backend.sign(account, message, with_hash=True) as result:
-        if firmware.is_nano:
+        if device.is_nano:
             tezos_navigator.accept_sign_blindsign_risk(snap_path=snapshot_dir / "clear_n_too_long_warning")
         else:
             tezos_navigator.skip_sign(snap_path=snapshot_dir / "skip")
@@ -287,7 +287,7 @@ def test_sign_too_long_operation_with_only_transactions(
 
 def test_sign_too_long_operation_without_fee_or_amount(
         backend: TezosBackend,
-        firmware: Firmware,
+        device: Device,
         tezos_navigator: TezosNavigator,
         account: Account,
         snapshot_dir: Path
@@ -324,7 +324,7 @@ def test_sign_too_long_operation_without_fee_or_amount(
     tezos_navigator.toggle_blindsign()
 
     with backend.sign(account, message, with_hash=True) as result:
-        if firmware.is_nano:
+        if device.is_nano:
             tezos_navigator.accept_sign_blindsign_risk(snap_path=snapshot_dir / "clear_n_too_long_warning")
         else:
             tezos_navigator.skip_sign(snap_path=snapshot_dir / "skip")
@@ -392,7 +392,7 @@ OPERATION_WITH_TOO_LARGE = OperationGroup([
 
 def test_sign_too_long_operation_with_too_large(
         backend: TezosBackend,
-        firmware: Firmware,
+        device: Device,
         tezos_navigator: TezosNavigator,
         account: Account,
         snapshot_dir: Path
@@ -405,7 +405,7 @@ def test_sign_too_long_operation_with_too_large(
     tezos_navigator.toggle_blindsign()
 
     with backend.sign(account, message, with_hash=True) as result:
-        if firmware.is_nano:
+        if device.is_nano:
             tezos_navigator.accept_sign_error_risk(snap_path=snapshot_dir / "clear_n_too_large_warning")
         else:
             tezos_navigator.skip_sign(snap_path=snapshot_dir / "skip")
@@ -421,7 +421,7 @@ def test_sign_too_long_operation_with_too_large(
 
 def test_reject_too_long_operation_with_too_large_at_too_large_warning(
         backend: TezosBackend,
-        firmware: Firmware,
+        device: Device,
         tezos_navigator: TezosNavigator,
         account: Account,
         snapshot_dir: Path
@@ -433,7 +433,7 @@ def test_reject_too_long_operation_with_too_large_at_too_large_warning(
 
     with StatusCode.PARSE_ERROR.expected():
         with backend.sign(account, OPERATION_WITH_TOO_LARGE):
-            if firmware.is_nano:
+            if device.is_nano:
                 tezos_navigator.refuse_sign_error_risk(snap_path=snapshot_dir / "clear_n_too_large_warning")
             else:
                 tezos_navigator.skip_sign(snap_path=snapshot_dir / "skip")
@@ -441,7 +441,7 @@ def test_reject_too_long_operation_with_too_large_at_too_large_warning(
 
 def test_reject_too_long_operation_with_too_large_at_blindsigning(
         backend: TezosBackend,
-        firmware: Firmware,
+        device: Device,
         tezos_navigator: TezosNavigator,
         account: Account,
         snapshot_dir: Path
@@ -451,14 +451,14 @@ def test_reject_too_long_operation_with_too_large_at_blindsigning(
     tezos_navigator.toggle_expert_mode()
     tezos_navigator.toggle_blindsign()
 
-    if firmware.is_nano:
+    if device.is_nano:
         error = StatusCode.REJECT
     else:
         error = StatusCode.PARSE_ERROR
 
     with error.expected():
         with backend.sign(account, OPERATION_WITH_TOO_LARGE):
-            if firmware.is_nano:
+            if device.is_nano:
                 tezos_navigator.accept_sign_error_risk(snap_path=snapshot_dir / "clear_n_too_large_warning")
             else:
                 tezos_navigator.skip_sign(snap_path=snapshot_dir / "skip")
@@ -486,7 +486,7 @@ def test_reject_too_long_operation_with_too_large_at_blindsigning_warning(
 
 def test_blindsign_too_deep(
         backend: TezosBackend,
-        firmware: Firmware,
+        device: Device,
         tezos_navigator: TezosNavigator,
         account: Account,
         snapshot_dir: Path):
@@ -495,7 +495,7 @@ def test_blindsign_too_deep(
     expression = MichelineExpr([[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[{'int':42}]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]])
 
     with backend.sign(account, expression, with_hash=True) as result:
-        if firmware == Firmware.NANOS:
+        if device.type == DeviceType.NANOS:
             ### Simulate `navigate_review` up to `ACCEPT_RISK` because the nanos screen can look like it hasn't changed.
 
             instructions: List[Union[NavIns, NavInsID]] = [
@@ -517,7 +517,7 @@ def test_blindsign_too_deep(
             )
         else:
             tezos_navigator.accept_sign_error_risk(snap_path=snapshot_dir / "clear")
-            if not firmware.is_nano:
+            if not device.is_nano:
                 tezos_navigator.accept_sign_blindsign_risk(snap_path=snapshot_dir / "blindsigning_warning")
 
         tezos_navigator.accept_sign(snap_path=snapshot_dir / "blind")
@@ -530,7 +530,7 @@ def test_blindsign_too_deep(
 
 def test_blindsign_too_large(
         backend: TezosBackend,
-        firmware: Firmware,
+        device: Device,
         tezos_navigator: TezosNavigator,
         account: Account,
         snapshot_dir: Path
@@ -541,7 +541,7 @@ def test_blindsign_too_large(
 
     with backend.sign(account, message, with_hash=True) as result:
         tezos_navigator.accept_sign_error_risk(snap_path=snapshot_dir / "clear")
-        if not firmware.is_nano:
+        if not device.is_nano:
             tezos_navigator.accept_sign_blindsign_risk(snap_path=snapshot_dir / "blindsigning_warning")
         tezos_navigator.accept_sign(snap_path=snapshot_dir / "blind")
 
@@ -567,7 +567,7 @@ def test_blindsign_reject_from_clear(
 
 def test_blindsign_reject_from_blind(
         backend: TezosBackend,
-        firmware: Firmware,
+        device: Device,
         tezos_navigator: TezosNavigator,
         account: Account,
         snapshot_dir: Path
@@ -576,7 +576,7 @@ def test_blindsign_reject_from_blind(
 
     expression = MichelineExpr({'int':12345678901234567890123456789012345678901234567890123456789012345678901234567890})
 
-    if firmware.is_nano:
+    if device.is_nano:
         error = StatusCode.REJECT
     else:
         error = StatusCode.PARSE_ERROR
@@ -584,13 +584,13 @@ def test_blindsign_reject_from_blind(
     with error.expected():
         with backend.sign(account, expression, with_hash=False):
             tezos_navigator.accept_sign_error_risk(snap_path=snapshot_dir / "clear")
-            if not firmware.is_nano:
+            if not device.is_nano:
                 tezos_navigator.accept_sign_blindsign_risk(snap_path=snapshot_dir / "blind_warning")
             tezos_navigator.reject_sign(snap_path=snapshot_dir / "blind")
 
 def test_ensure_always_clearsign(
         backend: TezosBackend,
-        firmware: Firmware,
+        device: Device,
         tezos_navigator: TezosNavigator,
         account: Account,
         snapshot_dir: Path
@@ -598,7 +598,7 @@ def test_ensure_always_clearsign(
     """Check clear signing never blindsign"""
 
     tezos_navigator.toggle_expert_mode()
-    if not firmware.is_nano:
+    if not device.is_nano:
         tezos_navigator.toggle_blindsign()
 
     message = Transaction(
