@@ -22,7 +22,7 @@ from typing import Any, Dict, List, Optional, Type, TypeVar, Union
 
 import pytest
 
-from ragger.firmware import Firmware
+from ledgered.devices import Device
 from ragger.navigator import NavIns, NavInsID, BaseNavInsID
 
 from utils.account import Account
@@ -215,7 +215,7 @@ class TestOperation(ABC):
     def test_operation_field(
             self,
             backend: TezosBackend,
-            firmware: Firmware,
+            device: Device,
             tezos_navigator: TezosNavigator,
             account: Account,
             field: Field,
@@ -237,7 +237,7 @@ class TestOperation(ABC):
 
         with backend.sign(account, operation):
             validation_instructions: List[Union[NavIns, BaseNavInsID]] = []
-            if firmware.is_nano:
+            if device.is_nano:
                 validation_instructions = [NavInsID.RIGHT_CLICK]
             # Navigates until fields
             tezos_navigator.navigate_forward(

@@ -20,28 +20,33 @@ from pathlib import Path
 from typing import Dict, Generator, List, Union
 
 import pytest
-from ragger.firmware import Firmware
+from ledgered.devices import DeviceType, Device, Devices
 from ragger.navigator import Navigator, NanoNavigator, TouchNavigator
 
 from utils.account import Account, DEFAULT_ACCOUNT, DEFAULT_SEED
 from utils.backend import TezosBackend, SpeculosTezosBackend
 from utils.navigator import TezosNavigator
 
-FIRMWARES: List[Firmware] = [
-    Firmware.NANOS,
-    Firmware.NANOSP,
-    Firmware.NANOX,
-    Firmware.STAX,
-    Firmware.FLEX
+SUPPORTED_DEVICE_TYPES: List[DeviceType] = [
+    DeviceType.NANOS,
+    DeviceType.NANOSP,
+    DeviceType.NANOX,
+    DeviceType.STAX,
+    DeviceType.FLEX
 ]
 
-DEVICES: List[str] = list(map(lambda fw: fw.device, FIRMWARES))
+DEVICES_NAMES: List[str] = [
+    name
+    for device_type in SUPPORTED_DEVICE_TYPES
+    for device in [Devices.get_by_type(device_type)]
+    for name in [device.name] + device.names
+]
 
 def pytest_addoption(parser):
     """Register argparse-style options for pytest."""
     parser.addoption("-D", "--device",
                      type=str,
-                     choices=DEVICES,
+                     choices=DEVICES_NAMES,
                      help="Device type: nanos | nanosp | nanox | stax | flex",
                      required=True)
     parser.addoption("-P", "--port",
@@ -70,10 +75,10 @@ def pytest_addoption(parser):
                      required=True)
 
 @pytest.fixture(scope="session")
-def firmware(pytestconfig) -> Firmware :
-    """Get `firware` for pytest."""
+def device(pytestconfig) -> Device :
+    """Get `device` for pytest."""
     device = pytestconfig.getoption("device")
-    return next(fw for fw in FIRMWARES if fw.device == device)
+    return Devices.get_by_name(device)
 
 @pytest.fixture(scope="session")
 def port(pytestconfig, worker_id) -> int :
@@ -120,7 +125,7 @@ def account(request) -> Account:
 
 @pytest.fixture(scope="function")
 def backend(app_path: Path,
-            firmware: Firmware,
+            device: Device,
             port: int,
             display: bool,
             seed: str,
@@ -136,9 +141,11 @@ def backend(app_path: Path,
         "--seed", seed
     ]
 
-    backend = SpeculosTezosBackend(app_path,
-                                   firmware,
-                                   args=speculos_args)
+    backend = SpeculosTezosBackend(
+        app_path,
+        device,
+        args=speculos_args
+    )
 
     with backend as b:
         yield b
@@ -146,15 +153,15 @@ def backend(app_path: Path,
 @pytest.fixture(scope="function")
 def tezos_navigator(
         backend: TezosBackend,
-        firmware: Firmware,
+        device: Device,
         golden_run: bool
 ) -> TezosNavigator:
     """Get `navigator` for pytest."""
-    if firmware.is_nano:
-        navigator: Navigator = NanoNavigator(backend, firmware, golden_run)
+    if device.is_nano:
+        navigator: Navigator = NanoNavigator(backend, device, golden_run)
     else:
-        navigator = TouchNavigator(backend, firmware, golden_run)
-    return TezosNavigator(backend, firmware, navigator)
+        navigator = TouchNavigator(backend, device, golden_run)
+    return TezosNavigator(backend, device, navigator)
 
 @pytest.fixture(scope="function")
 def snapshot_dir(request) -> Path :
@@ -174,19 +181,19 @@ def requires_device(device):
     )
 
 @pytest.fixture(autouse=True)
-def use_only_on_device(request, firmware: Firmware):
+def use_only_on_device(request, device: Device):
     """Fixture to add tests on specific devices."""
 
     def get_devices(device: str) -> List[str]:
         if device == "nano":
             return ["nanos", "nanosp", "nanox"]
         if device == "touch":
-            return ["stax", "flex"]
+            return ["stax", "flex", "apex_p"]
         return [device]
 
     marker = request.node.get_closest_marker('use_on_device')
     if marker:
-        current_device = firmware.device
+        current_device = device.name
         requested_devices = marker.args[0]
         devices: List[str] = []
         if isinstance(requested_devices, str):

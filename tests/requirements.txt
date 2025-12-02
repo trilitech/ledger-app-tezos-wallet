@@ -3,7 +3,10 @@ setuptools
 pkginfo
 cryptography
 base58
-pytezos==3.14.0
+pytezos==3.16.1
 GitPython
 pytest-xdist
-ragger[tests,speculos,ledgerwallet]==1.24.0
+# from version `0.25.7`, speculos stops supporting NanoS devices
+speculos==0.25.5
+ledgered==0.12.3
+ragger[tests,speculos,ledgerwallet]==1.40.3
