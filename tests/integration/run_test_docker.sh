@@ -34,5 +34,9 @@ docker run --rm -it -v "$(realpath .):/app"              	\
 		python3 -m venv tezos_test_env --system-site-package;      \
 		source ./tezos_test_env/bin/activate;                      \
 		python3 -m pip install --upgrade pip -q;    \
-		python3 -m pip install -r tests/requirements.txt -q;    \
+		if [ \"$1\" = \"nanos\" ]; then \
+		    python3 -m pip install -r tests/requirements-nanos.txt -q; \
+		else \
+		    python3 -m pip install -r tests/requirements.txt -q; \
+		fi; \
      ./tests/integration/run_test_local.sh -F -m $*"
