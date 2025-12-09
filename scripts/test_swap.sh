@@ -144,15 +144,22 @@ build_app_tezos() {
 run_tests() {
     _assert_app_exchange_repo
 
+    device=$1
+    shift
+
     (
         cd $APP_EXCHANGE_REPO
 
-        docker run --privileged  --entrypoint /bin/bash                 \
-               --rm -v "$(realpath .):/app"                             \
-               ledger-app-tezos-integration-tests -c                    \
-               "cd /app &&                                              \
-                pip install --upgrade pip -q &&                         \
-                pip install -r test/python/requirements.txt -q &&       \
+        docker run --privileged  --entrypoint /bin/bash                   \
+               --rm -v "$(realpath .):/app"                               \
+               ledger-app-tezos-integration-tests -c                      \
+               "cd /app &&                                                \
+                pip install --upgrade pip -q &&                           \
+                if [ \"\$device\" = \"nanos\" ]; then                     \
+                    pip install -r test/python/requirements-nanos.txt -q; \
+                else                                                      \
+                    pip install -r test/python/requirements.txt -q;       \
+                fi &&                                                     \
                 pip install protobuf==3.20.3 && pytest test/python $*"
     )
 }
@@ -163,7 +170,7 @@ run_tests_all() {
     device=$1
     shift
 
-    run_tests --device $device -k "tezos" $*
+    run_tests $device --device $device -k "tezos" $*
 }
 
 update() {
