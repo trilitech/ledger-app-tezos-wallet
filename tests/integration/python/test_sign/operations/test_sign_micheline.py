@@ -210,6 +210,8 @@ prim_cases: List[Tuple[Micheline, str]] = [
     ({"prim": "BYTES"}, "BYTES"),
     ({"prim": "NAT"}, "NAT"),
     ({"prim": "IS_IMPLICIT_ACCOUNT"}, "IS_IMPLICIT_ACCOUNT"),
+    ({"prim": "INDEX_ADDRESS"}, "INDEX_ADDRESS"),
+    ({"prim": "GET_ADDRESS_INDEX"}, "GET_ADDRESS_INDEX"),
 
     # Type
     ({"prim": "bool"}, "bool"),

@@ -94,6 +94,9 @@ class Watermark(IntEnum):
 # pytezos is not up to date with the protocol Seoul
 # See `https://gitlab.com/tezos/tezos/-/blob/v23-release/src/proto_023_PtSeouLo/lib_protocol/michelson_v1_primitives.ml#L807`
 prim_tags.update({ 'IS_IMPLICIT_ACCOUNT': b'\x9e'})
+# See `https://gitlab.com/tezos/tezos/-/blob/master/src/proto_024_PsU87LFi/lib_protocol/michelson_v1_primitives.ml#L816-L817`
+prim_tags.update({ 'INDEX_ADDRESS': b'\x9f'})
+prim_tags.update({ 'GET_ADDRESS_INDEX': b'\xa0'})
 
 class MichelineExpr(Message):
     """Class representing a tezos micheline expression."""

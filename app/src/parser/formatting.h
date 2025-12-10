@@ -23,7 +23,7 @@
  *
  *        Should be kept in sync with the last protocol update.
  */
-#define TZ_LAST_MICHELSON_OPCODE 158
+#define TZ_LAST_MICHELSON_OPCODE 160
 
 /**
  * @brief Get the human readable name of a Michelson op_code if valid
@@ -205,7 +205,9 @@ typedef enum {
     TZ_MICHELSON_OP_BYTES                          = 155,
     TZ_MICHELSON_OP_NAT                            = 156,
     TZ_MICHELSON_OP_Ticket                         = 157,
-    TZ_MICHELSON_OP_IS_IMPLICIT_ACCOUNT            = 158
+    TZ_MICHELSON_OP_IS_IMPLICIT_ACCOUNT            = 158,
+    TZ_MICHELSON_OP_INDEX_ADDRESS                  = 159,
+    TZ_MICHELSON_OP_GET_ADDRESS_INDEX              = 160
 } tz_michelson_opcode;
 
 #define TZ_DECIMAL_BUFFER_SIZE(_l) ((((_l)*241) / 100) + 1)
